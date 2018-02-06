@@ -1,9 +1,9 @@
 import Server from './server';
 import connectToMongo from './utils/connect_to_mongo';
 import {createWeb3} from './utils/web3_tools';
-import IdentityManager from './components/identity_manager';
-import DataObjectBuilder from './components/data_object_builder';
-import DataModelEngine from './components/data_model_engine';
+import IdentityManager from './services/identity_manager';
+import DataObjectBuilder from './services/data_object_builder';
+import DataModelEngine from './services/data_model_engine';
 
 async function start() {
   const {db} = await connectToMongo();
