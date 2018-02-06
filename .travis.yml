@@ -1,0 +1,21 @@
+dist: trusty
+language: node_js
+cache:
+  yarn: true
+  directories:
+  - node_modules
+services:
+  - mongodb
+notifications:
+  slack: ambrosus:ybmTQyso2XmAp6SM9NQPhdl2
+node_js:
+  - '8'
+install:
+  - yarn install
+script:
+  - mongod --version
+  - yarn test
+env:
+  global:
+    - MONGODB_URI="mongodb://localhost"
+    - PORT=8888

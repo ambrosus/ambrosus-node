@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/ambrosus/ambrosus-sdk.svg?token=xjj4U84eSFwEsYLTc5Qe&branch=master)](https://travis-ci.com/ambrosus/ambrosus-sdk)
+
 # The Ambrosus Node
 The repository for http RESTful api.
 
