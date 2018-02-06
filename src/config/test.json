@@ -1,0 +1,10 @@
+{
+    "port": 9976,
+    "mongo" : {
+        "db_uri": "mongodb://localhost:27017/ambrosus_gateway_test",
+        "database": "ambrosus_gateway_test"
+    },
+    "web3" : {
+        "rpc": "ganache"
+    }
+}
