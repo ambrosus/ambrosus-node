@@ -1,7 +1,7 @@
 import express from 'express';
 import config from 'config';
 
-import testRouter from './routes/test';
+import accountsRouter from './routes/accounts';
 
 export default class Server {
   constructor(db, identityManager, objectBuilder, modelEngine) {
@@ -14,7 +14,7 @@ export default class Server {
   start() {
     const app = express();
 
-    app.use('/', testRouter);
+    app.use('/accounts', accountsRouter);
 
     const port = process.env.PORT || config.get('server.port');
     this.server = app.listen(port, () => console.log(`Listening in port ${port}`));
