@@ -3,7 +3,7 @@ import httpMocks from 'node-mocks-http';
 import {spy} from 'sinon';
 import sinonChai from 'sinon-chai';
 import errorHandling from '../../src/middlewares/error_handling';
-import {DataFormatError, PermissionError} from '../../src/errors/errors';
+import {ValidationError, PermissionError} from '../../src/errors/errors';
 
 chai.use(sinonChai);
 const {expect} = chai;
@@ -20,7 +20,7 @@ describe('Error handling middleware', () => {
   });
 
   it('should return 400 if WrongDataFormat', async () => {
-    errorHandling(new DataFormatError(), request, response, next);
+    errorHandling(new ValidationError(), request, response, next);
     expect(response._getStatusCode()).to.eq(400);
     expect(next).to.be.calledOnce;
   });

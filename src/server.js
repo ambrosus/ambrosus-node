@@ -1,7 +1,6 @@
 import express from 'express';
 import config from 'config';
 import errorHandling from './middlewares/error_handling';
-
 import accountsRouter from './routes/accounts';
 
 export default class Server {
