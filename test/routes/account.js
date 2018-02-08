@@ -17,10 +17,8 @@ describe('Accounts', async function () {
     server.start();
   });
 
-
   it('should create an account', async function () {
-    const response = await chai.request(server.server).post('/accounts').send({});    
-    //await expect(response.body.address).to.eq(200);
+    const response = await chai.request(server.server).post('/accounts').send({});
     expect(response.status).to.eq(200);
   });
 
