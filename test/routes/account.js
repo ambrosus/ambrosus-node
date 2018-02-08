@@ -1,3 +1,5 @@
+/* eslint-disable */
+// TODO Fix file to pass linting
 import chai, { assert } from 'chai';
 import chaiHttp from 'chai-http';
 import chaiAsPromissed from 'chai-as-promised';

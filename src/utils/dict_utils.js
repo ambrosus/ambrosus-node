@@ -77,4 +77,16 @@ const put = (dict, path, value) => {
   throw new Error('Path must be an string, or an dict');
 };
 
-export {put, pick};
+const get = (dict, path) => {
+  let result = dict;
+  for (const key of path.split('.').filter((key) => key.length > 0)) {
+    result = result[key];
+    if (typeof result === 'undefined') {
+      return undefined;
+    }
+  }
+  return result;
+};
+
+
+export {put, pick, get};

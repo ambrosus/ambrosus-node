@@ -37,8 +37,8 @@ export async function createWeb3() {
   if (isValidRPCAddress(rpc)) {
     web3.setProvider(rpc);
     tryToImportPrivateKey(web3);
-  } else if (isUsingGenache('ganache')) {
-    web3.setProvider(createGenacheProvider);
+  } else if (isUsingGenache(rpc)) {
+    web3.setProvider(createGenacheProvider());
     [web3.eth.defaultAccount] = (await web3.eth.getAccounts());
   } else {
     throw new Error('A configuration value for web3 rpc server is missing');

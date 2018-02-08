@@ -15,6 +15,7 @@ install:
 script:
   - mongod --version
   - yarn test
+  - yarn dev:lint
 env:
   global:
     - MONGODB_URI="mongodb://localhost"
