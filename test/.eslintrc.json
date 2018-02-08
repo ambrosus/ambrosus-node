@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "no-underscore-dangle": ["error", { "allow": ["_getStatusCode"] }]
+  },
+  "env": {
+    "mocha": true
+  }
+}
