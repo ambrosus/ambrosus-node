@@ -4,7 +4,8 @@ import asyncMiddleware from '../middlewares/async_middleware';
 const router = new express.Router();
 
 router.post('/', asyncMiddleware(async (req, res) => {
-  res.status(200).send('Test');
+  const response = { content: { address: ""} };
+  res.status(200).send();
 }));
 
 export default router;
