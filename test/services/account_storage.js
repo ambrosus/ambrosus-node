@@ -16,10 +16,11 @@ describe('Account Store', () => {
   });
 
   it('should compute signature', async () => {
+    // TODO: move to fixutres
     const account = {
       address: '0xcb330742f75cceb58f585cA8DFD95a476AB5D616',
       secret: '0xcb330742f75cceb58f585cA8DFD95a476AB5D616f585cA8DFD95a476AB5D616'
-    };    
+    };
     await accountStore.store(account);
     const result = await accountStore.get(account.address);
     expect(result).to.deep.equal(account);

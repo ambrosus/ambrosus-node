@@ -8,10 +8,10 @@ chai.use(chaiAsPromissed);
 
 const {expect} = chai;
 
-let aparatus;
+describe('Accounts - Integrations', async () => {
+  let aparatus;
 
-describe('Accounts', async () => {
-  before(async () => {    
+  before(async () => {
     aparatus = new Aparatus();
     await aparatus.start();
   });

@@ -1,20 +1,23 @@
 import express from 'express';
 import config from 'config';
 import errorHandling from './middlewares/error_handling';
+
 import accountsRouter from './routes/accounts';
+import assetsRouter from './routes/assets';
+
 
 export default class Server {
-  constructor(db, identityManager, objectBuilder, modelEngine) {
-    this.db = db;
-    this.identityManager = identityManager;
-    this.objectBuilder = objectBuilder;
+  constructor(modelEngine, linkHelper) {
     this.modelEngine = modelEngine;
+    this.linkHelper = linkHelper;
   }
 
   start() {
     const app = express();
-    app.use('/accounts', accountsRouter(this.modelEngine));
-    
+
+    app.use('/accounts', accountsRouter(this.modelEngine));  
+    app.use('/assets', assetsRouter(this.modelEngine.identityManager, this.modelEngine, this.linkHelper));
+
     // Should always be last
     app.use(errorHandling);
 

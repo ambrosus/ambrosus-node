@@ -1,9 +1,8 @@
 import chai from 'chai';
 import IdentityManager from '../../src/services/identity_manager';
 import {createWeb3} from '../../src/utils/web3_tools';
-import {ValidationError} from '../../src/errors/errors';
+import {InvalidParametersError, ValidationError} from '../../src/errors/errors';
 import {put} from '../../src/utils/dict_utils';
-import serialize from '../../src/utils/serialize';
 
 const {expect} = chai;
 
@@ -30,10 +29,10 @@ describe('Identity manager', () => {
 
   describe('Signing', () => {
     const testAccount =
-    {
-      address: '0x2795c24B088EDe052174b5Fe9157892e7D7e58cc',
-      privateKey: '0x22fd86011f7287f7d98e361ddd685f5ffd48ffd109b651e1578aae1f9c579863'
-    };
+      {
+        address: '0x2795c24B088EDe052174b5Fe9157892e7D7e58cc',
+        privateKey: '0x22fd86011f7287f7d98e361ddd685f5ffd48ffd109b651e1578aae1f9c579863'
+      };
 
     it('should compute signature', async () => {
       const signature = identityManager.sign(testAccount.privateKey, exampleData);
@@ -49,7 +48,7 @@ describe('Identity manager', () => {
     });
 
     it('should throw if private key has wrong format', () => {
-      expect(() => identityManager.sign('0x12312312321', exampleData)).to.throw(ValidationError);
+      expect(() => identityManager.sign('0x12312312321', exampleData)).to.throw(InvalidParametersError);
     });
   });
 
@@ -57,34 +56,29 @@ describe('Identity manager', () => {
     let signature;
 
     beforeEach(() => {
-      ({signature} = web3.eth.accounts.sign(serialize(exampleData), account.privateKey));
+      ({signature} = web3.eth.accounts.sign(identityManager.serializeForHashing(exampleData), account.privateKey));
     });
 
     it('should validate if signature is correct', () => {
-      const result = identityManager.validateSignature(account.address, signature, exampleData);
-      expect(result).to.be.true;
+      expect(() => identityManager.validateSignature(account.address, signature, exampleData)).to.not.throw();
     });
 
     it('should not validate if was signed by another address', () => {
       const otherAccount = web3.eth.accounts.create();
-      const result = identityManager.validateSignature(otherAccount.address, signature, exampleData);
-      expect(result).to.be.false;
+      expect(() => identityManager.validateSignature(otherAccount.address, signature, exampleData)).to.throw(ValidationError);
     });
 
     it('should not validate if data was modified after signing', () => {
-      const result = identityManager.validateSignature(account.address, signature,
-        put(exampleData, 'one.two.three', 42));
-      expect(result).to.be.false;
+      const modifiedData = put(exampleData, 'one.two.three', 42);
+      expect(() => identityManager.validateSignature(account.address, signature, modifiedData)).to.throw(ValidationError);
     });
 
     it('should throw if wrong signature format', () => {
-      expect(() => identityManager.validateSignature(account.address, '0x1312312312', exampleData))
-        .to.throw(ValidationError);
+      expect(() => identityManager.validateSignature(account.address, '0x1312312312', exampleData)).to.throw(InvalidParametersError);
     });
 
     it('should throw is wrong address format', () => {
-      expect(() => identityManager.validateSignature('0x1312312312', signature, exampleData))
-        .to.throw(ValidationError);
+      expect(() => identityManager.validateSignature('0x1312312312', signature, exampleData)).to.throw(InvalidParametersError);
     });
   });
 
@@ -101,4 +95,18 @@ describe('Identity manager', () => {
       expect(account1.address).not.to.eq(account2.address);
     });
   });    
+
+  it('Calculating the hash of data', () => {
+    // calculated from input using REPL
+    const input = {one: {two: {three: '3', four: 4}}, five: false};
+    const expectedHash = '0x1fa4bb07995e73c1c827c402d965726934c68d89581a1d4e5e8d02fb9fddcd9a';
+
+    expect(identityManager.calculateHash(input)).to.equal(expectedHash);
+  });
+
+  it('Calculating a stable serialization', async () => {
+    const serialized = identityManager.serializeForHashing({bar: {test1: 'test1', test2: [1, false], test3: 123}, foo: 'foo'});
+    const expectedResult = '{\'bar\':{\'test1\':\'test1\',\'test2\':[1,false],\'test3\':123},\'foo\':\'foo\'}';
+    expect(serialized).to.equal(expectedResult);
+  });
 });

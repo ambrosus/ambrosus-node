@@ -1,10 +1,12 @@
-import {PermissionError, ValidationError} from '../errors/errors';
+import {InvalidParametersError, ValidationError, PermissionError, NotFoundError} from '../errors/errors';
 
 export default (err, req, res, next) => {
-  if (err instanceof ValidationError) {
+  if (err instanceof InvalidParametersError || err instanceof ValidationError) {
     res.status(400).send({reason: err.message});
   } else if (err instanceof PermissionError) {
     res.status(401).send({reason: err.message});
+  } else if (err instanceof NotFoundError) {
+    res.status(404).send({reason: err.message});
   } else {
     res.status(500).send({reason: err.message});
   }

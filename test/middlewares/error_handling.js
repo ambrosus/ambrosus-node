@@ -3,7 +3,8 @@ import httpMocks from 'node-mocks-http';
 import {spy} from 'sinon';
 import sinonChai from 'sinon-chai';
 import errorHandling from '../../src/middlewares/error_handling';
-import {ValidationError, PermissionError} from '../../src/errors/errors';
+
+import {InvalidParametersError, ValidationError, PermissionError, NotFoundError} from '../../src/errors/errors';
 
 chai.use(sinonChai);
 const {expect} = chai;
@@ -19,7 +20,14 @@ describe('Error handling middleware', () => {
     next = spy();
   });
 
-  it('should return 400 if WrongDataFormat', async () => {
+
+  it('should return 400 if InvalidParametersError', async () => {
+    errorHandling(new InvalidParametersError(), request, response, next);
+    expect(response._getStatusCode()).to.eq(400);
+    expect(next).to.be.calledOnce;
+  });
+
+  it('should return 400 if ValidationError', async () => {
     errorHandling(new ValidationError(), request, response, next);
     expect(response._getStatusCode()).to.eq(400);
     expect(next).to.be.calledOnce;
@@ -28,6 +36,12 @@ describe('Error handling middleware', () => {
   it('should return 401 if PermissionError', async () => {
     errorHandling(new PermissionError(), request, response, next);
     expect(response._getStatusCode()).to.eq(401);
+    expect(next).to.be.calledOnce;
+  });
+
+  it('should return 404 if NotFoundError', async () => {
+    errorHandling(new NotFoundError(), request, response, next);
+    expect(response._getStatusCode()).to.eq(404);
     expect(next).to.be.calledOnce;
   });
 
