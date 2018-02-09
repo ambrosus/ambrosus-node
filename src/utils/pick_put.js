@@ -9,6 +9,10 @@ const pickKey = (dict, key) => Object.keys(dict)
 const pickChain = (dict, chain) => {
   const [firstOnChain, ...restOfChain] = chain;
 
+  if (!firstOnChain) {
+    throw new Error('Path is invalid: it shouldn\'t be emtpy string');
+  }
+
   if (restOfChain.length === 0) {
     return pickKey(dict, firstOnChain);
   }
@@ -42,6 +46,10 @@ const putKey = (dict, key, value) => ({
 const putChain = (dict, chain, value) => {
   const [firstOnChain, ...restOfChain] = chain;
 
+  if (!firstOnChain) {
+    throw new Error('Path is invalid: it shouldn\'t be emtpy string');
+  }
+
   if (restOfChain.length === 0) {
     return putKey(dict, firstOnChain, value);
   }
@@ -63,7 +71,7 @@ const put = (dict, path, value) => {
       .reduce((transformedDict, pathIterator) => put(transformedDict, pathIterator, path[pathIterator]), dict);
   } else if (isString(path)) {
     const chain = path.split('.');
-    return putChain(dict, chain, value);  
+    return putChain(dict, chain, value);
   }
 
   throw new Error('Path must be an string, or an dict');
