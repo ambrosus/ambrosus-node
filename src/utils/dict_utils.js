@@ -54,13 +54,15 @@ const putChain = (dict, chain, value) => {
     return putKey(dict, firstOnChain, value);
   }
 
-  if (!isDict(dict[firstOnChain])) {
+  const childDict = dict[firstOnChain] || {};
+
+  if (!isDict(childDict)) {
     throw new Error('Path is invalid: non-object detected while traversing');
   }
 
   return {
     ...dict,
-    [firstOnChain]: putChain(dict[firstOnChain], restOfChain, value)
+    [firstOnChain]: putChain(childDict, restOfChain, value)
   };
 };
 
@@ -87,6 +89,5 @@ const get = (dict, path) => {
   }
   return result;
 };
-
 
 export {put, pick, get};

@@ -1,6 +1,6 @@
 {
   "rules": {
-    "no-underscore-dangle": ["error", { "allow": ["_getStatusCode"] }]
+    "no-underscore-dangle": ["error", { "allow": ["_getStatusCode", "_isJSON", "_getData"] }]
   },
   "env": {
     "mocha": true

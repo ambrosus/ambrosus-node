@@ -6,24 +6,26 @@ export class AmbrosusError extends Error {
   }
 }
 
+export class InvalidParametersError extends AmbrosusError {
+  constructor(message) {
+    super(`Invalid parameter: ${message}`);
+  }
+}
+
 export class ValidationError extends AmbrosusError {
   constructor(message) {
-    super(`Validation Failed: ${message}`);
+    super(`Invalid data: ${message}`);
   }
 }
-
-export class DataFormatError extends AmbrosusError {
-  constructor(message) {
-    super(`Wrong data format: ${message}`);
-  }
-}
-
-export class NotFoundError extends AmbrosusError {}
-
-export class MissingParametersError extends AmbrosusError {}
 
 export class PermissionError extends AmbrosusError {
   constructor(message) {
     super(`Permision denied: ${message}`);
+  }
+}
+
+export class NotFoundError extends AmbrosusError {
+  constructor(message) {
+    super(`Entity not found: ${message}`);
   }
 }
