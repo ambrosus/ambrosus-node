@@ -1,5 +1,5 @@
 import Server from './server';
-import connectToMongo from './utils/connect_to_mongo';
+import {connectToMongo} from './utils/db_utils';
 import {createWeb3} from './utils/web3_tools';
 import IdentityManager from './services/identity_manager';
 import DataObjectBuilder from './services/data_object_builder';
@@ -15,7 +15,7 @@ async function start() {
 
   const server = new Server(db, identityManager, objectBuilder, modelEngine);
 
-  server.start();
+  server.start();  
 }
 
 start()

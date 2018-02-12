@@ -27,4 +27,9 @@ export default class IdentityManager {
     const signer = this.web3.eth.accounts.recover(hash, signature);
     return address === signer;
   }
+  
+  createKeyPair() {
+    const account = this.web3.eth.accounts.create();
+    return {address: account.address, secret: account.privateKey};
+  }
 }

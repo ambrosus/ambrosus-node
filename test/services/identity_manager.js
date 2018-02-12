@@ -87,4 +87,18 @@ describe('Identity manager', () => {
         .to.throw(ValidationError);
     });
   });
+
+  describe('Create key pair', () => {
+    it('should create an account', () => {
+      const result = identityManager.createKeyPair();
+      expect(result.address).to.match(/^0x[0-9-a-fA-F]{40}$/);
+      expect(result.secret).to.match(/^0x[0-9-a-fA-F]{64}$/);
+    });
+
+    it('accounts should be unique', () => {
+      const account1 = identityManager.createKeyPair();
+      const account2 = identityManager.createKeyPair();
+      expect(account1.address).not.to.eq(account2.address);
+    });
+  });    
 });
