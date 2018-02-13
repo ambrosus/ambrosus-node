@@ -10,9 +10,7 @@ const connectToMongo = async () => {
 };
 
 const cleanDatabase = async (db) => {
-  let collections = await db.collections();
-  collections = collections.filter((el) => el.collectionName !== 'migrations');
-
+  const collections = await db.collections();
   for (const colection of collections) {
     await colection.deleteMany({});
   }

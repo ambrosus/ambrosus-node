@@ -9,9 +9,8 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Data Model Engine', () => {
-  let mockObjectBuilder = null;
   let mockIdentityManager = null;
-  let mockAccountStorage = null;
+  let mockAccountRepository = null;
   let modelEngine;
   const mockKeyPair = {
     address: '0xEA3CA04478bb2D3Adbba8a3BBc90f84D4222d124',
@@ -19,26 +18,21 @@ describe('Data Model Engine', () => {
   };
 
   beforeEach(() => {
-    mockObjectBuilder = {
-      validateAsset : sinon.stub(),
-      setAssetBundle : sinon.stub(),
-      regenerateAssetId: sinon.stub()
-    };
     mockIdentityManager = {
       createKeyPair : sinon.stub()
     };
-    mockAccountStorage = {
+    mockAccountRepository = {
       store : sinon.stub()
     };
-    modelEngine = new DataModelEngine(mockObjectBuilder, mockIdentityManager, mockAccountStorage);
+    modelEngine = new DataModelEngine(null, mockIdentityManager, mockAccountRepository);
   });
 
   describe('creating an account', () => {
-    it('validates with Entity Builder and sends to Entity Storage', async () => {
+    it('creates key pair with identityManager and stores with accountRepository', async () => {
       mockIdentityManager.createKeyPair.returns(mockKeyPair);
       expect(await modelEngine.createAccount()).to.eq(mockKeyPair);
-      expect(mockIdentityManager.createKeyPair).to.have.been.calledWith();
-      expect(mockAccountStorage.store).to.have.been.calledWith(mockKeyPair);
+      expect(mockIdentityManager.createKeyPair).to.have.been.called;
+      expect(mockAccountRepository.store).to.have.been.calledWith(mockKeyPair);
     });
   });
 });

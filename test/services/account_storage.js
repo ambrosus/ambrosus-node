@@ -1,5 +1,5 @@
 import chai from 'chai';
-import AccountStore from '../../src/services/account_storage';
+import AccountStore from '../../src/services/account_repository';
 import {connectToMongo, cleanDatabase} from '../../src/utils/db_utils';
 
 const {expect} = chai;
