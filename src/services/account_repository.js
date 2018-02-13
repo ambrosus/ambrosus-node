@@ -1,4 +1,4 @@
-export default class AccountStorage {
+export default class AccountRepository {
   constructor(db) {
     this.db = db;
   }

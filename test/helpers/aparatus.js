@@ -2,7 +2,7 @@ import Server from '../../src/server';
 import {connectToMongo} from '../../src/utils/db_utils';
 import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
-import AccountStorage from '../../src/services/account_storage';
+import AccountRepository from '../../src/services/account_repository';
 import DataObjectBuilder from '../../src/services/data_object_builder';
 import DataModelEngine from '../../src/services/data_model_engine';
 import chai from 'chai';
@@ -19,8 +19,8 @@ export default class Aparatus {
 
     const identityManager = new IdentityManager(web3);
     const objectBuilder = new DataObjectBuilder(identityManager);
-    const accountStorage = new AccountStorage(db);
-    const modelEngine = new DataModelEngine(objectBuilder, identityManager, accountStorage);
+    const accountRepository = new AccountRepository(db);
+    const modelEngine = new DataModelEngine(objectBuilder, identityManager, accountRepository);
 
     this.server = new Server(db, identityManager, objectBuilder, modelEngine);
     this.server.start();
