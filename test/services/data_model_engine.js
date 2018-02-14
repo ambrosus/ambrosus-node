@@ -4,9 +4,9 @@ import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import DataModelEngine from '../../src/services/data_model_engine';
-import {ValidationError} from '../../src/errors/errors';
+import {NotFoundError, ValidationError} from '../../src/errors/errors';
 
-import pkPair from '../fixtures/pk_pair'; 
+import pkPair from '../fixtures/pk_pair';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -19,7 +19,7 @@ describe('Data Model Engine', () => {
   let mockEntityRepository = null;
   let mockAccountRepository = null;
 
-  const mockAsset = {};
+  const mockAsset = {one: 1};
 
   beforeEach(() => {
     mockIdentityManager = {
@@ -34,9 +34,11 @@ describe('Data Model Engine', () => {
       regenerateAssetId: sinon.stub()
     };
     mockEntityRepository = {
-      storeAsset: sinon.stub()
+      storeAsset: sinon.stub(),
+      getAsset: sinon.stub()
     };
-    modelEngine = new DataModelEngine(mockIdentityManager, mockEntityBuilder, mockEntityRepository, mockAccountRepository);
+    modelEngine = new DataModelEngine(mockIdentityManager, mockEntityBuilder, mockEntityRepository,
+      mockAccountRepository);
   });
 
   describe('creating an account', () => {
@@ -66,6 +68,23 @@ describe('Data Model Engine', () => {
       mockEntityBuilder.validateAsset.throws(new ValidationError('an error'));
 
       await expect(modelEngine.createAsset(mockAsset)).to.be.rejectedWith(ValidationError);
+    });
+  });
+
+  describe('getting an asset by id', () => {
+    const exampleAssetId = '0x123';
+    beforeEach(() => {
+      mockEntityRepository.getAsset.resolves(null);
+      mockEntityRepository.getAsset.withArgs(exampleAssetId).resolves(mockAsset);
+    });
+
+    it('gets asset by assetId', async () => {
+      const asset = await modelEngine.getAsset(exampleAssetId);
+      expect(asset).to.deep.equal(mockAsset);
+    });
+
+    it('throws if asset not found', async () => {
+      await expect(modelEngine.getAsset('notexistingAsset')).to.be.rejectedWith(NotFoundError);
     });
   });
 });

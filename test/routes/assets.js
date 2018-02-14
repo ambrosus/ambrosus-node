@@ -6,7 +6,7 @@ import chaiAsPromised from 'chai-as-promised';
 import Aparatus from '../helpers/aparatus';
 import chaiHttp from 'chai-http';
 
-import {createAssetHandler} from '../../src/routes/assets';
+import {createAssetHandler, fetchAssetHandler} from '../../src/routes/assets';
 import {put, pick} from '../../src/utils/dict_utils';
 import {createAsset, addSignatureToAsset} from '../fixtures/asset_fixture_builder';
 import pkPair from '../fixtures/pk_pair';
@@ -24,7 +24,8 @@ describe('Assets', () => {
 
   beforeEach(() => {
     mockModelEngine = {
-      createAsset: sinon.stub()
+      createAsset: sinon.stub(),
+      getAsset: sinon.stub()
     };
     mockLinkHelper = {
       linkForAsset: sinon.stub()
@@ -42,7 +43,7 @@ describe('Assets', () => {
 
     beforeEach(() => {
       inputAsset = createAsset();
-      mockModelEngine.createAsset.returns(put(inputAsset, 'assetId', resultAssetId));
+      mockModelEngine.createAsset.resolves(put(inputAsset, 'assetId', resultAssetId));
       mockLinkHelper.linkForAsset.returns('xyz');
       req.body = inputAsset;
       injectedHandler = createAssetHandler(mockModelEngine, mockLinkHelper);
@@ -55,6 +56,33 @@ describe('Assets', () => {
       expect(mockLinkHelper.linkForAsset).to.have.been.calledWith(resultAssetId);
 
       expect(res._getStatusCode()).to.eq(201);
+      expect(res._isJSON()).to.be.true;
+      const returnedData = JSON.parse(res._getData());
+
+      expect(returnedData.metadata.link).to.be.equal(`xyz`);
+    });
+  });
+
+  describe('fetching asset', () => {
+    const assetId = 'assetid';
+    let mockAsset;
+    let injectedHandler;
+
+    beforeEach(() => {
+      mockAsset = createAsset();
+      mockModelEngine.getAsset.resolves(put(mockAsset, 'assetId', assetId));
+      mockLinkHelper.linkForAsset.returns('xyz');
+      injectedHandler = fetchAssetHandler(mockModelEngine, mockLinkHelper);
+    });
+
+    it('fetching asset', async () => {
+      req.params.assetId = assetId;
+      await injectedHandler(req, res);
+
+      expect(mockModelEngine.getAsset).to.have.been.calledWith(assetId);
+      expect(mockLinkHelper.linkForAsset).to.have.been.calledWith(assetId);
+
+      expect(res._getStatusCode()).to.eq(200);
       expect(res._isJSON()).to.be.true;
       const returnedData = JSON.parse(res._getData());
 
@@ -108,6 +136,31 @@ describe('Assets - Integrations', () => {
       await expect(request)
         .to.eventually.be.rejected
         .and.have.property('status', 400);
+    });
+  });
+
+  describe('fetching asset', () => {
+    let asset;
+
+    beforeEach(async () => {
+      const signedAsset = addSignatureToAsset(aparatus.identityManager, createAsset(), pkPair.secret);
+      const response = await aparatus.request()
+        .post('/assets')
+        .send(signedAsset);
+      asset = response.body;
+    });
+
+    it('should get asset by id', async () => {
+      const response = await aparatus.request()
+        .get(`/assets/${asset.assetId}`);
+      expect(response.body).to.deep.equal(asset);
+    });
+
+    it('should return 404 if asset with that id doesn\'t exist', async () => {
+      const request = aparatus.request()
+        .get(`/assets/nonexistingAsset`);
+      await expect(request).to.eventually.be.rejected
+        .and.have.property('status', 404);
     });
   });
 

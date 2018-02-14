@@ -1,3 +1,5 @@
+import {NotFoundError} from '../errors/errors';
+
 export default class DataModelEngine {
   constructor(identityManager, entityBuilder, entityRepository, accountRepository) {
     this.identityManager = identityManager;    
@@ -21,5 +23,13 @@ export default class DataModelEngine {
     await this.entityRepository.storeAsset(augmentedAsset);
     
     return augmentedAsset;
+  }
+
+  async getAsset(assetId) {
+    const asset = await this.entityRepository.getAsset(assetId);
+    if (asset === null) {
+      throw new NotFoundError(`No asset with id = ${assetId} found`);
+    }
+    return asset;
   }
 }
