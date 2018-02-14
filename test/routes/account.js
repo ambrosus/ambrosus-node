@@ -22,7 +22,7 @@ describe('Accounts', async () => {
       .send({});
     expect(response.body.content.address).to.match(/^0x[0-9-a-fA-F]{40}$/);
     expect(response.body.content.secret).to.match(/^0x[0-9-a-fA-F]{64}$/);
-    expect(response.status).to.eq(200);
+    expect(response.status).to.eq(201);
   });
 
   after(async () => {
