@@ -22,7 +22,18 @@ host: 'network.ambrosus.com'
 tags:
 - name: "Account"
   description: |
-    API for creating accounts, supplement to ethereum account creation. 
+    An account represents an actor in the supply chain. This can be a person, a company, a location, etc.
+    
+    It consists of a pair - a public identifer `address` (compatible with ethereum address) and a `secret` (compatible with ethereum private key).
+    
+- name: "Asset"
+  description: |
+    An asset is a primary element moving through a supply chain. It can represent an ingredient, product, package of products or any other type of container.
+
+    Assets on they own function only as a handle for a Event stream. Becaouse of this they only contain an idData structure holding minimal infomation about their creation.
+
+    Assets are identified by an `assetId` field which is a sha3 hash calculated from the `content` field.  
+
 schemes:
 - "https"
 paths:
@@ -31,7 +42,7 @@ paths:
       tags:
       - "Account"
       summary: "Create account"
-      description: "Account is a pair - a public identifer `address` (compatible with ethereum address) and a `secret` (compatible with ethereum private key)."
+      description: ""
       operationId: "createAccount"
       consumes:
       - "application/json"
@@ -41,11 +52,77 @@ paths:
         201:
           description: "Created."
           schema:
-            type: "object"
-            properties:
-              address:
-                type: "string"
-                example: "0x162a44701727a31f457a53801cd181cd38eb5bbd"
-              secret:
-                type: "string"
-                example: "0x17d08f5fe8c77af811caa0c9a187e668ce3b74a99acc3f6d976f075fa8e0be55"
+            $ref: "#/definitions/Account"
+  /assets:
+    post:
+      tags:
+      - "Asset"
+      summary: "Create an asset"
+      description: | 
+        Places (after intensive validations) the provided asset object into the system.
+      operationId: "createAsset"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: body
+        name: "data"
+        description: "Asset object to be added to the system"
+        required: true
+        schema:
+          $ref: "#/definitions/Asset"
+      - in: header
+        name: "Authorization"
+        type: "string"
+        description: "If present, will instruct the server to sign the asset before adding"
+      responses:
+        201:
+          description: "Created"
+          schema:
+            $ref: "#/definitions/Asset"
+        400:
+          description: "Invalid input"
+
+definitions:
+  Account:
+    type: "object"
+    properties:
+      address:
+        type: "string"
+        example: "0x162a44701727a31f457a53801cd181cd38eb5bbd"
+      secret:
+        type: "string"
+        example: "0x17d08f5fe8c77af811caa0c9a187e668ce3b74a99acc3f6d976f075fa8e0be55"
+
+  Asset:
+    type: "object"
+    properties:
+      assetId:
+        type: "string"
+        format: "int64"
+        example: "0xc5cfd04.....30755ed65"
+      contents:
+        type: "object"
+        properties:
+          signature:
+            type: "string"
+            format: "int64"
+            example: "0x30755ed65396facf86c53e6...65c5cfd04be400"
+          idData:
+            $ref: "#/definitions/AssetIdData"
+
+  AssetIdData:
+    type: "object"
+    properties:
+        createdBy:
+          type: "string"
+          format: "int64"
+          example: "0x162a44701727a31f457a53801cd181cd38eb5bbd"
+        timestamp:
+          type: "integer"
+          format: "timestamp"
+          example: 1503424923
+        sequenceNumber:
+          type: "integer"
+          example: 3
