@@ -1,13 +1,13 @@
 {
-    "server": {
-        "port": 9876
-    },
-    "mongo" : {
-        "db_uri": "mongodb://localhost:27017/ambrosus_gateway_development",
-        "database": "ambrosus_gateway_developemnt"    
-    },
-    "web3" : {
-        "rpc" : "ws://159.89.23.203:8545",
-        "privateKey" : "0xfa654acfc59f0e4fe3bd57082ad28fbba574ac55fe96e915f17de27ad9c77696"
-    }
+  "server": {
+    "port": 9876
+  },
+  "mongo": {
+    "db_uri": "mongodb://localhost:27017/ambrosus_gateway_development",
+    "database": "ambrosus_gateway_developemnt"
+  },
+  "web3": {
+    "rpc": "ganache",
+    "privateKey": "0xfa654acfc59f0e4fe3bd57082ad28fbba574ac55fe96e915f17de27ad9c77696"
+  }
 }
