@@ -1,9 +1,8 @@
 import chai from 'chai';
 import AccountStore from '../../src/services/account_repository';
 import {connectToMongo, cleanDatabase} from '../../src/utils/db_utils';
-
+import {accountWithSecret, account} from '../fixtures/account.js';
 const {expect} = chai;
-
 
 describe('Account Store', () => {
   let client;
@@ -15,13 +14,8 @@ describe('Account Store', () => {
     accountStore = new AccountStore(db);
   });
 
-  it('should compute signature', async () => {
-    // TODO: move to fixutres
-    const account = {
-      address: '0xcb330742f75cceb58f585cA8DFD95a476AB5D616',
-      secret: '0xcb330742f75cceb58f585cA8DFD95a476AB5D616f585cA8DFD95a476AB5D616'
-    };
-    await accountStore.store(account);
+  it('account round database trip', async () => {
+    await accountStore.store(accountWithSecret);
     const result = await accountStore.get(account.address);
     expect(result).to.deep.equal(account);
   });

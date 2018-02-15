@@ -6,10 +6,14 @@ export default class DataModelEngine {
     this.accountRepository = accountRepository;
   }
 
-  createAccount() {
+  async createAccount() {
     const account = this.identityManager.createKeyPair();
-    this.accountRepository.store(account);
+    await this.accountRepository.store(account);
     return account;
+  }
+
+  async getAccount(address) {
+    return this.accountRepository.get(address);
   }
 
   async createAsset(asset) {
