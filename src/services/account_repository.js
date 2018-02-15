@@ -2,12 +2,14 @@ export default class AccountRepository {
   constructor(db) {
     this.db = db;
   }
-  
-  async store(account) {
-    await this.db.collection('accounts').insertOne({...account});
+
+  /* eslint no-unused-vars: ["error", { "varsIgnorePattern": "^secret$" }]*/
+  async store(account) {    
+    const {secret, ...accountWithoutSecret} = account;
+    await this.db.collection('accounts').insertOne(accountWithoutSecret);
   }
 
   async get(address) {
-    return await this.db.collection('accounts').findOne({address}, {fields: {_id: 0}});
+    return this.db.collection('accounts').findOne({address}, {fields: {_id: 0}});
   }
 }

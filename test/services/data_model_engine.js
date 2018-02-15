@@ -26,7 +26,8 @@ describe('Data Model Engine', () => {
       createKeyPair: sinon.stub()
     };
     mockAccountRepository = {
-      store: sinon.stub()
+      store: sinon.stub(),
+      get: sinon.stub()
     };
     mockEntityBuilder = {
       validateAsset: sinon.stub(),
@@ -46,6 +47,12 @@ describe('Data Model Engine', () => {
       expect(mockIdentityManager.createKeyPair).to.have.been.called;
       expect(mockAccountRepository.store).to.have.been.calledWith(pkPair);
     });
+
+    it('gets a account data from accountRepository', async () => {      
+      mockAccountRepository.get.returns(pkPair);
+      expect(await modelEngine.getAccount()).to.eq(pkPair);
+      expect(mockAccountRepository.get).to.have.been.called;
+    });    
   });
 
   describe('creating an asset', () => {
