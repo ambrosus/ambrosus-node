@@ -2,7 +2,7 @@ import chai from 'chai';
 import chaiHttp from 'chai-http';
 import chaiAsPromissed from 'chai-as-promised';
 import Aparatus from '../helpers/aparatus';
-import {createAccountRequest, accountWithSecret} from '../fixtures/account';
+import {createAccountRequest} from '../fixtures/account';
 
 chai.use(chaiHttp);
 chai.use(chaiAsPromissed);

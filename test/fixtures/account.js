@@ -16,7 +16,7 @@ const accountWithSecret = {
 };
 
 const account = {
-  address: '0xcb330742f75cceb58f585cA8DFD95a476AB5D616',
+  address: '0xcb330742f75cceb58f585cA8DFD95a476AB5D616'
 };
 
 export {createAccountRequest, accountWithSecret, account};
