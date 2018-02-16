@@ -13,8 +13,6 @@ describe('Accounts - Integrations', async () => {
   let aparatus;
   let account;
 
-
-
   before(async () => {
     aparatus = new Aparatus();
     await aparatus.start();
