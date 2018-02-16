@@ -10,7 +10,7 @@ chai.use(sinonChai);
 const {expect} = chai;
 
 describe('Presigner middleware', () => {
-  const correctSignature = '0x12345678';
+  const exampleSignature = '0x12345678';
   const exampleData = {
     content: {
       idData: {
@@ -38,7 +38,7 @@ describe('Presigner middleware', () => {
     });
     response = httpMocks.createResponse();
 
-    mockIdentityManager.sign.returns(correctSignature);
+    mockIdentityManager.sign.returns(exampleSignature);
   });
 
   it('adds signature if authorization header with a secret provided', () => {
@@ -46,8 +46,9 @@ describe('Presigner middleware', () => {
     configuredMiddleware(request, response, next);
     
     expect(request.body.content).to.include.key('signature');
-    expect(request.body.content.signature).to.equal(correctSignature);
+    expect(request.body.content.signature).to.equal(exampleSignature);
     expect(next).to.be.calledOnce;
+    expect(mockIdentityManager.sign).to.have.been.called;
   });
 
   it('does nothing if no authorization header with a secret was provided', () => {

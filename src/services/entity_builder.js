@@ -26,4 +26,24 @@ export default class EntityBuilder {
   regenerateAssetId(asset) {
     return put(asset, 'assetId', this.identityManager.calculateHash(asset.content));
   }
+
+  validateEvent(event) {
+    validatePathsNotEmpty(event, [
+      'eventId',
+      'content.signature',
+      'content.idData',      
+      'content.idData.assetId',
+      'content.idData.createdBy',
+      'content.idData.timestamp',
+      'content.idData.dataHash',
+      'content.data'
+    ]);
+    validateFieldsConstrainedToSet(event, ['content', 'eventId']);
+
+    this.identityManager.validateSignature(event.content.idData.createdBy, event.content.signature, event.content.idData);
+  }
+
+  setEventBundle(asset, bundle) {
+    return put(asset, 'metadata.bundleId', bundle);
+  }
 }

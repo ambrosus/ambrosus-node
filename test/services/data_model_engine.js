@@ -4,8 +4,9 @@ import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import DataModelEngine from '../../src/services/data_model_engine';
-import {NotFoundError, ValidationError} from '../../src/errors/errors';
+import {NotFoundError, ValidationError, InvalidParametersError} from '../../src/errors/errors';
 
+import {createAsset, createEvent} from '../fixtures/asset_fixture_builder';
 import pkPair from '../fixtures/pk_pair';
 
 chai.use(sinonChai);
@@ -19,9 +20,13 @@ describe('Data Model Engine', () => {
   let mockEntityRepository = null;
   let mockAccountRepository = null;
 
-  const mockAsset = {one: 1};
+  let mockAsset;
+  let mockEvent;
 
   beforeEach(() => {
+    mockAsset = createAsset();
+    mockEvent = createEvent();
+
     mockIdentityManager = {
       createKeyPair: sinon.stub()
     };
@@ -32,11 +37,14 @@ describe('Data Model Engine', () => {
     mockEntityBuilder = {
       validateAsset: sinon.stub(),
       setAssetBundle: sinon.stub(),
-      regenerateAssetId: sinon.stub()
+      regenerateAssetId: sinon.stub(),
+      validateEvent: sinon.stub(),
+      setEventBundle: sinon.stub()
     };
     mockEntityRepository = {
       storeAsset: sinon.stub(),
-      getAsset: sinon.stub()
+      getAsset: sinon.stub(),
+      storeEvent: sinon.stub()
     };
     modelEngine = new DataModelEngine(mockIdentityManager, mockEntityBuilder, mockEntityRepository,
       mockAccountRepository);
@@ -67,7 +75,7 @@ describe('Data Model Engine', () => {
 
       expect(mockEntityBuilder.validateAsset).to.have.been.calledWith(mockAsset);
       expect(mockEntityBuilder.regenerateAssetId).to.have.been.calledWith(mockAsset);
-      expect(mockEntityBuilder.setAssetBundle).to.have.been.calledWith(mockAsset);
+      expect(mockEntityBuilder.setAssetBundle).to.have.been.calledWith(mockAsset, null);
       expect(mockEntityRepository.storeAsset).to.have.been.calledWith(mockAsset);
     });
 
@@ -92,6 +100,39 @@ describe('Data Model Engine', () => {
 
     it('throws if asset not found', async () => {
       await expect(modelEngine.getAsset('notexistingAsset')).to.be.rejectedWith(NotFoundError);
+    });
+  });
+
+  describe('creating an event', () => {
+    beforeEach(() => {
+      mockEntityBuilder.setEventBundle.returns(mockEvent);
+      mockEntityRepository.storeEvent.resolves();
+      mockEntityRepository.getAsset.resolves(mockAsset);
+    });
+
+    it('coordinates all services', async () => {
+      await expect(modelEngine.createEvent(mockEvent));
+
+      // validates
+      expect(mockEntityBuilder.validateEvent).to.have.been.calledWith(mockEvent);
+      // checks if target asset exists
+      expect(mockEntityRepository.getAsset).to.have.been.calledWith(mockEvent.content.idData.assetId);
+      // marks the event bundle as null -> not yet bundled
+      expect(mockEntityBuilder.setEventBundle).to.have.been.calledWith(mockEvent, null);
+      // stores in entity repository
+      expect(mockEntityRepository.storeEvent).to.have.been.calledWith(mockEvent);
+    });
+
+    it('validates with the Entity Builder and proxies the ValidationError', async () => {
+      mockEntityBuilder.validateEvent.throws(new ValidationError('an error'));
+
+      await expect(modelEngine.createEvent(mockEvent)).to.be.rejectedWith(ValidationError);
+    });
+
+    it('checks if target asset exists in Entity Repository', async () => {
+      mockEntityRepository.getAsset.resolves(null);
+
+      await expect(modelEngine.createEvent(mockEvent)).to.be.rejectedWith(InvalidParametersError);
     });
   });
 });

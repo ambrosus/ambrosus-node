@@ -1,8 +1,8 @@
-import {NotFoundError} from '../errors/errors';
+import {NotFoundError, InvalidParametersError} from '../errors/errors';
 
 export default class DataModelEngine {
   constructor(identityManager, entityBuilder, entityRepository, accountRepository) {
-    this.identityManager = identityManager;    
+    this.identityManager = identityManager;
     this.entityBuilder = entityBuilder;
     this.entityRepository = entityRepository;
     this.accountRepository = accountRepository;
@@ -20,12 +20,12 @@ export default class DataModelEngine {
 
   async createAsset(asset) {
     this.entityBuilder.validateAsset(asset);
-    
+
     let augmentedAsset = this.entityBuilder.regenerateAssetId(asset);
     augmentedAsset = this.entityBuilder.setAssetBundle(augmentedAsset, null);
 
     await this.entityRepository.storeAsset(augmentedAsset);
-    
+
     return augmentedAsset;
   }
 
@@ -35,5 +35,17 @@ export default class DataModelEngine {
       throw new NotFoundError(`No asset with id = ${assetId} found`);
     }
     return asset;
+  }
+
+  async createEvent(event) {
+    this.entityBuilder.validateEvent(event);
+
+    if (await this.entityRepository.getAsset(event.content.idData.assetId) === null) {
+      throw new InvalidParametersError(`Target asset with id=${event.content.idData.assetId} doesn't exist`);
+    }
+    
+    const augmentedEvent = this.entityBuilder.setEventBundle(event, null);
+    await this.entityRepository.storeEvent(augmentedEvent);
+    return augmentedEvent;
   }
 }
