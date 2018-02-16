@@ -130,7 +130,7 @@ describe('Data Model Engine', () => {
     });
 
     it('checks if target asset exists in Entity Repository', async () => {
-      mockEntityRepository.getAsset.throws(new NotFoundError());
+      mockEntityRepository.getAsset.resolves(null);
 
       await expect(modelEngine.createEvent(mockEvent)).to.be.rejectedWith(InvalidParametersError);
     });

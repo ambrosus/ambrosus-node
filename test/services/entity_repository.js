@@ -17,22 +17,33 @@ describe('Entity Repository', () => {
     storage = new EntityRepository(db);
   });
 
-  it('Assets', async () => {
-    const exmapleAssetId = '0x123456';
-    const exampleAsset = put(createAsset(), 'assetId', exmapleAssetId);
-    await storage.storeAsset(exampleAsset);
-    await expect(storage.getAsset(exmapleAssetId)).to.eventually.be.deep.equal(exampleAsset);
-    const otherAssetId = '0x33333';
-    await expect(storage.getAsset(otherAssetId)).to.eventually.be.equal(null);
+  describe('Assets', () => {
+    it('db round trip works', async () => {
+      const exmapleAssetId = '0x123456';
+      const exampleAsset = put(createAsset(), 'assetId', exmapleAssetId);
+      await storage.storeAsset(exampleAsset);
+      await expect(storage.getAsset(exmapleAssetId)).to.eventually.be.deep.equal(exampleAsset);
+    });
+
+    it('returns null for non-existing asset', async () => {
+      const otherAssetId = '0x33333';
+      await expect(storage.getAsset(otherAssetId)).to.eventually.be.equal(null);
+    });
   });
 
-  it('Events', async () => {
-    const exampleEventId = '0x123456';
-    const exampleEvent = put(createEvent(), 'eventId', exampleEventId);
-    await storage.storeEvent(exampleEvent);
-    await expect(storage.getEvent(exampleEventId)).to.eventually.be.deep.equal(exampleEvent);
-    const otherEventId = '0x33333';
-    await expect(storage.getEvent(otherEventId)).to.eventually.be.equal(null);
+
+  describe('Events', () => {
+    it('db round trip works', async () => {
+      const exampleEventId = '0x123456';
+      const exampleEvent = put(createEvent(), 'eventId', exampleEventId);
+      await storage.storeEvent(exampleEvent);
+      await expect(storage.getEvent(exampleEventId)).to.eventually.be.deep.equal(exampleEvent);
+    });
+
+    it('returns null for non-existing event', async () => {
+      const otherEventId = '0x33333';
+      await expect(storage.getEvent(otherEventId)).to.eventually.be.equal(null);
+    });
   });
 
   afterEach(async () => {

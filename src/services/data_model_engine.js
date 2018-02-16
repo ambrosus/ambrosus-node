@@ -40,12 +40,10 @@ export default class DataModelEngine {
   async createEvent(event) {
     this.entityBuilder.validateEvent(event);
 
-    try {
-      await this.entityRepository.getAsset(event.content.idData.assetId);
-    } catch (err) {
+    if (await this.entityRepository.getAsset(event.content.idData.assetId) === null) {
       throw new InvalidParametersError(`Target asset with id=${event.content.idData.assetId} doesn't exist`);
     }
-
+    
     const augmentedEvent = this.entityBuilder.setEventBundle(event, null);
     await this.entityRepository.storeEvent(augmentedEvent);
     return augmentedEvent;
