@@ -91,12 +91,35 @@ paths:
             $ref: "#/definitions/Asset"
         400:
           description: "Invalid input"
+  /assets/{assetId}:
+    get:
+      tags:
+      - "Asset"
+      summary: "Find an asset by Id"
+      description: |
+        Finds asset with provided assetId in the system.
+      operationId: "fetchAsset"
+      produces:
+        - "application/json"
+      parameters:
+      - name: "assetId"
+        in: "path"
+        description: "ID of an asset"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Asset with provided assetId"
+          schema:
+            $ref: "#/definitions/Asset"
+        404:
+          description: "No asset with such assetId found"
   /assets/{assetId}/events:
     post:
       tags:
       - "Events"
       summary: "Create an event"
-      description: | 
+      description: |
         Places (after intensive validations) the provided event object into the system.
       operationId: "createEvent"
       consumes:
@@ -168,7 +191,7 @@ definitions:
         sequenceNumber:
           type: "integer"
           example: 3
-  
+
   Event:
     type: "object"
     properties:
@@ -187,7 +210,7 @@ definitions:
             $ref: "#/definitions/EventIdData"
           data:
             type: "object"
-     
+
   EventIdData:
     type: "object"
     properties:
