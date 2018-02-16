@@ -28,11 +28,19 @@ tags:
     
 - name: "Asset"
   description: |
-    An asset is a primary element moving through a supply chain. It can represent an ingredient, product, package of products or any other type of container.
+    Assets are primary elements moving through a supply chain. The are the nouns of the system. They can represent an ingredient, product, package of products or any other type of container.
 
-    Assets on they own function only as a handle for a Event stream. Becaouse of this they only contain an idData structure holding minimal infomation about their creation.
+    An Asset on its own function only as a handle for a Event stream. Because of this, they only contain an `idData` structure holding minimal infomation about their creation.
 
-    Assets are identified by an `assetId` field which is a sha3 hash calculated from the `content` field.  
+    Assets are identified by an `assetId` field which is a sha3 hash calculated from the `content` field.
+
+- name: "Event"
+  description: |
+    Events represent changes to the state of an Asset. They are the verbs and adjectives of the system. They can represent for example: location changes, sensor readings, packacking into bigger boxes, mixing into other products, etc.
+
+    An Event is strictly bound to it's Asset. They containt a `idData` structure holding information about their creation, and a `data` structure holding the actual data. This separation is important as the visibility of the `data` field can be restricted.
+
+    Events are identified by an `eventId` field which is a sha3 hash calculated from the `content` field.
 
 schemes:
 - "https"
@@ -83,6 +91,40 @@ paths:
             $ref: "#/definitions/Asset"
         400:
           description: "Invalid input"
+  /assets/{assetId}/events:
+    post:
+      tags:
+      - "Events"
+      summary: "Create an event"
+      description: | 
+        Places (after intensive validations) the provided event object into the system.
+      operationId: "createEvent"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        name: "assetId"
+        required: true
+        type: string
+      - in: body
+        name: "data"
+        description: "Event object to be added to the system"
+        required: true
+        schema:
+          $ref: "#/definitions/Event"
+      - in: header
+        name: "Authorization"
+        type: "string"
+        description: "If present, will instruct the server to sign the event before adding"
+      responses:
+        201:
+          description: "Created"
+          schema:
+            $ref: "#/definitions/Event"
+        400:
+          description: "Invalid input"
 
 definitions:
   Account:
@@ -126,3 +168,42 @@ definitions:
         sequenceNumber:
           type: "integer"
           example: 3
+  
+  Event:
+    type: "object"
+    properties:
+      eventId:
+        type: "string"
+        format: "int64"
+        example: "0xc5cfd04.....30755ed65"
+      contents:
+        type: "object"
+        properties:
+          signature:
+            type: "string"
+            format: "int64"
+            example: "0x30755ed65396facf86c53e6...65c5cfd04be400"
+          idData:
+            $ref: "#/definitions/EventIdData"
+          data:
+            type: "object"
+     
+  EventIdData:
+    type: "object"
+    properties:
+        assetId:
+          type: "string"
+          format: "int64"
+          example: "0xc5cfd04.....30755ed65"
+        createdBy:
+          type: "string"
+          format: "int64"
+          example: "0x162a44701727a31f457a53801cd181cd38eb5bbd"
+        timestamp:
+          type: "integer"
+          format: "timestamp"
+          example: 1503424923
+        dataHash:
+          type: "string"
+          format: "int64"
+          example: "0x01cd181cd38eb5bbd162a44701727a31f457a538"
