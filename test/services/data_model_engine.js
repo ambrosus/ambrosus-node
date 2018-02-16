@@ -37,7 +37,6 @@ describe('Data Model Engine', () => {
     mockEntityBuilder = {
       validateAsset: sinon.stub(),
       setAssetBundle: sinon.stub(),
-      regenerateAssetId: sinon.stub(),
       validateEvent: sinon.stub(),
       setEventBundle: sinon.stub()
     };
@@ -66,15 +65,13 @@ describe('Data Model Engine', () => {
   });
 
   describe('creating an asset', () => {
-    it('validates with Entity Builder and sends to Entity Storage', async () => {
-      mockEntityBuilder.regenerateAssetId.returns(mockAsset);
+    it('validates with Entity Builder and sends to Entity Storage', async () => { 
       mockEntityBuilder.setAssetBundle.returns(mockAsset);
       mockEntityRepository.storeAsset.resolves();
 
       await expect(modelEngine.createAsset(mockAsset));
 
       expect(mockEntityBuilder.validateAsset).to.have.been.calledWith(mockAsset);
-      expect(mockEntityBuilder.regenerateAssetId).to.have.been.calledWith(mockAsset);
       expect(mockEntityBuilder.setAssetBundle).to.have.been.calledWith(mockAsset, null);
       expect(mockEntityRepository.storeAsset).to.have.been.calledWith(mockAsset);
     });

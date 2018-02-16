@@ -21,8 +21,7 @@ export default class DataModelEngine {
   async createAsset(asset) {
     this.entityBuilder.validateAsset(asset);
 
-    let augmentedAsset = this.entityBuilder.regenerateAssetId(asset);
-    augmentedAsset = this.entityBuilder.setAssetBundle(augmentedAsset, null);
+    const augmentedAsset = this.entityBuilder.setAssetBundle(asset, null);
 
     await this.entityRepository.storeAsset(augmentedAsset);
 

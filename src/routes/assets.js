@@ -47,6 +47,7 @@ const assetRouter = (identityManager, modelEngine, linkHelper) => {
   router.post('/',
     bodyParser.json(),
     presignerMiddleware(identityManager),
+    prehasherMiddleware(identityManager, 'content', 'assetId'),
     asyncMiddleware(createAssetHandler(modelEngine, linkHelper)));
 
   router.get('/:assetId',

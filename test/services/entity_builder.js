@@ -36,7 +36,7 @@ describe('Entity Builder', () => {
   });
 
   describe('validating an asset', () => {
-    for (const field of ['content', 'content.signature', 'content.idData', 'content.idData.createdBy', 'content.idData.timestamp', 'content.idData.sequenceNumber']) {
+    for (const field of ['assetId', 'content', 'content.signature', 'content.idData', 'content.idData.createdBy', 'content.idData.timestamp', 'content.idData.sequenceNumber']) {
       // eslint-disable-next-line no-loop-func
       it(`throws if the ${field} field is missing`, () => {
         const brokenAssset = pick(exampleAsset, field);
@@ -69,15 +69,6 @@ describe('Entity Builder', () => {
   it('setting the bundle Id for an asset', () => {
     const modifiedAsset = entityBuilder.setAssetBundle(exampleAsset, 'abc');
     expect(modifiedAsset.metadata.bundleId).to.equal('abc');
-  });
-
-  it('regenerating assetId', () => {
-    const mockHash = 'xyz';
-    mockIdentityManager.calculateHash.returns(mockHash);
-
-    const regenerated = entityBuilder.regenerateAssetId(exampleAsset);
-    expect(mockIdentityManager.calculateHash).to.have.been.calledWith(exampleAsset.content);
-    expect(regenerated.assetId).to.equal(mockHash);
   });
 
   describe('validating an event', () => {

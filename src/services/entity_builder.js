@@ -8,6 +8,7 @@ export default class EntityBuilder {
 
   validateAsset(asset) {
     validatePathsNotEmpty(asset, [
+      'assetId',
       'content.idData',
       'content.signature',
       'content.idData.createdBy',
@@ -21,10 +22,6 @@ export default class EntityBuilder {
 
   setAssetBundle(asset, bundle) {
     return put(asset, 'metadata.bundleId', bundle);
-  }
-
-  regenerateAssetId(asset) {
-    return put(asset, 'assetId', this.identityManager.calculateHash(asset.content));
   }
 
   validateEvent(event) {
