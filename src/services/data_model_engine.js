@@ -47,4 +47,12 @@ export default class DataModelEngine {
     await this.entityRepository.storeEvent(augmentedEvent);
     return augmentedEvent;
   }
+
+  async getEvent(eventId) {
+    const event = await this.entityRepository.getEvent(eventId);
+    if (event === null) {
+      throw new NotFoundError(`No event with id = ${eventId} found`);
+    }
+    return event;
+  }
 }

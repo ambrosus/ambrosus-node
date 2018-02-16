@@ -8,11 +8,20 @@ import {put} from '../utils/dict_utils';
 import {ValidationError} from '../errors/errors';
 
 
-const addLinkToMetadata = (asset, linkHelper) => put(asset, 'metadata.link', linkHelper.linkForAsset(asset.assetId));
+const addLinkToAssetMetadata = (asset, linkHelper) => put(
+  asset, 
+  'metadata.link', 
+  linkHelper.linkForAsset(asset.assetId)
+);
+const addLinkToEventMetadata = (event, linkHelper) => put(
+  event, 
+  'metadata.link', 
+  linkHelper.linkForEvent(event.content.idData.assetId, event.eventId)
+);
 
 export const createAssetHandler = (modelEngine, linkHelper) => async (req, res) => {
   const createdAsset = await modelEngine.createAsset(req.body);
-  const createdAssetWithMetadata = addLinkToMetadata(createdAsset, linkHelper);
+  const createdAssetWithMetadata = addLinkToAssetMetadata(createdAsset, linkHelper);
 
   res.status(201)
     .type('json')
@@ -21,7 +30,7 @@ export const createAssetHandler = (modelEngine, linkHelper) => async (req, res) 
 
 export const fetchAssetHandler = (modelEngine, linkHelper) => async (req, res) => {
   const asset = await modelEngine.getAsset(req.params.assetId);
-  const assetWithMetadata = addLinkToMetadata(asset, linkHelper);
+  const assetWithMetadata = addLinkToAssetMetadata(asset, linkHelper);
   res.status(200)
     .type('json')
     .send(JSON.stringify(assetWithMetadata));
@@ -33,12 +42,20 @@ export const createEventHandler = (modelEngine, linkHelper) => async (req, res) 
   }
   
   const createdEvent = await modelEngine.createEvent(req.body);
-  const createdEventWithMetadata = put(createdEvent, 'metadata.link', linkHelper.linkForEvent(createdEvent.content.idData.assetId, createdEvent.eventId));
+  const createdEventWithMetadata = addLinkToEventMetadata(createdEvent, linkHelper);
 
   res.status(201)
     .type('json')
     .send(JSON.stringify(createdEventWithMetadata));
   res.status(201).send();
+};
+
+export const fetchEventHandler = (modelEngine, linkHelper) => async (req, res) => {
+  const event = await modelEngine.getEvent(req.params.eventId);
+  const eventWithMetadata = addLinkToEventMetadata(event, linkHelper);
+  res.status(200)
+    .type('json')
+    .send(JSON.stringify(eventWithMetadata));
 };
 
 const assetRouter = (identityManager, modelEngine, linkHelper) => {
@@ -48,7 +65,8 @@ const assetRouter = (identityManager, modelEngine, linkHelper) => {
     bodyParser.json(),
     presignerMiddleware(identityManager),
     prehasherMiddleware(identityManager, 'content', 'assetId'),
-    asyncMiddleware(createAssetHandler(modelEngine, linkHelper)));
+    asyncMiddleware(createAssetHandler(modelEngine, linkHelper))
+  );
 
   router.get('/:assetId',
     asyncMiddleware(fetchAssetHandler(modelEngine, linkHelper))
@@ -59,7 +77,12 @@ const assetRouter = (identityManager, modelEngine, linkHelper) => {
     prehasherMiddleware(identityManager, 'content.data', 'content.idData.dataHash'),
     presignerMiddleware(identityManager),
     prehasherMiddleware(identityManager, 'content', 'eventId'),
-    asyncMiddleware(createEventHandler(modelEngine, linkHelper)));
+    asyncMiddleware(createEventHandler(modelEngine, linkHelper))
+  );
+
+  router.get('/:assetId/events/:eventId',
+    asyncMiddleware(fetchEventHandler(modelEngine, linkHelper))
+  );
 
   return router;
 };

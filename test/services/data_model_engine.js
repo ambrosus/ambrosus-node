@@ -43,7 +43,8 @@ describe('Data Model Engine', () => {
     mockEntityRepository = {
       storeAsset: sinon.stub(),
       getAsset: sinon.stub(),
-      storeEvent: sinon.stub()
+      storeEvent: sinon.stub(),
+      getEvent: sinon.stub()
     };
     modelEngine = new DataModelEngine(mockIdentityManager, mockEntityBuilder, mockEntityRepository,
       mockAccountRepository);
@@ -90,13 +91,17 @@ describe('Data Model Engine', () => {
       mockEntityRepository.getAsset.withArgs(exampleAssetId).resolves(mockAsset);
     });
 
-    it('gets asset by assetId', async () => {
+    it('asks the respository for the asset', async () => {
       const asset = await modelEngine.getAsset(exampleAssetId);
+
+      expect(mockEntityRepository.getAsset).to.have.been.calledWith(exampleAssetId);
       expect(asset).to.deep.equal(mockAsset);
     });
 
     it('throws if asset not found', async () => {
       await expect(modelEngine.getAsset('notexistingAsset')).to.be.rejectedWith(NotFoundError);
+
+      expect(mockEntityRepository.getAsset).to.have.been.calledWith('notexistingAsset');
     });
   });
 
@@ -130,6 +135,27 @@ describe('Data Model Engine', () => {
       mockEntityRepository.getAsset.resolves(null);
 
       await expect(modelEngine.createEvent(mockEvent)).to.be.rejectedWith(InvalidParametersError);
+    });
+  });
+
+  describe('getting an event by id', () => {
+    const exampleEventId = '0x123';
+    beforeEach(() => {
+      mockEntityRepository.getEvent.resolves(null);
+      mockEntityRepository.getEvent.withArgs(exampleEventId).resolves(mockEvent);
+    });
+
+    it('asks the respository for the event', async () => {
+      const asset = await modelEngine.getEvent(exampleEventId);
+
+      expect(mockEntityRepository.getEvent).to.have.been.calledWith(exampleEventId);
+      expect(asset).to.deep.equal(mockEvent);
+    });
+
+    it('throws if event not found', async () => {
+      await expect(modelEngine.getEvent('notexistingEvent')).to.be.rejectedWith(NotFoundError);
+
+      expect(mockEntityRepository.getEvent).to.have.been.calledWith('notexistingEvent');
     });
   });
 });
