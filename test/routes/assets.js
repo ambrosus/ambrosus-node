@@ -4,7 +4,7 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import {createAssetHandler, fetchAssetHandler, createEventHandler} from '../../src/routes/assets';
+import {createAssetHandler, fetchAssetHandler, createEventHandler, fetchEventHandler} from '../../src/routes/assets';
 import {put} from '../../src/utils/dict_utils';
 import {createAsset, createEvent} from '../fixtures/asset_fixture_builder';
 
@@ -24,7 +24,8 @@ describe('Assets', () => {
     mockModelEngine = {
       createAsset: sinon.stub(),
       getAsset: sinon.stub(),
-      createEvent: sinon.stub()
+      createEvent: sinon.stub(),
+      getEvent: sinon.stub()
     };
     mockLinkHelper = {
       linkForAsset: sinon.stub(),
@@ -75,7 +76,7 @@ describe('Assets', () => {
       injectedHandler = fetchAssetHandler(mockModelEngine, mockLinkHelper);
     });
 
-    it('fetching asset', async () => {
+    it('asks the model engine for the asset and augments metadata using link helper', async () => {
       req.params.assetId = assetId;
       await injectedHandler(req, res);
 
@@ -121,6 +122,34 @@ describe('Assets', () => {
     it('fails if the path assetId differs from the one in content.idData.assetId', async () => {
       req.params.assetId = '0x3333';
       await expect(injectedHandler(req, res)).to.eventually.be.rejectedWith(ValidationError);
+    });
+  });
+
+  describe('fetching event', () => {
+    const eventId = 'eventid';
+    let mockEvent;
+    let injectedHandler;
+
+    beforeEach(() => {
+      mockEvent = createEvent();
+      mockModelEngine.getEvent.resolves(put(mockEvent, 'eventId', eventId));
+      mockLinkHelper.linkForEvent.returns('qwerty');
+      injectedHandler = fetchEventHandler(mockModelEngine, mockLinkHelper);
+    });
+
+    it('asks the model engine for the event and augments metadata using link helper', async () => {
+      req.params.assetId = mockEvent.content.idData.assetId;
+      req.params.eventId = eventId;
+      await injectedHandler(req, res);
+
+      expect(mockModelEngine.getEvent).to.have.been.calledWith(eventId);
+      expect(mockLinkHelper.linkForEvent).to.have.been.calledWith(mockEvent.content.idData.assetId, eventId);
+
+      expect(res._getStatusCode()).to.eq(200);
+      expect(res._isJSON()).to.be.true;
+      const returnedData = JSON.parse(res._getData());
+
+      expect(returnedData.metadata.link).to.be.equal(`qwerty`);
     });
   });
 });

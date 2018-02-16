@@ -72,7 +72,7 @@ describe('Assets - Integrations', () => {
       asset = response.body;
     });
 
-    it('should get asset by id', async () => {
+    it('works for existing asset', async () => {
       const response = await aparatus.request()
         .get(`/assets/${asset.assetId}`);
       expect(response.body).to.deep.equal(asset);
@@ -135,6 +135,38 @@ describe('Assets - Integrations', () => {
       await expect(request)
         .to.eventually.be.rejected
         .and.have.property('status', 400);
+    });
+  });
+
+  describe('fetching event', () => {
+    let asset;
+    let event;
+
+    beforeEach(async () => {
+      const signedAsset = createFullAsset(aparatus.identityManager);
+      const addAssetResponse = await aparatus.request()
+        .post('/assets')
+        .send(signedAsset);
+      asset = addAssetResponse.body;
+
+      const signedEvent = createFullEvent(aparatus.identityManager, {assetId: asset.assetId}, {});
+      const addEventResponse = await aparatus.request()
+        .post(`/assets/${asset.assetId}/events`)
+        .send(signedEvent);
+      event = addEventResponse.body;
+    });
+
+    it('works for existing event', async () => {
+      const response = await aparatus.request()
+        .get(`/assets/${asset.assetId}/events/${event.eventId}`);
+      expect(response.body).to.deep.equal(event);
+    });
+
+    it('should return 404 if asset with that id doesn\'t exist', async () => {
+      const request = aparatus.request()
+        .get(`/assets/${asset.assetId}/events/nonexistingEvent`);
+      await expect(request).to.eventually.be.rejected
+        .and.have.property('status', 404);
     });
   });
 
