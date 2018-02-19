@@ -1,5 +1,5 @@
 import Server from '../../src/server';
-import {connectToMongo} from '../../src/utils/db_utils';
+import {connectToMongo, cleanDatabase} from '../../src/utils/db_utils';
 import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
 import AccountRepository from '../../src/services/account_repository';
@@ -29,11 +29,16 @@ export default class Aparatus {
 
     this.server = new Server(this.modelEngine, this.linkHelper);
     this.server.start();
+      
     return this;
   }
 
   request() {
     return chai.request(this.server.server);
+  }
+  
+  async cleanDB() {
+    return cleanDatabase(this.db);
   }
 
   async stop() {

@@ -8,6 +8,7 @@ import {NotFoundError, ValidationError, InvalidParametersError} from '../../src/
 
 import {createAsset, createEvent} from '../fixtures/asset_fixture_builder';
 import pkPair from '../fixtures/pk_pair';
+import {createAccountRequest, adminAccount} from '../fixtures/account';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -28,7 +29,8 @@ describe('Data Model Engine', () => {
     mockEvent = createEvent();
 
     mockIdentityManager = {
-      createKeyPair: sinon.stub()
+      createKeyPair: sinon.stub(),
+      validateSignature: sinon.stub()
     };
     mockAccountRepository = {
       store: sinon.stub(),
@@ -50,23 +52,33 @@ describe('Data Model Engine', () => {
       mockAccountRepository);
   });
 
-  describe('creating an account', () => {
-    it('creates key pair with identityManager and stores with accountRepository', async () => {
+  describe('an account', () => {
+    it('creates an account with accountRepository', async () => {
+      const request = createAccountRequest();
+      mockAccountRepository.get.returns(adminAccount);
       mockIdentityManager.createKeyPair.returns(pkPair);
-      expect(await modelEngine.createAccount()).to.eq(pkPair);
-      expect(mockIdentityManager.createKeyPair).to.have.been.called;
+      expect(await modelEngine.createAccount(request.content.idData, request.content.signature)).to.eq(pkPair);
+      expect(mockIdentityManager.validateSignature).to.have.been.called;
       expect(mockAccountRepository.store).to.have.been.calledWith(pkPair);
+      expect(mockAccountRepository.get).to.have.been.calledWith(request.content.idData.createdBy);
     });
 
-    it('gets a account data from accountRepository', async () => {      
+    it('throws error if signatire is wrong', async () => {
+      const request = createAccountRequest();
+      mockIdentityManager.validateSignature.throws(new ValidationError('an error'));
+      await expect(modelEngine.createAccount(request.content.idData, request.content.signature))
+        .to.be.rejectedWith(ValidationError);
+    });
+
+    it('gets a account data from accountRepository', async () => {
       mockAccountRepository.get.returns(pkPair);
       expect(await modelEngine.getAccount()).to.eq(pkPair);
       expect(mockAccountRepository.get).to.have.been.called;
-    });    
+    });
   });
 
   describe('creating an asset', () => {
-    it('validates with Entity Builder and sends to Entity Storage', async () => { 
+    it('validates with Entity Builder and sends to Entity Storage', async () => {
       mockEntityBuilder.setAssetBundle.returns(mockAsset);
       mockEntityRepository.storeAsset.resolves();
 

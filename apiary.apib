@@ -61,6 +61,11 @@ paths:
           description: "Created."
           schema:
             $ref: "#/definitions/Account"
+        400:
+          description: "Invalid input (e.g. invalid signature)"
+        404:
+          description: "CreatedBy account not found"
+
   /assets:
     post:
       tags:

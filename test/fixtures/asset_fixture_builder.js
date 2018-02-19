@@ -1,5 +1,6 @@
 import {put, get} from '../../src/utils/dict_utils';
 import pkPair from './pk_pair';
+import addSignature from './add_signature';
 
 export const createAsset = (fields) => ({
   content: {
@@ -26,11 +27,6 @@ export const createEvent = (fields, data) => ({
     }
   }
 });
-
-export const addSignature = (identityManager, asset, secret = pkPair.secret) => {
-  const signature = identityManager.sign(secret, asset.content.idData);
-  return put(asset, 'content.signature', signature);
-};
 
 const addHash = (identityManager, object, fromPath, toPath) => {
   const hash = identityManager.calculateHash(get(object, fromPath));
