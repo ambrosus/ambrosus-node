@@ -10,6 +10,7 @@ export default (err, req, res, next) => {
   } else if (err instanceof NotFoundError) {
     res.status(404).send({reason: err.message});
   } else {
+    console.log(err.message);
     res.status(500).send({reason: err.message});
   }
   next();

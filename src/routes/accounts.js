@@ -13,13 +13,22 @@ const getAccountHandler = (dataModelEngine) => async (req, res) => {
   res.status(200).send({content});
 };
 
+const updatePermissions = (dataModelEngine) => async (req, res) => {
+  const content = await dataModelEngine.updatePermissions(req.body.idData, req.body.signature);
+  res.status(200).send({content});
+};
+
 export default (identityManager, dataModelEngine) => {
   const router = new express.Router();
-  router.post('/', 
-    bodyParser.json(),  
-    presignerMiddleware(identityManager),  
+  router.post('/',
+    bodyParser.json(),
+    presignerMiddleware(identityManager),
     asyncMiddleware(createAccountHandler(dataModelEngine)));
   router.get('/:id', asyncMiddleware(getAccountHandler(dataModelEngine)));
+  router.put('/permissions',
+    bodyParser.json(),
+    presignerMiddleware(identityManager, 'idData', 'signature'),
+    asyncMiddleware(updatePermissions(dataModelEngine)));
   return router;
 };
 

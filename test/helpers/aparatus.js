@@ -1,5 +1,5 @@
 import Server from '../../src/server';
-import {connectToMongo, cleanDatabase} from '../../src/utils/db_utils';
+import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
 import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
 import AccountRepository from '../../src/services/account_repository';
@@ -8,6 +8,7 @@ import EntityRepository from '../../src/services/entity_repository';
 import DataModelEngine from '../../src/services/data_model_engine';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
+import AccountAccessDefinitions from '../../src/services/account_access_definitions';
 
 chai.use(chaiHttp);
 
@@ -24,7 +25,9 @@ export default class Aparatus {
     this.entityBuilder = new EntityBuilder(this.identityManager);
     this.entityRepository = new EntityRepository(db);
     this.accountRepository = new AccountRepository(db);
-    this.modelEngine = new DataModelEngine(this.identityManager, this.entityBuilder, this.entityRepository, this.accountRepository);
+    this.accountAccessDefinitions = new AccountAccessDefinitions(this.accountRepository);
+    this.modelEngine = new DataModelEngine(this.identityManager, this.entityBuilder, this.entityRepository,
+      this.accountRepository, this.accountAccessDefinitions);
 
 
     this.server = new Server(this.modelEngine);

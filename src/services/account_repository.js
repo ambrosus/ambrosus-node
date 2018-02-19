@@ -1,3 +1,5 @@
+import {NotFoundError} from '../errors/errors';
+
 export default class AccountRepository {
   constructor(db) {
     this.db = db;
@@ -15,5 +17,24 @@ export default class AccountRepository {
 
   async count() {
     return this.db.collection('accounts').count();
-  }  
+  }
+
+  async setPermissions(address, permissions) {
+    const result = await this.db.collection('accounts')
+      .findOneAndUpdate({address}, {$set: {permissions}});
+    if (!result.value) {
+      throw new NotFoundError(`User with address ${address} not found`);
+    }
+  }
+
+  async getPermissions(address) {
+    const record = await this.get(address);
+    if (!record) {
+      throw new NotFoundError(`User with address ${address} not found`);
+    }
+    if (!record.permissions) {
+      return [];
+    }
+    return record.permissions;
+  }
 }

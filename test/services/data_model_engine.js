@@ -4,7 +4,13 @@ import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import DataModelEngine from '../../src/services/data_model_engine';
-import {NotFoundError, ValidationError, InvalidParametersError, PermissionError} from '../../src/errors/errors';
+import {
+  AuthenticationError,
+  InvalidParametersError,
+  NotFoundError,
+  PermissionError,
+  ValidationError
+} from '../../src/errors/errors';
 
 
 import {createAsset, createEvent} from '../fixtures/assets_events';
@@ -14,6 +20,7 @@ import pkPair from '../fixtures/pk_pair';
 import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
 import ScenarioBuilder from '../fixtures/scenario_builder';
+import {pick, put} from '../../src/utils/dict_utils';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -25,6 +32,7 @@ describe('Data Model Engine', () => {
   let mockEntityBuilder = null;
   let mockEntityRepository = null;
   let mockAccountRepository = null;
+  let mockAccountAccessDefinitions = null;
 
   let mockAsset;
   let mockEvent;
@@ -63,19 +71,32 @@ describe('Data Model Engine', () => {
       findEvents: sinon.stub(),
       countEvents: sinon.stub()
     };
+    mockAccountAccessDefinitions = {
+      checkPermission: sinon.stub(),
+      createAdminAccountPermissions: sinon.stub(),
+      setPermissions: sinon.stub()
+    };
     modelEngine = new DataModelEngine(mockIdentityManager, mockEntityBuilder, mockEntityRepository,
-      mockAccountRepository);
+      mockAccountRepository, mockAccountAccessDefinitions);
   });
 
   describe('Create account', () => {
-    it('validatest with mockIdentityManager and delegates to accountRepository', async () => {
+    it('validates with mockIdentityManager and delegates to accountRepository', async () => {
       const request = createAccountRequest();
+      mockAccountAccessDefinitions.checkPermission.resolves(true);
       mockAccountRepository.get.returns(adminAccount);
       mockIdentityManager.createKeyPair.returns(pkPair);
       expect(await modelEngine.createAccount(request.content.idData, request.content.signature)).to.eq(pkPair);
       expect(mockIdentityManager.validateSignature).to.have.been.called;
       expect(mockAccountRepository.store).to.have.been.calledWith(pkPair);
       expect(mockAccountRepository.get).to.have.been.calledWith(request.content.idData.createdBy);
+    });
+
+    it('throws PermissionError if account has no required permission', async () => {
+      const request = createAccountRequest();
+      mockAccountAccessDefinitions.checkPermission.resolves(false);
+      await expect(modelEngine.createAccount(request.content.idData, request.content.signature))
+        .to.eventually.be.rejectedWith(PermissionError);
     });
 
     it('throws ValidationError if signature is wrong', async () => {
@@ -97,6 +118,43 @@ describe('Data Model Engine', () => {
       mockAccountRepository.get.returns(null);
       await expect(modelEngine.getAccount())
         .to.eventually.be.rejectedWith(NotFoundError);
+    });
+  });
+
+  describe('Permissions', () => {
+    const exampleData = {
+      createdBy: '0x123',
+      address: '0x456',
+      permissions: ['a', 'b']
+    };
+
+    it('updates permissions', async () => {
+      const result = await modelEngine.updatePermissions(exampleData, 'signature');
+      expect(mockAccountAccessDefinitions.setPermissions)
+        .to.be.calledWith(exampleData.address, exampleData.permissions, exampleData.createdBy);
+      expect(result).to.deep.eq(pick(exampleData, 'createdBy'));
+    });
+
+    for (const field of [
+      'createdBy',
+      'address',
+      'permissions']) {
+      // eslint-disable-next-line no-loop-func
+      it(`throws if the ${field} field is missing`, async () => {
+        const brokenData = pick(exampleData, field);
+        await expect(modelEngine.updatePermissions(brokenData)).to.eventually.be.rejectedWith(ValidationError);
+      });
+    }
+
+    it('throws if permissions is not an array', async () => {
+      const brokenData = put(exampleData, 'permissions', 'aaa');
+      await expect(modelEngine.updatePermissions(brokenData)).to.eventually.be.rejectedWith(ValidationError);
+    });
+
+    it('throws error if signature is wrong', async () => {
+      mockIdentityManager.validateSignature.throws(new AuthenticationError('an error'));
+      await expect(modelEngine.createAccount(exampleData, 'signature'))
+        .to.be.rejectedWith(AuthenticationError);
     });
   });
 
@@ -215,8 +273,8 @@ describe('Data Model Engine', () => {
       const eventSet = await scenario.generateEvents(
         100,
         (inx) => ({
-          accountInx: 0, 
-          subjectInx: 0, 
+          accountInx: 0,
+          subjectInx: 0,
           fields: {timestamp: inx},
           data: {}
         })
@@ -233,3 +291,4 @@ describe('Data Model Engine', () => {
     });
   });
 });
+

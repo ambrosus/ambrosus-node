@@ -5,6 +5,7 @@ import EntityBuilder from './services/entity_builder';
 import EntityStorage from './services/entity_repository';
 import AccountRepository from './services/account_repository';
 import DataModelEngine from './services/data_model_engine';
+import AccountAccessDefinitions from './services/account_access_definitions';
 
 export default async function build() {
   const {db, client} = await connectToMongo();
@@ -13,6 +14,8 @@ export default async function build() {
   const entityBuilder = new EntityBuilder(identityManager);
   const entityRepository = new EntityStorage(db);
   const accountRepository = new AccountRepository(db);
-  const dataModelEngine = new DataModelEngine(identityManager, entityBuilder, entityRepository, accountRepository);
+  const accountAccessDefinitions = new AccountAccessDefinitions(accountRepository);
+  const dataModelEngine = new DataModelEngine(identityManager, entityBuilder, entityRepository, accountRepository,
+    accountAccessDefinitions);
   return {dataModelEngine, client};
 }

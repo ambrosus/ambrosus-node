@@ -94,7 +94,7 @@ describe('Identity manager', () => {
       const account2 = identityManager.createKeyPair();
       expect(account1.address).not.to.eq(account2.address);
     });
-  });    
+  });
 
   it('Calculating the hash of data', () => {
     // calculated from input using REPL

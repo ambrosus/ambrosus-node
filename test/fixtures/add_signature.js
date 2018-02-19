@@ -1,10 +1,11 @@
-import {put} from '../../src/utils/dict_utils';
+import {get, put} from '../../src/utils/dict_utils';
 import pkPair from './pk_pair';
 
-const addSignature = (identityManager, entity, secret = pkPair.secret) => {
-  const signature = identityManager.sign(secret, entity.content.idData);
+const addSignature = (identityManager, entity, secret = pkPair.secret, signaturePath = 'content.signature',
+  dataPath = 'content.idData') => {
+  const signature = identityManager.sign(secret, get(entity, dataPath));
   return put(entity, {
-    'content.signature': signature
+    [signaturePath]: signature
   });
 };
 
