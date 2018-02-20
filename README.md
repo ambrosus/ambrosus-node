@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.com/ambrosus/ambrosus-sdk.svg?token=xjj4U84eSFwEsYLTc5Qe&branch=master)](https://travis-ci.com/ambrosus/ambrosus-sdk)
 
 # The Ambrosus Node
-The repository for http RESTful api. Detailed API documentation is available [https://ambrosus.docs.apiary.io/](https://ambrosus.docs.apiary.io/).
+The repository for http RESTful api. Detailed API documentation is available at [https://ambrosus.docs.apiary.io/](https://ambrosus.docs.apiary.io/).
 
 ## Install, run & test
 To install dependencies:
