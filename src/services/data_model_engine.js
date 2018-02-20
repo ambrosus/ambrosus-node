@@ -11,7 +11,7 @@ export default class DataModelEngine {
   async createAdminAccount(account = this.identityManager.createKeyPair()) {
     const accounts = await this.accountRepository.count();
     if (accounts > 0) {
-      throw new PermissionError('Admin account arleady exist.');
+      throw new Error('Admin account arleady exist.');
     }    
     await this.accountRepository.store(account);
     return account;
@@ -22,14 +22,18 @@ export default class DataModelEngine {
     const account = this.identityManager.createKeyPair();
     const creatorAccount = await this.accountRepository.get(idData.createdBy);
     if (!creatorAccount) {
-      throw new NotFoundError();
+      throw new PermissionError('Account creator not specified');
     }
     await this.accountRepository.store(account);
     return account;
   }
 
   async getAccount(address) {
-    return this.accountRepository.get(address);
+    const result = await this.accountRepository.get(address);
+    if (!result) {
+      throw new NotFoundError(`Account ${address} not found.`);      
+    }
+    return result;    
   }
 
   async createAsset(asset) {

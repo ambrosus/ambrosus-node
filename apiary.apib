@@ -62,7 +62,9 @@ paths:
           schema:
             $ref: "#/definitions/Account"
         400:
-          description: "Invalid input (e.g. invalid signature)"
+          description: "Validation error"
+        403:
+          description: "Invalid signature"
         404:
           description: "CreatedBy account not found"
 

@@ -52,8 +52,8 @@ describe('Data Model Engine', () => {
       mockAccountRepository);
   });
 
-  describe('an account', () => {
-    it('creates an account with accountRepository', async () => {
+  describe('Create account', () => {
+    it('validatest with mockIdentityManager and delegates to accountRepository', async () => {
       const request = createAccountRequest();
       mockAccountRepository.get.returns(adminAccount);
       mockIdentityManager.createKeyPair.returns(pkPair);
@@ -63,17 +63,25 @@ describe('Data Model Engine', () => {
       expect(mockAccountRepository.get).to.have.been.calledWith(request.content.idData.createdBy);
     });
 
-    it('throws error if signatire is wrong', async () => {
+    it('throws error if signature is wrong', async () => {
       const request = createAccountRequest();
       mockIdentityManager.validateSignature.throws(new ValidationError('an error'));
       await expect(modelEngine.createAccount(request.content.idData, request.content.signature))
         .to.be.rejectedWith(ValidationError);
     });
+  });
 
-    it('gets a account data from accountRepository', async () => {
+  describe('Get account', () => {
+    it('delegates to accountRepository', async () => {
       mockAccountRepository.get.returns(pkPair);
       expect(await modelEngine.getAccount()).to.eq(pkPair);
       expect(mockAccountRepository.get).to.have.been.called;
+    });
+
+    it('throws NotFoundError if non-existing', async () => {
+      mockAccountRepository.get.returns(null);
+      await expect(modelEngine.getAccount())
+        .to.eventually.be.rejectedWith(NotFoundError);
     });
   });
 
