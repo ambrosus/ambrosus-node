@@ -4,7 +4,7 @@ import {spy} from 'sinon';
 import sinonChai from 'sinon-chai';
 import errorHandling from '../../src/middlewares/error_handling';
 
-import {InvalidParametersError, ValidationError, PermissionError, NotFoundError} from '../../src/errors/errors';
+import {InvalidParametersError, ValidationError, PermissionError, NotFoundError, AuthenticationError} from '../../src/errors/errors';
 
 chai.use(sinonChai);
 const {expect} = chai;
@@ -33,9 +33,15 @@ describe('Error handling middleware', () => {
     expect(next).to.be.calledOnce;
   });
 
-  it('should return 401 if PermissionError', async () => {
-    errorHandling(new PermissionError(), request, response, next);
+  it('should return 401 if AuthenticationError', async () => {
+    errorHandling(new AuthenticationError(), request, response, next);
     expect(response._getStatusCode()).to.eq(401);
+    expect(next).to.be.calledOnce;
+  });
+
+  it('should return 403 if PermissionError', async () => {
+    errorHandling(new PermissionError(), request, response, next);
+    expect(response._getStatusCode()).to.eq(403);
     expect(next).to.be.calledOnce;
   });
 

@@ -18,6 +18,12 @@ export class ValidationError extends AmbrosusError {
   }
 }
 
+export class AuthenticationError extends AmbrosusError {
+  constructor(message) {
+    super(`Authentication failed: ${message}`);
+  }
+}
+
 export class PermissionError extends AmbrosusError {
   constructor(message) {
     super(`Permision denied: ${message}`);
