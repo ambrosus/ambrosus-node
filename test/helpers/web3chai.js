@@ -9,7 +9,7 @@ const properAddress = (_chai, utils) => {
       , 'expected #{this} to not be a proper ethereum address'
     );
   });
-}
+};
 
 const properSecret = (_chai, utils) => {
   utils.addProperty(Assertion.prototype, 'properSecret', function () {
@@ -19,6 +19,6 @@ const properSecret = (_chai, utils) => {
       , 'expected #{this} to not be a proper ethereum address'
     );
   });
-}
+};
 
 export {properAddress, properSecret};
