@@ -152,10 +152,10 @@ paths:
     get:
       tags:
       - "Events"
-      summary: "Create an event"
+      summary: "Fetch event"
       description: |
         Fetches an event by identifier
-      operationId: "getEventsByAssetId"
+      operationId: "getEventById"
       produces:
       - "application/json"
       parameters:
@@ -173,7 +173,7 @@ paths:
           schema:
             $ref: "#/definitions/Event"
         404:
-          description: "Not found"
+          description: "Event not found"
 
 definitions:
   Account:
