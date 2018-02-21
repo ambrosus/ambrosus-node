@@ -7,7 +7,7 @@ import chaiHttp from 'chai-http';
 import {pick, get} from '../../src/utils/dict_utils';
 import {createFullAsset, createFullEvent} from '../fixtures/asset_fixture_builder';
 import pkPair from '../fixtures/pk_pair';
-import {createFullAccountRequest, adminAccountWithSecret} from '../fixtures/account';
+import {createFullAccountRequest, adminAccountWithSecret, nonExistingAccount} from '../fixtures/account';
 
 chai.use(chaiHttp);
 chai.use(sinonChai);
@@ -67,7 +67,7 @@ describe('Assets - Integrations', () => {
     });
 
     it('fails for not existing creator', async () => {
-      const fakeAsset = createFullAsset(aparatus.identityManager, {createdBy: '0x627306090abaB3A6e1400e9345bC60c78a8BEf57'}, '0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3');
+      const fakeAsset = createFullAsset(aparatus.identityManager, {createdBy: nonExistingAccount.address}, nonExistingAccount.secret);
       
       const request = aparatus.request()
         .post('/assets')
@@ -157,7 +157,7 @@ describe('Assets - Integrations', () => {
     });
 
     it('fails for not existing creator', async () => {
-      const fakeEvent = createFullEvent(aparatus.identityManager, {assetId: baseAsset.assetId, createdBy: '0x627306090abaB3A6e1400e9345bC60c78a8BEf57'}, {}, '0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3');
+      const fakeEvent = createFullEvent(aparatus.identityManager, {assetId: baseAsset.assetId, createdBy: nonExistingAccount.address}, {}, nonExistingAccount.secret);
     
       const request = aparatus.request()
         .post(`/assets/${baseAsset.assetId}/events`)
