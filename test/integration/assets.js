@@ -7,7 +7,7 @@ import chaiHttp from 'chai-http';
 import {pick, get} from '../../src/utils/dict_utils';
 import {createFullAsset, createFullEvent} from '../fixtures/asset_fixture_builder';
 import pkPair from '../fixtures/pk_pair';
-import {createFullAccountRequest, adminAccountWithSecret, nonExistingAccount} from '../fixtures/account';
+import {createFullAccountRequest, adminAccountWithSecret, notRegisteredAccount} from '../fixtures/account';
 
 chai.use(chaiHttp);
 chai.use(sinonChai);
@@ -67,11 +67,11 @@ describe('Assets - Integrations', () => {
     });
 
     it('fails for not existing creator', async () => {
-      const fakeAsset = createFullAsset(aparatus.identityManager, {createdBy: nonExistingAccount.address}, nonExistingAccount.secret);
+      const failingAsset = createFullAsset(aparatus.identityManager, {createdBy: notRegisteredAccount.address}, notRegisteredAccount.secret);
       
       const request = aparatus.request()
         .post('/assets')
-        .send(fakeAsset);
+        .send(failingAsset);
 
       await expect(request)
         .to.eventually.be.rejected
@@ -157,11 +157,11 @@ describe('Assets - Integrations', () => {
     });
 
     it('fails for not existing creator', async () => {
-      const fakeEvent = createFullEvent(aparatus.identityManager, {assetId: baseAsset.assetId, createdBy: nonExistingAccount.address}, {}, nonExistingAccount.secret);
+      const failingEvent = createFullEvent(aparatus.identityManager, {assetId: baseAsset.assetId, createdBy: notRegisteredAccount.address}, {}, notRegisteredAccount.secret);
     
       const request = aparatus.request()
         .post(`/assets/${baseAsset.assetId}/events`)
-        .send(fakeEvent);
+        .send(failingEvent);
 
       await expect(request)
         .to.eventually.be.rejected

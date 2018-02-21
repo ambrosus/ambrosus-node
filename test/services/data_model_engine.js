@@ -150,7 +150,7 @@ describe('Data Model Engine', () => {
       // checks if target asset exists
       expect(mockEntityRepository.getAsset).to.have.been.calledWith(mockEvent.content.idData.assetId);
       // marks the event bundle as null -> not yet bundled
-      expect(mockEntityBuilder.setEventBundle).to.have.been.called;
+      expect(mockEntityBuilder.setEventBundle).to.have.been.calledWith(mockEvent, null);
       // stores in entity repository
       expect(mockEntityRepository.storeEvent).to.have.been.calledWith(mockEvent);
     });
