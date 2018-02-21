@@ -7,11 +7,13 @@ import chaiHttp from 'chai-http';
 import {pick, get} from '../../src/utils/dict_utils';
 import {createFullAsset, createFullEvent} from '../fixtures/asset_fixture_builder';
 import pkPair from '../fixtures/pk_pair';
+import {createFullAccountRequest, adminAccountWithSecret} from '../fixtures/account';
 
 chai.use(chaiHttp);
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
+let account;
 
 describe('Assets - Integrations', () => {
   let aparatus;
@@ -19,13 +21,17 @@ describe('Assets - Integrations', () => {
   before(async () => {
     aparatus = new Aparatus();
     await aparatus.start();
+    await aparatus.modelEngine.createAdminAccount(adminAccountWithSecret);
+    account = await aparatus.request()
+      .post('/accounts')
+      .send(createFullAccountRequest(aparatus.identityManager));
   });
 
   describe('creating asset', () => {
     let inputAsset = null;
 
-    beforeEach(() => {
-      inputAsset = createFullAsset(aparatus.identityManager);
+    beforeEach(async () => {
+      inputAsset = createFullAsset(aparatus.identityManager, {createdBy: account.body.content.address}, account.body.content.secret);
     });
 
     it('works with valid input (client signed)', async () => {
@@ -42,7 +48,7 @@ describe('Assets - Integrations', () => {
 
       const response = await aparatus.request()
         .post('/assets')
-        .set('Authorization', `AMB ${pkPair.secret}`)
+        .set('Authorization', `AMB ${account.body.content.secret}`)
         .send(unsignedAsset);
       expect(response.status).to.eq(201);
       expect(response.body.metadata.link).to.equal(`/assets/${response.body.assetId}`);
@@ -59,20 +65,32 @@ describe('Assets - Integrations', () => {
         .to.eventually.be.rejected
         .and.have.property('status', 400);
     });
+
+    it('fails for not existing creator', async () => {
+      const fakeAsset = createFullAsset(aparatus.identityManager, {createdBy: '0x627306090abaB3A6e1400e9345bC60c78a8BEf57'}, '0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3');
+      
+      const request = aparatus.request()
+        .post('/assets')
+        .send(fakeAsset);
+
+      await expect(request)
+        .to.eventually.be.rejected
+        .and.have.property('status', 403);
+    });
   });
 
   describe('fetching asset', () => {
     let asset;
 
     beforeEach(async () => {
-      const signedAsset = createFullAsset(aparatus.identityManager);
+      const signedAsset = createFullAsset(aparatus.identityManager, {createdBy: account.body.content.address}, account.body.content.secret);
       const response = await aparatus.request()
         .post('/assets')
         .send(signedAsset);
       asset = response.body;
     });
 
-    it('works for existing asset', async () => {
+    it('should get asset by id', async () => {
       const response = await aparatus.request()
         .get(`/assets/${asset.assetId}`);
       expect(response.body).to.deep.equal(asset);
@@ -90,12 +108,13 @@ describe('Assets - Integrations', () => {
     let baseAsset = null;
     let inputEvent = null;
 
+
     beforeEach(async () => {
-      baseAsset = createFullAsset(aparatus.identityManager);
+      baseAsset = createFullAsset(aparatus.identityManager, {createdBy: account.body.content.address}, account.body.content.secret);
       await aparatus.request()
         .post('/assets')
         .send(baseAsset);
-      inputEvent = createFullEvent(aparatus.identityManager, {assetId: baseAsset.assetId}, {});
+      inputEvent = createFullEvent(aparatus.identityManager, {assetId: baseAsset.assetId, createdBy: account.body.content.address}, {}, account.body.content.secret);
     });
 
     it('works with valid input (client signed)', async () => {
@@ -113,7 +132,7 @@ describe('Assets - Integrations', () => {
 
       const response = await aparatus.request()
         .post(`/assets/${baseAsset.assetId}/events`)
-        .set('Authorization', `AMB ${pkPair.secret}`)
+        .set('Authorization', `AMB ${account.body.content.secret}`)
         .send(unsignedEvent);
 
       expect(response.status).to.eq(201);
@@ -136,20 +155,34 @@ describe('Assets - Integrations', () => {
         .to.eventually.be.rejected
         .and.have.property('status', 400);
     });
+
+    it('fails for not existing creator', async () => {
+      const fakeEvent = createFullEvent(aparatus.identityManager, {assetId: baseAsset.assetId, createdBy: '0x627306090abaB3A6e1400e9345bC60c78a8BEf57'}, {}, '0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3');
+    
+      const request = aparatus.request()
+        .post(`/assets/${baseAsset.assetId}/events`)
+        .send(fakeEvent);
+
+      await expect(request)
+        .to.eventually.be.rejected
+        .and.have.property('status', 403);
+    });
   });
 
   describe('fetching event', () => {
     let asset;
     let event;
 
+
     beforeEach(async () => {
-      const signedAsset = createFullAsset(aparatus.identityManager);
+      const signedAsset = createFullAsset(aparatus.identityManager, {createdBy: account.body.content.address}, account.body.content.secret);
       const addAssetResponse = await aparatus.request()
         .post('/assets')
         .send(signedAsset);
       asset = addAssetResponse.body;
 
-      const signedEvent = createFullEvent(aparatus.identityManager, {assetId: asset.assetId}, {});
+      const signedEvent = createFullEvent(aparatus.identityManager, {assetId: asset.assetId, createdBy: account.body.content.address}, {}, account.body.content.secret);
+
       const addEventResponse = await aparatus.request()
         .post(`/assets/${asset.assetId}/events`)
         .send(signedEvent);

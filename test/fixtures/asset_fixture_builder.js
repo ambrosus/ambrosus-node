@@ -43,7 +43,8 @@ export const createFullAsset = (identityManager, fields = {}, secret = pkPair.se
     addSignature(
       identityManager, 
       createAsset(fields), 
-      secret));
+      secret)
+  );
 
 export const createFullEvent = (identityManager, fields = {}, data = {}, secret = pkPair.secret) => 
   addEventId(
@@ -54,5 +55,7 @@ export const createFullEvent = (identityManager, fields = {}, data = {}, secret 
         identityManager, 
         createEvent(
           fields, 
-          data), 
-        secret)));
+          data
+        )
+      ), 
+      secret));
