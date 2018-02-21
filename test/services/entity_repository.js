@@ -1,7 +1,11 @@
 import chai from 'chai';
 import {connectToMongo, cleanDatabase} from '../../src/utils/db_utils';
-import {createAsset, createEvent} from '../fixtures/asset_fixture_builder';
 import {put} from '../../src/utils/dict_utils';
+
+import {createAsset, createEvent} from '../fixtures/assets_events';
+import {createWeb3} from '../../src/utils/web3_tools';
+import IdentityManager from '../../src/services/identity_manager';
+import ScenarioBuilder from '../fixtures/scenario_builder';
 
 import EntityRepository from '../../src/services/entity_repository';
 
@@ -11,10 +15,13 @@ describe('Entity Repository', () => {
   let db;
   let client;
   let storage;
+  let scenario;
 
   before(async () => {
     ({db, client} = await connectToMongo());
     storage = new EntityRepository(db);
+
+    scenario = new ScenarioBuilder(new IdentityManager(await createWeb3()));
   });
 
   describe('Assets', () => {
@@ -44,10 +51,36 @@ describe('Entity Repository', () => {
       const otherEventId = '0x33333';
       await expect(storage.getEvent(otherEventId)).to.eventually.be.equal(null);
     });
+
+    describe('Find', () => {
+      beforeEach(async () => {
+        scenario.addAsset();
+        const eventsSet = scenario.addEventsSerial(
+          134, 
+          (inx) => ({
+            subject: 0,
+            fields: {timestamp: inx},
+            data: {}
+          })
+        ).events;
+        for (const event of eventsSet) {
+          await storage.storeEvent(event);
+        }
+      });
+
+      it('returns 100 newest (ordered by timestamp desc) events', async () => {
+        const ret = await expect(storage.findEvents()).to.be.fulfilled;
+        expect(ret.results).have.lengthOf(100);
+        expect(ret.results[0]).to.deep.equal(scenario.events[133]);
+        expect(ret.results[99]).to.deep.equal(scenario.events[34]);
+        expect(ret.resultCount).to.equal(134);
+      });
+    });
   });
 
   afterEach(async () => {
     await cleanDatabase(db);
+    scenario.reset();
   });
 
   after(() => {

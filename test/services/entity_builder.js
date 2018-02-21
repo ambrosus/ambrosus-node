@@ -4,25 +4,23 @@ import sinonChai from 'sinon-chai';
 
 import {pick, put} from '../../src/utils/dict_utils';
 import {createWeb3} from '../../src/utils/web3_tools';
+import IdentityManager from '../../src/services/identity_manager';
 
 import EntityBuilder from '../../src/services/entity_builder';
-import {createFullEvent, createFullAsset} from '../fixtures/asset_fixture_builder';
+import {createFullEvent, createFullAsset} from '../fixtures/assets_events';
 import {ValidationError} from '../../src/errors/errors';
-import IdentityManager from '../../src/services/identity_manager';
 
 chai.use(sinonChai);
 const {expect} = chai;
 
 describe('Entity Builder', () => {
-  let web3 = null;
   let entityBuilder = null;
   let mockIdentityManager = null;
   let exampleAsset = null;
   let exampleEvent = null;
 
   before(async () => {
-    web3 = await createWeb3();
-    const identityManager = new IdentityManager(web3);
+    const identityManager = new IdentityManager(await createWeb3());
     exampleAsset = createFullAsset(identityManager);
     exampleEvent = createFullEvent(identityManager, {assetId: exampleAsset.assetId});
   });

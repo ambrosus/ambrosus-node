@@ -5,7 +5,7 @@ import Aparatus from '../helpers/aparatus';
 import chaiHttp from 'chai-http';
 
 import {pick, get} from '../../src/utils/dict_utils';
-import {createFullAsset, createFullEvent} from '../fixtures/asset_fixture_builder';
+import {createFullAsset, createFullEvent} from '../fixtures/assets_events';
 import pkPair from '../fixtures/pk_pair';
 import {createFullAccountRequest, adminAccountWithSecret, notRegisteredAccount} from '../fixtures/account';
 
@@ -25,6 +25,10 @@ describe('Assets - Integrations', () => {
     account = await aparatus.request()
       .post('/accounts')
       .send(createFullAccountRequest(aparatus.identityManager));
+  });
+
+  beforeEach(async () => {
+    await aparatus.cleanDB();
   });
 
   describe('creating asset', () => {
