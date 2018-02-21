@@ -61,6 +61,10 @@ paths:
           description: "Created."
           schema:
             $ref: "#/definitions/Account"
+        400:
+          description: "Validation error"
+        403:
+          description: "Invalid createdBy or signature "
   /assets:
     post:
       tags:

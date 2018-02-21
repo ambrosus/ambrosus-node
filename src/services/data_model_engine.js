@@ -1,4 +1,4 @@
-import {NotFoundError, InvalidParametersError} from '../errors/errors';
+import {NotFoundError, InvalidParametersError, PermissionError} from '../errors/errors';
 
 export default class DataModelEngine {
   constructor(identityManager, entityBuilder, entityRepository, accountRepository) {
@@ -8,14 +8,32 @@ export default class DataModelEngine {
     this.accountRepository = accountRepository;
   }
 
-  async createAccount() {
+  async createAdminAccount(account = this.identityManager.createKeyPair()) {
+    const accounts = await this.accountRepository.count();
+    if (accounts > 0) {
+      throw new Error('Admin account arleady exist.');
+    }    
+    await this.accountRepository.store(account);
+    return account;
+  }
+
+  async createAccount(idData, signature) {
+    this.identityManager.validateSignature(idData.createdBy, signature, idData);    
     const account = this.identityManager.createKeyPair();
+    const creatorAccount = await this.accountRepository.get(idData.createdBy);
+    if (!creatorAccount) {
+      throw new PermissionError('Account creator not specified');
+    }
     await this.accountRepository.store(account);
     return account;
   }
 
   async getAccount(address) {
-    return this.accountRepository.get(address);
+    const result = await this.accountRepository.get(address);
+    if (!result) {
+      throw new NotFoundError(`Account ${address} not found.`);      
+    }
+    return result;    
   }
 
   async createAsset(asset) {

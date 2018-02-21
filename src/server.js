@@ -15,7 +15,7 @@ export default class Server {
   start() {
     const app = express();
 
-    app.use('/accounts', accountsRouter(this.modelEngine));  
+    app.use('/accounts', accountsRouter(this.modelEngine.identityManager, this.modelEngine));  
     app.use('/assets', assetsRouter(this.modelEngine.identityManager, this.modelEngine, this.linkHelper));
 
     // Should always be last

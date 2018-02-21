@@ -1,7 +1,7 @@
 import chai from 'chai';
 import IdentityManager from '../../src/services/identity_manager';
 import {createWeb3} from '../../src/utils/web3_tools';
-import {InvalidParametersError, ValidationError} from '../../src/errors/errors';
+import {InvalidParametersError, AuthenticationError} from '../../src/errors/errors';
 import {put} from '../../src/utils/dict_utils';
 
 const {expect} = chai;
@@ -65,12 +65,12 @@ describe('Identity manager', () => {
 
     it('should not validate if was signed by another address', () => {
       const otherAccount = web3.eth.accounts.create();
-      expect(() => identityManager.validateSignature(otherAccount.address, signature, exampleData)).to.throw(ValidationError);
+      expect(() => identityManager.validateSignature(otherAccount.address, signature, exampleData)).to.throw(AuthenticationError);
     });
 
     it('should not validate if data was modified after signing', () => {
       const modifiedData = put(exampleData, 'one.two.three', 42);
-      expect(() => identityManager.validateSignature(account.address, signature, modifiedData)).to.throw(ValidationError);
+      expect(() => identityManager.validateSignature(account.address, signature, modifiedData)).to.throw(AuthenticationError);
     });
 
     it('should throw if wrong signature format', () => {

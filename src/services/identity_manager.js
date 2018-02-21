@@ -1,4 +1,4 @@
-import {InvalidParametersError, ValidationError} from '../errors/errors';
+import {InvalidParametersError, AuthenticationError} from '../errors/errors';
 import matchHexOfLength from '../utils/regex';
 
 export default class IdentityManager {
@@ -24,7 +24,7 @@ export default class IdentityManager {
     const hash = this.calculateHash(data);
     const signer = this.web3.eth.accounts.recover(hash, signature);
     if (address.toLowerCase() !== signer.toLowerCase()) {
-      throw new ValidationError(`Signature doesn't match`);
+      throw new AuthenticationError(`Signature doesn't match`);
     }
   }
 
