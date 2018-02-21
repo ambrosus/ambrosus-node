@@ -168,7 +168,7 @@ describe('Assets - Integrations', () => {
         .and.have.property('status', 403);
     });
   });
-
+  
   describe('fetching event', () => {
     let asset;
     let event;
