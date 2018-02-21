@@ -6,7 +6,6 @@ import chaiAsPromised from 'chai-as-promised';
 
 import {findEventsHandler} from '../../src/routes/events';
 
-import {createEvent} from '../fixtures/assets_events';
 import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
 import ScenarioBuilder from '../fixtures/scenario_builder';
