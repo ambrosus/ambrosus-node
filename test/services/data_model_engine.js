@@ -4,11 +4,11 @@ import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import DataModelEngine from '../../src/services/data_model_engine';
-import {NotFoundError, ValidationError, InvalidParametersError} from '../../src/errors/errors';
+import {NotFoundError, ValidationError, InvalidParametersError, PermissionError} from '../../src/errors/errors';
 
 import {createAsset, createEvent} from '../fixtures/asset_fixture_builder';
 import pkPair from '../fixtures/pk_pair';
-import {createAccountRequest, adminAccount} from '../fixtures/account';
+import {createAccountRequest, adminAccount, accountWithSecret} from '../fixtures/account';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -89,10 +89,12 @@ describe('Data Model Engine', () => {
     it('validates with Entity Builder and sends to Entity Storage', async () => {
       mockEntityBuilder.setAssetBundle.returns(mockAsset);
       mockEntityRepository.storeAsset.resolves();
+      mockAccountRepository.get.resolves(accountWithSecret);
 
       await expect(modelEngine.createAsset(mockAsset));
 
       expect(mockEntityBuilder.validateAsset).to.have.been.calledWith(mockAsset);
+      expect(mockAccountRepository.get).to.have.been.calledWith(mockAsset.content.idData.createdBy);
       expect(mockEntityBuilder.setAssetBundle).to.have.been.calledWith(mockAsset, null);
       expect(mockEntityRepository.storeAsset).to.have.been.calledWith(mockAsset);
     });
@@ -101,6 +103,11 @@ describe('Data Model Engine', () => {
       mockEntityBuilder.validateAsset.throws(new ValidationError('an error'));
 
       await expect(modelEngine.createAsset(mockAsset)).to.be.rejectedWith(ValidationError);
+    });
+
+    it('throws if address does not exist', async () => {
+      mockAccountRepository.get.resolves(null);
+      await expect(modelEngine.createAsset(mockEvent)).to.be.rejectedWith(PermissionError);
     });
   });
 
@@ -130,19 +137,27 @@ describe('Data Model Engine', () => {
       mockEntityBuilder.setEventBundle.returns(mockEvent);
       mockEntityRepository.storeEvent.resolves();
       mockEntityRepository.getAsset.resolves(mockAsset);
+      mockAccountRepository.get.resolves(accountWithSecret);
     });
 
     it('coordinates all services', async () => {
-      await expect(modelEngine.createEvent(mockEvent));
+      await expect(modelEngine.createEvent(mockEvent)).to.have.been.fulfilled;
 
       // validates
       expect(mockEntityBuilder.validateEvent).to.have.been.calledWith(mockEvent);
+      // checks if creator exists
+      expect(mockAccountRepository.get).to.have.been.calledWith(mockEvent.content.idData.createdBy);
       // checks if target asset exists
       expect(mockEntityRepository.getAsset).to.have.been.calledWith(mockEvent.content.idData.assetId);
       // marks the event bundle as null -> not yet bundled
       expect(mockEntityBuilder.setEventBundle).to.have.been.calledWith(mockEvent, null);
       // stores in entity repository
       expect(mockEntityRepository.storeEvent).to.have.been.calledWith(mockEvent);
+    });
+
+    it('throws if address does not exist', async () => {
+      mockAccountRepository.get.resolves(null);
+      await expect(modelEngine.createEvent(mockEvent)).to.be.rejectedWith(PermissionError);
     });
 
     it('validates with the Entity Builder and proxies the ValidationError', async () => {

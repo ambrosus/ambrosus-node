@@ -36,6 +36,11 @@ const adminAccountWithSecret = {
   secret: '0xbe84d666f9bd798e69e548804015cfbe82ae97880e4366a5fdc2d5afade439c0'
 };
 
+const notRegisteredAccount = {
+  address: '0x627306090abaB3A6e1400e9345bC60c78a8BEf57',
+  secret: '0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3'
+};
 
-export {createAccountRequest, accountWithSecret, account, adminAccount, adminAccountWithSecret, createFullAccountRequest};
+
+export {createAccountRequest, accountWithSecret, account, adminAccount, adminAccountWithSecret, createFullAccountRequest, notRegisteredAccount};
 
