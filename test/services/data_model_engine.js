@@ -69,13 +69,6 @@ describe('Data Model Engine', () => {
       await expect(modelEngine.createAccount(request.content.idData, request.content.signature))
         .to.be.rejectedWith(ValidationError);
     });
-
-    it('throws ValidationError if signature is wrong', async () => {
-      const request = createAccountRequest();
-      mockIdentityManager.validateSignature.throws(new ValidationError('an error'));
-      await expect(modelEngine.createAccount(request.content.idData, request.content.signature))
-        .to.be.rejectedWith(ValidationError);
-    });
   });
 
   describe('Get account', () => {
