@@ -95,6 +95,8 @@ paths:
             $ref: "#/definitions/Asset"
         400:
           description: "Invalid input"
+        403:
+          description: "The createBy user is not registered"
   /assets/{assetId}:
     get:
       tags:
@@ -152,6 +154,8 @@ paths:
             $ref: "#/definitions/Event"
         400:
           description: "Invalid input"
+        403:
+          description: "The createBy user is not registered"
   /assets/{assetId}/events/{eventId}:
     get:
       tags:
