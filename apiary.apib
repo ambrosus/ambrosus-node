@@ -148,6 +148,32 @@ paths:
             $ref: "#/definitions/Event"
         400:
           description: "Invalid input"
+  /assets/{assetId}/events/{eventId}:
+    get:
+      tags:
+      - "Events"
+      summary: "Fetch event"
+      description: |
+        Fetches an event by identifier
+      operationId: "getEventById"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        name: "assetId"
+        required: true
+        type: string
+      - in: path
+        name: "eventId"
+        required: true
+        type: string
+      responses:
+        200:
+          description: "The requested event"
+          schema:
+            $ref: "#/definitions/Event"
+        404:
+          description: "Event not found"
 
 definitions:
   Account:
