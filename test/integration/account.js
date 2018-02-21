@@ -1,12 +1,16 @@
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import chaiAsPromissed from 'chai-as-promised';
+import {properAddress, properSecret} from '../helpers/web3chai';
 import Aparatus from '../helpers/aparatus';
 import {createAccountRequest, adminAccountWithSecret, createFullAccountRequest, accountWithSecret} from '../fixtures/account';
 import addSignature from '../fixtures/add_signature';
 
+
 chai.use(chaiHttp);
 chai.use(chaiAsPromissed);
+chai.use(properAddress);
+chai.use(properSecret);
 
 const {expect} = chai;
 
@@ -52,8 +56,8 @@ describe('Accounts - Integrations', async () => {
       account = await aparatus.request()
         .post('/accounts')
         .send(signedAccountRequest);
-      expect(account.body.content.address).to.match(/^0x[0-9-a-fA-F]{40}$/);
-      expect(account.body.content.secret).to.match(/^0x[0-9-a-fA-F]{64}$/);
+      expect(account.body.content.address).to.be.properAddress;
+      expect(account.body.content.secret).to.be.properSecret;
       expect(account.status).to.eq(201);
     });
 
@@ -63,8 +67,8 @@ describe('Accounts - Integrations', async () => {
         .post('/accounts')
         .set('Authorization', `AMB ${adminAccountWithSecret.secret}`)
         .send(signedAccountRequest);
-      expect(account.body.content.address).to.match(/^0x[0-9-a-fA-F]{40}$/);
-      expect(account.body.content.secret).to.match(/^0x[0-9-a-fA-F]{64}$/);
+      expect(account.body.content.address).to.be.properAddress;
+      expect(account.body.content.secret).to.be.properSecret;
       expect(account.status).to.eq(201);
     });
 

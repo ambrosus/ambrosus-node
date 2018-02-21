@@ -63,7 +63,14 @@ describe('Data Model Engine', () => {
       expect(mockAccountRepository.get).to.have.been.calledWith(request.content.idData.createdBy);
     });
 
-    it('throws error if signature is wrong', async () => {
+    it('throws ValidationError if signature is wrong', async () => {
+      const request = createAccountRequest();
+      mockIdentityManager.validateSignature.throws(new ValidationError('an error'));
+      await expect(modelEngine.createAccount(request.content.idData, request.content.signature))
+        .to.be.rejectedWith(ValidationError);
+    });
+
+    it('throws ValidationError if signature is wrong', async () => {
       const request = createAccountRequest();
       mockIdentityManager.validateSignature.throws(new ValidationError('an error'));
       await expect(modelEngine.createAccount(request.content.idData, request.content.signature))
@@ -85,7 +92,7 @@ describe('Data Model Engine', () => {
     });
   });
 
-  describe('creating an asset', () => {
+  describe('Creating an asset', () => {
     it('validates with Entity Builder and sends to Entity Storage', async () => {
       mockEntityBuilder.setAssetBundle.returns(mockAsset);
       mockEntityRepository.storeAsset.resolves();
