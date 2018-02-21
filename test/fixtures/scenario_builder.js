@@ -1,8 +1,14 @@
 import {createFullAsset, createFullEvent} from './assets_events';
 
+const defaultScenarioProcessor = {
+  onAddAsset: async (asset) => asset,
+  onAddEvent: async (event) => event
+};
+
 class ScenarioBuilder {
-  constructor(identityManager) {
+  constructor(identityManager, processor = defaultScenarioProcessor) {
     this.identityManager = identityManager;
+    this.processor = processor;
     this.reset();
   }
 
@@ -11,31 +17,38 @@ class ScenarioBuilder {
     this.assets = [];
   }
 
-  addAsset(fields = {}) {
-    this.assets.push(createFullAsset(this.identityManager, fields));
-    return this;
+  async addAsset(fields = {}) {
+    const asset = createFullAsset(this.identityManager, fields);
+    const processedAsset = await this.processor.onAddAsset(asset);
+    this.assets.push(processedAsset);
+    return processedAsset;
   }
 
-  addEvent(subject, fields = {}, data = {}) {
-    this.events.push(createFullEvent(this.identityManager, {...fields, assetId: this.assets[subject].assetId}, data));
-    return this;
+  async addEvent(subject, fields = {}, data = {}) {
+    const event = createFullEvent(this.identityManager, {...fields, assetId: this.assets[subject].assetId}, data);
+    const processedEvent = await this.processor.onAddEvent(event);
+    this.events.push(processedEvent);
+    return processedEvent;
   }
 
-  addAssetsSerial(num, generator) {
+  async addAssetsSerial(num, generator) {
+    const ret = [];
     for (let it = 0; it < num; ++it) {
       const fields = generator(it);
-      this.addAsset(fields);
+      ret.push(await this.addAsset(fields));
     }
-    return this;
+    return ret;
   }
 
-  addEventsSerial(num, generator) {
+  async addEventsSerial(num, generator) {
+    const ret = [];
     for (let it = 0; it < num; ++it) {
       const {subject, fields, data} = generator(it);
-      this.addEvent(subject, fields, data);
+      ret.push(await this.addEvent(subject, fields, data));
     }
-    return this;
+    return ret;
   }
 }
 
 export default ScenarioBuilder;
+

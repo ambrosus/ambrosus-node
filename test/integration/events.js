@@ -1,10 +1,9 @@
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import Aparatus from '../helpers/aparatus';
+import Aparatus, {aparatusScenarioProcessor} from '../helpers/aparatus';
 import chaiHttp from 'chai-http';
 
-import {pick} from '../../src/utils/dict_utils';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 
 chai.use(chaiHttp);
@@ -19,7 +18,7 @@ describe('Events - Integrations', () => {
   before(async () => {
     aparatus = new Aparatus();
     await aparatus.start();
-    scenario = new ScenarioBuilder(aparatus.identityManager);
+    scenario = new ScenarioBuilder(aparatus.identityManager, aparatusScenarioProcessor(aparatus));
   });
 
   beforeEach(async () => {
@@ -29,24 +28,15 @@ describe('Events - Integrations', () => {
 
   describe('finding events', () => {
     beforeEach(async () => {
-      scenario.addAsset();
-      await aparatus.request()
-        .post('/assets')
-        .send(scenario.assets[0]);
-
-      const eventsSet = scenario.addEventsSerial(
+      await scenario.addAsset();
+      await scenario.addEventsSerial(
         134,
         (inx) => ({
           subject: 0,
           fields: {timestamp: inx},
           data: {}
         })
-      ).events;
-      for (const event of eventsSet) {
-        await aparatus.request()
-          .post(`/assets/${scenario.assets[0].assetId}/events`)
-          .send(event);
-      }
+      );
     });
 
     describe('without additional parameters', () => {
@@ -56,9 +46,9 @@ describe('Events - Integrations', () => {
 
         expect(body.results).to.have.lengthOf(100);
         expect(body.resultCount).to.equal(134);
-        expect(pick(body.results[0], 'metadata')).to.deep.equal(scenario.events[133]);
-        expect(pick(body.results[99], 'metadata')).to.deep.equal(scenario.events[34]);
-        
+        expect(body.results[0]).to.deep.equal(scenario.events[133]);
+        expect(body.results[99]).to.deep.equal(scenario.events[34]);
+
         const [specimen] = body.results;
         expect(specimen.metadata.link).to.equal(`/assets/${specimen.content.idData.assetId}/events/${specimen.eventId}`);
       });

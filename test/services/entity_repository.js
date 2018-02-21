@@ -24,6 +24,11 @@ describe('Entity Repository', () => {
     scenario = new ScenarioBuilder(new IdentityManager(await createWeb3()));
   });
 
+  beforeEach(async () => {
+    await cleanDatabase(db);
+    scenario.reset();
+  });
+
   describe('Assets', () => {
     it('db round trip works', async () => {
       const exmapleAssetId = '0x123456';
@@ -54,15 +59,15 @@ describe('Entity Repository', () => {
 
     describe('Find', () => {
       beforeEach(async () => {
-        scenario.addAsset();
-        const eventsSet = scenario.addEventsSerial(
-          134, 
+        await scenario.addAsset();
+        const eventsSet = await scenario.addEventsSerial(
+          134,
           (inx) => ({
             subject: 0,
             fields: {timestamp: inx},
             data: {}
           })
-        ).events;
+        );
         for (const event of eventsSet) {
           await storage.storeEvent(event);
         }
@@ -76,11 +81,6 @@ describe('Entity Repository', () => {
         expect(ret.resultCount).to.equal(134);
       });
     });
-  });
-
-  afterEach(async () => {
-    await cleanDatabase(db);
-    scenario.reset();
   });
 
   after(() => {

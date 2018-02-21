@@ -44,8 +44,15 @@ describe('Events', () => {
     });
 
     it('queries Data Model Engine, proxies result, appends metadata, and resultCount', async () => {
-      scenario.addAsset();
-      const eventSet = scenario.addEventsSerial(105, (inx) => ({subject: 0, fields: {timestamp: inx}, data: {}})).events;
+      await scenario.addAsset();
+      const eventSet = await scenario.addEventsSerial(
+        105, 
+        (inx) => ({
+          subject: 0, 
+          fields: {timestamp: inx}, 
+          data: {}
+        })
+      );
       
       mockModelEngine.findEvents.resolves({results: eventSet, resultCount: 165});
       mockLinkHelper.linkForEvent.returns('123');

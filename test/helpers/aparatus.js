@@ -27,14 +27,14 @@ export default class Aparatus {
 
     this.server = new Server(this.modelEngine);
     this.server.start();
-      
+
     return this;
   }
 
   request() {
     return chai.request(this.server.server);
   }
-  
+
   async cleanDB() {
     return cleanDatabase(this.db);
   }
@@ -44,3 +44,20 @@ export default class Aparatus {
     await this.client.close();
   }
 }
+
+const aparatusScenarioProcessor = (aparatus) => ({
+  onAddAsset: async (asset) => {
+    const response = await aparatus.request()
+      .post('/assets')
+      .send(asset);
+    return response.body;
+  },
+  onAddEvent: async (event) => {
+    const response = await aparatus.request()
+      .post(`/assets/${event.content.idData.assetId}/events`)
+      .send(event);
+    return response.body;
+  }
+});
+
+export {aparatusScenarioProcessor};

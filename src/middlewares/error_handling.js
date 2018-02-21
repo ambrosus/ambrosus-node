@@ -1,6 +1,6 @@
 import {InvalidParametersError, ValidationError, PermissionError, NotFoundError, AuthenticationError} from '../errors/errors';
 
-export default (err, req, res, next) => {
+export default (err, req, res, next) => { 
   if (err instanceof InvalidParametersError || err instanceof ValidationError) {
     res.status(400).send({reason: err.message});
   } else if (err instanceof AuthenticationError) {

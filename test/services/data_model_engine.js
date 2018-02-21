@@ -210,15 +210,15 @@ describe('Data Model Engine', () => {
 
   describe('finding events', () => {
     it('coordinates all services', async () => {
-      scenario.addAsset();
-      const eventSet = scenario.addEventsSerial(
+      await scenario.addAsset();
+      const eventSet = await scenario.addEventsSerial(
         100,
         (inx) => ({
           subject: 0,
           fields: {timestamp: inx},
           data: {}
         })
-      ).events;
+      );
       mockEntityRepository.findEvents.resolves({results: eventSet, resultCount: 165});
 
       const ret = await expect(modelEngine.findEvents()).to.fulfilled;
