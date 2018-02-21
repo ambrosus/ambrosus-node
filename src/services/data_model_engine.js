@@ -1,4 +1,5 @@
-import {NotFoundError, InvalidParametersError, PermissionError} from '../errors/errors';
+import {NotFoundError, InvalidParametersError, PermissionError, ValidationError} from '../errors/errors';
+import {validatePathsNotEmpty} from '../utils/validations';
 
 export default class DataModelEngine {
   constructor(identityManager, entityBuilder, entityRepository, accountRepository) {
@@ -17,14 +18,37 @@ export default class DataModelEngine {
     return account;
   }
 
-  async createAccount(idData, signature) {
-    this.identityManager.validateSignature(idData.createdBy, signature, idData);    
-    const account = this.identityManager.createKeyPair();
+  async getAndValidateCreator(idData, signature) {
+    this.identityManager.validateSignature(idData.createdBy, signature, idData);        
     const creatorAccount = await this.accountRepository.get(idData.createdBy);
     if (!creatorAccount) {
       throw new PermissionError('Account creator not specified');
     }
-    await this.accountRepository.store(account);
+    return creatorAccount;
+  }
+
+  validateNoReplyAttack(creatorAccount, idData) {    
+    const lastActionAt = parseInt(creatorAccount.lastActionAt, 10);
+    const timestamp = parseInt(idData.timestamp, 10);
+    if (lastActionAt && lastActionAt <= timestamp) {
+      throw new ValidationError('operation timestamp is smaller than last action timestamp');
+    }
+  }
+
+  validatecreateAccountRequest(idData) {
+    validatePathsNotEmpty(idData, [
+      'createdBy',
+      'timestamp'
+    ]);
+  }
+
+  async createAccount(idData, signature) {
+    this.validatecreateAccountRequest(idData);
+    const creatorAccount = await this.getAndValidateCreator(idData, signature);
+    this. validateNoReplyAttack(creatorAccount, idData);    
+    const account = this.identityManager.createKeyPair();    
+    await this.accountRepository.store({timestamp: idData.timestamp, ...account});    
+    await this.accountRepository.update(idData.createdBy, {lastActionAt: idData.timestamp});
     return account;
   }
 

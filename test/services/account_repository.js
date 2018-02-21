@@ -16,8 +16,12 @@ describe('Account Store', () => {
 
   it('account round database trip', async () => {
     await accountStore.store(accountWithSecret);
-    const result = await accountStore.get(account.address);
+    let result = await accountStore.get(account.address);
     expect(result).to.deep.equal(account);
+    
+    await accountStore.update(account.address, {timestamp: 7});
+    result = await accountStore.get(account.address);
+    expect(result).to.deep.equal({timestamp: 7, ...account});
   });
 
   afterEach(async () => {

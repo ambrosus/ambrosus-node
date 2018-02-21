@@ -95,6 +95,20 @@ describe('Accounts - Integrations', async () => {
         .to.eventually.be.rejected
         .and.have.property('status', 403);
     });
+
+    it('should fail to create account if transaction reply', async () => {
+      const signedAccountRequest = createFullAccountRequest(aparatus.identityManager);
+      account = await aparatus.request()
+        .post('/accounts')
+        .send(signedAccountRequest);
+      expect(account.status).to.eq(201);
+      const pendingRequest = aparatus.request()
+        .post('/accounts')
+        .send(signedAccountRequest);
+      await expect(pendingRequest)
+        .to.eventually.be.rejected
+        .and.have.property('status', 400);
+    });
   });
 
   afterEach(async () => {

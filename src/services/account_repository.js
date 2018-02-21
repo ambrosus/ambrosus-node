@@ -4,7 +4,7 @@ export default class AccountRepository {
   }
 
   /* eslint no-unused-vars: ["error", { "varsIgnorePattern": "^secret$" }]*/
-  async store(account) {    
+  async store(account) {
     const {secret, ...accountWithoutSecret} = account;
     await this.db.collection('accounts').insertOne(accountWithoutSecret);
   }
@@ -13,7 +13,11 @@ export default class AccountRepository {
     return this.db.collection('accounts').findOne({address}, {fields: {_id: 0}});
   }
 
+  async update(address, fields) {
+    return this.db.collection('accounts').update({address}, {$set: fields});
+  }
+
   async count() {
     return this.db.collection('accounts').count();
-  }  
+  }
 }

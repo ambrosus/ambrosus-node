@@ -34,7 +34,8 @@ describe('Data Model Engine', () => {
     };
     mockAccountRepository = {
       store: sinon.stub(),
-      get: sinon.stub()
+      get: sinon.stub(),
+      update: sinon.stub()
     };
     mockEntityBuilder = {
       validateAsset: sinon.stub(),
@@ -54,13 +55,31 @@ describe('Data Model Engine', () => {
 
   describe('Create account', () => {
     it('validatest with mockIdentityManager and delegates to accountRepository', async () => {
-      const request = createAccountRequest();
+      const request = createAccountRequest({createdBy: adminAccount.address});
       mockAccountRepository.get.returns(adminAccount);
       mockIdentityManager.createKeyPair.returns(pkPair);
       expect(await modelEngine.createAccount(request.content.idData, request.content.signature)).to.eq(pkPair);
       expect(mockIdentityManager.validateSignature).to.have.been.called;
-      expect(mockAccountRepository.store).to.have.been.calledWith(pkPair);
+      expect(mockAccountRepository.update).to.have.been.calledWith(adminAccount.address, {lastActionAt: request.content.idData.timestamp});
+      expect(mockAccountRepository.store).to.have.been.calledWith({timestamp: request.content.idData.timestamp, ...pkPair});
       expect(mockAccountRepository.get).to.have.been.calledWith(request.content.idData.createdBy);
+    });
+
+    it('throws ValidationError if no timestamp', async () => {
+      const request = createAccountRequest({timestamp: undefined});
+      expect(modelEngine.createAccount(request.content.idData, request.content.signature))
+        .to.eventually.be.rejectedWith(ValidationError);
+    });
+
+    it('throws ValidationError if reply attack', async () => {
+      const request = createAccountRequest();
+      mockAccountRepository.get.returns(adminAccount);      
+      mockIdentityManager.createKeyPair.returns(pkPair);      
+      expect(await modelEngine.createAccount(request.content.idData, request.content.signature))
+        .to.eq(pkPair);
+      mockAccountRepository.get.returns({...adminAccount, lastActionAt: '1'});
+      expect(modelEngine.createAccount(request.content.idData, request.content.signature))
+        .to.eventually.be.rejectedWith(ValidationError);      
     });
 
     it('throws ValidationError if signature is wrong', async () => {
