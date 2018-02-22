@@ -44,14 +44,9 @@ describe('Account Access Definitions', () => {
     });
   });
 
-  describe('admin permissions', () => {
-    beforeEach(async () => {
-      await accountAccessDefinitions.createAdminAccountPermissions(adminAddress);
-    });
-
-    it('should add `change_account_permissions` and `create_account` to admin account', async () => {
-      expect(mockPermissionRepository.setPermissions).to.be.calledWith(adminAddress,
-        ['change_account_permissions', 'create_account']);
-    });
+  it('should add `change_account_permissions` and `create_account` to admin account', async () => {
+    await accountAccessDefinitions.createAdminAccountPermissions(adminAddress);
+    expect(mockPermissionRepository.setPermissions).to.be.calledWith(adminAddress,
+      ['change_account_permissions', 'create_account']);
   });
 });
