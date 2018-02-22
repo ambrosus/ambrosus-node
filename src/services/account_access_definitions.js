@@ -6,22 +6,22 @@ export default class AccountAccessDefinitions {
   }
 
   async setPermissions(address, permissions, sender) {
-    await this.canChangePermissions(sender);
+    await this.ensureHasChangeAccountPermissions(sender);
     return this.accountRepository.setPermissions(address, permissions);
   }
 
-  async canChangePermissions(address) {
-    if (!await this.checkPermission(address, 'change_account_permissions')) {
+  async ensureHasChangeAccountPermissions(address) {
+    if (!await this.hasPermission(address, 'change_account_permissions')) {
       throw new PermissionError(`${address} cannot change account permissions`);
     }
   }
 
-  async checkPermission(address, permissionName) {
+  async hasPermission(address, permissionName) {
     const permissions = await this.accountRepository.getPermissions(address);
     return permissions.indexOf(permissionName) >= 0;
   }
 
-  async createAdminAccountPermissions(adminAddress) {
-    await this.accountRepository.setPermissions(adminAddress, ['change_account_permissions', 'create_account']);
+  defaultAdminPermissions() {
+    return ['change_account_permissions', 'create_account'];
   }
 }

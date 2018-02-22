@@ -45,8 +45,7 @@ describe('Account Access Definitions', () => {
   });
 
   it('should add `change_account_permissions` and `create_account` to admin account', async () => {
-    await accountAccessDefinitions.createAdminAccountPermissions(adminAddress);
-    expect(mockPermissionRepository.setPermissions).to.be.calledWith(adminAddress,
-      ['change_account_permissions', 'create_account']);
+    const permissions = await accountAccessDefinitions.defaultAdminPermissions();
+    expect(permissions).to.deep.eq(['change_account_permissions', 'create_account']);
   });
 });

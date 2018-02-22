@@ -15,14 +15,17 @@ export default class DataModelEngine {
     if (accounts > 0) {
       throw new Error('Admin account arleady exist.');
     }
-    await this.accountRepository.store(account);
-    await this.accountAccessDefinitions.createAdminAccountPermissions(account.address);
+    const accountWithPermissions = {
+      ...account,
+      permissions: this.accountAccessDefinitions.defaultAdminPermissions()
+    };
+    await this.accountRepository.store(accountWithPermissions);
     return account;
   }
 
   async createAccount(idData, signature) {
     this.identityManager.validateSignature(idData.createdBy, signature, idData);
-    if (!await this.accountAccessDefinitions.checkPermission(idData.createdBy, 'create_account')) {
+    if (!await this.accountAccessDefinitions.hasPermission(idData.createdBy, 'create_account')) {
       throw new PermissionError(`Creating new accounts forbidden for ${idData.createdBy}`);
     }
     const account = this.identityManager.createKeyPair();
