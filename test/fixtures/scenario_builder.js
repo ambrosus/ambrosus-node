@@ -27,8 +27,8 @@ class ScenarioBuilder {
     return processedAccount;
   }
 
-  async addAccount(creatorAccount) {
-    const accountRequest = createFullAccountRequest(this.identityManager, creatorAccount);
+  async addAccount(accountInx = 0) {
+    const accountRequest = createFullAccountRequest(this.identityManager, this.accounts[accountInx]);
     const processedAccount = await this.processor.onAddAccount(accountRequest);
     this.accounts.push(processedAccount);
     return processedAccount;
