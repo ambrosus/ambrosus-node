@@ -16,7 +16,6 @@ const {expect} = chai;
 
 describe('Assets', () => {
   let mockModelEngine = null;
-  let mockLinkHelper = null;
   let req = null;
   let res = null;
 
@@ -27,13 +26,8 @@ describe('Assets', () => {
       createEvent: sinon.stub(),
       getEvent: sinon.stub()
     };
-    mockLinkHelper = {
-      linkForAsset: sinon.stub(),
-      linkForEvent: sinon.stub()
-    };
     req = httpMocks.createRequest({});
     req.modelEngine = mockModelEngine;
-    req.linkHelper = mockLinkHelper;
     res = httpMocks.createResponse();
   });
 
@@ -45,22 +39,17 @@ describe('Assets', () => {
     beforeEach(() => {
       inputAsset = createAsset();
       mockModelEngine.createAsset.resolves(put(inputAsset, 'assetId', resultAssetId));
-      mockLinkHelper.linkForAsset.returns('xyz');
       req.body = inputAsset;
-      injectedHandler = createAssetHandler(mockModelEngine, mockLinkHelper);
+      injectedHandler = createAssetHandler(mockModelEngine);
     });
 
-    it('pushes json body into Data Model Engine, proxies result and appends metadata', async () => {
+    it('pushes json body into Data Model Engine, proxies result', async () => {
       await injectedHandler(req, res);
 
       expect(mockModelEngine.createAsset).to.have.been.calledWith(inputAsset);
-      expect(mockLinkHelper.linkForAsset).to.have.been.calledWith(resultAssetId);
 
       expect(res._getStatusCode()).to.eq(201);
       expect(res._isJSON()).to.be.true;
-      const returnedData = JSON.parse(res._getData());
-
-      expect(returnedData.metadata.link).to.be.equal(`xyz`);
     });
   });
 
@@ -72,51 +61,40 @@ describe('Assets', () => {
     beforeEach(() => {
       mockAsset = createAsset();
       mockModelEngine.getAsset.resolves(put(mockAsset, 'assetId', assetId));
-      mockLinkHelper.linkForAsset.returns('xyz');
-      injectedHandler = fetchAssetHandler(mockModelEngine, mockLinkHelper);
+      injectedHandler = fetchAssetHandler(mockModelEngine);
     });
 
-    it('asks the model engine for the asset and augments metadata using link helper', async () => {
+    it('asks the model engine for the asset', async () => {
       req.params.assetId = assetId;
       await injectedHandler(req, res);
 
       expect(mockModelEngine.getAsset).to.have.been.calledWith(assetId);
-      expect(mockLinkHelper.linkForAsset).to.have.been.calledWith(assetId);
 
       expect(res._getStatusCode()).to.eq(200);
       expect(res._isJSON()).to.be.true;
-      const returnedData = JSON.parse(res._getData());
-
-      expect(returnedData.metadata.link).to.be.equal(`xyz`);
     });
   });
 
   describe('creating an event', () => {
     let inputEvent = null;
     const mockAssetId = '4321';
-    const mockEventId = '4321';
     let injectedHandler;
 
     beforeEach(() => {
       inputEvent = createEvent({assetId: mockAssetId}, {});
       mockModelEngine.createEvent.returns(put(inputEvent, 'eventId', mockAssetId));
-      mockLinkHelper.linkForEvent.returns('abc');
       req.body = inputEvent;
       req.params.assetId = inputEvent.content.idData.assetId;
-      injectedHandler = createEventHandler(mockModelEngine, mockLinkHelper);
+      injectedHandler = createEventHandler(mockModelEngine);
     });
 
-    it('pushes json body into Data Model Engine, proxies result and appends metadata', async () => {
+    it('pushes json body into Data Model Engine, proxies result', async () => {
       await injectedHandler(req, res);
 
       expect(mockModelEngine.createEvent).to.have.been.calledWith(inputEvent);
-      expect(mockLinkHelper.linkForEvent).to.have.been.calledWith(mockAssetId, mockEventId);
 
       expect(res._getStatusCode()).to.eq(201);
       expect(res._isJSON()).to.be.true;
-      const returnedData = JSON.parse(res._getData());
-
-      expect(returnedData.metadata.link).to.be.equal(`abc`);
     });
 
     it('fails if the path assetId differs from the one in content.idData.assetId', async () => {
@@ -133,23 +111,18 @@ describe('Assets', () => {
     beforeEach(() => {
       mockEvent = createEvent();
       mockModelEngine.getEvent.resolves(put(mockEvent, 'eventId', eventId));
-      mockLinkHelper.linkForEvent.returns('qwerty');
-      injectedHandler = fetchEventHandler(mockModelEngine, mockLinkHelper);
+      injectedHandler = fetchEventHandler(mockModelEngine);
     });
 
-    it('asks the model engine for the event and augments metadata using link helper', async () => {
+    it('asks the model engine for the event', async () => {
       req.params.assetId = mockEvent.content.idData.assetId;
       req.params.eventId = eventId;
       await injectedHandler(req, res);
 
       expect(mockModelEngine.getEvent).to.have.been.calledWith(eventId);
-      expect(mockLinkHelper.linkForEvent).to.have.been.calledWith(mockEvent.content.idData.assetId, eventId);
 
       expect(res._getStatusCode()).to.eq(200);
       expect(res._isJSON()).to.be.true;
-      const returnedData = JSON.parse(res._getData());
-
-      expect(returnedData.metadata.link).to.be.equal(`qwerty`);
     });
   });
 });

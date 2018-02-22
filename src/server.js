@@ -7,16 +7,15 @@ import assetsRouter from './routes/assets';
 
 
 export default class Server {
-  constructor(modelEngine, linkHelper) {
+  constructor(modelEngine) {
     this.modelEngine = modelEngine;
-    this.linkHelper = linkHelper;
   }
 
   start() {
     const app = express();
 
     app.use('/accounts', accountsRouter(this.modelEngine.identityManager, this.modelEngine));  
-    app.use('/assets', assetsRouter(this.modelEngine.identityManager, this.modelEngine, this.linkHelper));
+    app.use('/assets', assetsRouter(this.modelEngine.identityManager, this.modelEngine));
 
     // Should always be last
     app.use(errorHandling);
