@@ -2,9 +2,10 @@ import chai from 'chai';
 import chaiHttp from 'chai-http';
 import chaiAsPromissed from 'chai-as-promised';
 import {properAddress, properSecret} from '../helpers/web3chai';
-import Aparatus from '../helpers/aparatus';
+import Aparatus, {aparatusScenarioProcessor}  from '../helpers/aparatus';
 import {createAccountRequest, adminAccountWithSecret, createFullAccountRequest, accountWithSecret} from '../fixtures/account';
 import addSignature from '../fixtures/add_signature';
+import ScenarioBuilder from '../fixtures/scenario_builder';
 
 
 chai.use(chaiHttp);
@@ -16,16 +17,19 @@ const {expect} = chai;
 
 describe('Accounts - Integrations', async () => {
   let aparatus;
+  let scenario;
   let account;
 
   before(async () => {
     aparatus = new Aparatus();
     await aparatus.start();
+    scenario = new ScenarioBuilder(aparatus.identityManager, aparatusScenarioProcessor(aparatus));
   });
 
   beforeEach(async () => {
     await aparatus.cleanDB();
-    await aparatus.modelEngine.createAdminAccount(adminAccountWithSecret);
+    scenario.reset();
+    account = await scenario.injectAccount(adminAccountWithSecret);
   });
 
   describe('Get account detail', () => {

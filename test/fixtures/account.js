@@ -11,12 +11,12 @@ const createAccountRequest = (fields) => ({
   }
 });
 
-const createFullAccountRequest = (identityManager) =>
+const createFullAccountRequest = (identityManager, creatorAccount = adminAccountWithSecret) =>
   addSignature(
     identityManager,
     createAccountRequest(
-      {createdBy: adminAccountWithSecret.address}),
-    adminAccountWithSecret.secret);
+      {createdBy: creatorAccount.address}),
+    creatorAccount.secret);
 
 const account = {
   address: '0x742e62cc7a19ef7d9c44306c07fad54b5bf6d4be'

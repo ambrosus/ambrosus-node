@@ -1,13 +1,15 @@
 import {createFullAsset, createFullEvent} from './assets_events';
+import {createFullAccountRequest} from './account';
 
-const defaultScenarioProcessor = {
+const defaultScenarioProcessor = (identityManager) => ({
   onInjectAccount: async (account) => account,
   onAddAsset: async (asset) => asset,
-  onAddEvent: async (event) => event
-};
+  onAddEvent: async (event) => event,
+  onAddAccount: async () => identityManager.createKeyPair()
+});
 
 class ScenarioBuilder {
-  constructor(identityManager, processor = defaultScenarioProcessor) {
+  constructor(identityManager, processor = defaultScenarioProcessor(identityManager)) {
     this.identityManager = identityManager;
     this.processor = processor;
     this.reset();
@@ -25,7 +27,14 @@ class ScenarioBuilder {
     return processedAccount;
   }
 
-  async addAsset(accountInx, fields = {}) {
+  async addAccount(creatorAccount) {
+    const accountRequest = createFullAccountRequest(this.identityManager, creatorAccount);
+    const processedAccount = await this.processor.onAddAccount(accountRequest);
+    this.accounts.push(processedAccount);
+    return processedAccount;
+  }
+
+  async addAsset(accountInx = 0 , fields = {}) {
     const account = this.accounts[accountInx];
     const asset = createFullAsset(
       this.identityManager, 
@@ -39,7 +48,7 @@ class ScenarioBuilder {
     return processedAsset;
   }
 
-  async addEvent(accountInx, subjectInx, fields = {}, data = {}) {
+  async addEvent(accountInx = 0, subjectInx = 0, fields = {}, data = {}) {
     const account = this.accounts[accountInx];
     const event = createFullEvent(
       this.identityManager, 
