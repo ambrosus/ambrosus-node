@@ -422,3 +422,46 @@ Fetches an event by identifier
     Event not found
 
     + Body
+    
+### /events{?assetId}
+
+#### Find events [GET]
+
+Finds event satisfying provided cryteria.
+
++ Parameters
+
+    + assetId : 0xc5cfd04.....30755ed65 (string, optional) - ID of the asset the events are targeting
+
++ Response 200 (application/json)
+
+    The requested event
+
+    + Body
+
+            {
+                results: [
+                    {
+                        "eventId": "0xc5cfd04.....30755ed65",
+                        "content": {
+                            "signature": "0x30755ed65396facf86c53e6...65c5cfd04be400",
+                            "idData": {
+                                "assetId": "0xc5cfd04.....30755ed65",
+                                "createdBy": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
+                                "timestamp": 1503424923,
+                                "dataHash": "0x01cd181cd38eb5bbd162a44701727a31f457a538"
+                            },
+                            "data": {
+        
+                            }
+                        }
+                    }
+                ],
+                resultCount: 112
+            }
+
++ Response 404
+
+    Event not found
+
+    + Body
