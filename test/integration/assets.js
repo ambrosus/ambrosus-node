@@ -27,10 +27,6 @@ describe('Assets - Integrations', () => {
       .send(createFullAccountRequest(aparatus.identityManager));
   });
 
-  beforeEach(async () => {
-    await aparatus.cleanDB();
-  });
-
   describe('creating asset', () => {
     let inputAsset = null;
 

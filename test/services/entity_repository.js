@@ -6,6 +6,7 @@ import {createAsset, createEvent} from '../fixtures/assets_events';
 import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
 import ScenarioBuilder from '../fixtures/scenario_builder';
+import {adminAccountWithSecret} from '../fixtures/account';
 
 import EntityRepository from '../../src/services/entity_repository';
 
@@ -27,6 +28,7 @@ describe('Entity Repository', () => {
   beforeEach(async () => {
     await cleanDatabase(db);
     scenario.reset();
+    await scenario.injectAccount(adminAccountWithSecret);
   });
 
   describe('Assets', () => {
@@ -59,11 +61,12 @@ describe('Entity Repository', () => {
 
     describe('Find', () => {
       beforeEach(async () => {
-        await scenario.addAsset();
-        const eventsSet = await scenario.addEventsSerial(
+        await scenario.addAsset(0);
+        const eventsSet = await scenario.generateEvents(
           134,
           (inx) => ({
-            subject: 0,
+            accountInx: 0,
+            subjectInx: 0,
             fields: {timestamp: inx},
             data: {}
           })

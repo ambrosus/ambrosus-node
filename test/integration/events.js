@@ -4,6 +4,7 @@ import chaiAsPromised from 'chai-as-promised';
 import Aparatus, {aparatusScenarioProcessor} from '../helpers/aparatus';
 import chaiHttp from 'chai-http';
 
+import {adminAccountWithSecret} from '../fixtures/account';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 
 chai.use(chaiHttp);
@@ -22,17 +23,19 @@ describe('Events - Integrations', () => {
   });
 
   beforeEach(async () => {
-    scenario.reset();
     await aparatus.cleanDB();
+    scenario.reset();
+    await scenario.injectAccount(adminAccountWithSecret);
   });
 
   describe('finding events', () => {
     beforeEach(async () => {
-      await scenario.addAsset();
-      await scenario.addEventsSerial(
+      await scenario.addAsset(0);
+      await scenario.generateEvents(
         134,
         (inx) => ({
-          subject: 0,
+          accountInx: 0,
+          subjectInx: 0,
           fields: {timestamp: inx},
           data: {}
         })

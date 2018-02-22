@@ -18,6 +18,8 @@ export default class Aparatus {
     this.db = db;
     this.web3 = await createWeb3();
 
+    await this.cleanDB();
+
     this.identityManager = new IdentityManager(this.web3);
     this.entityBuilder = new EntityBuilder(this.identityManager);
     this.entityRepository = new EntityRepository(db);
@@ -46,6 +48,7 @@ export default class Aparatus {
 }
 
 const aparatusScenarioProcessor = (aparatus) => ({
+  onInjectAccount: async (account) => await aparatus.modelEngine.createAdminAccount(account),
   onAddAsset: async (asset) => {
     const response = await aparatus.request()
       .post('/assets')

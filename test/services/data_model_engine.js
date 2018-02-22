@@ -8,7 +8,7 @@ import {NotFoundError, ValidationError, InvalidParametersError, PermissionError}
 
 
 import {createAsset, createEvent} from '../fixtures/assets_events';
-import {createAccountRequest, adminAccount, accountWithSecret} from '../fixtures/account';
+import {createAccountRequest, adminAccount, accountWithSecret, adminAccountWithSecret} from '../fixtures/account';
 import pkPair from '../fixtures/pk_pair';
 
 import {createWeb3} from '../../src/utils/web3_tools';
@@ -39,6 +39,7 @@ describe('Data Model Engine', () => {
     mockAsset = createAsset();
     mockEvent = createEvent();
     scenario.reset();
+    await scenario.injectAccount(adminAccountWithSecret);
 
     mockIdentityManager = {
       createKeyPair: sinon.stub(),
@@ -210,11 +211,12 @@ describe('Data Model Engine', () => {
 
   describe('finding events', () => {
     it('coordinates all services', async () => {
-      await scenario.addAsset();
-      const eventSet = await scenario.addEventsSerial(
+      await scenario.addAsset(0);
+      const eventSet = await scenario.generateEvents(
         100,
         (inx) => ({
-          subject: 0,
+          accountInx: 0, 
+          subjectInx: 0, 
           fields: {timestamp: inx},
           data: {}
         })

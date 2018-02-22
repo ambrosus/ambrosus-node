@@ -9,6 +9,7 @@ import {findEventsHandler} from '../../src/routes/events';
 import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
 import ScenarioBuilder from '../fixtures/scenario_builder';
+import {adminAccountWithSecret} from '../fixtures/account';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -34,6 +35,9 @@ describe('Events', () => {
     };
     req = httpMocks.createRequest({});
     res = httpMocks.createResponse();
+
+    scenario.reset();
+    scenario.injectAccount(adminAccountWithSecret);
   });
 
   describe('finding events', () => {
@@ -44,16 +48,17 @@ describe('Events', () => {
     });
 
     it('queries Data Model Engine, proxies result, appends metadata, and resultCount', async () => {
-      await scenario.addAsset();
-      const eventSet = await scenario.addEventsSerial(
-        105, 
+      await scenario.addAsset(0);
+      const eventSet = await scenario.generateEvents(
+        105,
         (inx) => ({
-          subject: 0, 
-          fields: {timestamp: inx}, 
+          accountInx: 0,
+          subjectInx: 0,
+          fields: {timestamp: inx},
           data: {}
         })
       );
-      
+
       mockModelEngine.findEvents.resolves({results: eventSet, resultCount: 165});
       mockLinkHelper.linkForEvent.returns('123');
 

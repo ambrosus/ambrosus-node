@@ -84,8 +84,6 @@ export default class DataModelEngine {
   }
 
   async findEvents() {
-    const ret = await this.entityRepository.findEvents();
-
-    return ret;
+    return await this.entityRepository.findEvents();
   }
 }
