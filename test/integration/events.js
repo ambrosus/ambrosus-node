@@ -43,7 +43,7 @@ describe('Events - Integrations', () => {
     });
 
     describe('without additional parameters', () => {
-      it('returns the 100 newest (by timestamp) events (augmented with links in metadata)', async () => {
+      it('returns the 100 newest (by timestamp) events', async () => {
         const response = await aparatus.request().get(`/events`);
         const {body} = response;
 
@@ -51,9 +51,6 @@ describe('Events - Integrations', () => {
         expect(body.resultCount).to.equal(134);
         expect(body.results[0]).to.deep.equal(scenario.events[133]);
         expect(body.results[99]).to.deep.equal(scenario.events[34]);
-
-        const [specimen] = body.results;
-        expect(specimen.metadata.link).to.equal(`/assets/${specimen.content.idData.assetId}/events/${specimen.eventId}`);
       });
     });
   });

@@ -17,7 +17,6 @@ const {expect} = chai;
 
 describe('Events', () => {
   let mockModelEngine;
-  let mockLinkHelper;
   let req;
   let res;
   let scenario;
@@ -30,9 +29,6 @@ describe('Events', () => {
     mockModelEngine = {
       findEvents: sinon.stub()
     };
-    mockLinkHelper = {
-      linkForEvent: sinon.stub()
-    };
     req = httpMocks.createRequest({});
     res = httpMocks.createResponse();
 
@@ -44,7 +40,7 @@ describe('Events', () => {
     let injectedHandler;
 
     beforeEach(() => {
-      injectedHandler = findEventsHandler(mockModelEngine, mockLinkHelper);
+      injectedHandler = findEventsHandler(mockModelEngine);
     });
 
     it('queries Data Model Engine, proxies result, appends metadata, and resultCount', async () => {
@@ -60,7 +56,6 @@ describe('Events', () => {
       );
 
       mockModelEngine.findEvents.resolves({results: eventSet, resultCount: 165});
-      mockLinkHelper.linkForEvent.returns('123');
 
       await injectedHandler(req, res);
 
@@ -71,11 +66,6 @@ describe('Events', () => {
       expect(res._isJSON()).to.be.true;
       expect(returnedData.resultCount).to.equal(165);
       expect(returnedData.results.length).to.equal(105);
-
-      expect(mockLinkHelper.linkForEvent).to.have.callCount(105);
-      for (const event of returnedData.results) {
-        expect(event.metadata.link).to.equal('123');
-      }
     });
   });
 });
