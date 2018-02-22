@@ -39,7 +39,6 @@ describe('Assets - Integrations', () => {
         .post('/assets')
         .send(inputAsset);
       expect(response.status).to.eq(201);
-      expect(response.body.metadata.link).to.equal(`/assets/${response.body.assetId}`);
       expect(response.body.content).to.deep.equal(inputAsset.content);
     });
 
@@ -51,7 +50,6 @@ describe('Assets - Integrations', () => {
         .set('Authorization', `AMB ${account.body.content.secret}`)
         .send(unsignedAsset);
       expect(response.status).to.eq(201);
-      expect(response.body.metadata.link).to.equal(`/assets/${response.body.assetId}`);
       expect(response.body.content.idData).to.deep.equal(unsignedAsset.content.idData);
     });
 
@@ -123,7 +121,6 @@ describe('Assets - Integrations', () => {
         .send(inputEvent);
 
       expect(response.status).to.eq(201);
-      expect(response.body.metadata.link).to.equal(`/assets/${baseAsset.assetId}/events/${response.body.eventId}`);
       expect(response.body.content).to.deep.equal(inputEvent.content);
     });
 
@@ -136,7 +133,6 @@ describe('Assets - Integrations', () => {
         .send(unsignedEvent);
 
       expect(response.status).to.eq(201);
-      expect(response.body.metadata.link).to.equal(`/assets/${baseAsset.assetId}/events/${response.body.eventId}`);
       // the idData should include all values taken from the input + dataHash
       for (const key of ['timestamp', 'accessLevel', 'assetId', 'createdBy']) {
         expect(get(response.body.content.idData, key)).to.equal(get(unsignedEvent.content.idData, key));
