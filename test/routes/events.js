@@ -3,6 +3,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
+import {put} from '../../src/utils/dict_utils';
 
 import {findEventsHandler} from '../../src/routes/events';
 
@@ -39,14 +40,11 @@ describe('Events', () => {
   describe('finding events', () => {
     let injectedHandler;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       injectedHandler = findEventsHandler(mockModelEngine);
-    });
-
-    it('queries Data Model Engine, proxies result, appends metadata, and resultCount', async () => {
       await scenario.addAsset(0);
       const eventSet = await scenario.generateEvents(
-        105,
+        4,
         (inx) => ({
           accountInx: 0,
           subjectInx: 0,
@@ -54,18 +52,25 @@ describe('Events', () => {
           data: {}
         })
       );
-
       mockModelEngine.findEvents.resolves({results: eventSet, resultCount: 165});
+    });
+
+    it('parses query string, proxies result from Data Model Engine, appends metadata/resultCount', async () => {
+      const validQueryParams = {
+        assetId: scenario.assets[0].assetId
+      };
+      const extendedQueryParams = put(validQueryParams, 'surplusParam', 'some value');
+      req.query = extendedQueryParams;
 
       await injectedHandler(req, res);
 
       const returnedData = JSON.parse(res._getData());
 
-      expect(mockModelEngine.findEvents).to.have.been.called;
+      expect(mockModelEngine.findEvents).to.have.been.calledWith(validQueryParams);
       expect(res._getStatusCode()).to.eq(200);
       expect(res._isJSON()).to.be.true;
+      expect(returnedData.results.length).to.equal(4);
       expect(returnedData.resultCount).to.equal(165);
-      expect(returnedData.results.length).to.equal(105);
     });
   });
 });

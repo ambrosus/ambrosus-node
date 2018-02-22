@@ -62,11 +62,12 @@ describe('Entity Repository', () => {
     describe('Find', () => {
       beforeEach(async () => {
         await scenario.addAsset(0);
+        await scenario.addAsset(0);
         const eventsSet = await scenario.generateEvents(
-          134,
+          135,
           (inx) => ({
             accountInx: 0,
-            subjectInx: 0,
+            subjectInx: (inx % 3 === 0 ? 1 : 0),
             fields: {timestamp: inx},
             data: {}
           })
@@ -76,12 +77,20 @@ describe('Entity Repository', () => {
         }
       });
 
-      it('returns 100 newest (ordered by timestamp desc) events', async () => {
-        const ret = await expect(storage.findEvents()).to.be.fulfilled;
+      it('without params returns 100 newest events', async () => {
+        const ret = await expect(storage.findEvents({})).to.be.fulfilled;
         expect(ret.results).have.lengthOf(100);
-        expect(ret.results[0]).to.deep.equal(scenario.events[133]);
-        expect(ret.results[99]).to.deep.equal(scenario.events[34]);
-        expect(ret.resultCount).to.equal(134);
+        expect(ret.results[0]).to.deep.equal(scenario.events[134]);
+        expect(ret.results[99]).to.deep.equal(scenario.events[35]);
+        expect(ret.resultCount).to.equal(135);
+      });
+
+      it('with assetId param returns events for selected asset', async () => {
+        const targetAssetId = scenario.assets[0].assetId;
+        const ret = await expect(storage.findEvents({assetId: targetAssetId})).to.be.fulfilled;
+        expect(ret.results).have.lengthOf(90);
+        expect(ret.resultCount).to.equal(90);
+        ret.results.forEach((element) => expect(element.content.idData.assetId).to.equal(targetAssetId));
       });
     });
   });

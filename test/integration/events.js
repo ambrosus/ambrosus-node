@@ -31,11 +31,12 @@ describe('Events - Integrations', () => {
   describe('finding events', () => {
     beforeEach(async () => {
       await scenario.addAsset(0);
+      await scenario.addAsset(0);
       await scenario.generateEvents(
-        134,
+        120,
         (inx) => ({
           accountInx: 0,
-          subjectInx: 0,
+          subjectInx: inx % 10 === 0 ? 1 : 0,
           fields: {timestamp: inx},
           data: {}
         })
@@ -48,9 +49,19 @@ describe('Events - Integrations', () => {
         const {body} = response;
 
         expect(body.results).to.have.lengthOf(100);
-        expect(body.resultCount).to.equal(134);
-        expect(body.results[0]).to.deep.equal(scenario.events[133]);
-        expect(body.results[99]).to.deep.equal(scenario.events[34]);
+        expect(body.resultCount).to.equal(120);
+        expect(body.results[0]).to.deep.equal(scenario.events[119]);
+        expect(body.results[99]).to.deep.equal(scenario.events[20]);
+      });
+
+      it('with assetId returns only events for target asset', async () => {
+        const targetAssetId = scenario.assets[0].assetId;
+        const response = await aparatus.request().get(`/events?assetId=${targetAssetId}`);
+        const {body} = response;
+
+        expect(body.results).to.have.lengthOf(100);
+        expect(body.resultCount).to.equal(108);
+        body.results.forEach((element) => expect(element.content.idData.assetId).to.equal(targetAssetId));
       });
     });
   });
