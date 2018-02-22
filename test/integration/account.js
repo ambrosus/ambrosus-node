@@ -24,6 +24,7 @@ describe('Accounts - Integrations', async () => {
   });
 
   beforeEach(async () => {
+    await aparatus.cleanDB();
     await aparatus.modelEngine.createAdminAccount(adminAccountWithSecret);
   });
 
@@ -86,7 +87,7 @@ describe('Accounts - Integrations', async () => {
       const request = addSignature(aparatus.identityManager,
         createAccountRequest({
           createdBy:
-          nonExistingUser.address
+            nonExistingUser.address
         }), nonExistingUser.secret);
       const pendingRequest = aparatus.request()
         .post('/accounts')
@@ -95,10 +96,6 @@ describe('Accounts - Integrations', async () => {
         .to.eventually.be.rejected
         .and.have.property('status', 403);
     });
-  });
-
-  afterEach(async () => {
-    await aparatus.cleanDB();
   });
 
   after(async () => {

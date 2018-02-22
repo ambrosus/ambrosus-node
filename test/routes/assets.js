@@ -6,7 +6,7 @@ import chaiAsPromised from 'chai-as-promised';
 
 import {createAssetHandler, fetchAssetHandler, createEventHandler, fetchEventHandler} from '../../src/routes/assets';
 import {put} from '../../src/utils/dict_utils';
-import {createAsset, createEvent} from '../fixtures/asset_fixture_builder';
+import {createAsset, createEvent} from '../fixtures/assets_events';
 
 import {ValidationError} from '../../src/errors/errors';
 
@@ -27,7 +27,6 @@ describe('Assets', () => {
       getEvent: sinon.stub()
     };
     req = httpMocks.createRequest({});
-    req.modelEngine = mockModelEngine;
     res = httpMocks.createResponse();
   });
 

@@ -18,6 +18,8 @@ export default class Aparatus {
     this.db = db;
     this.web3 = await createWeb3();
 
+    await this.cleanDB();
+
     this.identityManager = new IdentityManager(this.web3);
     this.entityBuilder = new EntityBuilder(this.identityManager);
     this.entityRepository = new EntityRepository(db);
@@ -27,14 +29,14 @@ export default class Aparatus {
 
     this.server = new Server(this.modelEngine);
     this.server.start();
-      
+
     return this;
   }
 
   request() {
     return chai.request(this.server.server);
   }
-  
+
   async cleanDB() {
     return cleanDatabase(this.db);
   }
@@ -44,3 +46,21 @@ export default class Aparatus {
     await this.client.close();
   }
 }
+
+const aparatusScenarioProcessor = (aparatus) => ({
+  onInjectAccount: async (account) => await aparatus.modelEngine.createAdminAccount(account),
+  onAddAsset: async (asset) => {
+    const response = await aparatus.request()
+      .post('/assets')
+      .send(asset);
+    return response.body;
+  },
+  onAddEvent: async (event) => {
+    const response = await aparatus.request()
+      .post(`/assets/${event.content.idData.assetId}/events`)
+      .send(event);
+    return response.body;
+  }
+});
+
+export {aparatusScenarioProcessor};

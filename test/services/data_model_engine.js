@@ -6,9 +6,14 @@ import chaiAsPromised from 'chai-as-promised';
 import DataModelEngine from '../../src/services/data_model_engine';
 import {NotFoundError, ValidationError, InvalidParametersError, PermissionError} from '../../src/errors/errors';
 
-import {createAsset, createEvent} from '../fixtures/asset_fixture_builder';
+
+import {createAsset, createEvent} from '../fixtures/assets_events';
+import {createAccountRequest, adminAccount, accountWithSecret, adminAccountWithSecret} from '../fixtures/account';
 import pkPair from '../fixtures/pk_pair';
-import {createAccountRequest, adminAccount, accountWithSecret} from '../fixtures/account';
+
+import {createWeb3} from '../../src/utils/web3_tools';
+import IdentityManager from '../../src/services/identity_manager';
+import ScenarioBuilder from '../fixtures/scenario_builder';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -24,9 +29,17 @@ describe('Data Model Engine', () => {
   let mockAsset;
   let mockEvent;
 
-  beforeEach(() => {
+  let scenario;
+
+  before(async () => {
+    scenario = new ScenarioBuilder(new IdentityManager(await createWeb3()));
+  });
+
+  beforeEach(async () => {
     mockAsset = createAsset();
     mockEvent = createEvent();
+    scenario.reset();
+    await scenario.injectAccount(adminAccountWithSecret);
 
     mockIdentityManager = {
       createKeyPair: sinon.stub(),
@@ -46,7 +59,9 @@ describe('Data Model Engine', () => {
       storeAsset: sinon.stub(),
       getAsset: sinon.stub(),
       storeEvent: sinon.stub(),
-      getEvent: sinon.stub()
+      getEvent: sinon.stub(),
+      findEvents: sinon.stub(),
+      countEvents: sinon.stub()
     };
     modelEngine = new DataModelEngine(mockIdentityManager, mockEntityBuilder, mockEntityRepository,
       mockAccountRepository);
@@ -191,6 +206,30 @@ describe('Data Model Engine', () => {
       await expect(modelEngine.getEvent('notexistingEvent')).to.be.rejectedWith(NotFoundError);
 
       expect(mockEntityRepository.getEvent).to.have.been.calledWith('notexistingEvent');
+    });
+  });
+
+  describe('finding events', () => {
+    it('coordinates all services', async () => {
+      await scenario.addAsset(0);
+      const eventSet = await scenario.generateEvents(
+        100,
+        (inx) => ({
+          accountInx: 0, 
+          subjectInx: 0, 
+          fields: {timestamp: inx},
+          data: {}
+        })
+      );
+      mockEntityRepository.findEvents.resolves({results: eventSet, resultCount: 165});
+
+      const ret = await expect(modelEngine.findEvents()).to.fulfilled;
+
+      // asks the entity repository for the events
+      expect(mockEntityRepository.findEvents).to.have.been.called;
+
+      expect(ret.results).to.equal(eventSet);
+      expect(ret.resultCount).to.equal(165);
     });
   });
 });

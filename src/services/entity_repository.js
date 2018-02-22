@@ -18,4 +18,21 @@ export default class EntityRepository {
   async getEvent(eventId) {
     return await this.db.collection('event').findOne({eventId}, {fields: {_id: 0}});
   }
+
+  async findEvents() {
+    const cursor = this.db
+      .collection('event')
+      .find(
+        {},
+        {
+          fields: {_id: 0},
+          limit: 100,
+          sort: [['content.idData.timestamp', 'descending']]
+        });
+
+    return {
+      results: await cursor.toArray(),
+      resultCount: await cursor.count(false)
+    };
+  }
 }
