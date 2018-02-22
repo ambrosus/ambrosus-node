@@ -1,7 +1,8 @@
 import {InvalidParametersError} from '../errors/errors';
 import {get, put} from '../utils/dict_utils';
 
-const presignerMiddleware = (identityManager, toSignPath = 'content.idData', signaturePath = 'content.signature') => ((req, res, next) => {
+const presignerMiddleware = (
+  identityManager, toSignPath = 'content.idData', signaturePath = 'content.signature') => ((req, res, next) => {
   const authorizationHeader = req.headers.authorization;
   if (!authorizationHeader) {
     next();

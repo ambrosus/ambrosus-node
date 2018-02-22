@@ -11,12 +11,12 @@ const createAccountRequest = (fields) => ({
   }
 });
 
-const createFullAccountRequest = (identityManager) =>
+const createFullAccountRequest = (identityManager, pkPair = adminAccountWithSecret) =>
   addSignature(
     identityManager,
     createAccountRequest(
-      {createdBy: adminAccountWithSecret.address}),
-    adminAccountWithSecret.secret);
+      {createdBy: pkPair.address}),
+    pkPair.secret);
 
 const account = {
   address: '0x742e62cc7a19ef7d9c44306c07fad54b5bf6d4be'
@@ -40,7 +40,18 @@ const notRegisteredAccount = {
   address: '0x627306090abaB3A6e1400e9345bC60c78a8BEf57',
   secret: '0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3'
 };
+const createFullPermissionRequest = (identityManager, address, idData, pkPair = adminAccountWithSecret) =>
+  addSignature(
+    identityManager,
+    {
+      idData: {address, permissions: ['abc', 'def', 'qwe'], createdBy: pkPair.address, ...idData}
+    },
+    pkPair.secret,
+    'signature', 'idData'
+  );
 
-
-export {createAccountRequest, accountWithSecret, account, adminAccount, adminAccountWithSecret, createFullAccountRequest, notRegisteredAccount};
+export {
+  createAccountRequest, accountWithSecret, account, adminAccount, adminAccountWithSecret, createFullAccountRequest,
+  createFullPermissionRequest, notRegisteredAccount
+};
 

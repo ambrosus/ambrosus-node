@@ -1,24 +1,33 @@
-import {NotFoundError, InvalidParametersError, PermissionError} from '../errors/errors';
+import {NotFoundError, InvalidParametersError, PermissionError, ValidationError} from '../errors/errors';
+import {validatePathsNotEmpty} from '../utils/validations';
 
 export default class DataModelEngine {
-  constructor(identityManager, entityBuilder, entityRepository, accountRepository) {
+  constructor(identityManager, entityBuilder, entityRepository, accountRepository, accountAccessDefinitions) {
     this.identityManager = identityManager;
     this.entityBuilder = entityBuilder;
     this.entityRepository = entityRepository;
     this.accountRepository = accountRepository;
+    this.accountAccessDefinitions = accountAccessDefinitions;
   }
 
   async createAdminAccount(account = this.identityManager.createKeyPair()) {
     const accounts = await this.accountRepository.count();
     if (accounts > 0) {
       throw new Error('Admin account arleady exist.');
-    }    
-    await this.accountRepository.store(account);
+    }
+    const accountWithPermissions = {
+      ...account,
+      permissions: this.accountAccessDefinitions.defaultAdminPermissions()
+    };
+    await this.accountRepository.store(accountWithPermissions);
     return account;
   }
 
   async createAccount(idData, signature) {
-    this.identityManager.validateSignature(idData.createdBy, signature, idData);    
+    this.identityManager.validateSignature(idData.createdBy, signature, idData);
+    if (!await this.accountAccessDefinitions.hasPermission(idData.createdBy, 'create_account')) {
+      throw new PermissionError(`Creating new accounts forbidden for ${idData.createdBy}`);
+    }
     const account = this.identityManager.createKeyPair();
     const creatorAccount = await this.accountRepository.get(idData.createdBy);
     if (!creatorAccount) {
@@ -28,12 +37,26 @@ export default class DataModelEngine {
     return account;
   }
 
+  async updatePermissions(idData, signature) {
+    validatePathsNotEmpty(idData, ['address', 'createdBy']);
+    if (!Array.isArray(idData.permissions)) {
+      throw new ValidationError('Permissions should be provided as an array');
+    }
+
+    this.identityManager.validateSignature(idData.createdBy, signature, idData);
+    await this.accountAccessDefinitions.setPermissions(idData.address, idData.permissions, idData.createdBy);
+    return {
+      address: idData.address,
+      permissions: idData.permissions
+    };
+  }
+
   async getAccount(address) {
     const result = await this.accountRepository.get(address);
     if (!result) {
-      throw new NotFoundError(`Account ${address} not found.`);      
+      throw new NotFoundError(`Account ${address} not found.`);
     }
-    return result;    
+    return result;
   }
 
   async createAsset(asset) {

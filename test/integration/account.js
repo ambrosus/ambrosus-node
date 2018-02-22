@@ -3,7 +3,13 @@ import chaiHttp from 'chai-http';
 import chaiAsPromissed from 'chai-as-promised';
 import {properAddress, properSecret} from '../helpers/web3chai';
 import Aparatus from '../helpers/aparatus';
-import {createAccountRequest, adminAccountWithSecret, createFullAccountRequest, accountWithSecret} from '../fixtures/account';
+import {
+  adminAccountWithSecret,
+  accountWithSecret,
+  createAccountRequest,
+  createFullAccountRequest,
+  createFullPermissionRequest
+} from '../fixtures/account';
 import addSignature from '../fixtures/add_signature';
 
 
@@ -16,7 +22,6 @@ const {expect} = chai;
 
 describe('Accounts - Integrations', async () => {
   let aparatus;
-  let account;
 
   before(async () => {
     aparatus = new Aparatus();
@@ -31,7 +36,7 @@ describe('Accounts - Integrations', async () => {
   describe('Get account detail', () => {
     it('get by account address', async () => {
       const signedAccountRequest = createFullAccountRequest(aparatus.identityManager);
-      account = await aparatus.request()
+      const account = await aparatus.request()
         .post('/accounts')
         .send(signedAccountRequest);
       const response = await aparatus.request()
@@ -54,7 +59,7 @@ describe('Accounts - Integrations', async () => {
   describe('Create an account', () => {
     it('should create an account (client signed)', async () => {
       const signedAccountRequest = createFullAccountRequest(aparatus.identityManager);
-      account = await aparatus.request()
+      const account = await aparatus.request()
         .post('/accounts')
         .send(signedAccountRequest);
       expect(account.body.content.address).to.be.properAddress;
@@ -64,7 +69,7 @@ describe('Accounts - Integrations', async () => {
 
     it('should create an account (server signed)', async () => {
       const signedAccountRequest = createAccountRequest({createdBy: adminAccountWithSecret.address});
-      account = await aparatus.request()
+      const account = await aparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB ${adminAccountWithSecret.secret}`)
         .send(signedAccountRequest);
@@ -94,7 +99,88 @@ describe('Accounts - Integrations', async () => {
         .send(request);
       await expect(pendingRequest)
         .to.eventually.be.rejected
+        .and.have.property('status', 404);
+    });
+
+    it('should throw 403 if account has no permissions for creation', async () => {
+      const signedAccountRequest = createFullAccountRequest(aparatus.identityManager);
+      const newAccount = (await aparatus.request()
+        .post('/accounts')
+        .send(signedAccountRequest)).body;
+      const signedAccountByNotAdmin = createFullAccountRequest(aparatus.identityManager, newAccount.content);
+      const pendingRequest = aparatus.request()
+        .post('/accounts')
+        .send(signedAccountByNotAdmin);
+      await expect(pendingRequest)
+        .to.eventually.be.rejected
         .and.have.property('status', 403);
+    });
+  });
+
+  describe('Permissions', () => {
+    let newAccount;
+
+    beforeEach(async () => {
+      const signedAccountRequest = createFullAccountRequest(aparatus.identityManager);
+      newAccount = (await aparatus.request()
+        .post('/accounts')
+        .send(signedAccountRequest)).body;
+    });
+
+    it('admin can update permissions', async () => {
+      const signedPermissionRequest = createFullPermissionRequest(aparatus.identityManager, newAccount.content.address);
+      await aparatus.request()
+        .put('/accounts/permissions')
+        .send(signedPermissionRequest);
+      const result = await aparatus.request()
+        .get(`/accounts/${newAccount.content.address}`)
+        .send({});
+      expect(result.body.content.permissions).to.deep.eq(signedPermissionRequest.idData.permissions);
+    });
+
+    it('non-admin cannot update permissions', async () => {
+      const signedPermissionRequest = createFullPermissionRequest(aparatus.identityManager, newAccount.content.address,
+        {}, newAccount.content);
+      const pendingRequest = aparatus.request()
+        .put('/accounts/permissions')
+        .send(signedPermissionRequest);
+      await expect(pendingRequest)
+        .to.eventually.be.rejected
+        .and.have.property('status', 403);
+    });
+
+    describe('non-admin account receives permissions from admin', () => {
+      beforeEach(async () => {
+        const signedPermissionRequest = createFullPermissionRequest(aparatus.identityManager, newAccount.content.address,
+          {permissions: ['create_account', 'change_account_permissions']});
+        await aparatus.request()
+          .put('/accounts/permissions')
+          .send(signedPermissionRequest);
+      });
+
+      it('account can create new accounts', async () => {
+        const signedAccountByNotAdmin = createFullAccountRequest(aparatus.identityManager, newAccount.content);
+        const account = await aparatus.request()
+          .post('/accounts')
+          .send(signedAccountByNotAdmin);
+        const response = await aparatus.request()
+          .get(`/accounts/${account.body.content.address}`)
+          .send({});
+        expect(response.body.content.address).to.equal(account.body.content.address);
+        expect(response.body.content.secret).to.be.undefined;
+      });
+
+      it('account can change permissions', async () => {
+        const signedPermissionRequest = createFullPermissionRequest(aparatus.identityManager, newAccount.content.address,
+          {}, newAccount.content);
+        await aparatus.request()
+          .put('/accounts/permissions')
+          .send(signedPermissionRequest);
+        const result = await aparatus.request()
+          .get(`/accounts/${newAccount.content.address}`)
+          .send({});
+        expect(result.body.content.permissions).to.deep.eq(signedPermissionRequest.idData.permissions);
+      });
     });
   });
 

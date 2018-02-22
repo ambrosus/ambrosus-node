@@ -7,7 +7,7 @@ import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
 
 import EntityBuilder from '../../src/services/entity_builder';
-import {createFullEvent, createFullAsset} from '../fixtures/assets_events';
+import {createFullAsset, createFullEvent} from '../fixtures/assets_events';
 import {ValidationError} from '../../src/errors/errors';
 
 chai.use(sinonChai);
@@ -34,7 +34,14 @@ describe('Entity Builder', () => {
   });
 
   describe('validating an asset', () => {
-    for (const field of ['assetId', 'content', 'content.signature', 'content.idData', 'content.idData.createdBy', 'content.idData.timestamp', 'content.idData.sequenceNumber']) {
+    for (const field of [
+      'assetId',
+      'content',
+      'content.signature',
+      'content.idData',
+      'content.idData.createdBy',
+      'content.idData.timestamp',
+      'content.idData.sequenceNumber']) {
       // eslint-disable-next-line no-loop-func
       it(`throws if the ${field} field is missing`, () => {
         const brokenAssset = pick(exampleAsset, field);
@@ -70,7 +77,16 @@ describe('Entity Builder', () => {
   });
 
   describe('validating an event', () => {
-    for (const field of ['eventId', 'content', 'content.signature', 'content.idData', 'content.idData.assetId', 'content.idData.createdBy', 'content.idData.timestamp', 'content.idData.dataHash', 'content.data']) {
+    for (const field of [
+      'eventId',
+      'content',
+      'content.signature',
+      'content.idData',
+      'content.idData.assetId',
+      'content.idData.createdBy',
+      'content.idData.timestamp',
+      'content.idData.dataHash',
+      'content.data']) {
       // eslint-disable-next-line no-loop-func
       it(`throws if the ${field} field is missing`, () => {
         const brokenEvent = pick(exampleEvent, field);
