@@ -37,7 +37,7 @@ describe('Identity manager', () => {
     it('should compute signature', async () => {
       const signature = identityManager.sign(testAccount.privateKey, exampleData);
       const expected =
-        '0x2b74b5356cd3b26595773bd9d6cc3dcdb5c473b145f51a058736a20eb9bace17670bc450cd766e80116381b3d250e3562f3dcb79c8a6f61d8eb6271d1195bbd21b';
+        '0x60b04901cd87535336eb810de3a4c7504f0f0718780a25a2beb01bbc00b66ade77ac9c013c27ff037538d5502d34cfb5de667175c1391ba8b69a82771efb286f1b';
       expect(signature).to.eq(expected);
     });
 
@@ -99,14 +99,15 @@ describe('Identity manager', () => {
   it('Calculating the hash of data', () => {
     // calculated from input using REPL
     const input = {one: {two: {three: '3', four: 4}}, five: false};
-    const expectedHash = '0x1fa4bb07995e73c1c827c402d965726934c68d89581a1d4e5e8d02fb9fddcd9a';
+    const expectedHash = '0x1a9a56b79d8e360cf056f04ea43869479fdf79f60f72d5a6e9bda0eea7bbe947';
 
     expect(identityManager.calculateHash(input)).to.equal(expectedHash);
   });
 
   it('Calculating a stable serialization', async () => {
     const serialized = identityManager.serializeForHashing({bar: {test1: 'test1', test2: [1, false], test3: 123}, foo: 'foo'});
-    const expectedResult = '{\'bar\':{\'test1\':\'test1\',\'test2\':[1,false],\'test3\':123},\'foo\':\'foo\'}';
+    const expectedResult = '{"bar":{"test1":"test1","test2":[1,false],"test3":123},"foo":"foo"}';
     expect(serialized).to.equal(expectedResult);
   });
 });
+1
