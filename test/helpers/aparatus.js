@@ -8,6 +8,7 @@ import EntityRepository from '../../src/services/entity_repository';
 import DataModelEngine from '../../src/services/data_model_engine';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
+import AccountAccessDefinitions from '../../src/services/account_access_definitions';
 
 chai.use(chaiHttp);
 
@@ -24,7 +25,9 @@ export default class Aparatus {
     this.entityBuilder = new EntityBuilder(this.identityManager);
     this.entityRepository = new EntityRepository(db);
     this.accountRepository = new AccountRepository(db);
-    this.modelEngine = new DataModelEngine(this.identityManager, this.entityBuilder, this.entityRepository, this.accountRepository);
+    this.accountAccessDefinitions = new AccountAccessDefinitions(this.identityManager);
+    this.modelEngine = new DataModelEngine(this.identityManager, this.entityBuilder, this.entityRepository,
+      this.accountRepository, this.accountAccessDefinitions);
 
 
     this.server = new Server(this.modelEngine);

@@ -16,11 +16,21 @@ Each state-modifying call needs to have the `content.idData.createdBy` field wit
 
 __Note:__ All data is immutable, therefore, you will not find update or delete calls.
 
+### Errors
+
+The majority of errors along to the error code provide additional information in `body` with following format:
+```{json}
+{
+  "reason": "What happened"
+}
+```
+
+
 ## Group Account
 
 An account represents an actor in the supply chain. This can be a person, a company, a location, etc.
 
-It consists of a pair - a public identifer `address` (compatible with ethereum address) and a `secret` (compatible with ethereum private key).
+It consists of a pair - a public identifer `address` (compatible with ethereum address) and a `secret` (compatible with ethereum private key). Additionally an account has a list of permissions which specify the account's access levels.
 
 ### /accounts
 
@@ -37,7 +47,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
             {
                 "content": {
                     "idData": {
-                        "createdBy": "0x"
+                        "createdBy": "0x162a44701727a31f457a53801cd181cd38eb5bbd"
                     }
                 }
             }
@@ -79,7 +89,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 
 + Response 403 (application/json)
 
-    Invalid createdBy or signature
+    Invalid createdBy, invalid signature or missing create_account permission
 
     + Body
 
@@ -189,6 +199,33 @@ Places (after intensive validations) the provided asset object into the system.
     The createdBy user is not registered
 
     + Body
+
+### /accounts/{address}
+
+### Finds an account by address [GET]
+
+
++ Parameters
+
+    + address (string, required) - Address of an account
+
++ Response 200 (application/json)
+
+  Account with provided address
+
+  + Body
+
+            {
+                "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
+                "secret": "0x17d08f5fe8c77af811caa0c9a187e668ce3b74a99acc3f6d976f075fa8e0be55"
+            }
+
++ Response 404 (application/json)
+
+    Account with such address doesn't exist
+
+    + Body
+
 
 ### /assets/{assetId}
 

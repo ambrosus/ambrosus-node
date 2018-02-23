@@ -6,6 +6,7 @@ const createAccountRequest = (fields) => ({
     idData: {
       createdBy: pkPair.address,
       timestamp: Date.now(),
+      permissions: [],
       ...fields
     }
   }
@@ -19,11 +20,12 @@ const createFullAccountRequest = (identityManager, creatorAccount = adminAccount
     creatorAccount.secret);
 
 const account = {
-  address: '0x742e62cc7a19ef7d9c44306c07fad54b5bf6d4be'
+  address: '0x742e62cc7a19ef7d9c44306c07fad54b5bf6d4be',
+  permissions: []
 };
 
 const accountWithSecret = {
-  address: account.address,
+  ...account,
   secret: '0x12df4781cc9b5aef9a566850f15b67e176eaf076d50804a29c7c19d8e635cea1'
 };
 
@@ -38,9 +40,11 @@ const adminAccountWithSecret = {
 
 const notRegisteredAccount = {
   address: '0x627306090abaB3A6e1400e9345bC60c78a8BEf57',
-  secret: '0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3'
+  secret: '0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3',
+  permissions: []
 };
 
-
-export {createAccountRequest, accountWithSecret, account, adminAccount, adminAccountWithSecret, createFullAccountRequest, notRegisteredAccount};
-
+export {
+  createAccountRequest, accountWithSecret, account, adminAccount, adminAccountWithSecret, createFullAccountRequest,
+  notRegisteredAccount
+};

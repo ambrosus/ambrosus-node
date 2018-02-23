@@ -4,7 +4,7 @@ import {ValidationError} from '../errors/errors';
 const validatePathsNotEmpty = (dict, paths) => {
   for (const path of paths) {
     const value = get(dict, path);
-    if (value === undefined || value === null || value.length === 0) {
+    if (value === undefined || value === null || value === '') {
       throw new ValidationError(`${path} should not be empty`);
     }
   }

@@ -98,7 +98,7 @@ describe('Accounts - Integrations', async () => {
         .send(request);
       await expect(pendingRequest)
         .to.eventually.be.rejected
-        .and.have.property('status', 403);
+        .and.have.property('status', 404);
     });
   });
 
