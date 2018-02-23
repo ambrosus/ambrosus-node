@@ -2,9 +2,10 @@ import chai from 'chai';
 import chaiHttp from 'chai-http';
 import chaiAsPromissed from 'chai-as-promised';
 import {properAddress, properSecret} from '../helpers/web3chai';
-import Aparatus from '../helpers/aparatus';
+import Aparatus, {aparatusScenarioProcessor}  from '../helpers/aparatus';
 import {createAccountRequest, adminAccountWithSecret, createFullAccountRequest, accountWithSecret} from '../fixtures/account';
 import addSignature from '../fixtures/add_signature';
+import ScenarioBuilder from '../fixtures/scenario_builder';
 
 
 chai.use(chaiHttp);
@@ -16,22 +17,25 @@ const {expect} = chai;
 
 describe('Accounts - Integrations', async () => {
   let aparatus;
-  let account;
+  let scenario;
+  let adminAccount;
 
   before(async () => {
     aparatus = new Aparatus();
     await aparatus.start();
+    scenario = new ScenarioBuilder(aparatus.identityManager, aparatusScenarioProcessor(aparatus));
   });
 
   beforeEach(async () => {
     await aparatus.cleanDB();
-    await aparatus.modelEngine.createAdminAccount(adminAccountWithSecret);
+    scenario.reset();
+    adminAccount = await scenario.injectAccount(adminAccountWithSecret);
   });
 
   describe('Get account detail', () => {
     it('get by account address', async () => {
-      const signedAccountRequest = createFullAccountRequest(aparatus.identityManager);
-      account = await aparatus.request()
+      const signedAccountRequest = createFullAccountRequest(aparatus.identityManager, adminAccount);
+      const account = await aparatus.request()
         .post('/accounts')
         .send(signedAccountRequest);
       const response = await aparatus.request()
@@ -53,8 +57,8 @@ describe('Accounts - Integrations', async () => {
 
   describe('Create an account', () => {
     it('should create an account (client signed)', async () => {
-      const signedAccountRequest = createFullAccountRequest(aparatus.identityManager);
-      account = await aparatus.request()
+      const signedAccountRequest = createFullAccountRequest(aparatus.identityManager, adminAccount);
+      const account = await aparatus.request()
         .post('/accounts')
         .send(signedAccountRequest);
       expect(account.body.content.address).to.be.properAddress;
@@ -64,7 +68,7 @@ describe('Accounts - Integrations', async () => {
 
     it('should create an account (server signed)', async () => {
       const signedAccountRequest = createAccountRequest({createdBy: adminAccountWithSecret.address});
-      account = await aparatus.request()
+      const account = await aparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB ${adminAccountWithSecret.secret}`)
         .send(signedAccountRequest);

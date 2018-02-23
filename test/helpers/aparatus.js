@@ -60,6 +60,12 @@ const aparatusScenarioProcessor = (aparatus) => ({
       .post(`/assets/${event.content.idData.assetId}/events`)
       .send(event);
     return response.body;
+  },
+  onAddAccount: async (accountRequest) => {
+    const newAccount = await aparatus.request()
+      .post('/accounts')
+      .send(accountRequest);
+    return newAccount.body.content;
   }
 });
 

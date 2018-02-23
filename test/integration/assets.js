@@ -1,37 +1,42 @@
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import Aparatus from '../helpers/aparatus';
+import Aparatus, {aparatusScenarioProcessor} from '../helpers/aparatus';
 import chaiHttp from 'chai-http';
 
 import {pick, get} from '../../src/utils/dict_utils';
 import {createFullAsset, createFullEvent} from '../fixtures/assets_events';
 import pkPair from '../fixtures/pk_pair';
-import {createFullAccountRequest, adminAccountWithSecret, notRegisteredAccount} from '../fixtures/account';
+import {adminAccountWithSecret, notRegisteredAccount} from '../fixtures/account';
+import ScenarioBuilder from '../fixtures/scenario_builder';
 
 chai.use(chaiHttp);
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
-let account;
 
 describe('Assets - Integrations', () => {
   let aparatus;
+  let scenario;
+  let adminAccount;
 
   before(async () => {
     aparatus = new Aparatus();
     await aparatus.start();
-    await aparatus.modelEngine.createAdminAccount(adminAccountWithSecret);
-    account = await aparatus.request()
-      .post('/accounts')
-      .send(createFullAccountRequest(aparatus.identityManager));
+    scenario = new ScenarioBuilder(aparatus.identityManager, aparatusScenarioProcessor(aparatus));
+  });
+
+  beforeEach(async () => {
+    await aparatus.cleanDB();
+    scenario.reset();
+    adminAccount = await scenario.injectAccount(adminAccountWithSecret);
   });
 
   describe('creating asset', () => {
     let inputAsset = null;
 
     beforeEach(async () => {
-      inputAsset = createFullAsset(aparatus.identityManager, {createdBy: account.body.content.address}, account.body.content.secret);
+      inputAsset = createFullAsset(aparatus.identityManager, {createdBy: adminAccount.address}, adminAccount.secret);
     });
 
     it('works with valid input (client signed)', async () => {
@@ -47,7 +52,7 @@ describe('Assets - Integrations', () => {
 
       const response = await aparatus.request()
         .post('/assets')
-        .set('Authorization', `AMB ${account.body.content.secret}`)
+        .set('Authorization', `AMB ${adminAccount.secret}`)
         .send(unsignedAsset);
       expect(response.status).to.eq(201);
       expect(response.body.content.idData).to.deep.equal(unsignedAsset.content.idData);
@@ -81,11 +86,7 @@ describe('Assets - Integrations', () => {
     let asset;
 
     beforeEach(async () => {
-      const signedAsset = createFullAsset(aparatus.identityManager, {createdBy: account.body.content.address}, account.body.content.secret);
-      const response = await aparatus.request()
-        .post('/assets')
-        .send(signedAsset);
-      asset = response.body;
+      asset = await scenario.addAsset();
     });
 
     it('should get asset by id', async () => {
@@ -108,11 +109,8 @@ describe('Assets - Integrations', () => {
 
 
     beforeEach(async () => {
-      baseAsset = createFullAsset(aparatus.identityManager, {createdBy: account.body.content.address}, account.body.content.secret);
-      await aparatus.request()
-        .post('/assets')
-        .send(baseAsset);
-      inputEvent = createFullEvent(aparatus.identityManager, {assetId: baseAsset.assetId, createdBy: account.body.content.address}, {}, account.body.content.secret);
+      baseAsset = await scenario.addAsset();
+      inputEvent = createFullEvent(aparatus.identityManager, {assetId: baseAsset.assetId, createdBy: adminAccount.address}, {}, adminAccount.secret);
     });
 
     it('works with valid input (client signed)', async () => {
@@ -129,7 +127,7 @@ describe('Assets - Integrations', () => {
 
       const response = await aparatus.request()
         .post(`/assets/${baseAsset.assetId}/events`)
-        .set('Authorization', `AMB ${account.body.content.secret}`)
+        .set('Authorization', `AMB ${adminAccount.secret}`)
         .send(unsignedEvent);
 
       expect(response.status).to.eq(201);
@@ -171,18 +169,8 @@ describe('Assets - Integrations', () => {
 
 
     beforeEach(async () => {
-      const signedAsset = createFullAsset(aparatus.identityManager, {createdBy: account.body.content.address}, account.body.content.secret);
-      const addAssetResponse = await aparatus.request()
-        .post('/assets')
-        .send(signedAsset);
-      asset = addAssetResponse.body;
-
-      const signedEvent = createFullEvent(aparatus.identityManager, {assetId: asset.assetId, createdBy: account.body.content.address}, {}, account.body.content.secret);
-
-      const addEventResponse = await aparatus.request()
-        .post(`/assets/${asset.assetId}/events`)
-        .send(signedEvent);
-      event = addEventResponse.body;
+      asset = await scenario.addAsset();
+      event = await scenario.addEvent();
     });
 
     it('works for existing event', async () => {
