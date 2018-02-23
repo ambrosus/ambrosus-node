@@ -2,8 +2,8 @@ import Server from './server';
 import build from './build';
 
 async function start() {
-  const modelEngine = build();
-  const server = new Server(modelEngine);
+  const {dataModelEngine} = await build();
+  const server = new Server(dataModelEngine);
   server.start();
 }
 
