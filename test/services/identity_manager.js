@@ -3,6 +3,7 @@ import IdentityManager from '../../src/services/identity_manager';
 import {createWeb3} from '../../src/utils/web3_tools';
 import {InvalidParametersError, AuthenticationError} from '../../src/errors/errors';
 import {put} from '../../src/utils/dict_utils';
+import pkPair from '../fixtures/pk_pair';
 
 const {expect} = chai;
 
@@ -85,8 +86,8 @@ describe('Identity manager', () => {
   describe('Create key pair', () => {
     it('should create an account', () => {
       const result = identityManager.createKeyPair();
-      expect(result.address).to.match(/^0x[0-9-a-fA-F]{40}$/);
-      expect(result.secret).to.match(/^0x[0-9-a-fA-F]{64}$/);
+      expect(result.address).to.be.properAddress;
+      expect(result.secret).to.be.properSecret;
     });
 
     it('accounts should be unique', () => {
@@ -94,7 +95,18 @@ describe('Identity manager', () => {
       const account2 = identityManager.createKeyPair();
       expect(account1.address).not.to.eq(account2.address);
     });
-  });    
+  });
+
+  describe('Gets address from secret', () => {
+    it('should create an account', () => {
+      const address = identityManager.addressFromSecret(pkPair.secret);
+      expect(address).to.eq(pkPair.address.toLocaleLowerCase());
+    });
+
+    it('accounts should be unique', () => {
+      expect(() => identityManager.addressFromSecret('badsecret')).to.throw(AuthenticationError);      
+    });
+  });
 
   it('Calculating the hash of data', () => {
     // calculated from input using REPL
@@ -110,4 +122,3 @@ describe('Identity manager', () => {
     expect(serialized).to.equal(expectedResult);
   });
 });
-1

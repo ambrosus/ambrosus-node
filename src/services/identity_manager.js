@@ -58,4 +58,12 @@ export default class IdentityManager {
     const account = this.web3.eth.accounts.create();
     return {address: account.address, secret: account.privateKey};
   }
+
+  addressFromSecret(secret) {
+    try {
+      return this.web3.eth.accounts.privateKeyToAccount(secret).address.toLowerCase();
+    } catch (_e) {
+      throw new AuthenticationError('Invalid secret.');
+    }
+  }
 }

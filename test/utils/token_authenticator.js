@@ -3,19 +3,22 @@ import chaistring from 'chai-string';
 import {createWeb3} from '../../src/utils/web3_tools';
 import TokenAuthenticator from '../../src/utils/token_authenticator';
 import pkPair from '../fixtures/pk_pair';
-import {AuthenticationError} from '../../src/errors/errors';
+import {AuthenticationError, InvalidParametersError} from '../../src/errors/errors';
+import IdentityManager from '../../src/services/identity_manager';
 
 const {expect} = chai;
 chai.use(chaistring);
 
 describe('TokenAuthenticator', () => {
   let authenticator;
+  let identityManager;
 
-  const ENCODED_TOKEN = 'eyJzaWduYXR1cmUiOiIweDBjNmFiYjVhYTNkYmJhZTMzMDJhNjkxMzlkNjU1ZGJkYmNjN2UzOTA0NDM2Y2UxOGQwZTAzYjRkNmZmMDRhMDUyODlkY2I2ZTdhMGYyZmMyNWZjMjU0M2E5ZmZmMTE2ODkwYjEwNjlkZWM3MmNhMTQ1NTUyMjBiZDIzMTRlNjJkMWIiLCJpZERhdGEiOnsiY3JlYXRlZEJ5IjoiMHg3NDJlNjJjYzdhMTllZjdkOWM0NDMwNmMwN2ZhZDU0YjViZjZkNGJlIiwidmFsaWRVbnRpbCI6N319';
-  const SIGNATURE = '0x0c6abb5aa3dbbae3302a69139d655dbdbcc7e3904436ce18d0e03b4d6ff04a05289dcb6e7a0f2fc25fc2543a9fff116890b1069dec72ca14555220bd2314e62d1b';
-  
+  const ENCODED_TOKEN = 'eyJpZERhdGEiOnsiY3JlYXRlZEJ5IjoiMHg3NDJlNjJjYzdhMTllZjdkOWM0NDMwNmMwN2ZhZDU0YjViZjZkNGJlIiwidmFsaWRVbnRpbCI6N30sInNpZ25hdHVyZSI6IjB4OWY2YzM5MTA2OWUwMDVhMjc3ZTk5MGFlMjA0Mzk4MmZmOGU4ZDcxZWZlZjA4NzU3Yzg5ZWY5NjhhYzBmZjczZjI3MTU3ZWFhNjI2MDhiZTdhNzRhMjRkODM3MzdiNjVhMWUxMTE4NjY4NzY3ZmQzNDAwNDU4ZTgwM2I1ODBlZjMxYyJ9';
+  const SIGNATURE = '0x9f6c391069e005a277e990ae2043982ff8e8d71efef08757c89ef968ac0ff73f27157eaa62608be7a74a24d83737b65a1e1118668767fd3400458e803b580ef31c';
+
   before(async () => {
-    authenticator = new TokenAuthenticator(await createWeb3());
+    identityManager = new IdentityManager(await createWeb3());
+    authenticator = new TokenAuthenticator(identityManager);
   });
 
   describe('Valid data', () => {
@@ -41,9 +44,9 @@ describe('TokenAuthenticator', () => {
       const idData = {
         createdBy: '0xbadAdd6e55',
         validUntil: 7
-      };  
+      };
       const token = authenticator.doGenerateToken(pkPair.secret, idData);
-      expect(() => authenticator.decodeToken(token)).to.throw(AuthenticationError);      
+      expect(() => authenticator.decodeToken(token)).to.throw(InvalidParametersError);
     });
 
     it('decode token with invalid signature (different data validUntil)', () => {
@@ -51,13 +54,13 @@ describe('TokenAuthenticator', () => {
         createdBy: pkPair.address,
         validUntil: 7
       };
-      const signature = authenticator.sign(idData, pkPair.secret);
+      const signature = identityManager.sign(pkPair.secret, idData);
       const payload = {signature, idData: {...idData, validUntil: 8}};
-      const token =  authenticator.encode(payload);          
-      expect(() => authenticator.decodeToken(token)).to.throw(AuthenticationError);      
-    });    
+      const token = authenticator.encode(payload);
+      expect(() => authenticator.decodeToken(token)).to.throw(AuthenticationError);
+    });
 
-    it('decode token with invalid format', () => {            
+    it('decode token with invalid format', () => {
       expect(() => authenticator.decodeToken('notarealtoken')).to.throw(AuthenticationError);
     });
 
@@ -68,8 +71,8 @@ describe('TokenAuthenticator', () => {
       };
       const signature = 'fake';
       const payload = {signature, idData: {...idData, validUntil: 8}};
-      const token =  authenticator.encode(payload);                
-      expect(() => authenticator.decodeToken(token)).to.throw(AuthenticationError);            
+      const token = authenticator.encode(payload);
+      expect(() => authenticator.decodeToken(token)).to.throw(InvalidParametersError);
     });
   });
 });
