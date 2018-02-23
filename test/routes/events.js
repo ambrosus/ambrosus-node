@@ -3,7 +3,6 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import {put} from '../../src/utils/dict_utils';
 
 import {findEventsHandler} from '../../src/routes/events';
 
@@ -55,18 +54,17 @@ describe('Events', () => {
       mockModelEngine.findEvents.resolves({results: eventSet, resultCount: 165});
     });
 
-    it('parses query string, proxies result from Data Model Engine, appends metadata/resultCount', async () => {
-      const validQueryParams = {
+    it('passes query parameters to Data Model Engine, proxies result, appends metadata/resultCount', async () => {
+      const queryParams = {
         assetId: scenario.assets[0].assetId
       };
-      const extendedQueryParams = put(validQueryParams, 'surplusParam', 'some value');
-      req.query = extendedQueryParams;
+      req.query = queryParams;
 
       await injectedHandler(req, res);
 
       const returnedData = JSON.parse(res._getData());
 
-      expect(mockModelEngine.findEvents).to.have.been.calledWith(validQueryParams);
+      expect(mockModelEngine.findEvents).to.have.been.calledWith(queryParams);
       expect(res._getStatusCode()).to.eq(200);
       expect(res._isJSON()).to.be.true;
       expect(returnedData.results.length).to.equal(4);
