@@ -23,7 +23,7 @@ export default class Server {
     app.use(errorHandling);
 
     const port = process.env.PORT || config.get('server.port');
-    this.server = app.listen(port, () => console.log(`Listening in port ${port}`));
+    this.server = app.listen(port);
   }
 
   stop() {
