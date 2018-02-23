@@ -4,11 +4,10 @@ import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import DataModelEngine from '../../src/services/data_model_engine';
-import {NotFoundError, ValidationError, InvalidParametersError, PermissionError} from '../../src/errors/errors';
-
+import {InvalidParametersError, NotFoundError, PermissionError, ValidationError} from '../../src/errors/errors';
 
 import {createAsset, createEvent} from '../fixtures/assets_events';
-import {createAccountRequest, adminAccount, accountWithSecret, adminAccountWithSecret} from '../fixtures/account';
+import {accountWithSecret, adminAccount, adminAccountWithSecret, createAccountRequest} from '../fixtures/account';
 import pkPair from '../fixtures/pk_pair';
 
 import {createWeb3} from '../../src/utils/web3_tools';
@@ -25,6 +24,7 @@ describe('Data Model Engine', () => {
   let mockEntityBuilder = null;
   let mockEntityRepository = null;
   let mockAccountRepository = null;
+  let mockAccountAccessDefinitions = null;
 
   let mockAsset;
   let mockEvent;
@@ -47,7 +47,8 @@ describe('Data Model Engine', () => {
     };
     mockAccountRepository = {
       store: sinon.stub(),
-      get: sinon.stub()
+      get: sinon.stub(),
+      count: sinon.stub()
     };
     mockEntityBuilder = {
       validateAsset: sinon.stub(),
@@ -63,26 +64,69 @@ describe('Data Model Engine', () => {
       findEvents: sinon.stub(),
       countEvents: sinon.stub()
     };
+    mockAccountAccessDefinitions = {
+      ensureHasPermission: sinon.stub(),
+      defaultAdminPermissions: sinon.stub(),
+      validateNewAccountRequest: sinon.stub()
+    };
+
     modelEngine = new DataModelEngine(mockIdentityManager, mockEntityBuilder, mockEntityRepository,
-      mockAccountRepository);
+      mockAccountRepository, mockAccountAccessDefinitions);
   });
 
   describe('Create account', () => {
-    it('validatest with mockIdentityManager and delegates to accountRepository', async () => {
-      const request = createAccountRequest();
+    beforeEach(() => {
       mockAccountRepository.get.returns(adminAccount);
+    });
+
+    it('validates with mockIdentityManager and delegates to accountRepository', async () => {
+      const request = createAccountRequest();
       mockIdentityManager.createKeyPair.returns(pkPair);
-      expect(await modelEngine.createAccount(request.content.idData, request.content.signature)).to.eq(pkPair);
-      expect(mockIdentityManager.validateSignature).to.have.been.called;
-      expect(mockAccountRepository.store).to.have.been.calledWith(pkPair);
+      expect(await modelEngine.createAccount(request.content)).to.eq(pkPair);
+      expect(mockAccountAccessDefinitions.validateNewAccountRequest).to.have.been.called;
+      expect(mockAccountRepository.store)
+        .to.have.been.calledWith({...pkPair, permissions: request.content.idData.permissions});
       expect(mockAccountRepository.get).to.have.been.calledWith(request.content.idData.createdBy);
     });
 
-    it('throws ValidationError if signature is wrong', async () => {
+    it('throws ValidationError if wrong request format', async () => {
       const request = createAccountRequest();
-      mockIdentityManager.validateSignature.throws(new ValidationError('an error'));
-      await expect(modelEngine.createAccount(request.content.idData, request.content.signature))
+      mockAccountAccessDefinitions.validateNewAccountRequest.throws(new ValidationError('an error'));
+      await expect(modelEngine.createAccount(request.content))
         .to.be.rejectedWith(ValidationError);
+    });
+
+    it('throws PermissionError if account misses required permissions', async () => {
+      const request = createAccountRequest();
+      mockAccountAccessDefinitions.ensureHasPermission.throws(new PermissionError());
+      await expect(modelEngine.createAccount(request.content))
+        .to.eventually.be.rejectedWith(PermissionError);
+    });
+
+    it('gives needed permissions to admin account', async () => {
+      const permissions = ['a', 'b'];
+      mockAccountAccessDefinitions.defaultAdminPermissions.returns(permissions);
+      mockAccountRepository.count.resolves(0);
+      await modelEngine.createAdminAccount(accountWithSecret);
+      expect(mockAccountRepository.store).to.be.calledOnce;
+      expect(mockAccountRepository.store).to.be.calledWith({...accountWithSecret, permissions});
+    });
+
+    it('not possible to overwrite admin permissions', async () => {
+      const permissions = ['a', 'b'];
+      mockAccountAccessDefinitions.defaultAdminPermissions.returns(permissions);
+      mockAccountRepository.count.resolves(0);
+      await modelEngine.createAdminAccount({...accountWithSecret, permissions: ['1', '2']});
+      expect(mockAccountRepository.store).to.be.calledOnce;
+      expect(mockAccountRepository.store).to.be.calledWith({...accountWithSecret, permissions});
+    });
+
+    it('cannot create admin if not first account', async () => {
+      const permissions = ['a', 'b'];
+      mockAccountAccessDefinitions.defaultAdminPermissions.returns(permissions);
+      mockAccountRepository.count.resolves(1);
+      await expect(modelEngine.createAdminAccount(accountWithSecret)).to.eventually.be.rejected;
+      expect(mockAccountRepository.store).to.be.not.called;
     });
   });
 
@@ -215,8 +259,8 @@ describe('Data Model Engine', () => {
       const eventSet = await scenario.generateEvents(
         100,
         (inx) => ({
-          accountInx: 0, 
-          subjectInx: 0, 
+          accountInx: 0,
+          subjectInx: 0,
           fields: {timestamp: inx},
           data: {}
         })

@@ -1,30 +1,37 @@
 import {NotFoundError, InvalidParametersError, PermissionError} from '../errors/errors';
 
 export default class DataModelEngine {
-  constructor(identityManager, entityBuilder, entityRepository, accountRepository) {
+  constructor(identityManager, entityBuilder, entityRepository, accountRepository, accountAccessDefinitions) {
     this.identityManager = identityManager;
     this.entityBuilder = entityBuilder;
     this.entityRepository = entityRepository;
     this.accountRepository = accountRepository;
+    this.accountAccessDefinitions = accountAccessDefinitions;
   }
 
   async createAdminAccount(account = this.identityManager.createKeyPair()) {
     const accounts = await this.accountRepository.count();
     if (accounts > 0) {
       throw new Error('Admin account arleady exist.');
-    }    
-    await this.accountRepository.store(account);
+    }
+    const accountWithPermissions = {
+      ...account,
+      permissions: this.accountAccessDefinitions.defaultAdminPermissions()
+    };
+    await this.accountRepository.store(accountWithPermissions);
     return account;
   }
 
-  async createAccount(idData, signature) {
-    this.identityManager.validateSignature(idData.createdBy, signature, idData);    
+  async createAccount(accountRequest) {
+    this.accountAccessDefinitions.validateNewAccountRequest(accountRequest);
+    const creatorAccount = await this.getAccount(accountRequest.idData.createdBy);
+    this.accountAccessDefinitions.ensureHasPermission(creatorAccount, 'create_account');
     const account = this.identityManager.createKeyPair();
-    const creatorAccount = await this.accountRepository.get(idData.createdBy);
-    if (!creatorAccount) {
-      throw new PermissionError('Account creator not specified');
-    }
-    await this.accountRepository.store(account);
+    const accountWithPermissions = {
+      ...account,
+      permissions: accountRequest.idData.permissions
+    };
+    await this.accountRepository.store(accountWithPermissions);
     return account;
   }
 
