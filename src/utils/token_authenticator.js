@@ -12,7 +12,7 @@ export default class TokenAuthenticator {
       createdBy: address,
       validUntil: timestamp
     };
-    return this.doGenerateToken(secret, idData);
+    return this.encode(this.preparePayload(secret, idData));
   }
 
   decodeToken(token) {
@@ -23,10 +23,10 @@ export default class TokenAuthenticator {
     return decoded;
   }
 
-  doGenerateToken(secret, idData) {
+  preparePayload(secret, idData) {
     const signature = this.identityManager.sign(secret, idData);
     const payload = {signature, idData};
-    return this.encode(payload);  
+    return payload;  
   }
 
   decode(token) {

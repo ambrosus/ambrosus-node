@@ -45,7 +45,7 @@ describe('TokenAuthenticator', () => {
         createdBy: '0xbadAdd6e55',
         validUntil: 7
       };
-      const token = authenticator.doGenerateToken(pkPair.secret, idData);
+      const token = authenticator.encode(authenticator.preparePayload(pkPair.secret, idData));
       expect(() => authenticator.decodeToken(token)).to.throw(InvalidParametersError);
     });
 

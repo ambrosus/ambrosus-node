@@ -98,12 +98,12 @@ describe('Identity manager', () => {
   });
 
   describe('Gets address from secret', () => {
-    it('should create an account', () => {
+    it('should get address from secret', () => {
       const address = identityManager.addressFromSecret(pkPair.secret);
       expect(address).to.eq(pkPair.address.toLocaleLowerCase());
     });
 
-    it('accounts should be unique', () => {
+    it('should throw if invalid secret', () => {
       expect(() => identityManager.addressFromSecret('badsecret')).to.throw(AuthenticationError);      
     });
   });
