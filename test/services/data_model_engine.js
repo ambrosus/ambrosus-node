@@ -256,21 +256,15 @@ describe('Data Model Engine', () => {
   describe('finding events', () => {
     it('coordinates all services', async () => {
       await scenario.addAsset(0);
-      const eventSet = await scenario.generateEvents(
-        100,
-        (inx) => ({
-          accountInx: 0,
-          subjectInx: 0,
-          fields: {timestamp: inx},
-          data: {}
-        })
-      );
+      await scenario.addEvent(0, 0);
+      const eventSet = scenario.events;
       mockEntityRepository.findEvents.resolves({results: eventSet, resultCount: 165});
+      const mockParams = {'a param' : 'a value'};
 
-      const ret = await expect(modelEngine.findEvents()).to.fulfilled;
+      const ret = await expect(modelEngine.findEvents(mockParams)).to.fulfilled;
 
       // asks the entity repository for the events
-      expect(mockEntityRepository.findEvents).to.have.been.called;
+      expect(mockEntityRepository.findEvents).to.have.been.calledWith(mockParams);
 
       expect(ret.results).to.equal(eventSet);
       expect(ret.resultCount).to.equal(165);

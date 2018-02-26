@@ -6,8 +6,6 @@ import prehasherMiddleware from '../middlewares/prehasher_middleware';
 
 import {ValidationError} from '../errors/errors';
 
-
-
 export const createAssetHandler = (modelEngine) => async (req, res) => {
   const createdAsset = await modelEngine.createAsset(req.body);
 

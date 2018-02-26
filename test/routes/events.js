@@ -39,14 +39,11 @@ describe('Events', () => {
   describe('finding events', () => {
     let injectedHandler;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       injectedHandler = findEventsHandler(mockModelEngine);
-    });
-
-    it('queries Data Model Engine, proxies result, appends metadata, and resultCount', async () => {
       await scenario.addAsset(0);
       const eventSet = await scenario.generateEvents(
-        105,
+        4,
         (inx) => ({
           accountInx: 0,
           subjectInx: 0,
@@ -54,18 +51,24 @@ describe('Events', () => {
           data: {}
         })
       );
-
       mockModelEngine.findEvents.resolves({results: eventSet, resultCount: 165});
+    });
+
+    it('passes query parameters to Data Model Engine, proxies result, appends metadata/resultCount', async () => {
+      const queryParams = {
+        assetId: scenario.assets[0].assetId
+      };
+      req.query = queryParams;
 
       await injectedHandler(req, res);
 
       const returnedData = JSON.parse(res._getData());
 
-      expect(mockModelEngine.findEvents).to.have.been.called;
+      expect(mockModelEngine.findEvents).to.have.been.calledWith(queryParams);
       expect(res._getStatusCode()).to.eq(200);
       expect(res._isJSON()).to.be.true;
+      expect(returnedData.results.length).to.equal(4);
       expect(returnedData.resultCount).to.equal(165);
-      expect(returnedData.results.length).to.equal(105);
     });
   });
 });

@@ -90,7 +90,7 @@ export default class DataModelEngine {
     return event;
   }
 
-  async findEvents() {
-    return await this.entityRepository.findEvents();
+  async findEvents(params) {
+    return await this.entityRepository.findEvents(params);
   }
 }
