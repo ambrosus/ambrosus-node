@@ -24,6 +24,13 @@ export default class EntityRepository {
     if (params.assetId) {
       query['content.idData.assetId'] = params.assetId;
     }
+    if (params.toTimestamp && params.fromTimestamp) {
+      query.$and = [{'content.idData.timestamp': {$gt : params.fromTimestamp}}, {'content.idData.timestamp': {$lt : params.toTimestamp}}];
+    } else if (params.fromTimestamp) {
+      query['content.idData.timestamp'] = {$gt : params.fromTimestamp};
+    } else if (params.toTimestamp) {
+      query['content.idData.timestamp'] = {$lt : params.toTimestamp};
+    }
     const options = {
       limit: 100,
       sort: [['content.idData.timestamp', 'descending']]

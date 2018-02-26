@@ -93,6 +93,7 @@ export default class DataModelEngine {
   }
 
   async findEvents(params) {
-    return await this.entityRepository.findEvents(params);
+    const validatedParams = this.entityBuilder.validateAndCastFindEventsParams(params);
+    return this.entityRepository.findEvents(validatedParams);
   }
 }

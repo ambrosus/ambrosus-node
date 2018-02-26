@@ -54,7 +54,8 @@ describe('Data Model Engine', () => {
       validateAsset: sinon.stub(),
       setAssetBundle: sinon.stub(),
       validateEvent: sinon.stub(),
-      setEventBundle: sinon.stub()
+      setEventBundle: sinon.stub(),
+      validateAndCastFindEventsParams: sinon.stub()
     };
     mockEntityRepository = {
       storeAsset: sinon.stub(),
@@ -260,9 +261,12 @@ describe('Data Model Engine', () => {
       const eventSet = scenario.events;
       mockEntityRepository.findEvents.resolves({results: eventSet, resultCount: 165});
       const mockParams = {'a param' : 'a value'};
+      mockEntityBuilder.validateAndCastFindEventsParams.returns(mockParams);
 
       const ret = await expect(modelEngine.findEvents(mockParams)).to.fulfilled;
 
+      // asks the entity builder for parameters validation
+      expect(mockEntityBuilder.validateAndCastFindEventsParams).to.have.been.calledWith(mockParams);
       // asks the entity repository for the events
       expect(mockEntityRepository.findEvents).to.have.been.calledWith(mockParams);
 

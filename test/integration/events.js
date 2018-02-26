@@ -1,5 +1,4 @@
 import chai from 'chai';
-import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
@@ -64,16 +63,36 @@ describe('Events - Integrations', () => {
       body.results.forEach((element) => expect(element.content.idData.assetId).to.equal(targetAssetId));
     });
 
-    it('filters surplus parameters our of the request', async () => {
-      // sadly we can't look for side effect of the filtering so a sinon spy is used to check what gets passed into the model engine
-      sinon.spy(apparatus.modelEngine, 'findEvents');
 
-      const targetAssetId = scenario.assets[0].assetId;
-      await apparatus.request().get(`/events?assetId=${targetAssetId}&additional=123`);
+    it('with fromTimestamp returns only events from selected timestamp', async () => {
+      const fromTimestamp = 50;
+      const response = await apparatus.request().get(`/events?fromTimestamp=${fromTimestamp}`);
+      const {body} = response;
 
-      expect(apparatus.modelEngine.findEvents).to.have.been.calledWith({assetId: targetAssetId});
-      
-      apparatus.modelEngine.findEvents.restore();
+      expect(body.results).to.have.lengthOf(69);
+      expect(body.resultCount).to.equal(69);
+      body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.above(50));
+    });
+
+    it('with toTimestamp returns only events to selected timestamp', async () => {
+      const toTimestamp = 50;
+      const response = await apparatus.request().get(`/events?toTimestamp=${toTimestamp}`);
+      const {body} = response;
+
+      expect(body.results).to.have.lengthOf(50);
+      expect(body.resultCount).to.equal(50);
+      body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.below(50));
+    });
+
+    it('with fromTimestamp and toTimestamp returns only events from between selected timestamps', async () => {
+      const fromTimestamp = 50;
+      const toTimestamp = 100;
+      const response = await apparatus.request().get(`/events?fromTimestamp=${fromTimestamp}&toTimestamp=${toTimestamp}`);
+      const {body} = response;
+
+      expect(body.results).to.have.lengthOf(49);
+      expect(body.resultCount).to.equal(49);
+      body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(51, 99));
     });
   });
 
