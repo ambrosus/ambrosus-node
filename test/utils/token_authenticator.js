@@ -36,6 +36,10 @@ describe('TokenAuthenticator', () => {
   });
 
   describe('Invalid data', () => {
+    it('generate token throws InvalidParametersError if no validUntil', async () => {
+      expect(() => authenticator.generateToken(pkPair.secret, undefined)).to.throw(InvalidParametersError);
+    });
+
     it('generate token from invalid secret', async () => {
       expect(() => authenticator.generateToken('not-a-secret', 7)).to.throw(AuthenticationError);
     });

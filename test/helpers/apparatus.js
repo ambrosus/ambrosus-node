@@ -9,6 +9,7 @@ import DataModelEngine from '../../src/services/data_model_engine';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import AccountAccessDefinitions from '../../src/services/account_access_definitions';
+import TokenAuthenticator from '../../src/utils/token_authenticator';
 
 chai.use(chaiHttp);
 
@@ -29,8 +30,8 @@ export default class Apparatus {
     this.modelEngine = new DataModelEngine(this.identityManager, this.entityBuilder, this.entityRepository,
       this.accountRepository, this.accountAccessDefinitions);
 
-
-    this.server = new Server(this.modelEngine);
+    this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
+    this.server = new Server(this.modelEngine, this.tokenAuthenticator);
     this.server.start();
 
     return this;
