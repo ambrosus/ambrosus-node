@@ -4,7 +4,7 @@ import {spy} from 'sinon';
 import sinonChai from 'sinon-chai';
 import {InvalidParametersError} from '../../src/errors/errors';
 import pkPair from '../fixtures/pk_pair';
-import authorizationHeaderMiddleware from '../../src/middlewares/authorization_header_middleware';
+import ambAuthorizationHeaderMiddleware from '../../src/middlewares/amb_authorization_header_middleware';
 
 chai.use(sinonChai);
 const {expect} = chai;
@@ -24,20 +24,20 @@ describe('Authorisation header middleware', () => {
     response = httpMocks.createResponse();
   });
 
-  it('adds secret to the request if authorization header with an AMB secret provided', () => {
-    authorizationHeaderMiddleware(request, response, next);
+  it('adds ambSecret to the request if authorization header with an AMB secret provided', () => {
+    ambAuthorizationHeaderMiddleware(request, response, next);
 
-    expect(request).to.include.key('secret');
-    expect(request.secret).to.equal(pkPair.secret);
+    expect(request).to.include.key('ambSecret');
+    expect(request.ambSecret).to.equal(pkPair.secret);
     expect(next).to.be.calledOnce;
   });
 
   it('does nothing if no authorization header with an AMB secret was provided', () => {
     delete request.headers.authorization;
 
-    authorizationHeaderMiddleware(request, response, next);
+    ambAuthorizationHeaderMiddleware(request, response, next);
 
-    expect(request).to.not.include.key('secret');
+    expect(request).to.not.include.key('ambSecret');
     expect(next).to.be.calledOnce;
   });
 
@@ -45,7 +45,7 @@ describe('Authorisation header middleware', () => {
     delete request.headers.authorization;
     request.headers.authorization = pkPair.secret;
 
-    expect(() => authorizationHeaderMiddleware(request, response, next)).to.throw(InvalidParametersError);
+    expect(() => ambAuthorizationHeaderMiddleware(request, response, next)).to.throw(InvalidParametersError);
     expect(next).to.be.not.called;
   });
 });

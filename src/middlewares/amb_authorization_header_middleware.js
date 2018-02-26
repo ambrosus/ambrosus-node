@@ -1,6 +1,6 @@
 import {InvalidParametersError} from '../errors/errors';
 
-const authorizationHeaderMiddleware = (req, res, next) => {
+const ambAuthorizationHeaderMiddleware = (req, res, next) => {
   const authorizationHeader = req.headers.authorization;
   if (!authorizationHeader) {
     next();
@@ -11,9 +11,9 @@ const authorizationHeaderMiddleware = (req, res, next) => {
   if (type !== 'AMB') {
     throw new InvalidParametersError(`Only Authorization type AMB is supported`);
   }
-  req.secret = secret;
+  req.ambSecret = secret;
   next();
 };
 
-export default authorizationHeaderMiddleware;
+export default ambAuthorizationHeaderMiddleware;
 

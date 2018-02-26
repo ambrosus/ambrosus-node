@@ -31,7 +31,7 @@ describe('Presigner middleware', () => {
       sign: sinon.stub()
     };
     request = httpMocks.createRequest({
-      secret: pkPair.secret,
+      ambSecret: pkPair.secret,
       body: exampleData
     });
     response = httpMocks.createResponse();
@@ -39,7 +39,7 @@ describe('Presigner middleware', () => {
     mockIdentityManager.sign.returns(exampleSignature);
   });
 
-  it('adds signature if secret provided', () => {
+  it('adds signature if AMB secret was provided', () => {
     const configuredMiddleware = presignerMiddleware(mockIdentityManager, 'content.idData', 'content.signature');
     configuredMiddleware(request, response, next);
 
@@ -49,15 +49,8 @@ describe('Presigner middleware', () => {
     expect(mockIdentityManager.sign).to.have.been.calledWith(pkPair.secret, request.body.content.idData);
   });
 
-  it('deletes secret from request after data was signed', () => {
-    const configuredMiddleware = presignerMiddleware(mockIdentityManager, 'content.idData', 'content.signature');
-    configuredMiddleware(request, response, next);
-
-    expect(request).to.not.include.key('secret');
-  });
-
-  it('doesn\'t do anything if no secret in request', () => {
-    delete request.secret;
+  it('doesn\'t do anything if no AMB secret in request', () => {
+    delete request.ambSecret;
 
     const configuredMiddleware = presignerMiddleware(mockIdentityManager, 'content.idData', 'content.signature');
     configuredMiddleware(request, response, next);

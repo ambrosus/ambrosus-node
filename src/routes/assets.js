@@ -5,7 +5,7 @@ import presignerMiddleware from '../middlewares/presigner_middleware';
 import prehasherMiddleware from '../middlewares/prehasher_middleware';
 
 import {ValidationError} from '../errors/errors';
-import authorizationHeaderMiddleware from '../middlewares/authorization_header_middleware';
+import ambAuthorizationHeaderMiddleware from '../middlewares/amb_authorization_header_middleware';
 
 export const createAssetHandler = (modelEngine) => async (req, res) => {
   const createdAsset = await modelEngine.createAsset(req.body);
@@ -47,7 +47,7 @@ const assetRouter = (identityManager, modelEngine) => {
 
   router.post('/',
     bodyParser.json(),
-    authorizationHeaderMiddleware,
+    ambAuthorizationHeaderMiddleware,
     presignerMiddleware(identityManager),
     prehasherMiddleware(identityManager, 'content', 'assetId'),
     asyncMiddleware(createAssetHandler(modelEngine))
@@ -59,7 +59,7 @@ const assetRouter = (identityManager, modelEngine) => {
 
   router.post('/:assetId/events',
     bodyParser.json(),
-    authorizationHeaderMiddleware,
+    ambAuthorizationHeaderMiddleware,
     prehasherMiddleware(identityManager, 'content.data', 'content.idData.dataHash'),
     presignerMiddleware(identityManager),
     prehasherMiddleware(identityManager, 'content', 'eventId'),
