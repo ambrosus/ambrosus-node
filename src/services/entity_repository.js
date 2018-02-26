@@ -19,7 +19,7 @@ export default class EntityRepository {
     return await this.db.collection('event').findOne({eventId}, {fields: {_id: 0}});
   }
 
-  constructConfigurationForFindEventsQuery(params) {
+  getConfigurationForFindEventsQuery(params) {
     const query = {};
     if (params.assetId) {
       query['content.idData.assetId'] = params.assetId;
@@ -32,7 +32,7 @@ export default class EntityRepository {
   }
 
   async findEvents(params) {
-    const {query, options} = this.constructConfigurationForFindEventsQuery(params);
+    const {query, options} = this.getConfigurationForFindEventsQuery(params);
 
     const cursor = this.db
       .collection('event')
