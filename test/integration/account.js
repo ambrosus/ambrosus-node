@@ -2,9 +2,8 @@ import chai from 'chai';
 import chaiHttp from 'chai-http';
 import chaiAsPromissed from 'chai-as-promised';
 import {properAddress, properSecret} from '../helpers/web3chai';
-import Aparatus, {aparatusScenarioProcessor}  from '../helpers/aparatus';
-import {createAccountRequest, adminAccountWithSecret, createFullAccountRequest, accountWithSecret} from '../fixtures/account';
-import addSignature from '../fixtures/add_signature';
+import Aparatus, {aparatusScenarioProcessor} from '../helpers/aparatus';
+import {createAccountRequest, adminAccountWithSecret, accountWithSecret} from '../fixtures/account';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 
 
@@ -18,7 +17,6 @@ const {expect} = chai;
 describe('Accounts - Integrations', async () => {
   let aparatus;
   let scenario;
-  let adminAccount;
 
   before(async () => {
     aparatus = new Aparatus();
@@ -29,15 +27,57 @@ describe('Accounts - Integrations', async () => {
   beforeEach(async () => {
     await aparatus.cleanDB();
     scenario.reset();
-    adminAccount = await scenario.injectAccount(adminAccountWithSecret);
+    await scenario.injectAccount(adminAccountWithSecret);
+  });
+
+  describe('Create an account', () => {
+    it('should create an account (client signed)', async () => {
+      const account = await aparatus.request()
+        .post('/accounts')
+        .set('Authorization', `AMB_TOKEN ${aparatus.generateToken()}`)
+        .send(createAccountRequest());
+      expect(account.body.content.address).to.be.properAddress;
+      expect(account.body.content.secret).to.be.properSecret;
+      expect(account.status).to.eq(201);
+    });
+
+    it('should fail to create if no token', async () => {
+      const pendingRequest = aparatus.request()
+        .post('/accounts')
+        .send(createAccountRequest());
+      await expect(pendingRequest)
+        .to.eventually.be.rejected
+        .and.have.property('status', 401);
+    });
+
+    it('should fail to create account if non-existing user', async () => {
+      const nonExistingUser = accountWithSecret;
+      const pendingRequest = aparatus.request()
+        .post('/accounts')
+        .set('Authorization', `AMB_TOKEN ${aparatus.generateToken(nonExistingUser.secret)}`)
+        .send(createAccountRequest({createdBy: nonExistingUser.address}));
+      await expect(pendingRequest)
+        .to.eventually.be.rejected
+        .and.have.property('status', 404);
+    });
+
+    it('should fail to create account if session user and createBy mismatch', async () => {
+      const pendingRequest = aparatus.request()
+        .post('/accounts')
+        .set('Authorization', `AMB_TOKEN ${aparatus.generateToken(accountWithSecret.secret)}`)
+        .send(createAccountRequest());
+      await expect(pendingRequest)
+        .to.eventually.be.rejected
+        .and.have.property('status', 401);
+    });
   });
 
   describe('Get account detail', () => {
     it('get by account address', async () => {
-      const signedAccountRequest = createFullAccountRequest(aparatus.identityManager, adminAccount);
       const account = await aparatus.request()
         .post('/accounts')
-        .send(signedAccountRequest);
+        .set('Authorization', `AMB_TOKEN ${aparatus.generateToken()}`)
+        .send(createAccountRequest());
       const response = await aparatus.request()
         .get(`/accounts/${account.body.content.address}`)
         .send({});
@@ -55,52 +95,6 @@ describe('Accounts - Integrations', async () => {
     });
   });
 
-  describe('Create an account', () => {
-    it('should create an account (client signed)', async () => {
-      const signedAccountRequest = createFullAccountRequest(aparatus.identityManager, adminAccount);
-      const account = await aparatus.request()
-        .post('/accounts')
-        .send(signedAccountRequest);
-      expect(account.body.content.address).to.be.properAddress;
-      expect(account.body.content.secret).to.be.properSecret;
-      expect(account.status).to.eq(201);
-    });
-
-    it('should create an account (server signed)', async () => {
-      const signedAccountRequest = createAccountRequest({createdBy: adminAccountWithSecret.address});
-      const account = await aparatus.request()
-        .post('/accounts')
-        .set('Authorization', `AMB ${adminAccountWithSecret.secret}`)
-        .send(signedAccountRequest);
-      expect(account.body.content.address).to.be.properAddress;
-      expect(account.body.content.secret).to.be.properSecret;
-      expect(account.status).to.eq(201);
-    });
-
-    it('should fail to create account if no signature', async () => {
-      const pendingRequest = aparatus.request()
-        .post('/accounts')
-        .send(createAccountRequest());
-      await expect(pendingRequest)
-        .to.eventually.be.rejected
-        .and.have.property('status', 400);
-    });
-
-    it('should fail to create account if non-existing user', async () => {
-      const nonExistingUser = accountWithSecret;
-      const request = addSignature(aparatus.identityManager,
-        createAccountRequest({
-          createdBy:
-            nonExistingUser.address
-        }), nonExistingUser.secret);
-      const pendingRequest = aparatus.request()
-        .post('/accounts')
-        .send(request);
-      await expect(pendingRequest)
-        .to.eventually.be.rejected
-        .and.have.property('status', 404);
-    });
-  });
 
   after(async () => {
     aparatus.stop();

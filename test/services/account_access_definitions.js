@@ -5,7 +5,7 @@ import chaiAsPromised from 'chai-as-promised';
 
 import AccountAccessDefinitions from '../../src/services/account_access_definitions';
 import {PermissionError, ValidationError} from '../../src/errors/errors';
-import {account, createFullAccountRequest} from '../fixtures/account';
+import {account, createAccountRequest} from '../fixtures/account';
 import {pick} from '../../src/utils/dict_utils';
 
 chai.use(sinonChai);
@@ -40,32 +40,20 @@ describe('Account Access Definitions', () => {
     expect(() => accountAccessDefinitions.ensureHasPermission(mockAccount, 'topsecret')).to.throw(PermissionError);
   });
 
-  describe('validating account request', () => {
+  describe('validating account', () => {
     let account;
 
     before(() => {
       mockIdentityManager.sign.returns('0x1');
-      account = createFullAccountRequest(mockIdentityManager).content;
+      account = createAccountRequest().content;
     });
 
-    for (const field of [
-      'signature',
-      'idData.createdBy',
-      'idData.timestamp',
-      'idData.permissions']) {
+    for (const field of ['idData', 'idData.createdBy']) {
       // eslint-disable-next-line no-loop-func
       it(`throws if the ${field} field is missing`, () => {
         const brokenData = pick(account, field);
         expect(() => accountAccessDefinitions.validateNewAccountRequest(brokenData)).to.throw(ValidationError);
       });
     }
-
-    it('validates signature', async () => {
-      accountAccessDefinitions.validateNewAccountRequest(account);
-      expect(mockIdentityManager.validateSignature).to.be.calledWith(
-        account.idData.createdBy,
-        account.signature,
-        account.idData);
-    });
   });
 });

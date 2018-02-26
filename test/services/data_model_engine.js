@@ -21,6 +21,7 @@ const {expect} = chai;
 describe('Data Model Engine', () => {
   let modelEngine = null;
   let mockIdentityManager = null;
+  let mockTokenAuthenticator = null;
   let mockEntityBuilder = null;
   let mockEntityRepository = null;
   let mockAccountRepository = null;
@@ -44,6 +45,8 @@ describe('Data Model Engine', () => {
     mockIdentityManager = {
       createKeyPair: sinon.stub(),
       validateSignature: sinon.stub()
+    };
+    mockTokenAuthenticator = {
     };
     mockAccountRepository = {
       store: sinon.stub(),
@@ -70,7 +73,7 @@ describe('Data Model Engine', () => {
       validateNewAccountRequest: sinon.stub()
     };
 
-    modelEngine = new DataModelEngine(mockIdentityManager, mockEntityBuilder, mockEntityRepository,
+    modelEngine = new DataModelEngine(mockIdentityManager, mockTokenAuthenticator, mockEntityBuilder, mockEntityRepository,
       mockAccountRepository, mockAccountAccessDefinitions);
   });
 
@@ -79,10 +82,18 @@ describe('Data Model Engine', () => {
       mockAccountRepository.get.returns(adminAccount);
     });
 
+    function createTokenFor(request) {
+      const defaultExpiryPeriod = 10000;
+      return {
+        createdBy: request.content.idData.createdBy,
+        validBy: Date.now() + defaultExpiryPeriod
+      };
+    }
+
     it('validates with mockIdentityManager and delegates to accountRepository', async () => {
       const request = createAccountRequest();
       mockIdentityManager.createKeyPair.returns(pkPair);
-      expect(await modelEngine.createAccount(request.content)).to.eq(pkPair);
+      expect(await modelEngine.createAccount(request.content, createTokenFor(request))).to.eq(pkPair);
       expect(mockAccountAccessDefinitions.validateNewAccountRequest).to.have.been.called;
       expect(mockAccountRepository.store)
         .to.have.been.calledWith({...pkPair, permissions: request.content.idData.permissions});
@@ -99,7 +110,7 @@ describe('Data Model Engine', () => {
     it('throws PermissionError if account misses required permissions', async () => {
       const request = createAccountRequest();
       mockAccountAccessDefinitions.ensureHasPermission.throws(new PermissionError());
-      await expect(modelEngine.createAccount(request.content))
+      await expect(modelEngine.createAccount(request.content, createTokenFor(request)))
         .to.eventually.be.rejectedWith(PermissionError);
     });
 
@@ -259,7 +270,7 @@ describe('Data Model Engine', () => {
       await scenario.addEvent(0, 0);
       const eventSet = scenario.events;
       mockEntityRepository.findEvents.resolves({results: eventSet, resultCount: 165});
-      const mockParams = {'a param' : 'a value'};
+      const mockParams = {'a param': 'a value'};
 
       const ret = await expect(modelEngine.findEvents(mockParams)).to.fulfilled;
 

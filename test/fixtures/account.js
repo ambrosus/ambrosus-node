@@ -1,23 +1,12 @@
-import pkPair from './pk_pair';
-import addSignature from './add_signature';
-
 const createAccountRequest = (fields) => ({
   content: {
     idData: {
-      createdBy: pkPair.address,
-      timestamp: Date.now(),
+      createdBy: adminAccountWithSecret.address,
       permissions: [],
       ...fields
     }
   }
 });
-
-const createFullAccountRequest = (identityManager, creatorAccount = adminAccountWithSecret) =>
-  addSignature(
-    identityManager,
-    createAccountRequest(
-      {createdBy: creatorAccount.address}),
-    creatorAccount.secret);
 
 const account = {
   address: '0x742e62cc7a19ef7d9c44306c07fad54b5bf6d4be',
@@ -45,6 +34,6 @@ const notRegisteredAccount = {
 };
 
 export {
-  createAccountRequest, accountWithSecret, account, adminAccount, adminAccountWithSecret, createFullAccountRequest,
+  createAccountRequest, accountWithSecret, account, adminAccount, adminAccountWithSecret,
   notRegisteredAccount
 };

@@ -22,12 +22,8 @@ export default class AccountAccessDefinitions {
 
   validateNewAccountRequest(account) {
     validatePathsNotEmpty(account, [
-      'signature',
       'idData',
-      'idData.createdBy',
-      'idData.timestamp',
-      'idData.permissions'
+      'idData.createdBy'
     ]);
-    this.identityManager.validateSignature(account.idData.createdBy, account.signature, account.idData);
   }
 }
