@@ -40,6 +40,10 @@ describe('TokenAuthenticator', () => {
       expect(() => authenticator.generateToken(pkPair.secret, undefined)).to.throw(InvalidParametersError);
     });
 
+    it('generate token throws InvalidParametersError if validUntil is not integer', async () => {
+      expect(() => authenticator.generateToken(pkPair.secret, '01.01.1970')).to.throw(InvalidParametersError);
+    });
+
     it('generate token from invalid secret', async () => {
       expect(() => authenticator.generateToken('not-a-secret', 7)).to.throw(AuthenticationError);
     });
