@@ -1,6 +1,7 @@
 import Server from '../../src/server';
 import {connectToMongo, cleanDatabase} from '../../src/utils/db_utils';
 import {createWeb3} from '../../src/utils/web3_tools';
+import TokenAuthenticator from '../../src/utils/token_authenticator';
 import IdentityManager from '../../src/services/identity_manager';
 import AccountRepository from '../../src/services/account_repository';
 import EntityBuilder from '../../src/services/entity_builder';
@@ -9,7 +10,7 @@ import DataModelEngine from '../../src/services/data_model_engine';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import AccountAccessDefinitions from '../../src/services/account_access_definitions';
-import TokenAuthenticator from '../../src/utils/token_authenticator';
+import {adminAccountWithSecret} from '../fixtures/account';
 
 chai.use(chaiHttp);
 
@@ -23,18 +24,23 @@ export default class Apparatus {
     await this.cleanDB();
 
     this.identityManager = new IdentityManager(this.web3);
+    this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
     this.entityBuilder = new EntityBuilder(this.identityManager);
     this.entityRepository = new EntityRepository(db);
     this.accountRepository = new AccountRepository(db);
     this.accountAccessDefinitions = new AccountAccessDefinitions(this.identityManager);
-    this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
-    this.modelEngine = new DataModelEngine(this.identityManager, this.entityBuilder, this.entityRepository,
-      this.accountRepository, this.accountAccessDefinitions, this.tokenAuthenticator);
+    this.modelEngine = new DataModelEngine(this.identityManager, this.tokenAuthenticator, this.entityBuilder, this.entityRepository,
+      this.accountRepository, this.accountAccessDefinitions);
+
 
     this.server = new Server(this.modelEngine);
     this.server.start();
 
     return this;
+  }
+
+  generateToken(secret = adminAccountWithSecret.secret, validUntil = this.tokenAuthenticator.defaultValidUntil()) {
+    return this.tokenAuthenticator.generateToken(secret, validUntil);
   }
 
   request() {

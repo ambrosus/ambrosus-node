@@ -1,9 +1,9 @@
-import {NotFoundError, InvalidParametersError, PermissionError} from '../errors/errors';
+import {NotFoundError, InvalidParametersError, PermissionError, AuthenticationError} from '../errors/errors';
 
 export default class DataModelEngine {
-  constructor(identityManager, entityBuilder, entityRepository, accountRepository, accountAccessDefinitions,
-    tokenAuthenticator) {
+  constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, accountRepository, accountAccessDefinitions) {
     this.identityManager = identityManager;
+    this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
     this.entityRepository = entityRepository;
     this.accountRepository = accountRepository;
@@ -24,8 +24,11 @@ export default class DataModelEngine {
     return account;
   }
 
-  async createAccount(accountRequest) {
+  async createAccount(accountRequest, tokenData) {
     this.accountAccessDefinitions.validateNewAccountRequest(accountRequest);
+    if (tokenData.createdBy.toLowerCase() !== accountRequest.idData.createdBy.toLowerCase()) {
+      throw new AuthenticationError('Session user and createdBy mismatch.');
+    }
     const creatorAccount = await this.getAccount(accountRequest.idData.createdBy);
     this.accountAccessDefinitions.ensureHasPermission(creatorAccount, 'create_account');
     const account = this.identityManager.createKeyPair();

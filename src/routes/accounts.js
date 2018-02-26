@@ -1,11 +1,10 @@
 import express from 'express';
 import asyncMiddleware from '../middlewares/async_middleware';
 import bodyParser from 'body-parser';
-import presignerMiddleware from '../middlewares/presigner_middleware';
-import ambAuthorizationHeaderMiddleware from '../middlewares/amb_authorization_header_middleware';
+import sessionTokenMiddleware from '../middlewares/session_token_middleware';
 
 const createAccountHandler = (dataModelEngine) => async (req, res) => {
-  const content = await dataModelEngine.createAccount(req.body.content);
+  const content = await dataModelEngine.createAccount(req.body.content, req.tokenData);
   res.status(201).send({content});
 };
 
@@ -14,12 +13,11 @@ const getAccountHandler = (dataModelEngine) => async (req, res) => {
   res.status(200).send({content});
 };
 
-export default (identityManager, dataModelEngine) => {
+export default (tokenAuthenticator, dataModelEngine) => {
   const router = new express.Router();
   router.post('/', 
-    bodyParser.json(),
-    ambAuthorizationHeaderMiddleware,
-    presignerMiddleware(identityManager),
+    bodyParser.json(),  
+    sessionTokenMiddleware(tokenAuthenticator),
     asyncMiddleware(createAccountHandler(dataModelEngine)));
   router.get('/:id', asyncMiddleware(getAccountHandler(dataModelEngine)));
   return router;
