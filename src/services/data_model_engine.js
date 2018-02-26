@@ -1,12 +1,14 @@
 import {NotFoundError, InvalidParametersError, PermissionError} from '../errors/errors';
 
 export default class DataModelEngine {
-  constructor(identityManager, entityBuilder, entityRepository, accountRepository, accountAccessDefinitions) {
+  constructor(identityManager, entityBuilder, entityRepository, accountRepository, accountAccessDefinitions,
+    tokenAuthenticator) {
     this.identityManager = identityManager;
     this.entityBuilder = entityBuilder;
     this.entityRepository = entityRepository;
     this.accountRepository = accountRepository;
     this.accountAccessDefinitions = accountAccessDefinitions;
+    this.tokenAuthenticator = tokenAuthenticator;
   }
 
   async createAdminAccount(account = this.identityManager.createKeyPair()) {

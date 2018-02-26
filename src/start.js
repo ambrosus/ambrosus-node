@@ -4,8 +4,8 @@ import TokenAuthenticator from './utils/token_authenticator';
 
 async function start() {
   const {dataModelEngine} = await build();
-  const tokenAuthentificator = new TokenAuthenticator(dataModelEngine.identityManager);
-  const server = new Server(dataModelEngine, tokenAuthentificator);
+  const tokenAuthenticator = new TokenAuthenticator(dataModelEngine.identityManager);
+  const server = new Server(dataModelEngine, tokenAuthenticator);
   server.start();
 }
 

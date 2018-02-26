@@ -9,9 +9,8 @@ import tokenRouter from './routes/token';
 
 
 export default class Server {
-  constructor(modelEngine, tokenAuthenticator) {
+  constructor(modelEngine) {
     this.modelEngine = modelEngine;
-    this.tokenAuthenticator = tokenAuthenticator;
   }
 
   start() {
@@ -20,7 +19,7 @@ export default class Server {
     app.use('/accounts', accountsRouter(this.modelEngine.identityManager, this.modelEngine));  
     app.use('/assets', assetsRouter(this.modelEngine.identityManager, this.modelEngine));
     app.use('/events', eventsRouter(this.modelEngine.identityManager, this.modelEngine));
-    app.use('/token', tokenRouter(this.tokenAuthenticator));
+    app.use('/token', tokenRouter(this.modelEngine.tokenAuthenticator));
 
     // Should always be last
     app.use(errorHandling);

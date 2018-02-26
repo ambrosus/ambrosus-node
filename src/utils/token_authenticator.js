@@ -7,8 +7,8 @@ export default class TokenAuthenticator {
   }
 
   generateToken(secret, timestamp) {
-    if (!timestamp) {
-      throw new InvalidParametersError('No timestamp provided');
+    if (!timestamp || !Number.isInteger(timestamp)) {
+      throw new InvalidParametersError('Unix timestamp was not provided or hav an invalid format');
     }
     const address = this.identityManager.addressFromSecret(secret);
     const idData = {

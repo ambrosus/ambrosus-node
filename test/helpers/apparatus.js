@@ -27,11 +27,11 @@ export default class Apparatus {
     this.entityRepository = new EntityRepository(db);
     this.accountRepository = new AccountRepository(db);
     this.accountAccessDefinitions = new AccountAccessDefinitions(this.identityManager);
-    this.modelEngine = new DataModelEngine(this.identityManager, this.entityBuilder, this.entityRepository,
-      this.accountRepository, this.accountAccessDefinitions);
-
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
-    this.server = new Server(this.modelEngine, this.tokenAuthenticator);
+    this.modelEngine = new DataModelEngine(this.identityManager, this.entityBuilder, this.entityRepository,
+      this.accountRepository, this.accountAccessDefinitions, this.tokenAuthenticator);
+
+    this.server = new Server(this.modelEngine);
     this.server.start();
 
     return this;
