@@ -2,15 +2,10 @@ import {InvalidParametersError} from '../errors/errors';
 import {get, put} from '../utils/dict_utils';
 
 const presignerMiddleware = (identityManager, toSignPath = 'content.idData', signaturePath = 'content.signature') => ((req, res, next) => {
-  const authorizationHeader = req.headers.authorization;
-  if (!authorizationHeader) {
+  const {secret} = req;
+  if (!secret) {
     next();
     return;
-  }
-
-  const [type, secret] = authorizationHeader.split(' ');
-  if (type !== 'AMB') {
-    throw new InvalidParametersError(`Only Authorization type AMB is supported`);
   }
 
   const toSign = get(req.body, toSignPath);
@@ -20,6 +15,7 @@ const presignerMiddleware = (identityManager, toSignPath = 'content.idData', sig
 
   const signature = identityManager.sign(secret, toSign);
   req.body = put(req.body, signaturePath, signature);
+  delete req.secret;
   next();
 });
 

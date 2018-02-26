@@ -31,9 +31,7 @@ describe('Presigner middleware', () => {
       sign: sinon.stub()
     };
     request = httpMocks.createRequest({
-      headers: {
-        authorization: `AMB ${pkPair.secret}`
-      },
+      secret: pkPair.secret,
       body: exampleData
     });
     response = httpMocks.createResponse();
@@ -41,33 +39,31 @@ describe('Presigner middleware', () => {
     mockIdentityManager.sign.returns(exampleSignature);
   });
 
-  it('adds signature if authorization header with a secret provided', () => {
+  it('adds signature if secret provided', () => {
     const configuredMiddleware = presignerMiddleware(mockIdentityManager, 'content.idData', 'content.signature');
     configuredMiddleware(request, response, next);
-    
+
     expect(request.body.content).to.include.key('signature');
     expect(request.body.content.signature).to.equal(exampleSignature);
     expect(next).to.be.calledOnce;
-    expect(mockIdentityManager.sign).to.have.been.called;
+    expect(mockIdentityManager.sign).to.have.been.calledWith(pkPair.secret, request.body.content.idData);
   });
 
-  it('does nothing if no authorization header with a secret was provided', () => {
-    delete request.headers.authorization;
-    
+  it('deletes secret from request after data was signed', () => {
     const configuredMiddleware = presignerMiddleware(mockIdentityManager, 'content.idData', 'content.signature');
     configuredMiddleware(request, response, next);
-    
-    expect(mockIdentityManager.sign).to.be.not.called;
-    expect(next).to.be.calledOnce;
+
+    expect(request).to.not.include.key('secret');
   });
 
-  it('throws exception if authorization type is not AMB', () => {
-    delete request.headers.authorization;
-    request.headers.authorization = pkPair.secret;
-    const configuredMiddleware = presignerMiddleware(mockIdentityManager, 'content.wrongPath', 'content.signature');
+  it('doesn\'t do anything if no secret in request', () => {
+    delete request.secret;
 
-    expect(() => configuredMiddleware(request, response, next)).to.throw(InvalidParametersError);
-    expect(next).to.be.not.called;
+    const configuredMiddleware = presignerMiddleware(mockIdentityManager, 'content.idData', 'content.signature');
+    configuredMiddleware(request, response, next);
+
+    expect(mockIdentityManager.sign).to.be.not.called;
+    expect(next).to.be.calledOnce;
   });
 
   it('throws exception when path not accessible', () => {
