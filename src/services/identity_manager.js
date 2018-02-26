@@ -42,14 +42,14 @@ export default class IdentityManager {
       const content = Object
         .keys(object)
         .sort()
-        .map((key) => `'${key}':${this.serializeForHashing(object[key])}`)
+        .map((key) => `"${key}":${this.serializeForHashing(object[key])}`)
         .join(',');
       return `{${content}}`;
     } else if (isArray(object)) {
       const content = object.map((item) => this.serializeForHashing(item)).join(',');
       return `[${content}]`;
     } else if (isString(object)) {
-      return `'${object}'`;
+      return `"${object}"`;
     }
     return object.toString();
   }
@@ -57,5 +57,13 @@ export default class IdentityManager {
   createKeyPair() {
     const account = this.web3.eth.accounts.create();
     return {address: account.address, secret: account.privateKey};
+  }
+
+  addressFromSecret(secret) {
+    try {
+      return this.web3.eth.accounts.privateKeyToAccount(secret).address.toLowerCase();
+    } catch (_e) {
+      throw new AuthenticationError('Invalid secret.');
+    }
   }
 }

@@ -22,6 +22,7 @@
     "yarn": ">=1.3.2 <2.0.0"
   },
   "dependencies": {
+    "base64url": "^2.0.0",
     "body-parser": "^1.18.2",
     "config": "^1.29.2",
     "express": "^4.16.2",
@@ -40,6 +41,7 @@
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chai-http": "^3.0.0",
+    "chai-string": "^1.4.0",    
     "eslint": "^4.16.0",
     "eslint-plugin-import": "^2.8.0",
     "ganache-core": "^2.0.2",
