@@ -261,7 +261,7 @@ describe('Data Model Engine', () => {
       const eventSet = scenario.events;
       mockEntityRepository.findEvents.resolves({results: eventSet, resultCount: 165});
       const mockParams = {'a param' : 'a value'};
-      const mockParams2 = {'a param' : 'a value'};
+      const mockParams2 = {'a param2' : 'a value2'};
       mockEntityBuilder.validateAndCastFindEventsParams.returns(mockParams2);
 
       const ret = await expect(modelEngine.findEvents(mockParams)).to.fulfilled;
@@ -276,10 +276,6 @@ describe('Data Model Engine', () => {
     });
 
     it('throws InvalidParametersError when parameter validation is not successful', async () => {
-      await scenario.addAsset(0);
-      await scenario.addEvent(0, 0);
-      const eventSet = scenario.events;
-      mockEntityRepository.findEvents.resolves({results: eventSet, resultCount: 165});
       const mockParams = {'a param' : 'a value'};
       mockEntityBuilder.validateAndCastFindEventsParams.throws(new InvalidParametersError);
 

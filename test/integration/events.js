@@ -64,7 +64,7 @@ describe('Events - Integrations', () => {
     });
 
 
-    it('with fromTimestamp returns only events from selected timestamp', async () => {
+    it('with fromTimestamp returns only events newer than selected timestamp', async () => {
       const fromTimestamp = 50;
       const response = await apparatus.request().get(`/events?fromTimestamp=${fromTimestamp}`);
       const {body} = response;
@@ -74,7 +74,7 @@ describe('Events - Integrations', () => {
       body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.at.least(50));
     });
 
-    it('with toTimestamp returns only events to selected timestamp', async () => {
+    it('with toTimestamp returns only events older than selected timestamp', async () => {
       const toTimestamp = 50;
       const response = await apparatus.request().get(`/events?toTimestamp=${toTimestamp}`);
       const {body} = response;
@@ -84,7 +84,7 @@ describe('Events - Integrations', () => {
       body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.at.most(50));
     });
 
-    it('with fromTimestamp and toTimestamp returns only events from between selected timestamps', async () => {
+    it('with fromTimestamp and toTimestamp returns only events between selected timestamps', async () => {
       const fromTimestamp = 50;
       const toTimestamp = 100;
       const response = await apparatus.request().get(`/events?fromTimestamp=${fromTimestamp}&toTimestamp=${toTimestamp}`);
