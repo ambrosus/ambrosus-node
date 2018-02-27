@@ -40,9 +40,9 @@ export default class DataModelEngine {
   async getAccount(address) {
     const result = await this.accountRepository.get(address);
     if (!result) {
-      throw new NotFoundError(`Account ${address} not found.`);      
+      throw new NotFoundError(`Account ${address} not found.`);
     }
-    return result;    
+    return result;
   }
 
   async createAsset(asset) {
@@ -52,7 +52,7 @@ export default class DataModelEngine {
       throw new PermissionError(`Address ${asset.content.idData.createdBy} doesn't exist`);
     }
 
-    const augmentedAsset = this.entityBuilder.setAssetBundle(asset, null);
+    const augmentedAsset = this.entityBuilder.setBundle(asset, null);
 
     await this.entityRepository.storeAsset(augmentedAsset);
 
@@ -78,7 +78,7 @@ export default class DataModelEngine {
       throw new InvalidParametersError(`Target asset with id=${event.content.idData.assetId} doesn't exist`);
     }
 
-    const augmentedEvent = this.entityBuilder.setEventBundle(event, null);
+    const augmentedEvent = this.entityBuilder.setBundle(event, null);
 
     await this.entityRepository.storeEvent(augmentedEvent);
     return augmentedEvent;
@@ -94,5 +94,27 @@ export default class DataModelEngine {
 
   async findEvents(params) {
     return await this.entityRepository.findEvents(params);
+  }
+
+  async finaliseBundle() {
+    const assets = await this.entityRepository.getAssetsWithoutBundle();
+    const events = await this.entityRepository.getEventsWithoutBundle();
+
+    const nodeSecret = await this.identityManager.nodePrivateKey();
+    const newBundle = this.entityBuilder.assembleBundle(assets, events, Date.now(), nodeSecret);
+
+    await this.entityRepository.storeBundle(newBundle);
+
+    const {bundleId} = newBundle;
+    for (const asset of assets) {
+      const updatedAsset = this.entityBuilder.setBundle(asset, bundleId);
+      await this.entityRepository.storeAsset(updatedAsset);
+    }
+    for (const event of events) {
+      const updatedEvent = this.entityBuilder.setBundle(event, bundleId);
+      await this.entityRepository.storeEvent(updatedEvent);
+    }
+
+    return newBundle;
   }
 }

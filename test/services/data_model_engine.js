@@ -31,8 +31,14 @@ describe('Data Model Engine', () => {
 
   let scenario;
 
+  let web3;
+  let clock;
+
   before(async () => {
-    scenario = new ScenarioBuilder(new IdentityManager(await createWeb3()));
+    web3 = await createWeb3();
+    scenario = new ScenarioBuilder(new IdentityManager(web3));
+
+    clock = sinon.useFakeTimers();
   });
 
   beforeEach(async () => {
@@ -43,7 +49,8 @@ describe('Data Model Engine', () => {
 
     mockIdentityManager = {
       createKeyPair: sinon.stub(),
-      validateSignature: sinon.stub()
+      validateSignature: sinon.stub(),
+      nodePrivateKey: sinon.stub()
     };
     mockAccountRepository = {
       store: sinon.stub(),
@@ -52,9 +59,9 @@ describe('Data Model Engine', () => {
     };
     mockEntityBuilder = {
       validateAsset: sinon.stub(),
-      setAssetBundle: sinon.stub(),
+      setBundle: sinon.stub(),
       validateEvent: sinon.stub(),
-      setEventBundle: sinon.stub()
+      assembleBundle: sinon.stub()
     };
     mockEntityRepository = {
       storeAsset: sinon.stub(),
@@ -62,7 +69,9 @@ describe('Data Model Engine', () => {
       storeEvent: sinon.stub(),
       getEvent: sinon.stub(),
       findEvents: sinon.stub(),
-      countEvents: sinon.stub()
+      getEventsWithoutBundle: sinon.stub(),
+      getAssetsWithoutBundle: sinon.stub(),
+      storeBundle: sinon.stub()
     };
     mockAccountAccessDefinitions = {
       ensureHasPermission: sinon.stub(),
@@ -72,6 +81,10 @@ describe('Data Model Engine', () => {
 
     modelEngine = new DataModelEngine(mockIdentityManager, mockEntityBuilder, mockEntityRepository,
       mockAccountRepository, mockAccountAccessDefinitions);
+  });
+
+  after(() => {
+    clock.restore();
   });
 
   describe('Create account', () => {
@@ -146,7 +159,7 @@ describe('Data Model Engine', () => {
 
   describe('Creating an asset', () => {
     it('validates with Entity Builder and sends to Entity Storage', async () => {
-      mockEntityBuilder.setAssetBundle.returns(mockAsset);
+      mockEntityBuilder.setBundle.returns(mockAsset);
       mockEntityRepository.storeAsset.resolves();
       mockAccountRepository.get.resolves(accountWithSecret);
 
@@ -154,7 +167,7 @@ describe('Data Model Engine', () => {
 
       expect(mockEntityBuilder.validateAsset).to.have.been.calledWith(mockAsset);
       expect(mockAccountRepository.get).to.have.been.calledWith(mockAsset.content.idData.createdBy);
-      expect(mockEntityBuilder.setAssetBundle).to.have.been.calledWith(mockAsset, null);
+      expect(mockEntityBuilder.setBundle).to.have.been.calledWith(mockAsset, null);
       expect(mockEntityRepository.storeAsset).to.have.been.calledWith(mockAsset);
     });
 
@@ -193,7 +206,7 @@ describe('Data Model Engine', () => {
 
   describe('creating an event', () => {
     beforeEach(() => {
-      mockEntityBuilder.setEventBundle.returns(mockEvent);
+      mockEntityBuilder.setBundle.returns(mockEvent);
       mockEntityRepository.storeEvent.resolves();
       mockEntityRepository.getAsset.resolves(mockAsset);
       mockAccountRepository.get.resolves(accountWithSecret);
@@ -209,7 +222,7 @@ describe('Data Model Engine', () => {
       // checks if target asset exists
       expect(mockEntityRepository.getAsset).to.have.been.calledWith(mockEvent.content.idData.assetId);
       // marks the event bundle as null -> not yet bundled
-      expect(mockEntityBuilder.setEventBundle).to.have.been.calledWith(mockEvent, null);
+      expect(mockEntityBuilder.setBundle).to.have.been.calledWith(mockEvent, null);
       // stores in entity repository
       expect(mockEntityRepository.storeEvent).to.have.been.calledWith(mockEvent);
     });
@@ -259,7 +272,7 @@ describe('Data Model Engine', () => {
       await scenario.addEvent(0, 0);
       const eventSet = scenario.events;
       mockEntityRepository.findEvents.resolves({results: eventSet, resultCount: 165});
-      const mockParams = {'a param' : 'a value'};
+      const mockParams = {'a param': 'a value'};
 
       const ret = await expect(modelEngine.findEvents(mockParams)).to.fulfilled;
 
@@ -268,6 +281,71 @@ describe('Data Model Engine', () => {
 
       expect(ret.results).to.equal(eventSet);
       expect(ret.resultCount).to.equal(165);
+    });
+  });
+
+  describe('finalising a bundle', () => {
+    it('coordinates all services', async () => {
+      await scenario.generateAssets(
+        2,
+        (inx) => ({
+          account: 0,
+          fields: {
+            timestamp: inx
+          }
+        })
+      );
+
+      await scenario.generateEvents(
+        3,
+        (inx) => ({
+          accountInx: 0,
+          assetInx: 0,
+          fields: {
+            timestamp: inx
+          }
+        })
+      );
+
+      const unbundledAssets = scenario.assets;
+      const unbundledEvents = scenario.events;
+      const nodeSecret = 'nodeSecret';
+      const assembledBundle = {
+        bundleId: 'a mock bundle',
+        contents: {
+          entries: [
+            ...unbundledAssets,
+            ...unbundledEvents
+          ]
+        }
+      };
+
+      mockEntityRepository.getAssetsWithoutBundle.resolves(unbundledAssets);
+      mockEntityRepository.getEventsWithoutBundle.resolves(unbundledEvents);
+      mockEntityBuilder.assembleBundle.returns(assembledBundle);
+      mockEntityBuilder.setBundle.returnsArg(0);
+      mockEntityRepository.storeBundle.resolves();
+      mockEntityRepository.storeAsset.resolves();
+      mockEntityRepository.storeEvent.resolves();
+      mockIdentityManager.nodePrivateKey.resolves(nodeSecret);
+
+      const ret = await expect(modelEngine.finaliseBundle()).to.be.fulfilled;
+
+      // get unbundled assets and events from the repository 
+      expect(mockEntityRepository.getAssetsWithoutBundle).to.have.been.called;
+      expect(mockEntityRepository.getEventsWithoutBundle).to.have.been.called;
+      // create a bundle with the gathered assets and events and sign it
+      expect(mockIdentityManager.nodePrivateKey).to.have.been.called;
+      expect(mockEntityBuilder.assembleBundle).to.have.been.calledWith(unbundledAssets, unbundledEvents, Date.now(), nodeSecret);
+      // store it in the repository
+      expect(mockEntityRepository.storeBundle).to.have.been.calledWith(assembledBundle);
+      // set the bundle metadata for all the now bundled assets and events
+      expect(mockEntityBuilder.setBundle).to.have.callCount(unbundledAssets.length + unbundledEvents.length);
+      expect(mockEntityRepository.storeAsset).to.have.callCount(unbundledAssets.length);
+      expect(mockEntityRepository.storeEvent).to.have.callCount(unbundledEvents.length);
+
+      // return the bundle
+      expect(ret).to.be.deep.eq(assembledBundle);
     });
   });
 });

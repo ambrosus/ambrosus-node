@@ -1,9 +1,14 @@
 import {InvalidParametersError, AuthenticationError} from '../errors/errors';
 import matchHexOfLength from '../utils/regex';
+import {getDefaultAccount} from '../utils/web3_tools';
 
 export default class IdentityManager {
   constructor(web3) {
     this.web3 = web3;
+  }
+
+  async nodePrivateKey() {
+    return await getDefaultAccount(this.web3);
   }
 
   sign(privateKey, data) {
@@ -53,7 +58,7 @@ export default class IdentityManager {
     }
     return object.toString();
   }
-  
+
   createKeyPair() {
     const account = this.web3.eth.accounts.create();
     return {address: account.address, secret: account.privateKey};

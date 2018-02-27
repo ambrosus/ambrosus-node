@@ -1,5 +1,5 @@
 import {validatePathsNotEmpty, validateFieldsConstrainedToSet} from '../utils/validations';
-import {put} from '../utils/dict_utils';
+import {put, pick} from '../utils/dict_utils';
 
 export default class EntityBuilder {
   constructor(identityManager) {
@@ -20,15 +20,23 @@ export default class EntityBuilder {
     this.identityManager.validateSignature(asset.content.idData.createdBy, asset.content.signature, asset.content.idData);
   }
 
-  setAssetBundle(asset, bundle) {
-    return put(asset, 'metadata.bundleId', bundle);
+  setBundle(entity, bundle) {
+    return put(entity, 'metadata.bundleId', bundle);
+  }
+
+  removeBundle(entity) {
+    const afterRemoval = pick(entity, 'metadata.bundleId');
+    if (Object.keys(afterRemoval.metadata).length === 0) {
+      return pick(afterRemoval, 'metadata');
+    }
+    return afterRemoval;
   }
 
   validateEvent(event) {
     validatePathsNotEmpty(event, [
       'eventId',
       'content.signature',
-      'content.idData',      
+      'content.idData',
       'content.idData.assetId',
       'content.idData.createdBy',
       'content.idData.timestamp',
@@ -40,7 +48,29 @@ export default class EntityBuilder {
     this.identityManager.validateSignature(event.content.idData.createdBy, event.content.signature, event.content.idData);
   }
 
-  setEventBundle(asset, bundle) {
-    return put(asset, 'metadata.bundleId', bundle);
+  assembleBundle(assets, events, timestamp, secret) {
+    const createdBy = this.identityManager.addressFromSecret(secret);
+    const entries = [
+      ...assets,
+      ...events
+    ].map((entry) => this.removeBundle(entry));
+    const entriesHash = this.identityManager.calculateHash(entries);
+    const idData = {
+      createdBy,
+      entriesHash,
+      timestamp
+    };
+    const signature = this.identityManager.sign(secret, idData);
+    const content = {
+      signature,
+      idData,
+      entries
+    };
+    const bundleId = this.identityManager.calculateHash(content);
+
+    return {
+      bundleId,
+      content
+    };
   }
 }
