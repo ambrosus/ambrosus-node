@@ -122,13 +122,18 @@ describe('Entity Builder', () => {
       expect(validatedParams.toTimestamp).to.equal(20);
     });
 
-    it('throws if parameters are not valid', () => {
+    it('throws if surplus parameters are passed', () => {
       const params = {assetId : '0x1234', fromTimestamp : '10', toTimestamp : '20', addtionalParameter : '123'};
       expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
     });
 
-    it('throws if value not valid', () => {
-      const params = {assetId : '0x1234', fromTimestamp : 'totallyNotANumber', toTimestamp : '20'};
+    it('throws if fromTimestamp value not in valid type', () => {
+      const params = {assetId : '0x1234', fromTimestamp : 'NaN', toTimestamp : '20'};
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+    });
+
+    it('throws if toTimestamp value not in valid type', () => {
+      const params = {assetId : '0x1234', fromTimestamp : '10', toTimestamp : 'NaN'};
       expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
     });
   });

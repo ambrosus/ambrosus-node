@@ -20,22 +20,35 @@ export default class EntityRepository {
   }
 
   getConfigurationForFindEventsQuery(params) {
-    const query = {};
+    let query = {};
     if (params.assetId) {
-      query['content.idData.assetId'] = params.assetId;
+      query = this.addToQuery(query, {'content.idData.assetId' : params.assetId});
     }
-    if (params.toTimestamp && params.fromTimestamp) {
-      query.$and = [{'content.idData.timestamp': {$gt : params.fromTimestamp}}, {'content.idData.timestamp': {$lt : params.toTimestamp}}];
-    } else if (params.fromTimestamp) {
-      query['content.idData.timestamp'] = {$gt : params.fromTimestamp};
-    } else if (params.toTimestamp) {
-      query['content.idData.timestamp'] = {$lt : params.toTimestamp};
+    if (params.fromTimestamp) {
+      query = this.addToQuery(query, {'content.idData.timestamp' : {$gte: params.fromTimestamp}});
+    }
+    if (params.toTimestamp) {
+      query = this.addToQuery(query, {'content.idData.timestamp' : {$lte: params.toTimestamp}});
     }
     const options = {
       limit: 100,
       sort: [['content.idData.timestamp', 'descending']]
     };
     return {query, options};
+  }
+
+  addToQuery(query, part) {
+    const queryLength = Object.keys(query).length;
+    if (queryLength === 0) {
+      return part;
+    } 
+    const and = queryLength === 1 ? [query] : query.$and;
+    return {
+      $and: [
+        ...and,
+        part
+      ]
+    };
   }
 
   async findEvents(params) {

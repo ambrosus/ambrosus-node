@@ -69,9 +69,9 @@ describe('Events - Integrations', () => {
       const response = await apparatus.request().get(`/events?fromTimestamp=${fromTimestamp}`);
       const {body} = response;
 
-      expect(body.results).to.have.lengthOf(69);
-      expect(body.resultCount).to.equal(69);
-      body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.above(50));
+      expect(body.results).to.have.lengthOf(70);
+      expect(body.resultCount).to.equal(70);
+      body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.at.least(50));
     });
 
     it('with toTimestamp returns only events to selected timestamp', async () => {
@@ -79,9 +79,9 @@ describe('Events - Integrations', () => {
       const response = await apparatus.request().get(`/events?toTimestamp=${toTimestamp}`);
       const {body} = response;
 
-      expect(body.results).to.have.lengthOf(50);
-      expect(body.resultCount).to.equal(50);
-      body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.below(50));
+      expect(body.results).to.have.lengthOf(51);
+      expect(body.resultCount).to.equal(51);
+      body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.at.most(50));
     });
 
     it('with fromTimestamp and toTimestamp returns only events from between selected timestamps', async () => {
@@ -90,9 +90,9 @@ describe('Events - Integrations', () => {
       const response = await apparatus.request().get(`/events?fromTimestamp=${fromTimestamp}&toTimestamp=${toTimestamp}`);
       const {body} = response;
 
-      expect(body.results).to.have.lengthOf(49);
-      expect(body.resultCount).to.equal(49);
-      body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(51, 99));
+      expect(body.results).to.have.lengthOf(51);
+      expect(body.resultCount).to.equal(51);
+      body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(50, 100));
     });
   });
 

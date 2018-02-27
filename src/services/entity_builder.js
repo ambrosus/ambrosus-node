@@ -47,36 +47,27 @@ export default class EntityBuilder {
   }
 
   validateAndCastFindEventsParams(params, allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp']) {
-    const filteredParams = Object
-      .keys(params)
-      .filter((key) => allowedParametersList.includes(key))
-      .reduce(
-        (ret, key) => put(ret, key, params[key]),
-        {});
-
     const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
     if (invalidFields.length > 0) {
       throw new InvalidParametersError(`Some parameters (${invalidFields.join(',')}) are not supported`);
     }
 
-    if (filteredParams.fromTimestamp) {
-      if (!isNaN(parseInt(filteredParams.fromTimestamp, 10))) {
-        filteredParams.fromTimestamp = parseInt(filteredParams.fromTimestamp, 10);
-      } else {
+    if (params.fromTimestamp) {
+      const parsedFromTimestamp = parseInt(params.fromTimestamp, 10);
+      if (isNaN(parsedFromTimestamp)) {
         throw new InvalidParametersError(`Invalid 'fromTimestamp' parameter value`);
       }
+      params.fromTimestamp = parsedFromTimestamp;
     }
-    
 
-    if (filteredParams.toTimestamp) {
-      if (!isNaN(parseInt(filteredParams.toTimestamp, 10))) {
-        filteredParams.toTimestamp = parseInt(filteredParams.toTimestamp, 10);
-      } else {
+    if (params.toTimestamp) {
+      const parsedToTimestamp = parseInt(params.toTimestamp, 10);
+      if (isNaN(parsedToTimestamp)) {
         throw new InvalidParametersError(`Invalid 'toTimestamp' parameter value`);
       }
+      params.toTimestamp = parsedToTimestamp;
     }
     
-    
-    return filteredParams;
+    return params;
   }
 }

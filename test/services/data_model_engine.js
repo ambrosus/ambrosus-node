@@ -261,17 +261,32 @@ describe('Data Model Engine', () => {
       const eventSet = scenario.events;
       mockEntityRepository.findEvents.resolves({results: eventSet, resultCount: 165});
       const mockParams = {'a param' : 'a value'};
-      mockEntityBuilder.validateAndCastFindEventsParams.returns(mockParams);
+      const mockParams2 = {'a param' : 'a value'};
+      mockEntityBuilder.validateAndCastFindEventsParams.returns(mockParams2);
 
       const ret = await expect(modelEngine.findEvents(mockParams)).to.fulfilled;
 
       // asks the entity builder for parameters validation
       expect(mockEntityBuilder.validateAndCastFindEventsParams).to.have.been.calledWith(mockParams);
       // asks the entity repository for the events
-      expect(mockEntityRepository.findEvents).to.have.been.calledWith(mockParams);
+      expect(mockEntityRepository.findEvents).to.have.been.calledWith(mockParams2);
 
       expect(ret.results).to.equal(eventSet);
       expect(ret.resultCount).to.equal(165);
+    });
+
+    it('throws InvalidParametersError when parameter validation is not successful', async () => {
+      await scenario.addAsset(0);
+      await scenario.addEvent(0, 0);
+      const eventSet = scenario.events;
+      mockEntityRepository.findEvents.resolves({results: eventSet, resultCount: 165});
+      const mockParams = {'a param' : 'a value'};
+      mockEntityBuilder.validateAndCastFindEventsParams.throws(new InvalidParametersError);
+
+      await expect(modelEngine.findEvents(mockParams)).to.be.rejectedWith(InvalidParametersError);
+
+      // asks the entity builder for parameters validation
+      expect(mockEntityBuilder.validateAndCastFindEventsParams).to.have.been.calledWith(mockParams);
     });
   });
 });
