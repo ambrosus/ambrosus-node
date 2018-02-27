@@ -42,7 +42,7 @@ export default class EntityRepository {
     if (queryLength === 0) {
       return part;
     } 
-    const and = queryLength === 1 ? [query] : query.$and;
+    const and = query.$and || [query];
     return {
       $and: [
         ...and,
