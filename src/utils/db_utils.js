@@ -11,8 +11,8 @@ const connectToMongo = async () => {
 
 const cleanDatabase = async (db) => {
   const collections = await db.collections();
-  for (const colection of collections) {
-    await colection.deleteMany({});
+  for (const collection of collections) {
+    await collection.deleteMany({});
   }
 };
 

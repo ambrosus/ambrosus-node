@@ -26,7 +26,7 @@ export class AuthenticationError extends AmbrosusError {
 
 export class PermissionError extends AmbrosusError {
   constructor(message) {
-    super(`Permision denied: ${message}`);
+    super(`Permission denied: ${message}`);
   }
 }
 

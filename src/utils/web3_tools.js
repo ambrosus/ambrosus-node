@@ -5,11 +5,11 @@ function isValidRPCAddress(rpc) {
   return /^((?:http)|(?:ws)):\/\//g.test(rpc);
 }
 
-function isUsingGenache(rpc) {
+function isUsingGanache(rpc) {
   return rpc === 'ganache';
 }
 
-function createGenacheProvider() {
+function createGanacheProvider() {
   // import in code with purpose:D
   const Ganache = require('ganache-core');
   const ganacheOptions = {
@@ -37,8 +37,8 @@ export async function createWeb3() {
   if (isValidRPCAddress(rpc)) {
     web3.setProvider(rpc);
     tryToImportPrivateKey(web3);
-  } else if (isUsingGenache(rpc)) {
-    web3.setProvider(createGenacheProvider());
+  } else if (isUsingGanache(rpc)) {
+    web3.setProvider(createGanacheProvider());
     [web3.eth.defaultAccount] = (await web3.eth.getAccounts());
   } else {
     throw new Error('A configuration value for web3 rpc server is missing');

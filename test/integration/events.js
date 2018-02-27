@@ -2,7 +2,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import Aparatus, {aparatusScenarioProcessor} from '../helpers/aparatus';
+import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
 import chaiHttp from 'chai-http';
 
 import {adminAccountWithSecret} from '../fixtures/account';
@@ -14,17 +14,17 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Events - Integrations', () => {
-  let aparatus;
+  let apparatus;
   let scenario;
 
   before(async () => {
-    aparatus = new Aparatus();
-    await aparatus.start();
-    scenario = new ScenarioBuilder(aparatus.identityManager, aparatusScenarioProcessor(aparatus));
+    apparatus = new Apparatus();
+    await apparatus.start();
+    scenario = new ScenarioBuilder(apparatus.identityManager, apparatusScenarioProcessor(apparatus));
   });
 
   beforeEach(async () => {
-    await aparatus.cleanDB();
+    await apparatus.cleanDB();
     scenario.reset();
     await scenario.injectAccount(adminAccountWithSecret);
   });
@@ -45,7 +45,7 @@ describe('Events - Integrations', () => {
     });
 
     it('without additional parameters returns the 100 newest (by timestamp) events', async () => {
-      const response = await aparatus.request().get(`/events`);
+      const response = await apparatus.request().get(`/events`);
       const {body} = response;
 
       expect(body.results).to.have.lengthOf(100);
@@ -56,7 +56,7 @@ describe('Events - Integrations', () => {
 
     it('with assetId returns only events for target asset', async () => {
       const targetAssetId = scenario.assets[0].assetId;
-      const response = await aparatus.request().get(`/events?assetId=${targetAssetId}`);
+      const response = await apparatus.request().get(`/events?assetId=${targetAssetId}`);
       const {body} = response;
 
       expect(body.results).to.have.lengthOf(100);
@@ -66,18 +66,18 @@ describe('Events - Integrations', () => {
 
     it('filters surplus parameters our of the request', async () => {
       // sadly we can't look for side effect of the filtering so a sinon spy is used to check what gets passed into the model engine
-      sinon.spy(aparatus.modelEngine, 'findEvents');
+      sinon.spy(apparatus.modelEngine, 'findEvents');
 
       const targetAssetId = scenario.assets[0].assetId;
-      await aparatus.request().get(`/events?assetId=${targetAssetId}&additional=123`);
+      await apparatus.request().get(`/events?assetId=${targetAssetId}&additional=123`);
 
-      expect(aparatus.modelEngine.findEvents).to.have.been.calledWith({assetId: targetAssetId});
+      expect(apparatus.modelEngine.findEvents).to.have.been.calledWith({assetId: targetAssetId});
       
-      aparatus.modelEngine.findEvents.restore();
+      apparatus.modelEngine.findEvents.restore();
     });
   });
 
   after(async () => {
-    aparatus.stop();
+    apparatus.stop();
   });
 });

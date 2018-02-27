@@ -10,7 +10,7 @@ const pickChain = (dict, chain) => {
   const [firstOnChain, ...restOfChain] = chain;
 
   if (!firstOnChain) {
-    throw new Error('Path is invalid: it shouldn\'t be emtpy string');
+    throw new Error('Path is invalid: it shouldn\'t be empty string');
   }
 
   if (restOfChain.length === 0) {
@@ -47,7 +47,7 @@ const putChain = (dict, chain, value) => {
   const [firstOnChain, ...restOfChain] = chain;
 
   if (!firstOnChain) {
-    throw new Error('Path is invalid: it shouldn\'t be emtpy string');
+    throw new Error('Path is invalid: it shouldn\'t be empty string');
   }
 
   if (restOfChain.length === 0) {

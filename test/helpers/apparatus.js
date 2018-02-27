@@ -12,7 +12,7 @@ import AccountAccessDefinitions from '../../src/services/account_access_definiti
 
 chai.use(chaiHttp);
 
-export default class Aparatus {
+export default class Apparatus {
   async start() {
     const {client, db} = await connectToMongo();
     this.client = client;
@@ -50,26 +50,26 @@ export default class Aparatus {
   }
 }
 
-const aparatusScenarioProcessor = (aparatus) => ({
-  onInjectAccount: async (account) => await aparatus.modelEngine.createAdminAccount(account),
+const apparatusScenarioProcessor = (apparatus) => ({
+  onInjectAccount: async (account) => await apparatus.modelEngine.createAdminAccount(account),
   onAddAsset: async (asset) => {
-    const response = await aparatus.request()
+    const response = await apparatus.request()
       .post('/assets')
       .send(asset);
     return response.body;
   },
   onAddEvent: async (event) => {
-    const response = await aparatus.request()
+    const response = await apparatus.request()
       .post(`/assets/${event.content.idData.assetId}/events`)
       .send(event);
     return response.body;
   },
   onAddAccount: async (accountRequest) => {
-    const newAccount = await aparatus.request()
+    const newAccount = await apparatus.request()
       .post('/accounts')
       .send(accountRequest);
     return newAccount.body.content;
   }
 });
 
-export {aparatusScenarioProcessor};
+export {apparatusScenarioProcessor};

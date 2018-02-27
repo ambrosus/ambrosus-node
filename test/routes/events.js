@@ -25,7 +25,7 @@ describe('Events', () => {
     scenario = new ScenarioBuilder(new IdentityManager(await createWeb3()));
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     mockModelEngine = {
       findEvents: sinon.stub()
     };
@@ -33,7 +33,7 @@ describe('Events', () => {
     res = httpMocks.createResponse();
 
     scenario.reset();
-    scenario.injectAccount(adminAccountWithSecret);
+    await scenario.injectAccount(adminAccountWithSecret);
   });
 
   describe('finding events', () => {

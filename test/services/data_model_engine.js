@@ -177,7 +177,7 @@ describe('Data Model Engine', () => {
       mockEntityRepository.getAsset.withArgs(exampleAssetId).resolves(mockAsset);
     });
 
-    it('asks the respository for the asset', async () => {
+    it('asks the repository for the asset', async () => {
       const asset = await modelEngine.getAsset(exampleAssetId);
 
       expect(mockEntityRepository.getAsset).to.have.been.calledWith(exampleAssetId);
@@ -239,7 +239,7 @@ describe('Data Model Engine', () => {
       mockEntityRepository.getEvent.withArgs(exampleEventId).resolves(mockEvent);
     });
 
-    it('asks the respository for the event', async () => {
+    it('asks the repository for the event', async () => {
       const asset = await modelEngine.getEvent(exampleEventId);
 
       expect(mockEntityRepository.getEvent).to.have.been.calledWith(exampleEventId);

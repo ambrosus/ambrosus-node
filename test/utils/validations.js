@@ -23,7 +23,7 @@ describe('validation', () => {
   describe('validateFieldsConstrainedToSet', () => {
     const input = {one: 0, two: '', three: false};
 
-    it('works for a complet list of fields', () => {
+    it('works for a complete list of fields', () => {
       expect(() => validateFieldsConstrainedToSet(input, ['one', 'two', 'three'])).to.not.throw();
     });
 
