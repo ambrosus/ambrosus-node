@@ -1,6 +1,6 @@
 import {InvalidParametersError, AuthenticationError} from '../errors/errors';
 
-const sessionTokenMiddleware = (tokenAuthenticator) => ((req, res, next) => {
+const accessTokenMiddleware = (tokenAuthenticator) => ((req, res, next) => {
   const authorizationHeader = req.headers.authorization;
   if (!authorizationHeader) {
     throw new AuthenticationError('Authorization AMB_TOKEN header not found');
@@ -11,10 +11,10 @@ const sessionTokenMiddleware = (tokenAuthenticator) => ((req, res, next) => {
     throw new InvalidParametersError(`Expected Authorization type AMB_TOKEN`);
   }
 
-  const {idData} = tokenAuthenticator.decodeToken(token, Date.now());
+  const {idData} = tokenAuthenticator.decodeToken(token, Date.now());  
   req.tokenData = idData;
   next();
 });
 
-export default sessionTokenMiddleware;
+export default accessTokenMiddleware;
 

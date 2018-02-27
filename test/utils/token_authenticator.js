@@ -51,6 +51,10 @@ describe('TokenAuthenticator', () => {
       expect(() => authenticator.generateToken('not-a-secret', 7)).to.throw(AuthenticationError);
     });
 
+    it('decode token which is not base64', () => {
+      expect(() => authenticator.decodeToken('notbase64')).to.throw(AuthenticationError);
+    });
+
     it('decode token with invalid signature (different createdBy)', () => {
       const idData = {
         createdBy: '0xbadAdd6e55',

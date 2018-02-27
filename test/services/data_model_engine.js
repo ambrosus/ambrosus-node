@@ -13,6 +13,7 @@ import pkPair from '../fixtures/pk_pair';
 import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
 import ScenarioBuilder from '../fixtures/scenario_builder';
+import createTokenFor from '../fixtures/create_token_for';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -81,14 +82,6 @@ describe('Data Model Engine', () => {
     beforeEach(() => {
       mockAccountRepository.get.returns(adminAccount);
     });
-
-    function createTokenFor(request) {
-      const defaultExpiryPeriod = 10000;
-      return {
-        createdBy: request.content.idData.createdBy,
-        validBy: Date.now() + defaultExpiryPeriod
-      };
-    }
 
     it('validates with mockIdentityManager and delegates to accountRepository', async () => {
       const request = createAccountRequest();

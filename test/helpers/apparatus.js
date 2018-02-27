@@ -15,6 +15,8 @@ import {adminAccountWithSecret} from '../fixtures/account';
 chai.use(chaiHttp);
 
 export default class Apparatus {
+  DEFAULT_TOKEN_EXPIRATION = 60 * 60 * 24 * 28;
+
   async start() {
     const {client, db} = await connectToMongo();
     this.client = client;
@@ -39,8 +41,13 @@ export default class Apparatus {
     return this;
   }
 
-  generateToken(secret = adminAccountWithSecret.secret, validUntil = this.tokenAuthenticator.defaultValidUntil()) {
+  generateToken(secret = adminAccountWithSecret.secret, validUntil = this.defaultValidUntil()) {
     return this.tokenAuthenticator.generateToken(secret, validUntil);
+  }
+
+
+  defaultValidUntil() {
+    return Date.now() + this.DEFAULT_TOKEN_EXPIRATION;
   }
 
   request() {

@@ -1,6 +1,6 @@
 import chai from 'chai';
 import httpMocks from 'node-mocks-http';
-import {spy} from 'sinon';
+import sinon, {spy} from 'sinon';
 import sinonChai from 'sinon-chai';
 import errorHandling from '../../src/middlewares/error_handling';
 
@@ -52,7 +52,11 @@ describe('Error handling middleware', () => {
   });
 
   it('should return 500 if other error', async () => {
-    errorHandling(new Error(), request, response, next);
+    const consoleErrorFunction = console.error;
+    console.error = sinon.stub();    
+    errorHandling(new Error(), request, response, next);    
+    expect(console.error).to.be.calledOnce;    
+    console.error = consoleErrorFunction;
     expect(response._getStatusCode()).to.eq(500);
     expect(next).to.be.calledOnce;
   });

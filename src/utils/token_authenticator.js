@@ -2,8 +2,6 @@ import base64url from 'base64url';
 import {AuthenticationError, InvalidParametersError} from '../errors/errors';
 
 export default class TokenAuthenticator {
-  DEFAULT_TOKEN_EXPIRATION = 60 * 60 * 24 * 28;
-
   constructor(identityManager) {
     this.identityManager = identityManager;
   }
@@ -53,9 +51,4 @@ export default class TokenAuthenticator {
   encode(data) {
     return base64url(this.identityManager.serializeForHashing(data));
   }
-
-  defaultValidUntil() {
-    return Date.now() + this.DEFAULT_TOKEN_EXPIRATION;
-  }
 }
-

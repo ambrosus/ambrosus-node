@@ -31,7 +31,7 @@ describe('Accounts - Integrations', async () => {
   });
 
   describe('Create an account', () => {
-    it('should create an account (client signed)', async () => {
+    it('should create an account', async () => {
       const account = await apparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
@@ -61,7 +61,7 @@ describe('Accounts - Integrations', async () => {
         .and.have.property('status', 404);
     });
 
-    it('should fail to create account if session user and createBy mismatch', async () => {
+    it('should fail to create account if session user and createdBy mismatch', async () => {
       const pendingRequest = apparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(accountWithSecret.secret)}`)
