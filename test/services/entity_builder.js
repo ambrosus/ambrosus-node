@@ -118,6 +118,7 @@ describe('Entity Builder', () => {
   it('Assembling a bundle', async () => {
     const inAssets = ['inAsset1', 'inAsset2'];
     const inEvents = ['inEvent1', 'inEvent2', 'inEvent3'];
+    const inTimestamp = Date.now();
     const inSecret = 'inSecret';
     const mockAddress = 'mockAddress';
     const mockHash1 = 'mockHash1';
@@ -135,7 +136,7 @@ describe('Entity Builder', () => {
     sinon.stub(entityBuilder, 'removeBundle');
     entityBuilder.removeBundle.callsFake(strippFunc);
 
-    const ret = entityBuilder.assambleBundle(inAssets, inEvents, inSecret);
+    const ret = entityBuilder.assambleBundle(inAssets, inEvents, inTimestamp, inSecret);
 
     // strips the bundleId metadata link using the removeBundle method
     expect(entityBuilder.removeBundle).to.have.callCount(inAssets.length + inEvents.length);
@@ -144,10 +145,13 @@ describe('Entity Builder', () => {
     expect(ret.content.entries).to.deep.include.members(inAssetsStipped);
     expect(ret.content.entries).to.deep.include.members(inEventsStipped);
     expect(ret.content.entries).to.have.lengthOf(inAssets.length + inEvents.length);
-    
+
     // asks the identity manager for the address of the provided secret and put it into idData.createdBy
     expect(mockIdentityManager.addressFromSecret).to.have.been.calledWith(inSecret);
     expect(ret.content.idData.createdBy).to.be.equal(mockAddress);
+
+    // puts the provided timestamp into idData.timestamp
+    expect(ret.content.idData.timestamp).to.be.equal(inTimestamp);
 
     // orders the identity manager to calculate the entriesHash and put it into idData
     expect(mockIdentityManager.calculateHash).to.have.been.calledWith(ret.content.entries);

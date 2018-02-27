@@ -32,10 +32,13 @@ describe('Data Model Engine', () => {
   let scenario;
 
   let web3;
+  let clock;
 
   before(async () => {
     web3 = await createWeb3();
     scenario = new ScenarioBuilder(new IdentityManager(web3));
+
+    clock = sinon.useFakeTimers();
   });
 
   beforeEach(async () => {
@@ -57,7 +60,7 @@ describe('Data Model Engine', () => {
     mockEntityBuilder = {
       validateAsset: sinon.stub(),
       setBundle: sinon.stub(),
-      validateEvent: sinon.stub(), 
+      validateEvent: sinon.stub(),
       assambleBundle: sinon.stub()
     };
     mockEntityRepository = {
@@ -78,6 +81,10 @@ describe('Data Model Engine', () => {
 
     modelEngine = new DataModelEngine(mockIdentityManager, mockEntityBuilder, mockEntityRepository,
       mockAccountRepository, mockAccountAccessDefinitions);
+  });
+
+  after(() => {
+    clock.restore();
   });
 
   describe('Create account', () => {
@@ -329,7 +336,7 @@ describe('Data Model Engine', () => {
       expect(mockEntityRepository.getEventsWithoutBundle).to.have.been.called;
       // create a bundle with the gathered assets and events and sign it
       expect(mockIdentityManager.nodeSecret).to.have.been.called;
-      expect(mockEntityBuilder.assambleBundle).to.have.been.calledWith(unbundledAssets, unbundledEvents, nodeSecret);
+      expect(mockEntityBuilder.assambleBundle).to.have.been.calledWith(unbundledAssets, unbundledEvents, Date.now(), nodeSecret);
       // store it in the repository
       expect(mockEntityRepository.storeBundle).to.have.been.calledWith(assambledBundle);
       // set the bundle metadata for all the now bundled assets and events

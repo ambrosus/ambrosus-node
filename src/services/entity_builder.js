@@ -48,7 +48,7 @@ export default class EntityBuilder {
     this.identityManager.validateSignature(event.content.idData.createdBy, event.content.signature, event.content.idData);
   }
 
-  assambleBundle(assets, events, secret) {
+  assambleBundle(assets, events, timestamp, secret) {
     const createdBy = this.identityManager.addressFromSecret(secret);
     const entries = [
       ...assets,
@@ -57,7 +57,8 @@ export default class EntityBuilder {
     const entriesHash = this.identityManager.calculateHash(entries);
     const idData = {
       createdBy,
-      entriesHash
+      entriesHash,
+      timestamp
     };
     const signature = this.identityManager.sign(secret, idData);
     const content = {

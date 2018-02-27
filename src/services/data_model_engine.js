@@ -101,7 +101,7 @@ export default class DataModelEngine {
     const events = await this.entityRepository.getEventsWithoutBundle();
 
     const nodeSecret = await this.identityManager.nodeSecret();
-    const newBundle = this.entityBuilder.assambleBundle(assets, events, nodeSecret);
+    const newBundle = this.entityBuilder.assambleBundle(assets, events, Date.now(), nodeSecret);
 
     await this.entityRepository.storeBundle(newBundle);
 
