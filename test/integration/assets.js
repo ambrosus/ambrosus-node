@@ -1,7 +1,7 @@
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import Aparatus, {aparatusScenarioProcessor} from '../helpers/aparatus';
+import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
 import chaiHttp from 'chai-http';
 
 import {pick, get} from '../../src/utils/dict_utils';
@@ -16,18 +16,18 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Assets - Integrations', () => {
-  let aparatus;
+  let apparatus;
   let scenario;
   let adminAccount;
 
   before(async () => {
-    aparatus = new Aparatus();
-    await aparatus.start();
-    scenario = new ScenarioBuilder(aparatus.identityManager, aparatusScenarioProcessor(aparatus));
+    apparatus = new Apparatus();
+    await apparatus.start();
+    scenario = new ScenarioBuilder(apparatus.identityManager, apparatusScenarioProcessor(apparatus));
   });
 
   beforeEach(async () => {
-    await aparatus.cleanDB();
+    await apparatus.cleanDB();
     scenario.reset();
     adminAccount = await scenario.injectAccount(adminAccountWithSecret);
   });
@@ -36,11 +36,11 @@ describe('Assets - Integrations', () => {
     let inputAsset = null;
 
     beforeEach(async () => {
-      inputAsset = createFullAsset(aparatus.identityManager, {createdBy: adminAccount.address}, adminAccount.secret);
+      inputAsset = createFullAsset(apparatus.identityManager, {createdBy: adminAccount.address}, adminAccount.secret);
     });
 
     it('works with valid input (client signed)', async () => {
-      const response = await aparatus.request()
+      const response = await apparatus.request()
         .post('/assets')
         .send(inputAsset);
       expect(response.status).to.eq(201);
@@ -50,7 +50,7 @@ describe('Assets - Integrations', () => {
     it('works with valid input (server signed)', async () => {
       const unsignedAsset = pick(inputAsset, ['content.signature', 'assetId']);
 
-      const response = await aparatus.request()
+      const response = await apparatus.request()
         .post('/assets')
         .set('Authorization', `AMB ${adminAccount.secret}`)
         .send(unsignedAsset);
@@ -60,7 +60,7 @@ describe('Assets - Integrations', () => {
 
     it('fails for invalid input', async () => {
       const brokenAsset = pick(inputAsset, 'content.idData.timestamp');
-      const request = aparatus.request()
+      const request = apparatus.request()
         .post('/assets')
         .set('Authorization', `AMB ${pkPair.secret}`)
         .send(brokenAsset);
@@ -70,9 +70,9 @@ describe('Assets - Integrations', () => {
     });
 
     it('fails for not existing creator', async () => {
-      const failingAsset = createFullAsset(aparatus.identityManager, {createdBy: notRegisteredAccount.address}, notRegisteredAccount.secret);
+      const failingAsset = createFullAsset(apparatus.identityManager, {createdBy: notRegisteredAccount.address}, notRegisteredAccount.secret);
       
-      const request = aparatus.request()
+      const request = apparatus.request()
         .post('/assets')
         .send(failingAsset);
 
@@ -90,13 +90,13 @@ describe('Assets - Integrations', () => {
     });
 
     it('should get asset by id', async () => {
-      const response = await aparatus.request()
+      const response = await apparatus.request()
         .get(`/assets/${asset.assetId}`);
       expect(response.body).to.deep.equal(asset);
     });
 
     it('should return 404 if asset with that id doesn\'t exist', async () => {
-      const request = aparatus.request()
+      const request = apparatus.request()
         .get(`/assets/nonexistingAsset`);
       await expect(request).to.eventually.be.rejected
         .and.have.property('status', 404);
@@ -110,11 +110,11 @@ describe('Assets - Integrations', () => {
 
     beforeEach(async () => {
       baseAsset = await scenario.addAsset();
-      inputEvent = createFullEvent(aparatus.identityManager, {assetId: baseAsset.assetId, createdBy: adminAccount.address}, {}, adminAccount.secret);
+      inputEvent = createFullEvent(apparatus.identityManager, {assetId: baseAsset.assetId, createdBy: adminAccount.address}, {}, adminAccount.secret);
     });
 
     it('works with valid input (client signed)', async () => {
-      const response = await aparatus.request()
+      const response = await apparatus.request()
         .post(`/assets/${baseAsset.assetId}/events`)
         .send(inputEvent);
 
@@ -125,7 +125,7 @@ describe('Assets - Integrations', () => {
     it('works with valid input (server signed)', async () => {
       const unsignedEvent = pick(inputEvent, ['content.signature', 'eventId', 'content.idData.dataHash']);
 
-      const response = await aparatus.request()
+      const response = await apparatus.request()
         .post(`/assets/${baseAsset.assetId}/events`)
         .set('Authorization', `AMB ${adminAccount.secret}`)
         .send(unsignedEvent);
@@ -141,7 +141,7 @@ describe('Assets - Integrations', () => {
 
     it('fails for invalid input', async () => {
       const brokenEvent = pick(inputEvent, 'content.data');
-      const request = aparatus.request()
+      const request = apparatus.request()
         .post(`/assets/${baseAsset.assetId}/events`)
         .set('Authorization', `AMB ${pkPair.secret}`)
         .send(brokenEvent);
@@ -151,9 +151,9 @@ describe('Assets - Integrations', () => {
     });
 
     it('fails for not existing creator', async () => {
-      const failingEvent = createFullEvent(aparatus.identityManager, {assetId: baseAsset.assetId, createdBy: notRegisteredAccount.address}, {}, notRegisteredAccount.secret);
+      const failingEvent = createFullEvent(apparatus.identityManager, {assetId: baseAsset.assetId, createdBy: notRegisteredAccount.address}, {}, notRegisteredAccount.secret);
     
-      const request = aparatus.request()
+      const request = apparatus.request()
         .post(`/assets/${baseAsset.assetId}/events`)
         .send(failingEvent);
 
@@ -174,13 +174,13 @@ describe('Assets - Integrations', () => {
     });
 
     it('works for existing event', async () => {
-      const response = await aparatus.request()
+      const response = await apparatus.request()
         .get(`/assets/${asset.assetId}/events/${event.eventId}`);
       expect(response.body).to.deep.equal(event);
     });
 
     it('should return 404 if asset with that id doesn\'t exist', async () => {
-      const request = aparatus.request()
+      const request = apparatus.request()
         .get(`/assets/${asset.assetId}/events/nonexistingEvent`);
       await expect(request).to.eventually.be.rejected
         .and.have.property('status', 404);
@@ -188,6 +188,6 @@ describe('Assets - Integrations', () => {
   });
 
   after(async () => {
-    aparatus.stop();
+    apparatus.stop();
   });
 });

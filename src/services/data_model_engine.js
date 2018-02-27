@@ -12,7 +12,7 @@ export default class DataModelEngine {
   async createAdminAccount(account = this.identityManager.createKeyPair()) {
     const accounts = await this.accountRepository.count();
     if (accounts > 0) {
-      throw new Error('Admin account arleady exist.');
+      throw new Error('Admin account already exist.');
     }
     const accountWithPermissions = {
       ...account,

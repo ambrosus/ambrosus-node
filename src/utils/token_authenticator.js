@@ -33,7 +33,7 @@ export default class TokenAuthenticator {
     try {
       return JSON.parse(base64url.decode(token));
     } catch (_e) {
-      throw new AuthenticationError('Unanable to decode token.');
+      throw new AuthenticationError('Unable to decode token.');
     }
   }
 

@@ -1,5 +1,5 @@
 import {validatePathsNotEmpty, validateFieldsConstrainedToSet} from '../utils/validations';
-import {put} from '..//utils/dict_utils';
+import {put} from '../utils/dict_utils';
 
 export default class EntityBuilder {
   constructor(identityManager) {

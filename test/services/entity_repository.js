@@ -33,10 +33,10 @@ describe('Entity Repository', () => {
 
   describe('Assets', () => {
     it('db round trip works', async () => {
-      const exmapleAssetId = '0x123456';
-      const exampleAsset = put(createAsset(), 'assetId', exmapleAssetId);
+      const exampleAssetId = '0x123456';
+      const exampleAsset = put(createAsset(), 'assetId', exampleAssetId);
       await storage.storeAsset(exampleAsset);
-      await expect(storage.getAsset(exmapleAssetId)).to.eventually.be.deep.equal(exampleAsset);
+      await expect(storage.getAsset(exampleAssetId)).to.eventually.be.deep.equal(exampleAsset);
     });
 
     it('returns null for non-existing asset', async () => {

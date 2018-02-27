@@ -37,8 +37,8 @@ describe('Entity Builder', () => {
     for (const field of ['assetId', 'content', 'content.signature', 'content.idData', 'content.idData.createdBy', 'content.idData.timestamp', 'content.idData.sequenceNumber']) {
       // eslint-disable-next-line no-loop-func
       it(`throws if the ${field} field is missing`, () => {
-        const brokenAssset = pick(exampleAsset, field);
-        expect(() => entityBuilder.validateAsset(brokenAssset)).to.throw(ValidationError);
+        const brokenAsset = pick(exampleAsset, field);
+        expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
       });
     }
 
@@ -59,8 +59,8 @@ describe('Entity Builder', () => {
     });
 
     it('doesn\'t allow root-level fields other than content, and assetId', () => {
-      const brokenAssset = put(exampleAsset, 'metadata', 'abc');
-      expect(() => entityBuilder.validateAsset(brokenAssset)).to.throw(ValidationError);
+      const brokenAsset = put(exampleAsset, 'metadata', 'abc');
+      expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
     });
   });
 

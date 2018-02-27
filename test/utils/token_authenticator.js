@@ -1,5 +1,5 @@
 import chai from 'chai';
-import chaistring from 'chai-string';
+import chaiString from 'chai-string';
 import {createWeb3} from '../../src/utils/web3_tools';
 import TokenAuthenticator from '../../src/utils/token_authenticator';
 import pkPair from '../fixtures/pk_pair';
@@ -7,7 +7,7 @@ import {AuthenticationError, InvalidParametersError} from '../../src/errors/erro
 import IdentityManager from '../../src/services/identity_manager';
 
 const {expect} = chai;
-chai.use(chaistring);
+chai.use(chaiString);
 
 describe('TokenAuthenticator', () => {
   let authenticator;

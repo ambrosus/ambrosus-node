@@ -104,7 +104,7 @@ describe('Identity manager', () => {
     });
 
     it('should throw if invalid secret', () => {
-      expect(() => identityManager.addressFromSecret('badsecret')).to.throw(AuthenticationError);      
+      expect(() => identityManager.addressFromSecret('badSecret')).to.throw(AuthenticationError);
     });
   });
 
