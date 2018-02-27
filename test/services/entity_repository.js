@@ -59,7 +59,7 @@ describe('Entity Repository', () => {
       await expect(storage.getEvent(otherEventId)).to.eventually.be.equal(null);
     });
 
-    describe('Find', () => {
+    describe('Find Events', () => {
       beforeEach(async () => {
         await scenario.addAsset(0);
         await scenario.addAsset(0);
@@ -93,6 +93,27 @@ describe('Entity Repository', () => {
         ret.results.forEach((element) => expect(element.content.idData.assetId).to.equal(targetAssetId));
       });
     });
+  });
+
+  it('Quering for assets and events without a bundle', async () => {
+    const asset1 = put(await scenario.addAsset(0), 'metadata.bundleId', 2);
+    const asset2 = put(await scenario.addAsset(0), 'metadata.bundleId', null);
+    const event1 = put(await scenario.addEvent(0, 0), 'metadata.bundleId', 2);
+    const event2 = put(await scenario.addEvent(0, 0), 'metadata.bundleId', null);
+    const event3 = put(await scenario.addEvent(0, 1), 'metadata.bundleId', null);
+    await storage.storeAsset(asset1);
+    await storage.storeAsset(asset2);
+    await storage.storeEvent(event3);
+    await storage.storeEvent(event1);
+    await storage.storeEvent(event2);
+    await storage.storeEvent(event3);
+
+    const unbundledAssets = await storage.getAssetsWithoutBundle();
+    expect(unbundledAssets).to.deep.include(asset2);
+
+    const unbundledEvents = await storage.getEventsWithoutBundle();
+    expect(unbundledEvents).to.deep.include(event2);
+    expect(unbundledEvents).to.deep.include(event3);
   });
 
   after(() => {

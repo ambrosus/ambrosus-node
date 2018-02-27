@@ -12,11 +12,11 @@ export default class EntityRepository {
   }
 
   async storeEvent(event) {
-    await this.db.collection('event').insertOne({...event});
+    await this.db.collection('events').insertOne({...event});
   }
 
   async getEvent(eventId) {
-    return await this.db.collection('event').findOne({eventId}, {fields: {_id: 0}});
+    return await this.db.collection('events').findOne({eventId}, {fields: {_id: 0}});
   }
 
   getConfigurationForFindEventsQuery(params) {
@@ -35,7 +35,7 @@ export default class EntityRepository {
     const {query, options} = this.getConfigurationForFindEventsQuery(params);
 
     const cursor = this.db
-      .collection('event')
+      .collection('events')
       .find(
         query,
         {
@@ -48,5 +48,31 @@ export default class EntityRepository {
       results: await cursor.toArray(),
       resultCount: await cursor.count(false)
     };
+  }
+
+  async getAssetsWithoutBundle() {
+    const cursor = this.db
+      .collection('assets')
+      .find(
+        {
+          'metadata.bundleId': null
+        },
+        {
+          fields: {_id: 0}
+        });
+    return cursor.toArray();
+  }
+
+  async getEventsWithoutBundle() {
+    const cursor = this.db
+      .collection('events')
+      .find(
+        {
+          'metadata.bundleId': null
+        },
+        {
+          fields: {_id: 0}
+        });
+    return cursor.toArray();
   }
 }

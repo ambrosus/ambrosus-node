@@ -28,7 +28,9 @@ describe('Entity Builder', () => {
   beforeEach(() => {
     mockIdentityManager = {
       validateSignature: sinon.stub(),
-      calculateHash: sinon.stub()
+      calculateHash: sinon.stub(),
+      sign: sinon.stub(),
+      addressFromSecret: sinon.stub()
     };
     entityBuilder = new EntityBuilder(mockIdentityManager);
   });
@@ -64,11 +66,6 @@ describe('Entity Builder', () => {
     });
   });
 
-  it('setting the bundle Id for an asset', () => {
-    const modifiedAsset = entityBuilder.setAssetBundle(exampleAsset, 'abc');
-    expect(modifiedAsset.metadata.bundleId).to.equal('abc');
-  });
-
   describe('validating an event', () => {
     for (const field of ['eventId', 'content', 'content.signature', 'content.idData', 'content.idData.assetId', 'content.idData.createdBy', 'content.idData.timestamp', 'content.idData.dataHash', 'content.data']) {
       // eslint-disable-next-line no-loop-func
@@ -100,8 +97,68 @@ describe('Entity Builder', () => {
     });
   });
 
-  it('setting the bundle Id for an event', () => {
-    const modifiedEvent = entityBuilder.setEventBundle(exampleEvent, '123');
-    expect(modifiedEvent.metadata.bundleId).to.equal('123');
+  it('Setting the bundle for an entity', () => {
+    const assetWithBundle = entityBuilder.setBundle(exampleAsset, 'abc');
+    expect(assetWithBundle.metadata.bundleId).to.equal('abc');
+
+    const eventWithBundle = entityBuilder.setBundle(exampleEvent, '123');
+    expect(eventWithBundle.metadata.bundleId).to.equal('123');
+  });
+
+  it('Removing the bundle from a entity', () => {
+    const assetWithBundle = entityBuilder.setBundle(exampleAsset, 'abc');
+    const assetWithoutBundle = entityBuilder.removeBundle(assetWithBundle);
+    expect(assetWithoutBundle).to.deep.equal(exampleAsset);
+
+    const eventWithBundle = entityBuilder.setBundle(exampleEvent, '123');
+    const eventWithoutBundle = entityBuilder.removeBundle(eventWithBundle);
+    expect(eventWithoutBundle).to.deep.equal(exampleEvent);
+  });
+
+  it('Assembling a bundle', async () => {
+    const inAssets = ['inAsset1', 'inAsset2'];
+    const inEvents = ['inEvent1', 'inEvent2', 'inEvent3'];
+    const inSecret = 'inSecret';
+    const mockAddress = 'mockAddress';
+    const mockHash1 = 'mockHash1';
+    const mockHash2 = 'mockHash2';
+    const mockSignature = 'mockSignature';
+
+    const strippFunc = (entry) => `${entry}_stripped`;
+    const inAssetsStipped = inAssets.map(strippFunc);
+    const inEventsStipped = inAssets.map(strippFunc);
+
+    mockIdentityManager.addressFromSecret.returns(mockAddress);
+    mockIdentityManager.calculateHash.onFirstCall().returns(mockHash1);
+    mockIdentityManager.calculateHash.onSecondCall().returns(mockHash2);
+    mockIdentityManager.sign.returns(mockSignature);
+    sinon.stub(entityBuilder, 'removeBundle');
+    entityBuilder.removeBundle.callsFake(strippFunc);
+
+    const ret = entityBuilder.assambleBundle(inAssets, inEvents, inSecret);
+
+    // strips the bundleId metadata link using the removeBundle method
+    expect(entityBuilder.removeBundle).to.have.callCount(inAssets.length + inEvents.length);
+
+    // puts the assets and events into entries
+    expect(ret.content.entries).to.deep.include.members(inAssetsStipped);
+    expect(ret.content.entries).to.deep.include.members(inEventsStipped);
+    expect(ret.content.entries).to.have.lengthOf(inAssets.length + inEvents.length);
+    
+    // asks the identity manager for the address of the provided secret and put it into idData.createdBy
+    expect(mockIdentityManager.addressFromSecret).to.have.been.calledWith(inSecret);
+    expect(ret.content.idData.createdBy).to.be.equal(mockAddress);
+
+    // orders the identity manager to calculate the entriesHash and put it into idData
+    expect(mockIdentityManager.calculateHash).to.have.been.calledWith(ret.content.entries);
+    expect(ret.content.idData.entriesHash).to.be.equal(mockHash1);
+
+    // orders the identity manager to sign the the idData part
+    expect(mockIdentityManager.sign).to.have.been.calledWith(inSecret, ret.content.idData);
+    expect(ret.content.signature).to.be.equal(mockSignature);
+
+    // orders the identity manager to calculate the bundleId
+    expect(mockIdentityManager.calculateHash).to.have.been.calledWith(ret.content);
+    expect(ret.bundleId).to.be.equal(mockHash2);
   });
 });
