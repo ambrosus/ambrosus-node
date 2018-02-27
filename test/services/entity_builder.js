@@ -136,7 +136,7 @@ describe('Entity Builder', () => {
     sinon.stub(entityBuilder, 'removeBundle');
     entityBuilder.removeBundle.callsFake(strippFunc);
 
-    const ret = entityBuilder.assambleBundle(inAssets, inEvents, inTimestamp, inSecret);
+    const ret = entityBuilder.assembleBundle(inAssets, inEvents, inTimestamp, inSecret);
 
     // strips the bundleId metadata link using the removeBundle method
     expect(entityBuilder.removeBundle).to.have.callCount(inAssets.length + inEvents.length);

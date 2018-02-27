@@ -61,7 +61,7 @@ describe('Data Model Engine', () => {
       validateAsset: sinon.stub(),
       setBundle: sinon.stub(),
       validateEvent: sinon.stub(),
-      assambleBundle: sinon.stub()
+      assembleBundle: sinon.stub()
     };
     mockEntityRepository = {
       storeAsset: sinon.stub(),
@@ -310,7 +310,7 @@ describe('Data Model Engine', () => {
       const unbundledAssets = scenario.assets;
       const unbundledEvents = scenario.events;
       const nodeSecret = 'nodeSecret';
-      const assambledBundle = {
+      const assembledBundle = {
         bundleId: 'a mock bundle',
         contents: {
           entries: [
@@ -322,7 +322,7 @@ describe('Data Model Engine', () => {
 
       mockEntityRepository.getAssetsWithoutBundle.resolves(unbundledAssets);
       mockEntityRepository.getEventsWithoutBundle.resolves(unbundledEvents);
-      mockEntityBuilder.assambleBundle.returns(assambledBundle);
+      mockEntityBuilder.assembleBundle.returns(assembledBundle);
       mockEntityBuilder.setBundle.returnsArg(0);
       mockEntityRepository.storeBundle.resolves();
       mockEntityRepository.storeAsset.resolves();
@@ -336,16 +336,16 @@ describe('Data Model Engine', () => {
       expect(mockEntityRepository.getEventsWithoutBundle).to.have.been.called;
       // create a bundle with the gathered assets and events and sign it
       expect(mockIdentityManager.nodeSecret).to.have.been.called;
-      expect(mockEntityBuilder.assambleBundle).to.have.been.calledWith(unbundledAssets, unbundledEvents, Date.now(), nodeSecret);
+      expect(mockEntityBuilder.assembleBundle).to.have.been.calledWith(unbundledAssets, unbundledEvents, Date.now(), nodeSecret);
       // store it in the repository
-      expect(mockEntityRepository.storeBundle).to.have.been.calledWith(assambledBundle);
+      expect(mockEntityRepository.storeBundle).to.have.been.calledWith(assembledBundle);
       // set the bundle metadata for all the now bundled assets and events
       expect(mockEntityBuilder.setBundle).to.have.callCount(unbundledAssets.length + unbundledEvents.length);
       expect(mockEntityRepository.storeAsset).to.have.callCount(unbundledAssets.length);
       expect(mockEntityRepository.storeEvent).to.have.callCount(unbundledEvents.length);
 
       // return the bundle
-      expect(ret).to.be.deep.eq(assambledBundle);
+      expect(ret).to.be.deep.eq(assembledBundle);
     });
   });
 });

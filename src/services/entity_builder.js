@@ -48,7 +48,7 @@ export default class EntityBuilder {
     this.identityManager.validateSignature(event.content.idData.createdBy, event.content.signature, event.content.idData);
   }
 
-  assambleBundle(assets, events, timestamp, secret) {
+  assembleBundle(assets, events, timestamp, secret) {
     const createdBy = this.identityManager.addressFromSecret(secret);
     const entries = [
       ...assets,
