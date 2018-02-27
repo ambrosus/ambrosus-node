@@ -50,7 +50,7 @@ describe('Data Model Engine', () => {
     mockIdentityManager = {
       createKeyPair: sinon.stub(),
       validateSignature: sinon.stub(),
-      nodeSecret: sinon.stub()
+      nodePrivateKey: sinon.stub()
     };
     mockAccountRepository = {
       store: sinon.stub(),
@@ -327,7 +327,7 @@ describe('Data Model Engine', () => {
       mockEntityRepository.storeBundle.resolves();
       mockEntityRepository.storeAsset.resolves();
       mockEntityRepository.storeEvent.resolves();
-      mockIdentityManager.nodeSecret.resolves(nodeSecret);
+      mockIdentityManager.nodePrivateKey.resolves(nodeSecret);
 
       const ret = await expect(modelEngine.finaliseBundle()).to.be.fulfilled;
 
@@ -335,7 +335,7 @@ describe('Data Model Engine', () => {
       expect(mockEntityRepository.getAssetsWithoutBundle).to.have.been.called;
       expect(mockEntityRepository.getEventsWithoutBundle).to.have.been.called;
       // create a bundle with the gathered assets and events and sign it
-      expect(mockIdentityManager.nodeSecret).to.have.been.called;
+      expect(mockIdentityManager.nodePrivateKey).to.have.been.called;
       expect(mockEntityBuilder.assembleBundle).to.have.been.calledWith(unbundledAssets, unbundledEvents, Date.now(), nodeSecret);
       // store it in the repository
       expect(mockEntityRepository.storeBundle).to.have.been.calledWith(assembledBundle);
