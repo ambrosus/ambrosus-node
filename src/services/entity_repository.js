@@ -42,10 +42,10 @@ export default class EntityRepository {
     if (queryLength === 0) {
       return part;
     } 
-    const and = query.$and || [query];
+    const conjuntion = query.$and || [query];
     return {
       $and: [
-        ...and,
+        ...conjuntion,
         part
       ]
     };
