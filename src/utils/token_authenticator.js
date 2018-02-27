@@ -1,5 +1,5 @@
 import base64url from 'base64url';
-import {AuthenticationError} from '../errors/errors';
+import {AuthenticationError, InvalidParametersError} from '../errors/errors';
 
 export default class TokenAuthenticator {
   constructor(identityManager) {
@@ -7,6 +7,9 @@ export default class TokenAuthenticator {
   }
 
   generateToken(secret, timestamp) {
+    if (!timestamp || !Number.isInteger(timestamp)) {
+      throw new InvalidParametersError('Unix timestamp was not provided or has an invalid format');
+    }
     const address = this.identityManager.addressFromSecret(secret);
     const idData = {
       createdBy: address,

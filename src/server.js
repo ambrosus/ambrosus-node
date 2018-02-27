@@ -5,6 +5,7 @@ import errorHandling from './middlewares/error_handling';
 import accountsRouter from './routes/accounts';
 import assetsRouter from './routes/assets';
 import eventsRouter from './routes/events';
+import tokenRouter from './routes/token';
 
 
 export default class Server {
@@ -18,6 +19,7 @@ export default class Server {
     app.use('/accounts', accountsRouter(this.modelEngine.identityManager, this.modelEngine));  
     app.use('/assets', assetsRouter(this.modelEngine.identityManager, this.modelEngine));
     app.use('/events', eventsRouter(this.modelEngine.identityManager, this.modelEngine));
+    app.use('/token', tokenRouter(this.modelEngine.tokenAuthenticator));
 
     // Should always be last
     app.use(errorHandling);
