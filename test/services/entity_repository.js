@@ -93,7 +93,7 @@ describe('Entity Repository', () => {
       });
 
       describe('additional criteria', () => {
-        const eventsSet = [];
+        let eventsSet;
         before(async () => {
           await cleanDatabase(db);
           scenario.reset();
@@ -101,12 +101,14 @@ describe('Entity Repository', () => {
           await scenario.addAsset(0);
           await scenario.addAsset(0);
 
-          eventsSet[0] = await scenario.addEvent(0, 0, {timestamp: 0});
-          eventsSet[1] = await scenario.addEvent(0, 0, {timestamp: 1});
-          eventsSet[2] = await scenario.addEvent(0, 0, {timestamp: 2});
-          eventsSet[3] = await scenario.addEvent(0, 1, {timestamp: 3});
-          eventsSet[4] = await scenario.addEvent(0, 1, {timestamp: 4});
-          eventsSet[5] = await scenario.addEvent(0, 1, {timestamp: 5});
+          eventsSet = [
+            await scenario.addEvent(0, 0, {timestamp: 0}),
+            await scenario.addEvent(0, 0, {timestamp: 2}),
+            await scenario.addEvent(0, 0, {timestamp: 1}),
+            await scenario.addEvent(0, 1, {timestamp: 3}),
+            await scenario.addEvent(0, 1, {timestamp: 4}),
+            await scenario.addEvent(0, 1, {timestamp: 5})
+          ];
           
           for (const event of eventsSet) {
             await storage.storeEvent(event);
@@ -124,7 +126,7 @@ describe('Entity Repository', () => {
           ret.results.forEach((element) => expect(element.content.idData.assetId).to.equal(targetAssetId));  
         });
 
-        it('with fromTimestamp param returns events from selected timestamp', async () => {
+        it('with fromTimestamp param returns only events newer thanselected timestamp', async () => {
           const ret = await expect(storage.findEvents({fromTimestamp: 4})).to.be.fulfilled;
           expect(ret.results).have.lengthOf(2);
           expect(ret.resultCount).to.equal(2);
@@ -133,7 +135,7 @@ describe('Entity Repository', () => {
           ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.at.least(4));
         });
 
-        it('with toTimestamp param returns events to selected timestamp', async () => {
+        it('with toTimestamp param returns only events older than selected timestamp', async () => {
           const ret = await expect(storage.findEvents({toTimestamp: 2})).to.be.fulfilled;
           expect(ret.results).have.lengthOf(3);
           expect(ret.resultCount).to.equal(3);
@@ -153,7 +155,7 @@ describe('Entity Repository', () => {
           ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(2, 4));
         });
 
-        it('with fromTimestamp, toTimestamp and assetId params returns events for selected asset, from between selected timestamps', async () => {
+        it('with all params provided returns events for selected asset, from between selected timestamps', async () => {
           const targetAssetId = scenario.assets[0].assetId;
           const ret = await expect(storage.findEvents({fromTimestamp : 1, toTimestamp: 4, assetId: targetAssetId})).to.be.fulfilled;
           expect(ret.results).have.lengthOf(2);

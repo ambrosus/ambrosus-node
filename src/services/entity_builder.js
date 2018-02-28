@@ -46,7 +46,8 @@ export default class EntityBuilder {
     return put(asset, 'metadata.bundleId', bundle);
   }
 
-  validateAndCastFindEventsParams(params, allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp']) {
+  validateAndCastFindEventsParams(params) {
+    const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp'];
     const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
     if (invalidFields.length > 0) {
       throw new InvalidParametersError(`Some parameters (${invalidFields.join(',')}) are not supported`);
