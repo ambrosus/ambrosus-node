@@ -22,21 +22,17 @@ describe('Events - Integrations', () => {
     scenario = new ScenarioBuilder(apparatus.identityManager, apparatusScenarioProcessor(apparatus));
   });
 
-  beforeEach(async () => {
-    await apparatus.cleanDB();
-    scenario.reset();
-    await scenario.injectAccount(adminAccountWithSecret);
-  });
 
   describe('finding events', () => {
-    beforeEach(async () => {
+    before(async () => {
+      await scenario.injectAccount(adminAccountWithSecret);
       await scenario.addAsset(0);
       await scenario.addAsset(0);
       await scenario.generateEvents(
-        120,
+        200,
         (inx) => ({
           accountInx: 0,
-          subjectInx: inx % 10 === 0 ? 1 : 0,
+          subjectInx: inx % 20 === 0 ? 1 : 0,
           fields: {timestamp: inx},
           data: {}
         })
@@ -48,9 +44,9 @@ describe('Events - Integrations', () => {
       const {body} = response;
 
       expect(body.results).to.have.lengthOf(100);
-      expect(body.resultCount).to.equal(120);
-      expect(body.results[0]).to.deep.equal(scenario.events[119]);
-      expect(body.results[99]).to.deep.equal(scenario.events[20]);
+      expect(body.resultCount).to.equal(200);
+      expect(body.results[0]).to.deep.equal(scenario.events[199]);
+      expect(body.results[99]).to.deep.equal(scenario.events[100]);
     });
 
     it('with assetId returns only events for target asset', async () => {
@@ -59,7 +55,7 @@ describe('Events - Integrations', () => {
       const {body} = response;
 
       expect(body.results).to.have.lengthOf(100);
-      expect(body.resultCount).to.equal(108);
+      expect(body.resultCount).to.equal(190);
       body.results.forEach((element) => expect(element.content.idData.assetId).to.equal(targetAssetId));
     });
 
@@ -69,8 +65,8 @@ describe('Events - Integrations', () => {
       const response = await apparatus.request().get(`/events?fromTimestamp=${fromTimestamp}`);
       const {body} = response;
 
-      expect(body.results).to.have.lengthOf(70);
-      expect(body.resultCount).to.equal(70);
+      expect(body.results).to.have.lengthOf(100);
+      expect(body.resultCount).to.equal(150);
       body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.at.least(50));
     });
 
@@ -97,6 +93,8 @@ describe('Events - Integrations', () => {
   });
 
   after(async () => {
+    await apparatus.cleanDB();
+    scenario.reset();
     apparatus.stop();
   });
 });

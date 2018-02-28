@@ -21,17 +21,16 @@ describe('Entity Repository', () => {
   before(async () => {
     ({db, client} = await connectToMongo());
     storage = new EntityRepository(db);
-
     scenario = new ScenarioBuilder(new IdentityManager(await createWeb3()));
   });
 
-  beforeEach(async () => {
-    await cleanDatabase(db);
-    scenario.reset();
-    await scenario.injectAccount(adminAccountWithSecret);
-  });
-
   describe('Assets', () => {
+    before(async () => {
+      await cleanDatabase(db);
+      scenario.reset();
+      await scenario.injectAccount(adminAccountWithSecret);
+    });
+
     it('db round trip works', async () => {
       const exampleAssetId = '0x123456';
       const exampleAsset = put(createAsset(), 'assetId', exampleAssetId);
@@ -47,6 +46,11 @@ describe('Entity Repository', () => {
 
 
   describe('Events', () => {
+    before(async () => {
+      await cleanDatabase(db);
+      scenario.reset();
+      await scenario.injectAccount(adminAccountWithSecret);
+    });
     it('db round trip works', async () => {
       const exampleEventId = '0x123456';
       const exampleEvent = put(createEvent(), 'eventId', exampleEventId);
@@ -60,7 +64,10 @@ describe('Entity Repository', () => {
     });
 
     describe('Find', () => {
-      beforeEach(async () => {
+      before(async () => {
+        await cleanDatabase(db);
+        scenario.reset();
+        await scenario.injectAccount(adminAccountWithSecret);
         await scenario.addAsset(0);
         await scenario.addAsset(0);
         const eventsSet = await scenario.generateEvents(
@@ -85,46 +92,70 @@ describe('Entity Repository', () => {
         expect(ret.resultCount).to.equal(135);
       });
 
-      it('with assetId param returns events for selected asset', async () => {
-        const targetAssetId = scenario.assets[0].assetId;
-        const ret = await expect(storage.findEvents({assetId: targetAssetId})).to.be.fulfilled;
-        expect(ret.results).have.lengthOf(90);
-        expect(ret.resultCount).to.equal(90);
-        ret.results.forEach((element) => expect(element.content.idData.assetId).to.equal(targetAssetId));
-      });
+      describe('additional criteria', () => {
+        before(async () => {
+          await cleanDatabase(db);
+          scenario.reset();
+          await scenario.injectAccount(adminAccountWithSecret);
+          await scenario.addAsset(0);
+          await scenario.addAsset(0);
+          const eventsSet = await scenario.generateEvents(
+            10,
+            (inx) => ({
+              accountInx: 0,
+              subjectInx: (inx % 2 === 0 ? 1 : 0),
+              fields: {timestamp: inx},
+              data: {}
+            })
+          );
+          for (const event of eventsSet) {
+            await storage.storeEvent(event);
+          }
+        });
 
-      it('with fromTimestamp param returns events from selected timestamp', async () => {
-        const ret = await expect(storage.findEvents({fromTimestamp: 45})).to.be.fulfilled;
-        expect(ret.results).have.lengthOf(90);
-        expect(ret.resultCount).to.equal(90);
-        ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.at.least(45));
-      });
+        it('with assetId param returns events for selected asset', async () => {
+          const targetAssetId = scenario.assets[0].assetId;
+          const ret = await expect(storage.findEvents({assetId: targetAssetId})).to.be.fulfilled;
+          expect(ret.results).have.lengthOf(5);
+          expect(ret.resultCount).to.equal(5);
+          ret.results.forEach((element) => expect(element.content.idData.assetId).to.equal(targetAssetId));
+        });
 
-      it('with toTimestamp param returns events to selected timestamp', async () => {
-        const ret = await expect(storage.findEvents({toTimestamp: 90})).to.be.fulfilled;
-        expect(ret.results).have.lengthOf(91);
-        expect(ret.resultCount).to.equal(91);
-        ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.at.most(90));
-      });
+        it('with fromTimestamp param returns events from selected timestamp', async () => {
+          const ret = await expect(storage.findEvents({fromTimestamp: 8})).to.be.fulfilled;
+          expect(ret.results).have.lengthOf(2);
+          expect(ret.resultCount).to.equal(2);
+          ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.at.least(8));
+        });
+
+        it('with toTimestamp param returns events to selected timestamp', async () => {
+          const ret = await expect(storage.findEvents({toTimestamp: 4})).to.be.fulfilled;
+          expect(ret.results).have.lengthOf(5);
+          expect(ret.resultCount).to.equal(5);
+          ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.at.most(4));
+        });
       
-      it('with fromTimestamp param and toTimestamp param returns events from between selected timestamps', async () => {
-        const ret = await expect(storage.findEvents({fromTimestamp : 45, toTimestamp: 90})).to.be.fulfilled;
-        expect(ret.results).have.lengthOf(46);
-        expect(ret.resultCount).to.equal(46);
-        ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(45, 90));
-      });
+        it('with fromTimestamp param and toTimestamp param returns events from between selected timestamps', async () => {
+          const ret = await expect(storage.findEvents({fromTimestamp : 2, toTimestamp: 6})).to.be.fulfilled;
+          expect(ret.results).have.lengthOf(5);
+          expect(ret.resultCount).to.equal(5);
+          ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(2, 6));
+        });
 
-      it('with fromTimestamp, toTimestamp and assetId params returns events for selected asset, from between selected timestamps', async () => {
-        const targetAssetId = scenario.assets[0].assetId;
-        const ret = await expect(storage.findEvents({fromTimestamp : 45, toTimestamp: 90, assetId: targetAssetId})).to.be.fulfilled;
-        expect(ret.results).have.lengthOf(30);
-        expect(ret.resultCount).to.equal(30);
-        ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(45, 90));
+        it('with fromTimestamp, toTimestamp and assetId params returns events for selected asset, from between selected timestamps', async () => {
+          const targetAssetId = scenario.assets[0].assetId;
+          const ret = await expect(storage.findEvents({fromTimestamp : 2, toTimestamp: 6, assetId: targetAssetId})).to.be.fulfilled;
+          expect(ret.results).have.lengthOf(2);
+          expect(ret.resultCount).to.equal(2);
+          ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(2, 6));
+        });
       });
     });
   });
 
-  after(() => {
+  after(async () => {
+    await cleanDatabase(db);
+    scenario.reset();
     client.close();
   });
 });
