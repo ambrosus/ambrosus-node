@@ -423,7 +423,7 @@ Fetches an event by identifier
 
     + Body
     
-### /events{?assetId}
+### /events{?assetId,fromTimestamp,toTimestamp}
 
 #### Find events [GET]
 
@@ -432,6 +432,8 @@ Finds event satisfying provided cryteria.
 + Parameters
 
     + assetId : 0xc5cfd04.....30755ed65 (string, optional) - ID of the asset the events are targeting
+    + fromTimestamp : 1503424922 (integer, optional) - earliest timestamp for the events 
+    + toTimestamp : 1503424924 (integer, optional) - latest timestamp for the events 
 
 + Response 200 (application/json)
 
@@ -459,6 +461,12 @@ Finds event satisfying provided cryteria.
                 ],
                 resultCount: 112
             }
+
++ Response 400
+
+    One or more of included parameters are not supported, or parameter value is in invalid format
+
+    + Body
 
 + Response 404
 

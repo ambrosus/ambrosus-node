@@ -1,5 +1,7 @@
 import {validatePathsNotEmpty, validateFieldsConstrainedToSet} from '../utils/validations';
+
 import {put} from '../utils/dict_utils';
+import {InvalidParametersError} from '../errors/errors';
 
 export default class EntityBuilder {
   constructor(identityManager) {
@@ -42,5 +44,31 @@ export default class EntityBuilder {
 
   setEventBundle(asset, bundle) {
     return put(asset, 'metadata.bundleId', bundle);
+  }
+
+  validateAndCastFindEventsParams(params) {
+    const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp'];
+    const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
+    if (invalidFields.length > 0) {
+      throw new InvalidParametersError(`Some parameters (${invalidFields.join(',')}) are not supported`);
+    }
+
+    if (params.fromTimestamp) {
+      const parsedFromTimestamp = parseInt(params.fromTimestamp, 10);
+      if (isNaN(parsedFromTimestamp)) {
+        throw new InvalidParametersError(`Invalid 'fromTimestamp' parameter value`);
+      }
+      params.fromTimestamp = parsedFromTimestamp;
+    }
+
+    if (params.toTimestamp) {
+      const parsedToTimestamp = parseInt(params.toTimestamp, 10);
+      if (isNaN(parsedToTimestamp)) {
+        throw new InvalidParametersError(`Invalid 'toTimestamp' parameter value`);
+      }
+      params.toTimestamp = parsedToTimestamp;
+    }
+    
+    return params;
   }
 }

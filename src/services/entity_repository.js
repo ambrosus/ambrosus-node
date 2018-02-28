@@ -20,15 +20,35 @@ export default class EntityRepository {
   }
 
   getConfigurationForFindEventsQuery(params) {
-    const query = {};
+    let query = {};
     if (params.assetId) {
-      query['content.idData.assetId'] = params.assetId;
+      query = this.addToQuery(query, {'content.idData.assetId' : params.assetId});
+    }
+    if (params.fromTimestamp) {
+      query = this.addToQuery(query, {'content.idData.timestamp' : {$gte: params.fromTimestamp}});
+    }
+    if (params.toTimestamp) {
+      query = this.addToQuery(query, {'content.idData.timestamp' : {$lte: params.toTimestamp}});
     }
     const options = {
       limit: 100,
       sort: [['content.idData.timestamp', 'descending']]
     };
     return {query, options};
+  }
+
+  addToQuery(query, part) {
+    const queryLength = Object.keys(query).length;
+    if (queryLength === 0) {
+      return part;
+    } 
+    const conjuntion = query.$and || [query];
+    return {
+      $and: [
+        ...conjuntion,
+        part
+      ]
+    };
   }
 
   async findEvents(params) {

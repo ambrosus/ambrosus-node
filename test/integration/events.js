@@ -1,5 +1,4 @@
 import chai from 'chai';
-import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
@@ -23,21 +22,17 @@ describe('Events - Integrations', () => {
     scenario = new ScenarioBuilder(apparatus.identityManager, apparatusScenarioProcessor(apparatus));
   });
 
-  beforeEach(async () => {
-    await apparatus.cleanDB();
-    scenario.reset();
-    await scenario.injectAccount(adminAccountWithSecret);
-  });
 
   describe('finding events', () => {
-    beforeEach(async () => {
+    before(async () => {
+      await scenario.injectAccount(adminAccountWithSecret);
       await scenario.addAsset(0);
       await scenario.addAsset(0);
       await scenario.generateEvents(
-        120,
+        200,
         (inx) => ({
           accountInx: 0,
-          subjectInx: inx % 10 === 0 ? 1 : 0,
+          subjectInx: inx % 20 === 0 ? 1 : 0,
           fields: {timestamp: inx},
           data: {}
         })
@@ -49,9 +44,9 @@ describe('Events - Integrations', () => {
       const {body} = response;
 
       expect(body.results).to.have.lengthOf(100);
-      expect(body.resultCount).to.equal(120);
-      expect(body.results[0]).to.deep.equal(scenario.events[119]);
-      expect(body.results[99]).to.deep.equal(scenario.events[20]);
+      expect(body.resultCount).to.equal(200);
+      expect(body.results[0]).to.deep.equal(scenario.events[199]);
+      expect(body.results[99]).to.deep.equal(scenario.events[100]);
     });
 
     it('with assetId returns only events for target asset', async () => {
@@ -60,24 +55,46 @@ describe('Events - Integrations', () => {
       const {body} = response;
 
       expect(body.results).to.have.lengthOf(100);
-      expect(body.resultCount).to.equal(108);
+      expect(body.resultCount).to.equal(190);
       body.results.forEach((element) => expect(element.content.idData.assetId).to.equal(targetAssetId));
     });
 
-    it('filters surplus parameters our of the request', async () => {
-      // sadly we can't look for side effect of the filtering so a sinon spy is used to check what gets passed into the model engine
-      sinon.spy(apparatus.modelEngine, 'findEvents');
 
-      const targetAssetId = scenario.assets[0].assetId;
-      await apparatus.request().get(`/events?assetId=${targetAssetId}&additional=123`);
+    it('with fromTimestamp returns only events newer than selected timestamp', async () => {
+      const fromTimestamp = 50;
+      const response = await apparatus.request().get(`/events?fromTimestamp=${fromTimestamp}`);
+      const {body} = response;
 
-      expect(apparatus.modelEngine.findEvents).to.have.been.calledWith({assetId: targetAssetId});
-      
-      apparatus.modelEngine.findEvents.restore();
+      expect(body.results).to.have.lengthOf(100);
+      expect(body.resultCount).to.equal(150);
+      body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.at.least(50));
+    });
+
+    it('with toTimestamp returns only events older than selected timestamp', async () => {
+      const toTimestamp = 50;
+      const response = await apparatus.request().get(`/events?toTimestamp=${toTimestamp}`);
+      const {body} = response;
+
+      expect(body.results).to.have.lengthOf(51);
+      expect(body.resultCount).to.equal(51);
+      body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.at.most(50));
+    });
+
+    it('with fromTimestamp and toTimestamp returns only events between selected timestamps', async () => {
+      const fromTimestamp = 50;
+      const toTimestamp = 100;
+      const response = await apparatus.request().get(`/events?fromTimestamp=${fromTimestamp}&toTimestamp=${toTimestamp}`);
+      const {body} = response;
+
+      expect(body.results).to.have.lengthOf(51);
+      expect(body.resultCount).to.equal(51);
+      body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(50, 100));
     });
   });
 
   after(async () => {
+    await apparatus.cleanDB();
+    scenario.reset();
     apparatus.stop();
   });
 });

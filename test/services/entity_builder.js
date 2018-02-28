@@ -8,7 +8,7 @@ import IdentityManager from '../../src/services/identity_manager';
 
 import EntityBuilder from '../../src/services/entity_builder';
 import {createFullEvent, createFullAsset} from '../fixtures/assets_events';
-import {ValidationError} from '../../src/errors/errors';
+import {ValidationError, InvalidParametersError} from '../../src/errors/errors';
 
 chai.use(sinonChai);
 const {expect} = chai;
@@ -103,5 +103,38 @@ describe('Entity Builder', () => {
   it('setting the bundle Id for an event', () => {
     const modifiedEvent = entityBuilder.setEventBundle(exampleEvent, '123');
     expect(modifiedEvent.metadata.bundleId).to.equal('123');
+  });
+
+  describe('validating query parameters', () => {
+    it('passes for proper parameters', () => {
+      const params = {assetId : '0x1234', fromTimestamp : 10, toTimestamp : 20};
+      const validatedParams = entityBuilder.validateAndCastFindEventsParams(params);
+      expect(validatedParams.assetId).to.equal('0x1234');
+      expect(validatedParams.fromTimestamp).to.equal(10);
+      expect(validatedParams.toTimestamp).to.equal(20);
+    });
+
+    it('casts strings on integers if needed', () => {
+      const params = {assetId : '0x1234', fromTimestamp : '10', toTimestamp : '20'};
+      const validatedParams = entityBuilder.validateAndCastFindEventsParams(params);
+      expect(validatedParams.assetId).to.equal('0x1234');
+      expect(validatedParams.fromTimestamp).to.equal(10);
+      expect(validatedParams.toTimestamp).to.equal(20);
+    });
+
+    it('throws if surplus parameters are passed', () => {
+      const params = {assetId : '0x1234', fromTimestamp : '10', toTimestamp : '20', addtionalParameter : '123'};
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+    });
+
+    it('throws if fromTimestamp value not in valid type', () => {
+      const params = {assetId : '0x1234', fromTimestamp : 'NaN', toTimestamp : '20'};
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+    });
+
+    it('throws if toTimestamp value not in valid type', () => {
+      const params = {assetId : '0x1234', fromTimestamp : '10', toTimestamp : 'NaN'};
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+    });
   });
 });
