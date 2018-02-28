@@ -103,8 +103,8 @@ describe('Entity Repository', () => {
 
           eventsSet = [
             await scenario.addEvent(0, 0, {timestamp: 0}),
-            await scenario.addEvent(0, 0, {timestamp: 2}),
             await scenario.addEvent(0, 0, {timestamp: 1}),
+            await scenario.addEvent(0, 0, {timestamp: 2}),
             await scenario.addEvent(0, 1, {timestamp: 3}),
             await scenario.addEvent(0, 1, {timestamp: 4}),
             await scenario.addEvent(0, 1, {timestamp: 5})
