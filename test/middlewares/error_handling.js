@@ -52,11 +52,10 @@ describe('Error handling middleware', () => {
   });
 
   it('should return 500 if other error', async () => {
-    const consoleErrorFunction = console.error;
-    console.error = sinon.stub();    
+    sinon.stub(console, 'error');
     errorHandling(new Error(), request, response, next);    
     expect(console.error).to.be.calledOnce;    
-    console.error = consoleErrorFunction;
+    console.error.restore();
     expect(response._getStatusCode()).to.eq(500);
     expect(next).to.be.calledOnce;
   });
