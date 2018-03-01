@@ -8,7 +8,6 @@ export default class DataModelEngine {
     this.entityRepository = entityRepository;
     this.accountRepository = accountRepository;
     this.accountAccessDefinitions = accountAccessDefinitions;
-    this.tokenAuthenticator = tokenAuthenticator;
   }
 
   async createAdminAccount(account = this.identityManager.createKeyPair()) {
@@ -98,5 +97,18 @@ export default class DataModelEngine {
   async findEvents(params) {
     const validatedParams = this.entityBuilder.validateAndCastFindEventsParams(params);
     return this.entityRepository.findEvents(validatedParams);
+  }
+
+  async finaliseBundle(bundleStubId) {
+    const notBundled = await this.entityRepository.beginBundle(bundleStubId);
+
+    const nodeSecret = await this.identityManager.nodePrivateKey();
+    const newBundle = this.entityBuilder.assembleBundle(notBundled.assets, notBundled.events, Date.now(), nodeSecret);
+
+    await this.entityRepository.storeBundle(newBundle);
+
+    await this.entityRepository.endBundle(bundleStubId, newBundle.bundleId);
+
+    return newBundle;
   }
 }

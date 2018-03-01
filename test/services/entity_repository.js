@@ -2,7 +2,7 @@ import chai from 'chai';
 import {connectToMongo, cleanDatabase} from '../../src/utils/db_utils';
 import {put} from '../../src/utils/dict_utils';
 
-import {createAsset, createEvent} from '../fixtures/assets_events';
+import {createAsset, createEvent, createBundle} from '../fixtures/assets_events';
 import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
 import ScenarioBuilder from '../fixtures/scenario_builder';
@@ -178,6 +178,109 @@ describe('Entity Repository', () => {
         expect(ret.results[1]).to.deep.equal(eventsSet[1]);
         ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(1, 4));
       });
+    });
+  });
+
+  describe('Bundles', () => {
+    after(async () => {
+      await cleanDatabase(db);
+    });
+
+    it('db round trip works', async () => {
+      const exampleBundleId = '0xabcdef';
+      const exampleBundle = put(createBundle(), 'bundleId', exampleBundleId);
+      await storage.storeBundle(exampleBundle);
+      await expect(storage.getBundle(exampleBundleId)).to.eventually.be.deep.equal(exampleBundle);
+    });
+
+    it('returns null for non-existing event', async () => {
+      const otherBundleId = '0x33333';
+      await expect(storage.getBundle(otherBundleId)).to.eventually.be.equal(null);
+    });
+  });
+
+  describe('Bundle process', () => {
+    let scenario;
+
+    const bundleStubId = '123';
+    const bundleId = 'xyz';
+    let alreadyBundledAssets;
+    let alreadyBundledEvents;
+    let nonBundledAssets;
+    let nonBundledEvents;
+
+    let ret;
+
+    before(async () => {
+      scenario = new ScenarioBuilder(new IdentityManager(await createWeb3()));
+      await scenario.injectAccount(adminAccountWithSecret);
+
+      alreadyBundledAssets = [
+        await scenario.addAsset(0),
+        await scenario.addAsset(0)
+      ].map((asset) => put(asset, 'metadata.bundleId', 1));
+
+      alreadyBundledEvents = [
+        await scenario.addEvent(0, 0),
+        await scenario.addEvent(0, 1)
+      ].map((event) => put(event, 'metadata.bundleId', 1));
+
+      nonBundledAssets = [
+        await scenario.addAsset(0),
+        await scenario.addAsset(0)
+      ].map((asset) => put(asset, 'metadata.bundleId', null));
+
+      nonBundledEvents = [
+        await scenario.addEvent(0, 2),
+        await scenario.addEvent(0, 3)
+      ].map((event) => put(event, 'metadata.bundleId', null));
+
+      [...alreadyBundledAssets, ...nonBundledAssets].forEach((asset) => storage.storeAsset(asset));
+      [...alreadyBundledEvents, ...nonBundledEvents].forEach((event) => storage.storeEvent(event));
+
+      ret = await expect(storage.beginBundle(bundleStubId)).to.be.fulfilled;
+      await expect(storage.endBundle(bundleStubId, bundleId)).to.be.fulfilled;
+    });
+
+    after(async () => {
+      await cleanDatabase(db);
+    });
+
+    it('returns only assets and events without a bundle', () => {
+      expect(ret.assets).to.deep.include.members(nonBundledAssets);
+      expect(ret.assets).to.have.lengthOf(nonBundledAssets.length);
+      expect(ret.events).to.deep.include.members(nonBundledEvents);
+      expect(ret.events).to.have.lengthOf(nonBundledEvents.length);
+    });
+
+    it('the assets and events included in the bundle should have the metadata.bundleId set after the call to endBundle', async () => {
+      for (const asset of nonBundledAssets) {
+        const storedAsset = await storage.getAsset(asset.assetId);
+        expect(storedAsset.metadata.bundleId).to.equal(bundleId);
+      }
+
+      for (const event of nonBundledEvents) {
+        const storedEvent = await storage.getEvent(event.eventId);
+        expect(storedEvent.metadata.bundleId).to.equal(bundleId);
+      }
+    });
+
+    it('other assets and events that are not included in the bundle should be left untouched', async () => {
+      for (const asset of alreadyBundledAssets) {
+        const storedAsset = await storage.getAsset(asset.assetId);
+        expect(storedAsset).to.deep.equal(asset);
+      }
+
+      for (const event of alreadyBundledEvents) {
+        const storedEvent = await storage.getEvent(event.eventId);
+        expect(storedEvent).to.deep.equal(event);
+      }
+    });
+
+    it('second call to beginBundle should also ignore assets and events currently being bundled', async () => {
+      const ret2 = await expect(storage.beginBundle('otherId')).to.be.fulfilled;
+      expect(ret2.assets).to.be.empty;
+      expect(ret2.events).to.be.empty;
     });
   });
 });
