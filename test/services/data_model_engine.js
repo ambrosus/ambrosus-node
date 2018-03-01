@@ -52,9 +52,8 @@ describe('Data Model Engine', () => {
     };
     mockEntityBuilder = {
       validateAsset: sinon.stub(),
-      setAssetBundle: sinon.stub(),
+      setBundle: sinon.stub(),
       validateEvent: sinon.stub(),
-      setEventBundle: sinon.stub(),
       validateAndCastFindEventsParams: sinon.stub()
     };
     mockEntityRepository = {
@@ -147,7 +146,7 @@ describe('Data Model Engine', () => {
 
   describe('Creating an asset', () => {
     it('validates with Entity Builder and sends to Entity Storage', async () => {
-      mockEntityBuilder.setAssetBundle.returns(mockAsset);
+      mockEntityBuilder.setBundle.returns(mockAsset);
       mockEntityRepository.storeAsset.resolves();
       mockAccountRepository.get.resolves(accountWithSecret);
 
@@ -155,7 +154,7 @@ describe('Data Model Engine', () => {
 
       expect(mockEntityBuilder.validateAsset).to.have.been.calledWith(mockAsset);
       expect(mockAccountRepository.get).to.have.been.calledWith(mockAsset.content.idData.createdBy);
-      expect(mockEntityBuilder.setAssetBundle).to.have.been.calledWith(mockAsset, null);
+      expect(mockEntityBuilder.setBundle).to.have.been.calledWith(mockAsset, null);
       expect(mockEntityRepository.storeAsset).to.have.been.calledWith(mockAsset);
     });
 
@@ -194,7 +193,7 @@ describe('Data Model Engine', () => {
 
   describe('creating an event', () => {
     beforeEach(() => {
-      mockEntityBuilder.setEventBundle.returns(mockEvent);
+      mockEntityBuilder.setBundle.returns(mockEvent);
       mockEntityRepository.storeEvent.resolves();
       mockEntityRepository.getAsset.resolves(mockAsset);
       mockAccountRepository.get.resolves(accountWithSecret);
@@ -210,7 +209,7 @@ describe('Data Model Engine', () => {
       // checks if target asset exists
       expect(mockEntityRepository.getAsset).to.have.been.calledWith(mockEvent.content.idData.assetId);
       // marks the event bundle as null -> not yet bundled
-      expect(mockEntityBuilder.setEventBundle).to.have.been.calledWith(mockEvent, null);
+      expect(mockEntityBuilder.setBundle).to.have.been.calledWith(mockEvent, null);
       // stores in entity repository
       expect(mockEntityRepository.storeEvent).to.have.been.calledWith(mockEvent);
     });

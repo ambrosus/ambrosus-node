@@ -28,14 +28,31 @@ export const createEvent = (fields, data) => ({
   }
 });
 
+export const createBundle = (fields, entries = []) => ({
+  content: {
+    idData: {
+      createdBy: pkPair.address,
+      timestamp: Date.now(),
+      ...fields
+    },
+    entries: [
+      ...entries
+    ]
+  }
+});
+
 const addHash = (identityManager, object, fromPath, toPath) => {
   const hash = identityManager.calculateHash(get(object, fromPath));
   return put(object, toPath, hash);
 };
 
-export const addDataHashToEvent = (identityManager, event) => addHash(identityManager, event, 'content.data', 'content.idData.dataHash');
 export const addAssetId = (identityManager, asset) => addHash(identityManager, asset, 'content', 'assetId');
+
+export const addDataHashToEvent = (identityManager, event) => addHash(identityManager, event, 'content.data', 'content.idData.dataHash');
 export const addEventId = (identityManager, event) => addHash(identityManager, event, 'content', 'eventId');
+
+export const addEntriesHashToBundle = (identityManager, bundle) => addHash(identityManager, bundle, 'content.entries', 'content.idData.entriesHash');
+export const addBundleId = (identityManager, bundle) => addHash(identityManager, bundle, 'content', 'bundleId');
 
 export const createFullAsset = (identityManager, fields = {}, secret = pkPair.secret) => 
   addAssetId(
@@ -56,6 +73,20 @@ export const createFullEvent = (identityManager, fields = {}, data = {}, secret 
         createEvent(
           fields, 
           data
+        )
+      ), 
+      secret));
+
+export const createFullBundle = (identityManager, fields = {}, entries = [], secret = pkPair.secret) => 
+  addBundleId(
+    identityManager, 
+    addSignature(
+      identityManager, 
+      addEntriesHashToBundle(
+        identityManager, 
+        createBundle(
+          fields, 
+          entries
         )
       ), 
       secret));
