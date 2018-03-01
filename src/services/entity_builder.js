@@ -20,18 +20,6 @@ export default class EntityBuilder {
     this.identityManager.validateSignature(asset.content.idData.createdBy, asset.content.signature, asset.content.idData);
   }
 
-  setBundle(entity, bundle) {
-    return put(entity, 'metadata.bundleId', bundle);
-  }
-
-  removeBundle(entity) {
-    const afterRemoval = pick(entity, 'metadata.bundleId');
-    if (Object.keys(afterRemoval.metadata).length === 0) {
-      return pick(afterRemoval, 'metadata');
-    }
-    return afterRemoval;
-  }
-
   validateEvent(event) {
     validatePathsNotEmpty(event, [
       'eventId',
@@ -48,11 +36,28 @@ export default class EntityBuilder {
     this.identityManager.validateSignature(event.content.idData.createdBy, event.content.signature, event.content.idData);
   }
 
+  stubForEvent(event) {
+    return pick(event, 'content.data');
+  }
+
+  setBundle(entity, bundle) {
+    return put(entity, 'metadata.bundleId', bundle);
+  }
+
+  removeBundle(entity) {
+    const afterRemoval = pick(entity, 'metadata.bundleId');
+    if (Object.keys(afterRemoval.metadata).length === 0) {
+      return pick(afterRemoval, 'metadata');
+    }
+    return afterRemoval;
+  }
+
   assembleBundle(assets, events, timestamp, secret) {
     const createdBy = this.identityManager.addressFromSecret(secret);
+    const eventStubs = events.map((event) => this.stubForEvent(event));
     const entries = [
       ...assets,
-      ...events
+      ...eventStubs
     ].map((entry) => this.removeBundle(entry));
     const entriesHash = this.identityManager.calculateHash(entries);
     const idData = {

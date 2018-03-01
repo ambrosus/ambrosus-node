@@ -1,6 +1,10 @@
 export default class EntityRepository {
   constructor(db) {
     this.db = db;
+    this.blacklistedFields = {
+      _id: 0, 
+      'repository.bundleStubId': 0
+    };
   }
 
   async storeAsset(asset) {
@@ -8,7 +12,7 @@ export default class EntityRepository {
   }
 
   async getAsset(assetId) {
-    return await this.db.collection('assets').findOne({assetId}, {fields: {_id: 0}});
+    return await this.db.collection('assets').findOne({assetId}, {fields: this.blacklistedFields});
   }
 
   async storeEvent(event) {
@@ -16,7 +20,7 @@ export default class EntityRepository {
   }
 
   async getEvent(eventId) {
-    return await this.db.collection('events').findOne({eventId}, {fields: {_id: 0}});
+    return await this.db.collection('events').findOne({eventId}, {fields: this.blacklistedFields});
   }
 
   getConfigurationForFindEventsQuery(params) {
@@ -40,7 +44,7 @@ export default class EntityRepository {
         query,
         {
           ...options,
-          fields: {_id: 0}
+          fields: this.blacklistedFields
         }
       );
 
@@ -50,29 +54,23 @@ export default class EntityRepository {
     };
   }
 
-  async getAssetsWithoutBundle() {
-    const cursor = this.db
-      .collection('assets')
-      .find(
-        {
-          'metadata.bundleId': null
-        },
-        {
-          fields: {_id: 0}
-        });
-    return cursor.toArray();
+  async startBundle() {
+    return {
+      bundleStubId: 0,
+      assets: [],
+      events: []
+    };
   }
 
-  async getEventsWithoutBundle() {
-    const cursor = this.db
-      .collection('events')
-      .find(
-        {
-          'metadata.bundleId': null
-        },
-        {
-          fields: {_id: 0}
-        });
-    return cursor.toArray();
+  async endBundle(bundleStubId, bundleId) {
+
+  }
+
+  async storeBundle(bundle) {
+    await this.db.collection('bundles').insertOne({...bundle});
+  }
+
+  async getBundle(bundleId) {
+    return await this.db.collection('bundles').findOne({bundleId}, {fields: this.blacklistedFields});
   }
 }

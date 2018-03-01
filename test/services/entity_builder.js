@@ -4,21 +4,25 @@ import sinonChai from 'sinon-chai';
 
 import {pick, put} from '../../src/utils/dict_utils';
 import {createWeb3} from '../../src/utils/web3_tools';
-import IdentityManager from '../../src/services/identity_manager';
-
-import EntityBuilder from '../../src/services/entity_builder';
-import {createFullEvent, createFullAsset} from '../fixtures/assets_events';
 import {ValidationError} from '../../src/errors/errors';
+
+import IdentityManager from '../../src/services/identity_manager';
+import EntityBuilder from '../../src/services/entity_builder';
+
+import {adminAccountWithSecret} from '../fixtures/account';
+import {createFullEvent, createFullAsset} from '../fixtures/assets_events';
+import ScenarioBuilder from '../fixtures/scenario_builder';
 
 chai.use(sinonChai);
 const {expect} = chai;
 
 describe('Entity Builder', () => {
+  let identityManager;
   let exampleAsset;
   let exampleEvent;
 
   before(async () => {
-    const identityManager = new IdentityManager(await createWeb3());
+    identityManager = new IdentityManager(await createWeb3());
     exampleAsset = createFullAsset(identityManager);
     exampleEvent = createFullEvent(identityManager, {assetId: exampleAsset.assetId});
   });
@@ -36,7 +40,7 @@ describe('Entity Builder', () => {
 
     beforeEach(() => {
       mockIdentityManager.validateSignature.resetHistory();
-      mockIdentityManager.validateSignature.returns(); 
+      mockIdentityManager.validateSignature.returns();
     });
 
     describe('asset', () => {
@@ -136,10 +140,18 @@ describe('Entity Builder', () => {
     });
   });
 
+  it('Generating stubs of events', () => {
+    const entityBuilder = new EntityBuilder({});
 
-  describe('Assembling a bundle', async () => {
+    const ret = entityBuilder.stubForEvent(exampleEvent);
+
+    expect(ret.content.data).to.be.undefined;
+  });
+
+  describe('Assembling a bundle', () => {
     let mockIdentityManager;
     let entityBuilder;
+    let scenario;
 
     let inAssets;
     let inEvents;
@@ -151,6 +163,7 @@ describe('Entity Builder', () => {
     const mockSignature = 'mockSignature';
     let inAssetsStripped;
     let inEventsStripped;
+    let inEventsStubbed;
 
     let ret;
 
@@ -162,34 +175,53 @@ describe('Entity Builder', () => {
       };
       entityBuilder = new EntityBuilder(mockIdentityManager);
 
-      inAssets = ['inAsset1', 'inAsset2'];
-      inEvents = ['inEvent1', 'inEvent2', 'inEvent3'];
+      scenario = new ScenarioBuilder(identityManager);
+      await scenario.injectAccount(adminAccountWithSecret);
+
+      inAssets = [
+        await scenario.addAsset(0), 
+        await scenario.addAsset(0)
+      ];
+      inEvents = [
+        await scenario.addEvent(0, 0),
+        await scenario.addEvent(0, 1),
+        await scenario.addEvent(0, 1) 
+      ];
       inTimestamp = Date.now();
-      const stripFunc = (entry) => `${entry}_stripped`;
+      const stripFunc = (entry) => put(entry, 'mock.bundleStripped', 1);
       inAssetsStripped = inAssets.map(stripFunc);
       inEventsStripped = inEvents.map(stripFunc);
+      const stubFunc = (entry) => put(entry, 'mock.stub', 1);
+      inEventsStubbed = inEventsStripped.map(stubFunc);
 
       mockIdentityManager.addressFromSecret.returns(mockAddress);
       mockIdentityManager.calculateHash.onFirstCall().returns(mockHash1);
       mockIdentityManager.calculateHash.onSecondCall().returns(mockHash2);
       mockIdentityManager.sign.returns(mockSignature);
       sinon.stub(entityBuilder, 'removeBundle');
+      sinon.stub(entityBuilder, 'stubForEvent');
       entityBuilder.removeBundle.callsFake(stripFunc);
+      entityBuilder.stubForEvent.callsFake(stubFunc);
 
       ret = entityBuilder.assembleBundle(inAssets, inEvents, inTimestamp, inSecret);
     });
 
     after(() => {
       entityBuilder.removeBundle.restore();
+      entityBuilder.stubForEvent.restore();
     });
 
     it('strips the bundleId metadata link using the removeBundle method', () => {
       expect(entityBuilder.removeBundle).to.have.callCount(inAssets.length + inEvents.length);
     });
 
-    it('calculates event stubs and places them into entries', () => {
+    it('calculates event stubs', () => {
+      expect(entityBuilder.stubForEvent).to.have.callCount(inEvents.length);
+    });
+
+    it('places event stubs and untouched assets into the entries field', () => {
       expect(ret.content.entries).to.deep.include.members(inAssetsStripped);
-      expect(ret.content.entries).to.deep.include.members(inEventsStripped);
+      expect(ret.content.entries).to.deep.include.members(inEventsStubbed);
       expect(ret.content.entries).to.have.lengthOf(inAssets.length + inEvents.length);
     });
 
