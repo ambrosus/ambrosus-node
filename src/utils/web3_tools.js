@@ -13,19 +13,29 @@ function createGanacheProvider() {
   // import in code with purpose:D
   const Ganache = require('ganache-core');
   const ganacheOptions = {
-    accounts: [{balance: '1000000000000000000000000000'}]
+    accounts: [{balance: '100000000000000000000'}]
   };
   return Ganache.provider(ganacheOptions);
 }
 
-function tryToImportPrivateKey(web3) {
+async function ganacheTopUpDefaultAccount(web3) {
+  const [firstGanacheMasterAccount] = await web3.eth.getAccounts();
+  const defaultAddress = await getDefaultAddress(web3);
+  await web3.eth.sendTransaction({
+    from: firstGanacheMasterAccount,
+    to: defaultAddress,
+    value: web3.utils.toWei('10', 'ether')
+  });
+}
+
+function importPrivateKey(web3) {
   try {
-    const privateKey = process.env.WEB3_PRIVATEKEY || config.get('web3.privateKey');
+    const privateKey = process.env.WEB3_NODEPRIVATEKEY || config.get('web3.nodePrivateKey');
     const account = web3.eth.accounts.privateKeyToAccount(privateKey);
     web3.eth.accounts.wallet.add(account);
     web3.eth.defaultAccount = account.address;
   } catch (err) {
-    // silently ignore -> we don't care
+    throw new Error('A configuration value for web3 node private key is missing');
   }
 }
 
@@ -36,10 +46,11 @@ export async function createWeb3() {
 
   if (isValidRPCAddress(rpc)) {
     web3.setProvider(rpc);
-    tryToImportPrivateKey(web3);
+    importPrivateKey(web3);
   } else if (isUsingGanache(rpc)) {
     web3.setProvider(createGanacheProvider());
-    [web3.eth.defaultAccount] = (await web3.eth.getAccounts());
+    importPrivateKey(web3);
+    ganacheTopUpDefaultAccount(web3);
   } else {
     throw new Error('A configuration value for web3 rpc server is missing');
   }
@@ -47,10 +58,17 @@ export async function createWeb3() {
   return web3;
 }
 
-export async function getDefaultAccount(web3) {
+export async function getDefaultAddress(web3) {
+  // note: web3.eth.defaultAccount actually stores an address of the default account, and not the full account :P
   const {defaultAccount} = web3.eth;
   if (!defaultAccount) {
     throw new Error('web3 doesn\'t have a default account set. Check your configuration');
   }
   return defaultAccount;
+}
+
+export async function getDefaultPrivateKey(web3) {
+  const defaultAddress = await getDefaultAddress(web3);
+  const account = web3.eth.accounts.wallet[defaultAddress];
+  return account.privateKey;
 }

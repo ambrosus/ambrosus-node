@@ -40,9 +40,9 @@ export default class DataModelEngine {
   async getAccount(address) {
     const result = await this.accountRepository.get(address);
     if (!result) {
-      throw new NotFoundError(`Account ${address} not found.`);      
+      throw new NotFoundError(`Account ${address} not found.`);
     }
-    return result;    
+    return result;
   }
 
   async createAsset(asset) {
@@ -52,7 +52,7 @@ export default class DataModelEngine {
       throw new PermissionError(`Address ${asset.content.idData.createdBy} doesn't exist`);
     }
 
-    const augmentedAsset = this.entityBuilder.setAssetBundle(asset, null);
+    const augmentedAsset = this.entityBuilder.setBundle(asset, null);
 
     await this.entityRepository.storeAsset(augmentedAsset);
 
@@ -78,7 +78,7 @@ export default class DataModelEngine {
       throw new InvalidParametersError(`Target asset with id=${event.content.idData.assetId} doesn't exist`);
     }
 
-    const augmentedEvent = this.entityBuilder.setEventBundle(event, null);
+    const augmentedEvent = this.entityBuilder.setBundle(event, null);
 
     await this.entityRepository.storeEvent(augmentedEvent);
     return augmentedEvent;

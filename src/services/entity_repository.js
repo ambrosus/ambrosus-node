@@ -1,6 +1,9 @@
 export default class EntityRepository {
   constructor(db) {
     this.db = db;
+    this.blacklistedFields = {
+      _id: 0
+    };
   }
 
   async storeAsset(asset) {
@@ -8,15 +11,15 @@ export default class EntityRepository {
   }
 
   async getAsset(assetId) {
-    return await this.db.collection('assets').findOne({assetId}, {fields: {_id: 0}});
+    return await this.db.collection('assets').findOne({assetId}, {fields: this.blacklistedFields});
   }
 
   async storeEvent(event) {
-    await this.db.collection('event').insertOne({...event});
+    await this.db.collection('events').insertOne({...event});
   }
 
   async getEvent(eventId) {
-    return await this.db.collection('event').findOne({eventId}, {fields: {_id: 0}});
+    return await this.db.collection('events').findOne({eventId}, {fields: this.blacklistedFields});
   }
 
   getConfigurationForFindEventsQuery(params) {
@@ -55,12 +58,12 @@ export default class EntityRepository {
     const {query, options} = this.getConfigurationForFindEventsQuery(params);
 
     const cursor = this.db
-      .collection('event')
+      .collection('events')
       .find(
         query,
         {
           ...options,
-          fields: {_id: 0}
+          fields: this.blacklistedFields
         }
       );
 
