@@ -18,11 +18,19 @@ export default class TokenAuthenticator {
     return this.encode(this.preparePayload(secret, idData));
   }
 
-  decodeToken(token) {
+  decodeToken(token, timeNow = Date.now()) {
     const decoded = this.decode(token);
     const {signature} = decoded;
-    const {idData} = decoded;    
+    const {idData} = decoded;
     this.identityManager.validateSignature(idData.createdBy, signature, idData);
+    if (!decoded.idData.validUntil) {
+      throw new AuthenticationError('Invalid token, no expiration date.');
+    }
+
+    if (decoded.idData.validUntil < timeNow) {
+      throw new AuthenticationError('Token has expired.');
+    }
+
     return decoded;
   }
 
@@ -44,4 +52,3 @@ export default class TokenAuthenticator {
     return base64url(this.identityManager.serializeForHashing(data));
   }
 }
-

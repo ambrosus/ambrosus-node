@@ -13,6 +13,7 @@ import pkPair from '../fixtures/pk_pair';
 import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
 import ScenarioBuilder from '../fixtures/scenario_builder';
+import createTokenFor from '../fixtures/create_token_for';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -21,6 +22,7 @@ const {expect} = chai;
 describe('Data Model Engine', () => {
   let modelEngine = null;
   let mockIdentityManager = null;
+  let mockTokenAuthenticator = null;
   let mockEntityBuilder = null;
   let mockEntityRepository = null;
   let mockAccountRepository = null;
@@ -44,6 +46,8 @@ describe('Data Model Engine', () => {
     mockIdentityManager = {
       createKeyPair: sinon.stub(),
       validateSignature: sinon.stub()
+    };
+    mockTokenAuthenticator = {
     };
     mockAccountRepository = {
       store: sinon.stub(),
@@ -70,7 +74,7 @@ describe('Data Model Engine', () => {
       validateNewAccountRequest: sinon.stub()
     };
 
-    modelEngine = new DataModelEngine(mockIdentityManager, mockEntityBuilder, mockEntityRepository,
+    modelEngine = new DataModelEngine(mockIdentityManager, mockTokenAuthenticator, mockEntityBuilder, mockEntityRepository,
       mockAccountRepository, mockAccountAccessDefinitions);
   });
 
@@ -82,7 +86,7 @@ describe('Data Model Engine', () => {
     it('validates with mockIdentityManager and delegates to accountRepository', async () => {
       const request = createAccountRequest();
       mockIdentityManager.createKeyPair.returns(pkPair);
-      expect(await modelEngine.createAccount(request.content)).to.eq(pkPair);
+      expect(await modelEngine.createAccount(request.content, createTokenFor(request))).to.eq(pkPair);
       expect(mockAccountAccessDefinitions.validateNewAccountRequest).to.have.been.called;
       expect(mockAccountRepository.store)
         .to.have.been.calledWith({...pkPair, permissions: request.content.idData.permissions});
@@ -99,7 +103,7 @@ describe('Data Model Engine', () => {
     it('throws PermissionError if account misses required permissions', async () => {
       const request = createAccountRequest();
       mockAccountAccessDefinitions.ensureHasPermission.throws(new PermissionError());
-      await expect(modelEngine.createAccount(request.content))
+      await expect(modelEngine.createAccount(request.content, createTokenFor(request)))
         .to.eventually.be.rejectedWith(PermissionError);
     });
 
