@@ -2,7 +2,8 @@ export default class EntityRepository {
   constructor(db) {
     this.db = db;
     this.blacklistedFields = {
-      _id: 0
+      _id: 0,
+      repository: 0
     };
   }
 
@@ -25,13 +26,13 @@ export default class EntityRepository {
   getConfigurationForFindEventsQuery(params) {
     let query = {};
     if (params.assetId) {
-      query = this.addToQuery(query, {'content.idData.assetId' : params.assetId});
+      query = this.addToQuery(query, {'content.idData.assetId': params.assetId});
     }
     if (params.fromTimestamp) {
-      query = this.addToQuery(query, {'content.idData.timestamp' : {$gte: params.fromTimestamp}});
+      query = this.addToQuery(query, {'content.idData.timestamp': {$gte: params.fromTimestamp}});
     }
     if (params.toTimestamp) {
-      query = this.addToQuery(query, {'content.idData.timestamp' : {$lte: params.toTimestamp}});
+      query = this.addToQuery(query, {'content.idData.timestamp': {$lte: params.toTimestamp}});
     }
     const options = {
       limit: 100,
@@ -44,11 +45,11 @@ export default class EntityRepository {
     const queryLength = Object.keys(query).length;
     if (queryLength === 0) {
       return part;
-    } 
-    const conjuntion = query.$and || [query];
+    }
+    const conjunction = query.$and || [query];
     return {
       $and: [
-        ...conjuntion,
+        ...conjunction,
         part
       ]
     };
@@ -71,5 +72,69 @@ export default class EntityRepository {
       results: await cursor.toArray(),
       resultCount: await cursor.count(false)
     };
+  }
+
+  async beginBundle(bundleStubId) {
+    const notBundledQuery = {
+      'metadata.bundleId': null,
+      'repository.bundleStubId': null
+    };
+
+    const setBundleStubIdUpdate = {
+      $set: {
+        'repository.bundleStubId': bundleStubId
+      }
+    };
+
+    await this.db.collection('assets').update(notBundledQuery, setBundleStubIdUpdate, {multi: true});
+    await this.db.collection('events').update(notBundledQuery, setBundleStubIdUpdate, {multi: true});
+
+    const thisBundleStubQuery = {
+      'repository.bundleStubId': bundleStubId
+    };
+
+    const assets = await this.db
+      .collection('assets')
+      .find(
+        thisBundleStubQuery,
+        {fields: this.blacklistedFields})
+      .toArray();
+    const events = await this.db
+      .collection('events')
+      .find(
+        thisBundleStubQuery,
+        {fields: this.blacklistedFields})
+      .toArray();
+
+    return {
+      assets,
+      events
+    };
+  }
+
+  async endBundle(bundleStubId, bundleId) {
+    const thisBundleStubQuery = {      
+      'repository.bundleStubId': bundleStubId
+    };
+
+    const update = {
+      $set: {
+        'metadata.bundleId': bundleId
+      },
+      $unset: {
+        'repository.bundleStubId': ''
+      }
+    };
+
+    await this.db.collection('assets').update(thisBundleStubQuery, update, {multi: true});
+    await this.db.collection('events').update(thisBundleStubQuery, update, {multi: true});
+  }
+
+  async storeBundle(bundle) {
+    await this.db.collection('bundles').insertOne({...bundle});
+  }
+
+  async getBundle(bundleId) {
+    return await this.db.collection('bundles').findOne({bundleId}, {fields: this.blacklistedFields});
   }
 }
