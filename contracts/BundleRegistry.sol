@@ -1,7 +1,7 @@
 pragma solidity ^0.4.19;
 
 
-contract BundleStorage {
+contract BundleRegistry {
   mapping(bytes32 => address) public bundleVendors;
 
   event BundleAdded(bytes32 bundleId);

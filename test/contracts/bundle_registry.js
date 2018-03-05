@@ -11,39 +11,39 @@ chai.use(chaiAsPromised);
 
 const {expect} = chai;
 
-describe('Bundle Storage Contract', () => {
+describe('Bundle Registry Contract', () => {
   const bundleId = 'bundleId';
   const vendor = adminAccount.address;
-  let bundleStorage;
+  let bundleRegistry;
   let web3;
 
   beforeEach(async () => {
     web3 = await createWeb3();
-    ({bundleStorage} = await deployContracts(web3));
+    ({bundleRegistry} = await deployContracts(web3));
   });
 
   it('returns empty address if no bundle with such id stored', async () => {
-    const emptyAddress = await bundleStorage.methods.bundleVendors(web3.utils.utf8ToHex('notExists')).call();
+    const emptyAddress = await bundleRegistry.methods.bundleVendors(web3.utils.utf8ToHex('notExists')).call();
     expect(emptyAddress).to.match(/0x0{32}/);
   });
 
   it('stores bundleId/uploader_vendorId pairs', async () => {
-    await bundleStorage.methods.addBundle(web3.utils.utf8ToHex(bundleId), vendor).send({
+    await bundleRegistry.methods.addBundle(web3.utils.utf8ToHex(bundleId), vendor).send({
       from: getDefaultAddress(web3)
     });
-    const vendorAddress = await bundleStorage.methods.bundleVendors(web3.utils.utf8ToHex(bundleId)).call();
+    const vendorAddress = await bundleRegistry.methods.bundleVendors(web3.utils.utf8ToHex(bundleId)).call();
     expect(vendorAddress).to.eq(vendor);
   });
 
   it('emits event when bundle added', async () => {
     const callback = sinon.spy();
     // eslint-disable-next-line new-cap
-    bundleStorage.events.BundleAdded().on('data', callback);
+    bundleRegistry.events.BundleAdded().on('data', callback);
     expect(callback).to.be.not.called;
-    await bundleStorage.methods.addBundle(web3.utils.utf8ToHex(bundleId), vendor).send({
+    await bundleRegistry.methods.addBundle(web3.utils.utf8ToHex(bundleId), vendor).send({
       from: getDefaultAddress(web3)
     });
-    await bundleStorage.methods.addBundle(web3.utils.utf8ToHex('bundle2'), vendor).send({
+    await bundleRegistry.methods.addBundle(web3.utils.utf8ToHex('bundle2'), vendor).send({
       from: getDefaultAddress(web3)
     });
     expect(callback).to.be.calledTwice;

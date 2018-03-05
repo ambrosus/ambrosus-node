@@ -27,10 +27,9 @@ function createGanacheProvider(secretKey) {
 
 async function ganacheTopUpDefaultAccount(web3) {
   const [firstGanacheMasterAccount] = await web3.eth.getAccounts();
-  const defaultAddress = getDefaultAddress(web3);
   await web3.eth.sendTransaction({
     from: firstGanacheMasterAccount,
-    to: defaultAddress,
+    to: getDefaultAddress(web3),
     value: web3.utils.toWei('10', 'ether'),
     gas: DEFAULT_GAS
   });
@@ -52,11 +51,12 @@ export async function createWeb3() {
 
   const rpc = process.env.WEB3_RPC || config.get('web3.rpc');
 
+  const account = await importPrivateKey(web3);
+  web3.eth.defaultAccount = account.address;
   if (isValidRPCAddress(rpc)) {
     web3.setProvider(rpc);
-    web3.eth.accounts.wallet.add(importPrivateKey(web3));
+    web3.eth.accounts.wallet.add(account);
   } else if (isUsingGanache(rpc)) {
-    const account = await importPrivateKey(web3);
     web3.setProvider(createGanacheProvider(account.privateKey));
     await ganacheTopUpDefaultAccount(web3);
   } else {
