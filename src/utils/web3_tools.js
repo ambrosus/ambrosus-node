@@ -51,7 +51,8 @@ export async function createWeb3() {
 
   const rpc = process.env.WEB3_RPC || config.get('web3.rpc');
 
-  const account = await importPrivateKey(web3);
+  // TODO rewrite after ganache is fixed https://github.com/trufflesuite/ganache-core/pull/74
+  const account = importPrivateKey(web3);
   web3.eth.defaultAccount = account.address;
   if (isValidRPCAddress(rpc)) {
     web3.setProvider(rpc);
@@ -91,5 +92,8 @@ export async function deployContract(web3, contractJson, args = [], options = {}
 export function getDefaultPrivateKey(web3) {
   const defaultAddress = getDefaultAddress(web3);
   const account = web3.eth.accounts.wallet[defaultAddress];
+  if (account === undefined) {
+    return process.env.WEB3_NODEPRIVATEKEY || config.get('web3.nodePrivateKey');
+  }
   return account.privateKey;
 }

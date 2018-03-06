@@ -7,7 +7,10 @@ async function finalise(dataModelEngine) {
   console.log(`Bundle ${bundle.bundleId} with ${bundle.content.entries.length} entries created`);
 }
 
-build().then(({dataModelEngine}) => {
-  setInterval(() => finalise(dataModelEngine), config.get('bundle.finalisationInterval'));
-});
+build()
+  .then(({dataModelEngine}) => {
+    setInterval(() => finalise(dataModelEngine).catch((err) => console.error(err)),
+      config.get('bundle.finalisationInterval'));
+  })
+  .catch((err) => console.error(err));
 
