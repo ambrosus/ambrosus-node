@@ -235,8 +235,8 @@ describe('Entity Repository', () => {
         await scenario.addEvent(0, 3)
       ].map((event) => put(event, 'metadata.bundleId', null));
 
-      [...alreadyBundledAssets, ...nonBundledAssets].forEach((asset) => storage.storeAsset(asset));
-      [...alreadyBundledEvents, ...nonBundledEvents].forEach((event) => storage.storeEvent(event));
+      await Promise.all([...alreadyBundledAssets, ...nonBundledAssets].map((asset) => storage.storeAsset(asset)));
+      await Promise.all([...alreadyBundledEvents, ...nonBundledEvents].map((event) => storage.storeEvent(event)));
 
       ret = await expect(storage.beginBundle(bundleStubId)).to.be.fulfilled;
       await expect(storage.endBundle(bundleStubId, bundleId)).to.be.fulfilled;

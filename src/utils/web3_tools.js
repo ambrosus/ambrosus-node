@@ -1,7 +1,7 @@
 import Web3 from 'web3';
 import config from 'config';
 
-const DEFAULT_GAS = 4712388;
+const DEFAULT_GAS = 4700000;
 
 function isValidRPCAddress(rpc) {
   return /^((?:http)|(?:ws)):\/\//g.test(rpc);
