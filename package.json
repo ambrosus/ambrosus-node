@@ -17,6 +17,7 @@
     "test": "yarn dev:truffle && export NODE_ENV=test && mocha --require babel-register --timeout 5000 test/**/*.js",
     "dev:admin:create": "export NODE_ENV=dev && babel-node src/tasks/createAdminUser.js",
     "ops:admin:create": "export NODE_ENV=production && babel-node src/tasks/createAdminUser.js",
+    "ops:admin:finalisation": "export NODE_ENV=production && babel-node src/tasks/finalisation_service.js",
     "ops:deploy:bundleregistry": "export NODE_ENV=production && babel-node src/tasks/deploy_bundle_registry.js"
   },
   "engines": {
