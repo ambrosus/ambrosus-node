@@ -56,7 +56,7 @@ describe('Data Model Engine', () => {
         defaultAdminPermissions: sinon.stub(),
         validateNewAccountRequest: sinon.stub()
       };
-      modelEngine = new DataModelEngine(mockIdentityManager, {}, {}, {}, mockAccountRepository, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine(mockIdentityManager, {}, {}, {}, {}, mockAccountRepository, mockAccountAccessDefinitions);
     });
 
     beforeEach(() => {
@@ -128,7 +128,7 @@ describe('Data Model Engine', () => {
       mockAccountRepository = {
         get: sinon.stub()
       };
-      modelEngine = new DataModelEngine({}, {}, {}, {}, mockAccountRepository, {});
+      modelEngine = new DataModelEngine({}, {}, {}, {}, {}, mockAccountRepository, {});
     });
 
     beforeEach(() => {
@@ -167,7 +167,7 @@ describe('Data Model Engine', () => {
         get: sinon.stub()
       };
 
-      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository, mockAccountRepository, {}, {});
+      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository, {}, mockAccountRepository, {}, {});
     });
 
     const restoreDefaultBehaviour = () => {
@@ -229,7 +229,7 @@ describe('Data Model Engine', () => {
         getAsset: sinon.stub()
       };
 
-      modelEngine = new DataModelEngine({}, {}, {}, mockEntityRepository, {}, {}, {});
+      modelEngine = new DataModelEngine({}, {}, {}, mockEntityRepository, {}, {}, {}, {});
     });
 
     beforeEach(() => {
@@ -271,7 +271,7 @@ describe('Data Model Engine', () => {
         get: sinon.stub()
       };
 
-      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository, mockAccountRepository, {}, {});
+      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository, {}, mockAccountRepository, {}, {});
     });
 
     const restoreDefaultBehaviour = () => {
@@ -345,7 +345,7 @@ describe('Data Model Engine', () => {
         getEvent: sinon.stub()
       };
 
-      modelEngine = new DataModelEngine({}, {}, {}, mockEntityRepository, {}, {}, {});
+      modelEngine = new DataModelEngine({}, {}, {}, mockEntityRepository, {}, {}, {}, {});
     });
 
     beforeEach(() => {
@@ -398,7 +398,7 @@ describe('Data Model Engine', () => {
       mockEntityRepository.findEvents.resolves({results: eventSet, resultCount: 165});
       mockEntityBuilder.validateAndCastFindEventsParams.returns(mockParams2);
 
-      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository, {}, {}, {});
+      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository, {}, {}, {}, {});
 
       ret = await expect(modelEngine.findEvents(mockParams)).to.fulfilled;
     });
@@ -469,6 +469,7 @@ describe('Data Model Engine', () => {
     let mockEntityRepository;
     let mockEntityBuilder;
     let mockIdentityManager;
+    let mockProofRepository;
     let modelEngine;
 
     let clock;
@@ -521,6 +522,10 @@ describe('Data Model Engine', () => {
         nodePrivateKey: sinon.stub()
       };
 
+      mockProofRepository = {
+        uploadProof: sinon.stub()
+      };
+
       mockIdentityManager.nodePrivateKey.resolves(nodeSecret);
       mockEntityBuilder.assembleBundle.returns(assembledBundle);
       mockEntityRepository.beginBundle.resolves({
@@ -529,8 +534,9 @@ describe('Data Model Engine', () => {
       });
       mockEntityRepository.endBundle.resolves();
       mockEntityRepository.storeBundle.resolves();
+      mockProofRepository.uploadProof.resolves();
 
-      modelEngine = new DataModelEngine(mockIdentityManager, {}, mockEntityBuilder, mockEntityRepository, {}, {}, {});
+      modelEngine = new DataModelEngine(mockIdentityManager, {}, mockEntityBuilder, mockEntityRepository, mockProofRepository, {}, {});
 
       ret = await expect(modelEngine.finaliseBundle(bundleStubId)).to.be.fulfilled;
     });
@@ -558,6 +564,10 @@ describe('Data Model Engine', () => {
     it('ends the bundling procedure in the repository', () => {
       expect(mockEntityRepository.endBundle).to.have.been.calledWith(bundleStubId, assembledBundle.bundleId);
     });
+
+    it('uploads the proof to the registry contract', () => {
+      expect(mockProofRepository.uploadProof).to.have.been.calledWith(assembledBundle.bundleId);
+    });    
 
     it('returns the bundle', () => {
       expect(ret).to.be.deep.eq(assembledBundle);

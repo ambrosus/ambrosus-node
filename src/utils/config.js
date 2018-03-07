@@ -9,6 +9,13 @@ export default class Config {
     return config.get('bundle.finalisationInterval');
   }
 
+  static bundleRegistryContractAddress() {
+    if (!config.has('bundle.registryContractAddress')) {
+      return null;
+    }
+    return config.get('bundle.registryContractAddress');
+  }
+
   static serverPort() {
     return Config.get('server.port', process.env.PORT);
   }

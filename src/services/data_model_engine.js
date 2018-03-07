@@ -1,11 +1,12 @@
 import {NotFoundError, InvalidParametersError, PermissionError, AuthenticationError} from '../errors/errors';
 
 export default class DataModelEngine {
-  constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, accountRepository, accountAccessDefinitions) {
+  constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, proofRepository, accountRepository, accountAccessDefinitions) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
     this.entityRepository = entityRepository;
+    this.proofRepository = proofRepository;
     this.accountRepository = accountRepository;
     this.accountAccessDefinitions = accountAccessDefinitions;
   }
@@ -116,6 +117,8 @@ export default class DataModelEngine {
     await this.entityRepository.storeBundle(newBundle);
 
     await this.entityRepository.endBundle(bundleStubId, newBundle.bundleId);
+
+    await this.proofRepository.uploadProof(newBundle.bundleId);
 
     return newBundle;
   }

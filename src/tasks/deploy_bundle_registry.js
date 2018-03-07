@@ -3,7 +3,7 @@ import BundleRegistry from '../../build/contracts/BundleRegistry.json';
 
 async function deployBundleRegistry() {
   const web3 = await createWeb3();
-  return deployContract(web3, BundleRegistry);
+  return deployContract(web3, BundleRegistry.abi, BundleRegistry.bytecode);
 }
 
 deployBundleRegistry()

@@ -3,7 +3,7 @@ import {deployContract} from '../../src/utils/web3_tools';
 
 
 const deployContracts = async (web3) => {
-  const bundleRegistry = await deployContract(web3, BundleRegistryJson);
+  const bundleRegistry = await deployContract(web3, BundleRegistryJson.abi, BundleRegistryJson.bytecode);
   return {bundleRegistry};
 };
 
