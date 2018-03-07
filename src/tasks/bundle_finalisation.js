@@ -1,5 +1,5 @@
+import startBundleFinalisationWorker from './bundle_finalisation_worker';
 import build from '../build';
-import config from 'config';
 
 async function finalise(dataModelEngine) {
   const bundleStubId = Date.now().toString();
@@ -8,9 +8,7 @@ async function finalise(dataModelEngine) {
 }
 
 build()
-  .then(({dataModelEngine}) => {
-    setInterval(() => finalise(dataModelEngine).catch((err) => console.error(err)),
-      config.get('bundle.finalisationInterval'));
-  })
-  .catch((err) => console.error(err));
+  .then(({dataModelEngine}) => startBundleFinalisationWorker(dataModelEngine, finalise))
+  .catch(console.error);
+
 
