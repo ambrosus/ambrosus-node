@@ -6,21 +6,24 @@ import resetHistory from '../helpers/reset_history';
 
 import ContractManager from '../../src/services/contract_manager';
 import * as Web3Tools from '../../src/utils/web3_tools';
+import Config from '../../src/utils/config';
 
 chai.use(sinonChai);
 const {expect} = chai;
 
-describe.only('Contract Manager', () => {
+describe('Contract Manager', () => {
   let mockWeb3;
   let loadContractStub;
   let deployContractStub;
+  let bundleContractAddressStub;
 
   const exampleContract = 'a contract';
   let manager;
 
   before(async () => {
     loadContractStub = sinon.stub(Web3Tools, 'loadContract').returns(exampleContract);
-    deployContractStub = sinon.stub(Web3Tools, 'deployContract');
+    deployContractStub = sinon.stub(Web3Tools, 'deployContract').returns(exampleContract);
+    bundleContractAddressStub = sinon.stub(Config, 'bundleRegistryContractAddress');
 
     mockWeb3 = {
 
@@ -28,7 +31,7 @@ describe.only('Contract Manager', () => {
   });
 
   beforeEach(() => {
-    resetHistory({loadContractStub, deployContractStub}, mockWeb3);
+    resetHistory({loadContractStub, deployContractStub, bundleContractAddressStub}, mockWeb3);
   });
 
   after(async () => {
@@ -38,6 +41,8 @@ describe.only('Contract Manager', () => {
 
   describe('constructing', () => {
     it('should load the contracts', () => {
+      bundleContractAddressStub.returns('0xABCD');
+
       manager = new ContractManager(mockWeb3);
 
       expect(deployContractStub).to.not.have.been.called;
@@ -45,18 +50,32 @@ describe.only('Contract Manager', () => {
       expect(manager.bundleRegistry).to.equal(exampleContract);
     });
 
-    it('should throw if addresses are not configured and allowMissing = false)', () => {
+    it('should throw if addresses are not configured and allowMissing = false', () => {
+      bundleContractAddressStub.returns(null);
+
       expect(() => new ContractManager(mockWeb3)).to.throw;
 
       expect(deployContractStub).to.not.have.been.called;
       expect(loadContractStub).to.not.have.been.called;
     });
 
-    it('should silently ignore if addresses are not configured and allowMissing = true)', () => {
+    it('should silently ignore if addresses are not configured and allowMissing = true', () => {
+      bundleContractAddressStub.returns(null);
+
       manager = new ContractManager(mockWeb3, true);
 
       expect(deployContractStub).to.not.have.been.called;
       expect(loadContractStub).to.not.have.been.called;
     });
+  });
+
+  it('deployIfNeeded loads missing contracts', async () => {
+    bundleContractAddressStub.returns(null);
+    manager = new ContractManager(mockWeb3, true);
+
+    await manager.deployIfNeeded();
+
+    expect(deployContractStub).to.have.callCount(1);
+    expect(manager.bundleRegistry).to.equal(exampleContract);
   });
 });
