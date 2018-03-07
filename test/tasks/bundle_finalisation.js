@@ -3,7 +3,7 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import startBundleFinalisationWorker from '../../src/tasks/bundle_finalisation_worker';
+import startBundleFinalisationWorker from '../../src/tasks/bundle_finalisation';
 import Config from '../../src/utils/config';
 
 chai.use(sinonChai);
@@ -18,7 +18,7 @@ describe('Bundle finalisation service', () => {
 
   before(() => {
     clock = sinon.useFakeTimers();
-    sinon.stub(Config, 'get').returns(time);
+    sinon.stub(Config, 'bundleFinalisationInterval').returns(time);
   });
 
   beforeEach(() => {
@@ -35,10 +35,11 @@ describe('Bundle finalisation service', () => {
     expect(finalise).to.be.calledOnce;
     clock.tick(1);
     expect(finalise).to.be.calledTwice;
+    expect(Config.bundleFinalisationInterval).to.be.calledOnce;
   });
 
   after(() => {
-    Config.get.restore();
+    Config.bundleFinalisationInterval.restore();
     clearInterval(worker);
     clock.restore();
   });

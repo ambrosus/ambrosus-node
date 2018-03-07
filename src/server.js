@@ -24,7 +24,7 @@ export default class Server {
     // Should always be last
     app.use(errorHandling);
 
-    const port = Config.get('server.port', process.env.PORT);
+    const port = Config.serverPort();
     this.server = app.listen(port);
   }
 

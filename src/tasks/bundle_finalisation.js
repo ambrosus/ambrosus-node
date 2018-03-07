@@ -1,5 +1,10 @@
-import startBundleFinalisationWorker from './bundle_finalisation_worker';
+import Config from '../utils/config';
 import build from '../build';
+
+export default async function startBundleFinalisationWorker(dataModelEngine, finalisationCallback) {
+  return setInterval(() => finalisationCallback(dataModelEngine).catch(console.error),
+    Config.bundleFinalisationInterval());
+}
 
 async function finalise(dataModelEngine) {
   const bundleStubId = Date.now().toString();
@@ -7,8 +12,9 @@ async function finalise(dataModelEngine) {
   console.log(`Bundle ${bundle.bundleId} with ${bundle.content.entries.length} entries created`);
 }
 
-build()
-  .then(({dataModelEngine}) => startBundleFinalisationWorker(dataModelEngine, finalise))
-  .catch(console.error);
-
+if (require.main === module) {
+  build()
+    .then(({dataModelEngine}) => startBundleFinalisationWorker(dataModelEngine, finalise))
+    .catch(console.error);
+}
 

@@ -2,8 +2,8 @@ import {MongoClient} from 'mongodb';
 import Config from './config';
 
 const connectToMongo = async () => {
-  const uri = Config.get('mongo.db_uri', process.env.MONGODB_URI);
-  const database = Config.get('mongo.database', process.env.MONGODB_DATABASE);
+  const uri = Config.mongoDbUri();
+  const database = Config.mongoDbDatabase();
   const client = await MongoClient.connect(uri);
   const db = await client.db(database);
   return {client, db};
