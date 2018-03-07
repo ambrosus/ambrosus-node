@@ -19,7 +19,8 @@ function createGanacheProvider(secretKey) {
       {
         balance: '1000000000000000000000',
         secretKey
-      }
+      },
+      ...Array(9).fill({balance: '1000000000000000000000'})
     ]
   };
   return Ganache.provider(ganacheOptions);
