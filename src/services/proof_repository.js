@@ -11,6 +11,7 @@ export default class ProofRepository {
     const nodeAddress = this.identityManager.nodeAddress();
     const registryContract = this.contractManager.bundleProofRegistryContract();
     await registryContract
+      .methods
       .addBundle(bundleId, nodeAddress)
       .send({
         from: getDefaultAddress(this.web3),

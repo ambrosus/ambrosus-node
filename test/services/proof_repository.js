@@ -37,7 +37,9 @@ describe('Proof repository', () => {
     };
 
     mockBundleProofRegistryContract = {
-      addBundle: sinon.stub().returns(mockAddBundleContractMethod)
+      methods: {
+        addBundle: sinon.stub().returns(mockAddBundleContractMethod)
+      }
     };
 
     mockContractManager = {
@@ -57,7 +59,7 @@ describe('Proof repository', () => {
 
       expect(mockIdentityManager.nodeAddress).to.have.been.called;
       expect(mockContractManager.bundleProofRegistryContract).to.have.been.called;
-      expect(mockBundleProofRegistryContract.addBundle).to.have.been.calledWith(exampleBundleId, exampleNodeAddress);
+      expect(mockBundleProofRegistryContract.methods.addBundle).to.have.been.calledWith(exampleBundleId, exampleNodeAddress);
       expect(mockAddBundleContractMethod.send).to.have.been.called;
     });
   });
