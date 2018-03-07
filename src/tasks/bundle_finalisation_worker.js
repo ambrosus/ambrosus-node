@@ -1,6 +1,6 @@
-import config from 'config';
+import Config from '../utils/config';
 
 export default async function startBundleFinalisationWorker(dataModelEngine, finalisationCallback) {
   return setInterval(() => finalisationCallback(dataModelEngine).catch(console.error),
-    config.get('bundle.finalisationInterval'));
+    Config.get('bundle.finalisationInterval'));
 }
