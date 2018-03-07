@@ -1,5 +1,5 @@
 import Web3 from 'web3';
-import config from 'config';
+import Config from './config';
 
 const DEFAULT_GAS = 4700000;
 
@@ -37,7 +37,7 @@ async function ganacheTopUpDefaultAccount(web3) {
 
 function importPrivateKey(web3) {
   try {
-    const privateKey = process.env.WEB3_NODEPRIVATEKEY || config.get('web3.nodePrivateKey');
+    const privateKey = Config.nodePrivateKey();
     const account = web3.eth.accounts.privateKeyToAccount(privateKey);
     web3.eth.defaultAccount = account.address;
     return account;
@@ -49,7 +49,7 @@ function importPrivateKey(web3) {
 export async function createWeb3() {
   const web3 = new Web3();
 
-  const rpc = process.env.WEB3_RPC || config.get('web3.rpc');
+  const rpc = Config.web3Rpc();
 
   // TODO rewrite after ganache is fixed https://github.com/trufflesuite/ganache-core/pull/74
   const account = importPrivateKey(web3);
@@ -93,7 +93,7 @@ export function getDefaultPrivateKey(web3) {
   const defaultAddress = getDefaultAddress(web3);
   const account = web3.eth.accounts.wallet[defaultAddress];
   if (account === undefined) {
-    return process.env.WEB3_NODEPRIVATEKEY || config.get('web3.nodePrivateKey');
+    return Config.nodePrivateKey();
   }
   return account.privateKey;
 }

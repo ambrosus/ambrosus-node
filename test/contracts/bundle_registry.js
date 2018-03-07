@@ -3,7 +3,7 @@ import chaiAsPromised from 'chai-as-promised';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import {createWeb3, getDefaultAddress} from '../../src/utils/web3_tools';
-import deployContracts from '../utils/contracts';
+import deployContracts from '../helpers/contracts';
 import {adminAccount} from '../fixtures/account';
 
 chai.use(sinonChai);

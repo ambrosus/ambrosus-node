@@ -1,11 +1,11 @@
 import express from 'express';
-import config from 'config';
 import errorHandling from './middlewares/error_handling';
 
 import accountsRouter from './routes/accounts';
 import assetsRouter from './routes/assets';
 import eventsRouter from './routes/events';
 import tokenRouter from './routes/token';
+import Config from './utils/config';
 
 
 export default class Server {
@@ -24,7 +24,7 @@ export default class Server {
     // Should always be last
     app.use(errorHandling);
 
-    const port = process.env.PORT || config.get('server.port');
+    const port = Config.serverPort();
     this.server = app.listen(port);
   }
 
