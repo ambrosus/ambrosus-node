@@ -106,11 +106,12 @@ describe('Events - Integrations', () => {
       body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(2, 10));
     });
 
-    it('with fromTimestamp, toTimestamp and perPage returns only events between selected timestamps, with quantity limited to perPage', async () => {
+    it('with fromTimestamp, toTimestamp and perPage returns only events between selected timestamps, with quantity limited to perPage, from requested page', async () => {
       const fromTimestamp = 2;
       const toTimestamp = 10;
       const perPage = 4;
-      const response = await apparatus.request().get(`/events?fromTimestamp=${fromTimestamp}&toTimestamp=${toTimestamp}&perPage=${perPage}`);
+      const page = 1;
+      const response = await apparatus.request().get(`/events?fromTimestamp=${fromTimestamp}&toTimestamp=${toTimestamp}&perPage=${perPage}&page=${page}`);
       const {body} = response;
 
       expect(body.results).to.have.lengthOf(4);

@@ -81,6 +81,16 @@ export default class EntityBuilder {
     };
   }
 
+  validateIntegerAndCast(value, errorMsg) {
+    if (value) {
+      const parsedValue = parseInt(value, 10);
+      if (isNaN(parsedValue)) {
+        throw new InvalidParametersError(`Invalid ${errorMsg} parameter value`);
+      }
+      return parsedValue;
+    }
+  }
+
   validateAndCastFindEventsParams(params) {
     const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage'];
     const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
@@ -88,37 +98,10 @@ export default class EntityBuilder {
       throw new InvalidParametersError(`Some parameters (${invalidFields.join(',')}) are not supported`);
     }
 
-    if (params.fromTimestamp) {
-      const parsedFromTimestamp = parseInt(params.fromTimestamp, 10);
-      if (isNaN(parsedFromTimestamp)) {
-        throw new InvalidParametersError(`Invalid 'fromTimestamp' parameter value`);
-      }
-      params.fromTimestamp = parsedFromTimestamp;
-    }
-
-    if (params.toTimestamp) {
-      const parsedToTimestamp = parseInt(params.toTimestamp, 10);
-      if (isNaN(parsedToTimestamp)) {
-        throw new InvalidParametersError(`Invalid 'toTimestamp' parameter value`);
-      }
-      params.toTimestamp = parsedToTimestamp;
-    }
-
-    if (params.page) {
-      const parsedPage = parseInt(params.page, 10);
-      if (isNaN(parsedPage)) {
-        throw new InvalidParametersError(`Invalid 'page' parameter value`);
-      }
-      params.page = parsedPage;
-    }
-
-    if (params.perPage) {
-      const parsedPerPage = parseInt(params.perPage, 10);
-      if (isNaN(parsedPerPage)) {
-        throw new InvalidParametersError(`Invalid 'perPage' parameter value`);
-      }
-      params.perPage = parsedPerPage;
-    }
+    params.fromTimestamp = this.validateIntegerAndCast(params.fromTimestamp, 'fromTimestamp');
+    params.toTimestamp = this.validateIntegerAndCast(params.toTimestamp, 'toTimestamp');
+    params.page = this.validateIntegerAndCast(params.page, 'page');
+    params.perPage = this.validateIntegerAndCast(params.perPage, 'perPage');
     
     return params;
   }
