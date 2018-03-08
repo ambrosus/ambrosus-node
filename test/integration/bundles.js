@@ -26,14 +26,13 @@ describe('Bundles - Integrations', () => {
     await apparatus.entityRepository.storeBundle(exampleBundle);
   });
 
-
   describe('getting bundles', () => {
     it('should get bundle by id', async () => {
       const response = await apparatus.request()
         .get(`/bundle/${exampleBundleId}`);
-      await expect(response.body.content).to.deep.equal(exampleBundle.content);
-      await expect(response.body.bundleId).to.deep.equal(exampleBundleId);
-      await expect(response.body.entries).to.deep.equal(exampleEntries);
+      expect(response.body.content).to.deep.equal(exampleBundle.content);
+      expect(response.body.bundleId).to.deep.equal(exampleBundleId);
+      expect(response.body.entries).to.deep.equal(exampleEntries);
     });
 
     it('return 404 if bundle with requested id does not exist', async () => {

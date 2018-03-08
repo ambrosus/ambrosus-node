@@ -33,8 +33,6 @@ describe('Bundles', () => {
 
     beforeEach(async () => {
       injectedHandler = getBundleHandler(mockModelEngine);
-
-
       mockModelEngine.getBundle.resolves(exampleBundle);
     });
 

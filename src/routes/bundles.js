@@ -13,7 +13,6 @@ const bundlesRouter = (modelEngine) => {
   router.get('/:bundleId',
     asyncMiddleware(getBundleHandler(modelEngine))
   );
-
   return router;
 };
 
