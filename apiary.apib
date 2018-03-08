@@ -423,7 +423,7 @@ Fetches an event by identifier
 
     + Body
     
-### /events{?assetId,fromTimestamp,toTimestamp}
+### /events{?assetId,fromTimestamp,toTimestamp,perPage,page}
 
 #### Find events [GET]
 
@@ -433,7 +433,9 @@ Finds event satisfying provided cryteria.
 
     + assetId : 0xc5cfd04.....30755ed65 (string, optional) - ID of the asset the events are targeting
     + fromTimestamp : 1503424922 (integer, optional) - earliest timestamp for the events 
-    + toTimestamp : 1503424924 (integer, optional) - latest timestamp for the events 
+    + toTimestamp : 1503424924 (integer, optional) - latest timestamp for the events
+    + perPage : 150 (integer, optional) - number of events to return per page
+    + page : 20 (integer, optional) - number of page (more search results than specified in perPage parameter concludes more than one page)
 
 + Response 200 (application/json)
 
@@ -473,3 +475,47 @@ Finds event satisfying provided cryteria.
     Event not found
 
     + Body
+
+
+## Group Bundles
+
+## /bundle/{bundleId}
+
+#### Fetch bundle [GET]
+
+Fetches a bundle by identifier
+
++ Parameters
+
+    + bundleId (string, required) - ID of a bundle
+    
+
++ Response 200 (application/json)
+
+    The requested event
+
+    + Body
+
+            {
+                "bundleId" : "<hash (content addressable) calcuated from contents field>",
+                "contents" : {
+                    "signature": "<eliptic curve signature of the idData field>",
+                    "idData" : {
+                        "createdBy" : "<address (public key derived) of vendor holding data>",
+                        "timestamp" : "<unix epoch timestamp>",
+                        "entriesHash" : "<hash calculated from the entries field>"
+                        },
+                    "entries" : [
+                        "<asset and events stubs>"
+                    ]
+                },
+                "metadata" : {
+                }
+            }
+
++ Response 404 (application/json)
+
+    Bundle not found
+
+    + Body
+    
