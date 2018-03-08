@@ -1,4 +1,4 @@
-import {validatePathsNotEmpty, validateFieldsConstrainedToSet} from '../utils/validations';
+import {validatePathsNotEmpty, validateFieldsConstrainedToSet, validateIntegerParameterAndCast} from '../utils/validations';
 
 import {put, pick} from '../utils/dict_utils';
 import {InvalidParametersError} from '../errors/errors';
@@ -81,28 +81,18 @@ export default class EntityBuilder {
     };
   }
 
+
   validateAndCastFindEventsParams(params) {
-    const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp'];
+    const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage'];
     const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
     if (invalidFields.length > 0) {
       throw new InvalidParametersError(`Some parameters (${invalidFields.join(',')}) are not supported`);
     }
 
-    if (params.fromTimestamp) {
-      const parsedFromTimestamp = parseInt(params.fromTimestamp, 10);
-      if (isNaN(parsedFromTimestamp)) {
-        throw new InvalidParametersError(`Invalid 'fromTimestamp' parameter value`);
-      }
-      params.fromTimestamp = parsedFromTimestamp;
-    }
-
-    if (params.toTimestamp) {
-      const parsedToTimestamp = parseInt(params.toTimestamp, 10);
-      if (isNaN(parsedToTimestamp)) {
-        throw new InvalidParametersError(`Invalid 'toTimestamp' parameter value`);
-      }
-      params.toTimestamp = parsedToTimestamp;
-    }
+    params.fromTimestamp = validateIntegerParameterAndCast(params.fromTimestamp, 'fromTimestamp');
+    params.toTimestamp = validateIntegerParameterAndCast(params.toTimestamp, 'toTimestamp');
+    params.page = validateIntegerParameterAndCast(params.page, 'page');
+    params.perPage = validateIntegerParameterAndCast(params.perPage, 'perPage');
     
     return params;
   }

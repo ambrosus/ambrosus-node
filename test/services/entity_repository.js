@@ -92,7 +92,7 @@ describe('Entity Repository', () => {
         await cleanDatabase(db);
       });
 
-      it('returns 100 newest events', async () => {
+      it('returns 100 newest events without page and perPage params', async () => {
         const ret = await expect(storage.findEvents({})).to.be.fulfilled;
         expect(ret.results).have.lengthOf(100);
         expect(ret.results[0]).to.deep.equal(scenario.events[134]);
@@ -115,9 +115,13 @@ describe('Entity Repository', () => {
           await scenario.addEvent(0, 0, {timestamp: 0}),
           await scenario.addEvent(0, 0, {timestamp: 1}),
           await scenario.addEvent(0, 0, {timestamp: 2}),
-          await scenario.addEvent(0, 1, {timestamp: 3}),
-          await scenario.addEvent(0, 1, {timestamp: 4}),
-          await scenario.addEvent(0, 1, {timestamp: 5})
+          await scenario.addEvent(0, 0, {timestamp: 3}),
+          await scenario.addEvent(0, 0, {timestamp: 4}),
+          await scenario.addEvent(0, 1, {timestamp: 5}),
+          await scenario.addEvent(0, 1, {timestamp: 6}),
+          await scenario.addEvent(0, 1, {timestamp: 7}),
+          await scenario.addEvent(0, 1, {timestamp: 8}),
+          await scenario.addEvent(0, 1, {timestamp: 9})
         ];
 
         for (const event of eventsSet) {
@@ -132,20 +136,17 @@ describe('Entity Repository', () => {
       it('with assetId param returns events for selected asset', async () => {
         const targetAssetId = scenario.assets[0].assetId;
         const ret = await expect(storage.findEvents({assetId: targetAssetId})).to.be.fulfilled;
-        expect(ret.results).have.lengthOf(3);
-        expect(ret.resultCount).to.equal(3);
-        expect(ret.results[0]).to.deep.equal(eventsSet[2]);
-        expect(ret.results[1]).to.deep.equal(eventsSet[1]);
-        expect(ret.results[2]).to.deep.equal(eventsSet[0]);
+        expect(ret.results).have.lengthOf(5);
+        expect(ret.resultCount).to.equal(5);
+        expect(ret.results).to.deep.equal([eventsSet[0], eventsSet[1], eventsSet[2], eventsSet[3], eventsSet[4]].reverse());
         ret.results.forEach((element) => expect(element.content.idData.assetId).to.equal(targetAssetId));
       });
 
       it('with fromTimestamp param returns only events newer than selected timestamp', async () => {
         const ret = await expect(storage.findEvents({fromTimestamp: 4})).to.be.fulfilled;
-        expect(ret.results).have.lengthOf(2);
-        expect(ret.resultCount).to.equal(2);
-        expect(ret.results[1]).to.deep.equal(eventsSet[4]);
-        expect(ret.results[0]).to.deep.equal(eventsSet[5]);
+        expect(ret.results).have.lengthOf(6);
+        expect(ret.resultCount).to.equal(6);
+        expect(ret.results).to.deep.equal([eventsSet[4], eventsSet[5], eventsSet[6], eventsSet[7], eventsSet[8], eventsSet[9]].reverse());
         ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.at.least(4));
       });
 
@@ -153,9 +154,7 @@ describe('Entity Repository', () => {
         const ret = await expect(storage.findEvents({toTimestamp: 2})).to.be.fulfilled;
         expect(ret.results).have.lengthOf(3);
         expect(ret.resultCount).to.equal(3);
-        expect(ret.results[0]).to.deep.equal(eventsSet[2]);
-        expect(ret.results[1]).to.deep.equal(eventsSet[1]);
-        expect(ret.results[2]).to.deep.equal(eventsSet[0]);
+        expect(ret.results).to.deep.equal([eventsSet[0], eventsSet[1], eventsSet[2]].reverse());
         ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.at.most(2));
       });
 
@@ -163,17 +162,29 @@ describe('Entity Repository', () => {
         const ret = await expect(storage.findEvents({fromTimestamp: 2, toTimestamp: 4})).to.be.fulfilled;
         expect(ret.results).have.lengthOf(3);
         expect(ret.resultCount).to.equal(3);
-        expect(ret.results[0]).to.deep.equal(eventsSet[4]);
-        expect(ret.results[1]).to.deep.equal(eventsSet[3]);
-        expect(ret.results[2]).to.deep.equal(eventsSet[2]);
+        expect(ret.results).to.deep.equal([eventsSet[2], eventsSet[3], eventsSet[4]].reverse());
         ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(2, 4));
       });
 
-      it('with all params provided returns events for selected asset, from between selected timestamps', async () => {
+      it('with perPage returns requested number of events', async () => {
+        const ret = await expect(storage.findEvents({perPage : 3})).to.be.fulfilled;
+        expect(ret.results).have.lengthOf(3);
+        expect(ret.resultCount).to.equal(10);
+        expect(ret.results).to.deep.equal([eventsSet[7], eventsSet[8], eventsSet[9]].reverse());
+      });
+
+      it('with page and perPage returns limited requested of events from requested page', async () => {
+        const ret = await expect(storage.findEvents({page : 2, perPage : 3})).to.be.fulfilled;
+        expect(ret.results).have.lengthOf(3);
+        expect(ret.resultCount).to.equal(10);
+        expect(ret.results).to.deep.equal([eventsSet[1], eventsSet[2], eventsSet[3]].reverse());
+      });
+
+      it('with all params provided returns events for selected asset, from between selected timestamps and with requested paging', async () => {
         const targetAssetId = scenario.assets[0].assetId;
-        const ret = await expect(storage.findEvents({fromTimestamp: 1, toTimestamp: 4, assetId: targetAssetId})).to.be.fulfilled;
+        const ret = await expect(storage.findEvents({fromTimestamp: 1, toTimestamp: 4, assetId: targetAssetId, perPage : 2, page: 1})).to.be.fulfilled;
         expect(ret.results).have.lengthOf(2);
-        expect(ret.resultCount).to.equal(2);
+        expect(ret.resultCount).to.equal(4);
         expect(ret.results[0]).to.deep.equal(eventsSet[2]);
         expect(ret.results[1]).to.deep.equal(eventsSet[1]);
         ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(1, 4));
