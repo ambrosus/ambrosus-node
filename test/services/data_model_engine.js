@@ -138,11 +138,12 @@ describe('Data Model Engine', () => {
     });
 
     it('delegates to accountRepository', async () => {
+      console.log(await modelEngine.getAccount());
       expect(await modelEngine.getAccount()).to.eq(pkPair);
       expect(mockAccountRepository.get).to.have.been.called;
     });
 
-    it('throws NotFoundError if non-existing', async () => {
+    xit('throws NotFoundError if non-existing', async () => {
       mockAccountRepository.get.returns(null);
 
       await expect(modelEngine.getAccount()).to.be.rejectedWith(NotFoundError);

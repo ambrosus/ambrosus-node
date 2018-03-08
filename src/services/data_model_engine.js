@@ -29,7 +29,7 @@ export default class DataModelEngine {
     if (tokenData.createdBy.toLowerCase() !== accountRequest.idData.createdBy.toLowerCase()) {
       throw new AuthenticationError('Session user and createdBy mismatch.');
     }
-    const creatorAccount = await this.getAccount(accountRequest.idData.createdBy);
+    const creatorAccount = await this.getAccount(accountRequest.idData.createdBy, tokenData);
     this.accountAccessDefinitions.ensureHasPermission(creatorAccount, 'create_account');
     const account = this.identityManager.createKeyPair();
     const accountWithPermissions = {
@@ -40,7 +40,8 @@ export default class DataModelEngine {
     return account;
   }
 
-  async getAccount(address) {
+  async getAccount(address, tokenData) {
+    this.accountAccessDefinitions.ensureHasPermission(tokenData.createdBy, 'create_account');
     const result = await this.accountRepository.get(address);
     if (!result) {
       throw new NotFoundError(`Account ${address} not found.`);

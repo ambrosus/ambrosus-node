@@ -9,17 +9,21 @@ const createAccountHandler = (dataModelEngine) => async (req, res) => {
 };
 
 const getAccountHandler = (dataModelEngine) => async (req, res) => {
-  const content = await dataModelEngine.getAccount(req.params.id);
+  const content = await dataModelEngine.getAccount(req.params.id, req.tokenData);
   res.status(200).send({content});
 };
 
 export default (tokenAuthenticator, dataModelEngine) => {
   const router = new express.Router();
+
   router.post('/', 
     bodyParser.json(),  
     accessTokenMiddleware(tokenAuthenticator),
     asyncMiddleware(createAccountHandler(dataModelEngine)));
-  router.get('/:id', asyncMiddleware(getAccountHandler(dataModelEngine)));
+
+  router.get('/:id',
+    accessTokenMiddleware(tokenAuthenticator),
+    asyncMiddleware(getAccountHandler(dataModelEngine)));
   return router;
 };
 
