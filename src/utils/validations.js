@@ -1,5 +1,5 @@
 import {get} from './dict_utils';
-import {ValidationError} from '../errors/errors';
+import {ValidationError, InvalidParametersError} from '../errors/errors';
 
 const validatePathsNotEmpty = (dict, paths) => {
   for (const path of paths) {
@@ -17,4 +17,14 @@ const validateFieldsConstrainedToSet = (dict, validFields) => {
   }
 };
 
-export {validatePathsNotEmpty, validateFieldsConstrainedToSet};
+const validateIntegerParameterAndCast = (value, errorMsg) => {
+  if (value) {
+    const parsedValue = parseInt(value, 10);
+    if (isNaN(parsedValue)) {
+      throw new InvalidParametersError(`Invalid ${errorMsg} parameter value`);
+    }
+    return parsedValue;
+  }
+};
+
+export {validatePathsNotEmpty, validateFieldsConstrainedToSet, validateIntegerParameterAndCast};

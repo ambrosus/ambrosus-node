@@ -58,10 +58,7 @@ describe('Events - Integrations', () => {
 
       expect(body.results).to.have.lengthOf(perPage);
       expect(body.resultCount).to.equal(12);
-      expect(body.results[0]).to.deep.equal(scenario.events[3]);
-      expect(body.results[1]).to.deep.equal(scenario.events[2]);
-      expect(body.results[2]).to.deep.equal(scenario.events[1]);
-      expect(body.results[3]).to.deep.equal(scenario.events[0]);
+      expect(body.results).to.deep.equal([scenario.events[0], scenario.events[1], scenario.events[2], scenario.events[3]].reverse());
     });
 
     it('with assetId returns only events for target asset', async () => {
