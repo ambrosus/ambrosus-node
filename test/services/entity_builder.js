@@ -259,19 +259,23 @@ describe('Entity Builder', () => {
     });
 
     it('passes for proper parameters', () => {
-      const params = {assetId : '0x1234', fromTimestamp : 10, toTimestamp : 20};
+      const params = {assetId : '0x1234', fromTimestamp : 10, toTimestamp : 20, page : 2, perPage : 4};
       const validatedParams = entityBuilder.validateAndCastFindEventsParams(params);
       expect(validatedParams.assetId).to.equal('0x1234');
       expect(validatedParams.fromTimestamp).to.equal(10);
       expect(validatedParams.toTimestamp).to.equal(20);
+      expect(validatedParams.page).to.equal(2);
+      expect(validatedParams.perPage).to.equal(4);
     });
 
     it('casts strings on integers if needed', () => {
-      const params = {assetId : '0x1234', fromTimestamp : '10', toTimestamp : '20'};
+      const params = {assetId : '0x1234', fromTimestamp : '10', toTimestamp : '20', page : '2', perPage : '4'};
       const validatedParams = entityBuilder.validateAndCastFindEventsParams(params);
       expect(validatedParams.assetId).to.equal('0x1234');
       expect(validatedParams.fromTimestamp).to.equal(10);
       expect(validatedParams.toTimestamp).to.equal(20);
+      expect(validatedParams.page).to.equal(2);
+      expect(validatedParams.perPage).to.equal(4);
     });
 
     it('throws if surplus parameters are passed', () => {
@@ -280,12 +284,22 @@ describe('Entity Builder', () => {
     });
 
     it('throws if fromTimestamp value not in valid type', () => {
-      const params = {assetId : '0x1234', fromTimestamp : 'NaN', toTimestamp : '20'};
+      const params = {assetId : '0x1234', fromTimestamp : 'NaN', toTimestamp : '20', page : '2', perPage : '4'};
       expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
     });
 
     it('throws if toTimestamp value not in valid type', () => {
-      const params = {assetId : '0x1234', fromTimestamp : '10', toTimestamp : 'NaN'};
+      const params = {assetId : '0x1234', fromTimestamp : '10', toTimestamp : 'NaN', page : '2', perPage : '4'};
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+    });
+
+    it('throws if page value not in valid type', () => {
+      const params = {assetId : '0x1234', fromTimestamp : '10', toTimestamp : '20', page : 'NaN', perPage : '4'};
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+    });
+
+    it('throws if perPage value not in valid type', () => {
+      const params = {assetId : '0x1234', fromTimestamp : '10', toTimestamp : '20', page : '2', perPage : 'NaN'};
       expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
     });
   });

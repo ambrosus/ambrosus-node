@@ -34,8 +34,14 @@ export default class EntityRepository {
     if (params.toTimestamp) {
       query = this.addToQuery(query, {'content.idData.timestamp': {$lte: params.toTimestamp}});
     }
+    
+    const pageLimitation = params.perPage ? params.perPage : 100;
+    const pageNumber = params.page ? params.page : 0;
+    const resultsToSkip = pageNumber * pageLimitation;
+
     const options = {
-      limit: 100,
+      skip: resultsToSkip,
+      limit: pageLimitation,
       sort: [['content.idData.timestamp', 'descending']]
     };
     return {query, options};

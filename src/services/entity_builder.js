@@ -82,7 +82,7 @@ export default class EntityBuilder {
   }
 
   validateAndCastFindEventsParams(params) {
-    const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp'];
+    const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage'];
     const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
     if (invalidFields.length > 0) {
       throw new InvalidParametersError(`Some parameters (${invalidFields.join(',')}) are not supported`);
@@ -102,6 +102,22 @@ export default class EntityBuilder {
         throw new InvalidParametersError(`Invalid 'toTimestamp' parameter value`);
       }
       params.toTimestamp = parsedToTimestamp;
+    }
+
+    if (params.page) {
+      const parsedPage = parseInt(params.page, 10);
+      if (isNaN(parsedPage)) {
+        throw new InvalidParametersError(`Invalid 'page' parameter value`);
+      }
+      params.page = parsedPage;
+    }
+
+    if (params.perPage) {
+      const parsedPerPage = parseInt(params.perPage, 10);
+      if (isNaN(parsedPerPage)) {
+        throw new InvalidParametersError(`Invalid 'perPage' parameter value`);
+      }
+      params.perPage = parsedPerPage;
     }
     
     return params;
