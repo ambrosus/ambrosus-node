@@ -76,19 +76,6 @@ export function getDefaultAddress(web3) {
   return defaultAccount;
 }
 
-export async function deployContract(web3, contractJson, args = [], options = {}) {
-  const defaultAddress = getDefaultAddress(web3);
-  const contract = await new web3.eth.Contract(contractJson.abi)
-    .deploy({data: contractJson.bytecode, arguments: args})
-    .send({
-      from: defaultAddress,
-      gas: DEFAULT_GAS,
-      ...options
-    });
-  contract.setProvider(web3.currentProvider);
-  return contract;
-}
-
 export function getDefaultPrivateKey(web3) {
   const defaultAddress = getDefaultAddress(web3);
   const account = web3.eth.accounts.wallet[defaultAddress];
@@ -96,4 +83,23 @@ export function getDefaultPrivateKey(web3) {
     return Config.nodePrivateKey();
   }
   return account.privateKey;
+}
+
+export async function loadContract(web3, abi, address) {
+  const contract = new web3.eth.Contract(abi, address);
+  contract.setProvider(web3.currentProvider);
+  return contract;
+}
+
+export async function deployContract(web3, abi, bytecode, args = [], options = {}) {
+  const defaultAddress = getDefaultAddress(web3);
+  const contract = await new web3.eth.Contract(abi)
+    .deploy({data: bytecode, arguments: args})
+    .send({
+      from: defaultAddress,
+      gas: DEFAULT_GAS,
+      ...options
+    });
+  contract.setProvider(web3.currentProvider);
+  return contract;
 }

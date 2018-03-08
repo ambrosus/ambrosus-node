@@ -11,6 +11,8 @@ import chai from 'chai';
 import chaiHttp from 'chai-http';
 import AccountAccessDefinitions from '../../src/services/account_access_definitions';
 import {adminAccountWithSecret} from '../fixtures/account';
+import ProofRepository from '../../src/services/proof_repository';
+import ContractManager from '../../src/services/contract_manager';
 
 chai.use(chaiHttp);
 
@@ -22,6 +24,8 @@ export default class Apparatus {
     this.client = client;
     this.db = db;
     this.web3 = await createWeb3();
+    this.contractManager = new ContractManager(this.web3, true);
+    await this.contractManager.deployIfNeeded();
 
     await this.cleanDB();
 
@@ -29,11 +33,17 @@ export default class Apparatus {
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
     this.entityBuilder = new EntityBuilder(this.identityManager);
     this.entityRepository = new EntityRepository(db);
+    this.proofRepository = new ProofRepository(this.web3, this.contractManager, this.identityManager);
     this.accountRepository = new AccountRepository(db);
     this.accountAccessDefinitions = new AccountAccessDefinitions(this.identityManager);
-    this.modelEngine = new DataModelEngine(this.identityManager, this.tokenAuthenticator, this.entityBuilder, this.entityRepository,
-      this.accountRepository, this.accountAccessDefinitions);
-
+    this.modelEngine = new DataModelEngine(
+      this.identityManager, 
+      this.tokenAuthenticator, 
+      this.entityBuilder, 
+      this.entityRepository,
+      this.proofRepository,
+      this.accountRepository,
+      this.accountAccessDefinitions);
 
     this.server = new Server(this.modelEngine);
     this.server.start();

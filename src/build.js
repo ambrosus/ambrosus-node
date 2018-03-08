@@ -7,17 +7,27 @@ import EntityStorage from './services/entity_repository';
 import AccountRepository from './services/account_repository';
 import DataModelEngine from './services/data_model_engine';
 import AccountAccessDefinitions from './services/account_access_definitions';
+import ProofRepository from './services/proof_repository';
+import ContractManager from './services/contract_manager';
 
 export default async function build() {
   const {db, client} = await connectToMongo();
   const web3 = await createWeb3();
+  const contractManager = new ContractManager(web3);
   const identityManager = new IdentityManager(web3);
   const tokenAuthenticator = new TokenAuthenticator(identityManager);  
   const entityBuilder = new EntityBuilder(identityManager);
   const entityRepository = new EntityStorage(db);
+  const proofRepository = new ProofRepository(web3, contractManager, identityManager);
   const accountRepository = new AccountRepository(db);
   const accountAccessDefinitions = new AccountAccessDefinitions(identityManager);
-  const dataModelEngine = new DataModelEngine(identityManager, tokenAuthenticator, entityBuilder, entityRepository, accountRepository,
+  const dataModelEngine = new DataModelEngine(
+    identityManager, 
+    tokenAuthenticator, 
+    entityBuilder, 
+    entityRepository, 
+    proofRepository, 
+    accountRepository,
     accountAccessDefinitions);
   return {dataModelEngine, client};
 }

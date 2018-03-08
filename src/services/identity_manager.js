@@ -1,6 +1,6 @@
 import {InvalidParametersError, AuthenticationError} from '../errors/errors';
 import matchHexOfLength from '../utils/regex';
-import {getDefaultPrivateKey} from '../utils/web3_tools';
+import {getDefaultPrivateKey, getDefaultAddress} from '../utils/web3_tools';
 
 export default class IdentityManager {
   constructor(web3) {
@@ -9,6 +9,10 @@ export default class IdentityManager {
 
   async nodePrivateKey() {
     return await getDefaultPrivateKey(this.web3);
+  }
+
+  nodeAddress() {
+    return getDefaultAddress(this.web3);
   }
 
   sign(privateKey, data) {
