@@ -193,7 +193,7 @@ describe('Entity Repository', () => {
       await expect(storage.getBundle(exampleBundleId)).to.eventually.be.deep.equal(exampleBundle);
     });
 
-    it('returns null for non-existing event', async () => {
+    it('returns null for non-existing bundle', async () => {
       const otherBundleId = '0x33333';
       await expect(storage.getBundle(otherBundleId)).to.eventually.be.equal(null);
     });

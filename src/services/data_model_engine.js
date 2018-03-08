@@ -99,6 +99,14 @@ export default class DataModelEngine {
     return this.entityRepository.findEvents(validatedParams);
   }
 
+  async getBundle(bundleId) {
+    const bundle = await this.entityRepository.getBundle(bundleId);
+    if (bundle === null) {
+      throw new NotFoundError(`No bundle with id = ${bundleId} found`);
+    }
+    return bundle;
+  }
+
   async finaliseBundle(bundleStubId) {
     const notBundled = await this.entityRepository.beginBundle(bundleStubId);
 

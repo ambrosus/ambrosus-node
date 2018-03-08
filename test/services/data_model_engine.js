@@ -2,11 +2,12 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
+import {put} from '../../src/utils/dict_utils';
 
 import DataModelEngine from '../../src/services/data_model_engine';
 import {InvalidParametersError, NotFoundError, PermissionError, ValidationError} from '../../src/errors/errors';
 
-import {createAsset, createEvent} from '../fixtures/assets_events';
+import {createAsset, createEvent, createBundle} from '../fixtures/assets_events';
 import {accountWithSecret, adminAccount, adminAccountWithSecret, createAccountRequest} from '../fixtures/account';
 import pkPair from '../fixtures/pk_pair';
 
@@ -426,6 +427,43 @@ describe('Data Model Engine', () => {
     });
   });
 
+  describe('Getting a bundle by id', () => {
+    let mockEntityRepository;
+    let mockEntityBuilder;
+    let modelEngine;
+
+    let ret;
+
+    const exampleBundleId = '0xabcdef';
+    const exampleBundle = put(createBundle(), 'bundleId', exampleBundleId);
+
+    before(async () => {
+      mockEntityRepository = {
+        getBundle: sinon.stub()
+      };
+
+      
+
+      mockEntityRepository.getBundle.resolves(exampleBundle);
+
+      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository, {}, {}, {});
+
+      ret = await expect(modelEngine.getBundle(exampleBundleId)).to.fulfilled;
+    });
+
+    it('asks the entity repository for the bundle', async () => {
+      expect(mockEntityRepository.getBundle).to.have.been.calledWith(exampleBundleId);
+    });
+
+    it('properly assembles the result', () => {
+      expect(ret).to.equal(exampleBundle);
+    });
+
+    it('throws NotFoundError when bundle with requested id does not exist', async () => {
+      mockEntityRepository.getBundle.resolves(null);
+      await expect(modelEngine.getBundle(exampleBundleId)).to.be.rejectedWith(NotFoundError);
+    });
+  });
 
   describe('Finalising a bundle', () => {
     let mockEntityRepository;
