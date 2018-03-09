@@ -5,6 +5,7 @@ import {properAddress, properSecret} from '../helpers/web3chai';
 import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
 import {createAccountRequest, adminAccountWithSecret, accountWithSecret} from '../fixtures/account';
 import ScenarioBuilder from '../fixtures/scenario_builder';
+import {put} from '../../src/utils/dict_utils';
 
 
 chai.use(chaiHttp);
@@ -27,17 +28,17 @@ describe('Accounts - Integrations', async () => {
   beforeEach(async () => {
     await apparatus.cleanDB();
     scenario.reset();
-    await scenario.injectAccount(adminAccountWithSecret);
+    await scenario.injectAccount(put(adminAccountWithSecret, 'permissions', ['create_account']));
   });
 
   describe('Create an account', () => {
-    xit('should create an account', async () => {
+    it('should create an account', async () => {
       const account = await apparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send(createAccountRequest());
-      expect(account.body.content.address).to.be.properAddress;
-      expect(account.body.content.secret).to.be.properSecret;
+      expect(account.body.address).to.be.properAddress;
+      expect(account.body.secret).to.be.properSecret;
       expect(account.status).to.eq(201);
     });
 
@@ -50,7 +51,7 @@ describe('Accounts - Integrations', async () => {
         .and.have.property('status', 401);
     });
 
-    xit('should fail to create account if non-existing user', async () => {
+    it('should fail to create account if non-existing user', async () => {
       const nonExistingUser = accountWithSecret;
       const pendingRequest = apparatus.request()
         .post('/accounts')
@@ -73,20 +74,20 @@ describe('Accounts - Integrations', async () => {
   });
 
   describe('Get account detail', () => {
-    xit('get by account address', async () => {
+    it('get by account address', async () => {
       const account = await apparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send(createAccountRequest());
       const response = await apparatus.request()
-        .get(`/accounts/${account.body.content.address}`)
+        .get(`/accounts/${account.body.address}`)
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send({});
-      expect(response.body.content.address).to.equal(account.body.content.address);
-      expect(response.body.content.secret).to.be.undefined;
+      expect(response.body.address).to.equal(account.body.address);
+      expect(response.body.secret).to.be.undefined;
     });
 
-    xit('should return 404 code if non-existing account', async () => {
+    it('should return 404 code if non-existing account', async () => {
       const pendingRequest = apparatus.request()
         .get(`/accounts/0x1234567`)
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)

@@ -4,13 +4,13 @@ import bodyParser from 'body-parser';
 import accessTokenMiddleware from '../middlewares/access_token_middleware';
 
 const createAccountHandler = (dataModelEngine) => async (req, res) => {
-  const content = await dataModelEngine.createAccount(req.body.content, req.tokenData);
-  res.status(201).send({content});
+  const content = await dataModelEngine.createAccount(req.body, req.tokenData);
+  res.status(201).send(content);
 };
 
 const getAccountHandler = (dataModelEngine) => async (req, res) => {
   const content = await dataModelEngine.getAccount(req.params.id, req.tokenData);
-  res.status(200).send({content});
+  res.status(200).send(content);
 };
 
 export default (tokenAuthenticator, dataModelEngine) => {

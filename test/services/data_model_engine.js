@@ -2,7 +2,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import {put} from '../../src/utils/dict_utils';
+import {put, pick} from '../../src/utils/dict_utils';
 
 import DataModelEngine from '../../src/services/data_model_engine';
 import {InvalidParametersError, NotFoundError, PermissionError, ValidationError} from '../../src/errors/errors';
@@ -70,27 +70,35 @@ describe('Data Model Engine', () => {
 
     it('validates with mockIdentityManager and delegates to accountRepository', async () => {
       const request = createAccountRequest();
-      expect(await modelEngine.createAccount(request.content, createTokenFor(request))).to.eq(pkPair);
+      expect(await modelEngine.createAccount(request, createTokenFor(request))).to.deep.equal(put(pkPair, {permissions : [], createdBy : adminAccount.address}));
       expect(mockAccountAccessDefinitions.validateNewAccountRequest).to.have.been.called;
       expect(mockAccountRepository.store).to.have.been.calledWith({
         ...pkPair,
-        permissions: request.content.idData.permissions
+        permissions: request.permissions,
+        createdBy: request.createdBy
       });
-      expect(mockAccountRepository.get).to.have.been.calledWith(request.content.idData.createdBy);
+      expect(mockAccountRepository.get).to.have.been.calledWith(request.createdBy);
     });
 
     it('throws ValidationError if wrong request format', async () => {
       mockAccountAccessDefinitions.validateNewAccountRequest.throws(new ValidationError('an error'));
 
       const request = createAccountRequest();
-      await expect(modelEngine.createAccount(request.content)).to.be.rejectedWith(ValidationError);
+      await expect(modelEngine.createAccount(request, createTokenFor(request))).to.be.rejectedWith(ValidationError);
+    });
+
+    it('throws NotFoundError if account sender account does not exist', async () => {
+      mockAccountRepository.get.returns(null);
+
+      const request = createAccountRequest();
+      await expect(modelEngine.createAccount(request, createTokenFor(request))).to.be.rejectedWith(NotFoundError);
     });
 
     it('throws PermissionError if account misses required permissions', async () => {
       mockAccountAccessDefinitions.ensureHasPermission.throws(new PermissionError());
 
       const request = createAccountRequest();
-      await expect(modelEngine.createAccount(request.content, createTokenFor(request))).to.be.rejectedWith(PermissionError);
+      await expect(modelEngine.createAccount(request, createTokenFor(request))).to.be.rejectedWith(PermissionError);
     });
 
     it('gives needed permissions to admin account', async () => {
@@ -123,30 +131,46 @@ describe('Data Model Engine', () => {
   describe('Get account', () => {
     let mockAccountRepository;
     let modelEngine;
+    let mockAccountAccessDefinitions;
+    let account;
+    let accountWithoutSecret;
 
     before(() => {
       mockAccountRepository = {
         get: sinon.stub()
       };
-      modelEngine = new DataModelEngine({}, {}, {}, {}, {}, mockAccountRepository, {});
+      mockAccountAccessDefinitions = {
+        ensureHasPermission: sinon.stub(),
+        defaultAdminPermissions: sinon.stub(),
+        validateNewAccountRequest: sinon.stub()
+      };
+      modelEngine = new DataModelEngine({}, {}, {}, {}, {}, mockAccountRepository, mockAccountAccessDefinitions);
+      account = put(accountWithSecret, {createdBy : '0x123', permissions : ['perm1', 'perm2']});
+      accountWithoutSecret = pick(account, 'secret');
     });
 
     beforeEach(() => {
       resetHistory(mockAccountRepository);
 
-      mockAccountRepository.get.returns(pkPair);
+
+      mockAccountRepository.get.returns(accountWithoutSecret);
+      mockAccountAccessDefinitions.ensureHasPermission.resolves();
     });
 
     it('delegates to accountRepository', async () => {
-      console.log(await modelEngine.getAccount());
-      expect(await modelEngine.getAccount()).to.eq(pkPair);
+      expect(await modelEngine.getAccount(account.address, {createdBy : account.address})).to.eq(accountWithoutSecret);
       expect(mockAccountRepository.get).to.have.been.called;
     });
 
-    xit('throws NotFoundError if non-existing', async () => {
+    it('throws NotFoundError if non-existing sender', async () => {
       mockAccountRepository.get.returns(null);
+      await expect(modelEngine.getAccount(account.address, {createdBy : account.address})).to.be.rejectedWith(NotFoundError);
+    });
 
-      await expect(modelEngine.getAccount()).to.be.rejectedWith(NotFoundError);
+    it('throws NotFoundError if non-existing account requested', async () => {
+      mockAccountRepository.get.onFirstCall().resolves();
+      mockAccountRepository.get.onSecondCall().returns(null);
+      await expect(modelEngine.getAccount(account.address, {createdBy : account.address})).to.be.rejectedWith(NotFoundError);
     });
   });
 

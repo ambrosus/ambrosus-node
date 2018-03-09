@@ -45,10 +45,10 @@ describe('Account Access Definitions', () => {
 
     before(() => {
       mockIdentityManager.sign.returns('0x1');
-      account = createAccountRequest().content;
+      account = createAccountRequest();
     });
 
-    for (const field of ['idData', 'idData.createdBy']) {
+    for (const field of ['createdBy', 'permissions']) {
       // eslint-disable-next-line no-loop-func
       it(`throws if the ${field} field is missing`, () => {
         const brokenData = pick(account, field);

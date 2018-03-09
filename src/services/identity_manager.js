@@ -39,7 +39,7 @@ export default class IdentityManager {
 
   calculateHash(data) {
     const serialized = this.serializeForHashing(data);
-    return this.web3.eth.accounts.hashMessage(serialized).toLowerCase();
+    return this.web3.eth.accounts.hashMessage(serialized);
   }
 
   serializeForHashing(object) {
@@ -70,7 +70,7 @@ export default class IdentityManager {
 
   addressFromSecret(secret) {
     try {
-      return this.web3.eth.accounts.privateKeyToAccount(secret).address.toLowerCase();
+      return this.web3.eth.accounts.privateKeyToAccount(secret).address;
     } catch (_e) {
       throw new AuthenticationError('Invalid secret.');
     }
