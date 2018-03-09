@@ -7,23 +7,24 @@
   "private": true,
   "license": "UNLICENCED",
   "scripts": {
+    "build:contracts": "truffle compile",
+    "build:src": "babel ./src -d ./dist",
+    "build": "yarn build:contracts && yarn build:src",
+    "start": "node dist/start.js",
+    "test": "export NODE_ENV=test && mocha --require babel-register --timeout 5000 test/**/*.js",
+    "ops:admin:create": "babel-node src/tasks/createAdminUser.js",
+    "ops:bundle:finalisation": "babel-node src/tasks/bundle_finalisation.js",
+    "ops:bundle:whitelist": "babel-node src/tasks/bundle_whitelist.js",
+    "ops:deploy:bundleregistry": "babel-node src/tasks/deploy_bundle_registry.js",
     "dev:clean": "rimraf ./dist",
     "dev:start": "export NODE_ENV=dev && nodemon --watch src --exec babel-node --inspect src/start.js",
     "dev:db": "mongod --dbpath=./data",
     "dev:lint": "eslint src test",
-    "dev:truffle": "truffle compile",
-    "build": "babel ./src -d ./dist",
-    "start": "node dist/start.js",
-    "test": "yarn dev:truffle && export NODE_ENV=test && mocha --require babel-register --timeout 5000 test/**/*.js",
     "dev:admin:create": "export NODE_ENV=dev && babel-node src/tasks/createAdminUser.js",
-    "dev:bundle:finalisation": "export NODE_ENV=dev && babel-node src/tasks/bundle_finalisation.js",
-    "ops:admin:create": "export NODE_ENV=production && babel-node src/tasks/createAdminUser.js",
-    "ops:bundle:finalisation": "export NODE_ENV=production && babel-node src/tasks/bundle_finalisation.js",
-    "ops:bundle:whitelist": "export NODE_ENV=production && babel-node src/tasks/bundle_whitelist.js",
-    "ops:deploy:bundleregistry": "export NODE_ENV=production && babel-node src/tasks/deploy_bundle_registry.js"
+    "dev:bundle:finalisation": "export NODE_ENV=dev && babel-node src/tasks/bundle_finalisation.js"
   },
   "engines": {
-    "node": ">=8.9.1 <9.4.0",
+    "node": ">=9.0",
     "yarn": ">=1.3.2 <2.0.0"
   },
   "dependencies": {

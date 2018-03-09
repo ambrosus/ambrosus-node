@@ -9,9 +9,10 @@ services:
 notifications:
   slack: ambrosus:ybmTQyso2XmAp6SM9NQPhdl2
 node_js:
-  - '8'
+  - '9'
 install:
   - yarn install
+  - yarn build:contracts
 script:
   - mongod --version
   - yarn test
