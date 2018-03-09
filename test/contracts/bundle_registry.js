@@ -2,7 +2,7 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import {createWeb3, getDefaultAddress} from '../../src/utils/web3_tools';
+import {createWeb3} from '../../src/utils/web3_tools';
 import deployContracts from '../helpers/contracts';
 import {adminAccount} from '../fixtures/account';
 
@@ -27,19 +27,19 @@ describe('Bundle Registry Contract', () => {
 
   describe('Whitelisthig', () => {
     it('only owner should be whitelisted at the beginning', async () => {
-      expect(await bundleRegistry.methods.vendorWhitelist(ownerAddress).call()).to.eq(true);
-      expect(await bundleRegistry.methods.vendorWhitelist(otherAddress).call()).to.eq(false);
+      expect(await bundleRegistry.methods.isWhitelisted(ownerAddress).call()).to.eq(true);
+      expect(await bundleRegistry.methods.isWhitelisted(otherAddress).call()).to.eq(false);
     });
 
     it('owner can add/remove whitelisted addresses', async () => {
       await bundleRegistry.methods.addToWhitelist(otherAddress).send({
         from: ownerAddress
       });
-      expect(await bundleRegistry.methods.vendorWhitelist(otherAddress).call()).to.eq(true);
+      expect(await bundleRegistry.methods.isWhitelisted(otherAddress).call()).to.eq(true);
       await bundleRegistry.methods.removeFromWhitelist(otherAddress).send({
         from: ownerAddress
       });
-      expect(await bundleRegistry.methods.vendorWhitelist(otherAddress).call()).to.eq(false);
+      expect(await bundleRegistry.methods.isWhitelisted(otherAddress).call()).to.eq(false);
     });
 
     it('not whitelisted non-owner cannot add/remove whitelisted addresses', async () => {

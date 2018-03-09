@@ -86,7 +86,7 @@ export function getDefaultPrivateKey(web3) {
   return account.privateKey;
 }
 
-export async function loadContract(web3, abi, address) {
+export function loadContract(web3, abi, address) {
   const contract = new web3.eth.Contract(abi, address);
   contract.setProvider(web3.currentProvider);
   return contract;

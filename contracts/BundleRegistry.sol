@@ -30,4 +30,8 @@ contract BundleRegistry is Ownable {
   function removeFromWhitelist(address vendor) onlyOwner public {
     vendorWhitelist[vendor] = false;
   }
+
+  function isWhitelisted(address vendor) constant public returns (bool) {
+    return vendorWhitelist[vendor];
+  }
 }
