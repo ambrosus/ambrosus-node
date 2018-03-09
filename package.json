@@ -19,6 +19,7 @@
     "dev:bundle:finalisation": "export NODE_ENV=dev && babel-node src/tasks/bundle_finalisation.js",
     "ops:admin:create": "export NODE_ENV=production && babel-node src/tasks/createAdminUser.js",
     "ops:bundle:finalisation": "export NODE_ENV=production && babel-node src/tasks/bundle_finalisation.js",
+    "ops:bundle:whitelist": "export NODE_ENV=production && babel-node src/tasks/bundle_whitelist.js",
     "ops:deploy:bundleregistry": "export NODE_ENV=production && babel-node src/tasks/deploy_bundle_registry.js"
   },
   "engines": {
@@ -28,10 +29,12 @@
   "dependencies": {
     "base64url": "^2.0.0",
     "body-parser": "^1.18.2",
+    "command-line-args": "^5.0.2",
     "config": "^1.29.2",
     "express": "^4.16.2",
     "mongodb": "^3.0.2",
-    "web3": "^1.0.0-beta.29"
+    "web3": "^1.0.0-beta.29",
+    "zeppelin-solidity": "^1.7.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
