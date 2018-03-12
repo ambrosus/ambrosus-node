@@ -45,7 +45,7 @@ export default class DataModelEngine {
   async getAccount(address, tokenData) {
     const sender = await this.accountRepository.get(tokenData.createdBy);
     if (!sender) {
-      throw new NotFoundError(`Sender account ${address} not found.`);
+      throw new PermissionError(`Sender account ${address} not found.`);
     }
     this.accountAccessDefinitions.ensureHasPermission(sender, 'create_account');
     const result = await this.accountRepository.get(address);

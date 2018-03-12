@@ -87,11 +87,11 @@ describe('Data Model Engine', () => {
       await expect(modelEngine.createAccount(request, createTokenFor(request))).to.be.rejectedWith(ValidationError);
     });
 
-    it('throws NotFoundError if account sender account does not exist', async () => {
+    it('throws PermissionError if account sender account does not exist', async () => {
       mockAccountRepository.get.returns(null);
 
       const request = createAccountRequest();
-      await expect(modelEngine.createAccount(request, createTokenFor(request))).to.be.rejectedWith(NotFoundError);
+      await expect(modelEngine.createAccount(request, createTokenFor(request))).to.be.rejectedWith(PermissionError);
     });
 
     it('throws PermissionError if account misses required permissions', async () => {
@@ -162,14 +162,14 @@ describe('Data Model Engine', () => {
       expect(mockAccountRepository.get).to.have.been.called;
     });
 
-    it('throws NotFoundError if non-existing sender', async () => {
-      mockAccountRepository.get.returns(null);
-      await expect(modelEngine.getAccount(account.address, {createdBy : account.address})).to.be.rejectedWith(NotFoundError);
+    it('throws PermissionError if non-existing sender', async () => {
+      mockAccountRepository.get.resolves(null);
+      await expect(modelEngine.getAccount(account.address, {createdBy : account.address})).to.be.rejectedWith(PermissionError);
     });
 
     it('throws NotFoundError if non-existing account requested', async () => {
-      mockAccountRepository.get.onFirstCall().resolves();
-      mockAccountRepository.get.onSecondCall().returns(null);
+      mockAccountRepository.get.onFirstCall().resolves(true);
+      mockAccountRepository.get.onSecondCall().resolves(null);
       await expect(modelEngine.getAccount(account.address, {createdBy : account.address})).to.be.rejectedWith(NotFoundError);
     });
   });
