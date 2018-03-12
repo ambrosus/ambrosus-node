@@ -91,8 +91,9 @@ const apparatusScenarioProcessor = (apparatus) => ({
   onAddAccount: async (accountRequest) => {
     const newAccount = await apparatus.request()
       .post('/accounts')
+      .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
       .send(accountRequest);
-    return newAccount.body.content;
+    return newAccount.body;
   }
 });
 

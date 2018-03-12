@@ -19,6 +19,7 @@ describe('Assets - Integrations', () => {
   let apparatus;
   let scenario;
   let adminAccount;
+  let otherAccount;
 
   before(async () => {
     apparatus = new Apparatus();
@@ -30,25 +31,26 @@ describe('Assets - Integrations', () => {
     await apparatus.cleanDB();
     scenario.reset();
     adminAccount = await scenario.injectAccount(adminAccountWithSecret);
+    otherAccount = await scenario.addAccount(0);
   });
 
   describe('creating asset', () => {
-    let inputAsset = null;
+    let asset = null;
 
     beforeEach(async () => {
-      inputAsset = createFullAsset(apparatus.identityManager, {createdBy: adminAccount.address}, adminAccount.secret);
+      asset = createFullAsset(apparatus.identityManager, {createdBy: adminAccount.address}, adminAccount.secret);
     });
 
     it('works with valid input (client signed)', async () => {
       const response = await apparatus.request()
         .post('/assets')
-        .send(inputAsset);
+        .send(asset);
       expect(response.status).to.eq(201);
-      expect(response.body.content).to.deep.equal(inputAsset.content);
+      expect(response.body.content).to.deep.equal(asset.content);
     });
 
     it('works with valid input (server signed)', async () => {
-      const unsignedAsset = pick(inputAsset, ['content.signature', 'assetId']);
+      const unsignedAsset = pick(asset, ['content.signature', 'assetId']);
 
       const response = await apparatus.request()
         .post('/assets')
@@ -58,8 +60,8 @@ describe('Assets - Integrations', () => {
       expect(response.body.content.idData).to.deep.equal(unsignedAsset.content.idData);
     });
 
-    it('fails for invalid input', async () => {
-      const brokenAsset = pick(inputAsset, 'content.idData.timestamp');
+    it('returns 400 for invalid input (missing required field)', async () => {
+      const brokenAsset = pick(asset, 'content.idData.timestamp');
       const request = apparatus.request()
         .post('/assets')
         .set('Authorization', `AMB ${pkPair.secret}`)
@@ -69,12 +71,25 @@ describe('Assets - Integrations', () => {
         .and.have.property('status', 400);
     });
 
-    it('fails for not existing creator', async () => {
+    it('returns 403 for authorisation error (user does not exist)', async () => {
       const failingAsset = createFullAsset(apparatus.identityManager, {createdBy: notRegisteredAccount.address}, notRegisteredAccount.secret);
       
       const request = apparatus.request()
         .post('/assets')
         .send(failingAsset);
+
+      await expect(request)
+        .to.eventually.be.rejected
+        .and.have.property('status', 403);
+    });
+
+    it('returns 403 for permission error (no `create_entity` permission)', async () => {
+      const notPermittedAsset = createFullAsset(apparatus.identityManager, {createdBy: otherAccount.address},
+        otherAccount.secret);
+
+      const request = apparatus.request()
+        .post('/assets')
+        .send(notPermittedAsset);
 
       await expect(request)
         .to.eventually.be.rejected
@@ -150,7 +165,7 @@ describe('Assets - Integrations', () => {
         .and.have.property('status', 400);
     });
 
-    it('fails for not existing creator', async () => {
+    it('returns 403 for authorisation error (user does not exist)', async () => {
       const failingEvent = createFullEvent(apparatus.identityManager, {assetId: baseAsset.assetId, createdBy: notRegisteredAccount.address}, {}, notRegisteredAccount.secret);
     
       const request = apparatus.request()

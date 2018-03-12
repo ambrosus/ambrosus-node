@@ -287,7 +287,7 @@ Places (after intensive validations) the provided asset object into the system.
 
 + Response 403 (application/json)
 
-    The createdBy user is not registered
+    The createdBy user is not registered or has no permission for creating account
 
     + Body
 
@@ -443,7 +443,7 @@ Places (after intensive validations) the provided event object into the system.
 
 + Response 403 (application/json)
 
-    The createdBy user is not registered
+    The createdBy user is not registered or has no permission for creating account
 
     + Body
 
@@ -582,4 +582,3 @@ Fetches a bundle by identifier
     Bundle not found
 
     + Body
-    
