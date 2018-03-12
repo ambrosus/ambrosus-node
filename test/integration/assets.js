@@ -118,66 +118,6 @@ describe('Assets - Integrations', () => {
     });
   });
 
-  describe('creating event', () => {
-    let baseAsset = null;
-    let inputEvent = null;
-
-
-    beforeEach(async () => {
-      baseAsset = await scenario.addAsset();
-      inputEvent = createFullEvent(apparatus.identityManager, {assetId: baseAsset.assetId, createdBy: adminAccount.address}, {}, adminAccount.secret);
-    });
-
-    it('works with valid input (client signed)', async () => {
-      const response = await apparatus.request()
-        .post(`/assets/${baseAsset.assetId}/events`)
-        .send(inputEvent);
-
-      expect(response.status).to.eq(201);
-      expect(response.body.content).to.deep.equal(inputEvent.content);
-    });
-
-    it('works with valid input (server signed)', async () => {
-      const unsignedEvent = pick(inputEvent, ['content.signature', 'eventId', 'content.idData.dataHash']);
-
-      const response = await apparatus.request()
-        .post(`/assets/${baseAsset.assetId}/events`)
-        .set('Authorization', `AMB ${adminAccount.secret}`)
-        .send(unsignedEvent);
-
-      expect(response.status).to.eq(201);
-      // the idData should include all values taken from the input + dataHash
-      for (const key of ['timestamp', 'accessLevel', 'assetId', 'createdBy']) {
-        expect(get(response.body.content.idData, key)).to.equal(get(unsignedEvent.content.idData, key));
-      }
-      expect(response.body.content.idData.dataHash).to.exist;
-      expect(response.body.content.data).to.deep.equal(unsignedEvent.content.data);
-    });
-
-    it('fails for invalid input', async () => {
-      const brokenEvent = pick(inputEvent, 'content.data');
-      const request = apparatus.request()
-        .post(`/assets/${baseAsset.assetId}/events`)
-        .set('Authorization', `AMB ${pkPair.secret}`)
-        .send(brokenEvent);
-      await expect(request)
-        .to.eventually.be.rejected
-        .and.have.property('status', 400);
-    });
-
-    it('returns 403 for authorisation error (user does not exist)', async () => {
-      const failingEvent = createFullEvent(apparatus.identityManager, {assetId: baseAsset.assetId, createdBy: notRegisteredAccount.address}, {}, notRegisteredAccount.secret);
-    
-      const request = apparatus.request()
-        .post(`/assets/${baseAsset.assetId}/events`)
-        .send(failingEvent);
-
-      await expect(request)
-        .to.eventually.be.rejected
-        .and.have.property('status', 403);
-    });
-  });
-  
   describe('fetching event', () => {
     let asset;
     let event;

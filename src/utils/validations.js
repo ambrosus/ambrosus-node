@@ -27,4 +27,10 @@ const validateIntegerParameterAndCast = (value, errorMsg) => {
   }
 };
 
-export {validatePathsNotEmpty, validateFieldsConstrainedToSet, validateIntegerParameterAndCast};
+const assert = (value, errorMsg = '') => {
+  if (!value) {
+    throw new ValidationError(errorMsg);
+  }
+};
+
+export {validatePathsNotEmpty, validateFieldsConstrainedToSet, validateIntegerParameterAndCast, assert};

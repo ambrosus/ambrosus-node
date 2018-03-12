@@ -68,13 +68,12 @@ describe('Data Model Engine', () => {
 
     it('validates with mockIdentityManager and delegates to accountRepository', async () => {
       const request = addAccountRequest();
-      const registrationResponse = {address: account.address, permissions : [], registeredBy : adminAccount.address};
+      const registrationResponse = {address: account.address, permissions : [], registeredBy : adminAccount.address, accessLevel: 0};
       expect(await modelEngine.addAccount(request, createTokenFor(adminAccount.address))).to.deep.equal(registrationResponse);
       expect(mockAccountAccessDefinitions.validateAddAccountRequest).to.have.been.called;
       expect(mockAccountRepository.store).to.have.been.calledWith({
-        address: request.address,
-        permissions: request.permissions,
-        registeredBy : adminAccount.address
+        registeredBy : adminAccount.address,
+        ...registrationResponse
       });
       expect(mockAccountRepository.get).to.have.been.calledWith(adminAccount.address);
     });

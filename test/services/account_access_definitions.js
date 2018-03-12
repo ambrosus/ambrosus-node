@@ -53,16 +53,27 @@ describe('Account Access Definitions', () => {
       account = addAccountRequest();
     });
 
-    for (const field of ['address', 'permissions']) {
+    for (const field of ['address', 'permissions', 'accessLevel']) {
       // eslint-disable-next-line no-loop-func
       it(`throws if the ${field} field is missing`, () => {
         const brokenData = pick(account, field);
         expect(() => accountAccessDefinitions.validateAddAccountRequest(brokenData)).to.throw(ValidationError);
       });
     }
+
     it(`throws if surplus fields are passed`, () => {
       const brokenData = put(account, 'extraField', 'extraValue');
       expect(() => accountAccessDefinitions.validateAddAccountRequest(brokenData)).to.throw(ValidationError);
+    });
+
+    it('throws if accessLevel is not integer', async () => {
+      const brokenData = put(account, 'accessLevel', 3.14);
+      expect(() => accountAccessDefinitions.validateNewAccountRequest(brokenData)).to.throw(ValidationError);
+    });
+
+    it('throws if accessLevel is negative', async () => {
+      const brokenData = put(account, 'accessLevel', -10);
+      expect(() => accountAccessDefinitions.validateNewAccountRequest(brokenData)).to.throw(ValidationError);
     });
   });
 

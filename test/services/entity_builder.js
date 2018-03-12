@@ -4,13 +4,13 @@ import sinonChai from 'sinon-chai';
 
 import {pick, put} from '../../src/utils/dict_utils';
 import {createWeb3} from '../../src/utils/web3_tools';
-import {ValidationError, InvalidParametersError} from '../../src/errors/errors';
+import {InvalidParametersError, ValidationError} from '../../src/errors/errors';
 
 import IdentityManager from '../../src/services/identity_manager';
 import EntityBuilder from '../../src/services/entity_builder';
 
 import {adminAccountWithSecret} from '../fixtures/account';
-import {createFullEvent, createFullAsset} from '../fixtures/assets_events';
+import {createFullAsset, createFullEvent} from '../fixtures/assets_events';
 
 import ScenarioBuilder from '../fixtures/scenario_builder';
 
@@ -45,7 +45,14 @@ describe('Entity Builder', () => {
     });
 
     describe('Asset', () => {
-      for (const field of ['assetId', 'content', 'content.signature', 'content.idData', 'content.idData.createdBy', 'content.idData.timestamp', 'content.idData.sequenceNumber']) {
+      for (const field of [
+        'assetId',
+        'content',
+        'content.signature',
+        'content.idData',
+        'content.idData.createdBy',
+        'content.idData.timestamp',
+        'content.idData.sequenceNumber']) {
         // eslint-disable-next-line no-loop-func
         it(`throws if the ${field} field is missing`, () => {
           const brokenAsset = pick(exampleAsset, field);
@@ -76,10 +83,27 @@ describe('Entity Builder', () => {
     });
 
     describe('Event', () => {
-      for (const field of ['eventId', 'content', 'content.signature', 'content.idData', 'content.idData.assetId', 'content.idData.createdBy', 'content.idData.timestamp', 'content.idData.dataHash', 'content.data']) {
+      for (const field of [
+        'eventId',
+        'content',
+        'content.signature',
+        'content.idData',
+        'content.idData.assetId',
+        'content.idData.createdBy',
+        'content.idData.timestamp',
+        'content.idData.dataHash',
+        'content.idData.accessLevel',
+        'content.data']) {
         // eslint-disable-next-line no-loop-func
         it(`throws if the ${field} field is missing`, () => {
           const brokenEvent = pick(exampleEvent, field);
+          expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
+        });
+
+        it('throws if accessLevel not positive integer', async () => {
+          let brokenEvent = put('content.idData.accessLevel', exampleEvent, 1.1);
+          expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
+          brokenEvent = put('content.idData.accessLevel', exampleEvent, -1);
           expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
         });
       }
@@ -180,13 +204,13 @@ describe('Entity Builder', () => {
       await scenario.injectAccount(adminAccountWithSecret);
 
       inAssets = [
-        await scenario.addAsset(0), 
+        await scenario.addAsset(0),
         await scenario.addAsset(0)
       ];
       inEvents = [
         await scenario.addEvent(0, 0),
         await scenario.addEvent(0, 1),
-        await scenario.addEvent(0, 1) 
+        await scenario.addEvent(0, 1)
       ];
       inTimestamp = Date.now();
       const stripFunc = (entry) => put(entry, 'mock.bundleStripped', 1);
@@ -253,14 +277,14 @@ describe('Entity Builder', () => {
 
   describe('validating query parameters', () => {
     let entityBuilder;
-    const validParamsAsStrings = {assetId : '0x1234', fromTimestamp : '10', toTimestamp : '20', page : '2', perPage : '4', createdBy : '0x4321'};
+    const validParamsAsStrings = {assetId: '0x1234', fromTimestamp: '10', toTimestamp: '20', page: '2', perPage: '4', createdBy : '0x4321'};
 
     before(() => {
       entityBuilder = new EntityBuilder({});
     });
 
     it('passes for proper parameters', () => {
-      const params = {assetId : '0x1234', fromTimestamp : 10, toTimestamp : 20, page : 2, perPage : 4, createdBy : '0x4321'};
+      const params = {assetId: '0x1234', fromTimestamp: 10, toTimestamp: 20, page: 2, perPage: 4, createdBy : '0x4321'};
       const validatedParams = entityBuilder.validateAndCastFindEventsParams(params);
       expect(validatedParams.assetId).to.equal('0x1234');
       expect(validatedParams.fromTimestamp).to.equal(10);

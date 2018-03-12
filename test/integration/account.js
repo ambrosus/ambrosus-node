@@ -39,6 +39,7 @@ describe('Accounts - Integrations', async () => {
         .send(addAccountRequest());
       expect(result.body.address).to.be.equal(account.address);
       expect(result.body.permissions).to.be.deep.equal([]);
+      expect(account.body.accessLevel).to.be.equal(0);
       expect(result.body.registeredBy).to.be.equal(adminAccountWithSecret.address);
       expect(result.status).to.eq(201);
     });
@@ -77,6 +78,7 @@ describe('Accounts - Integrations', async () => {
       expect(response.body.address).to.equal(registeredAccount.body.address);
       expect(response.body.secret).to.be.undefined;
       expect(registeredAccount.body.permissions).to.be.deep.equal([]);
+      expect(account.body.accessLevel).to.be.equal(0);
       expect(registeredAccount.body.registeredBy).to.be.equal(adminAccountWithSecret.address);
     });
 
