@@ -42,6 +42,17 @@ export const fetchEventHandler = (modelEngine) => async (req, res) => {
     .send(JSON.stringify(event));
 };
 
+export const findEventsPerAssetHandler = (modelEngine) => async (req, res) => {
+  const queryParams = {...req.query, assetId: req.params.assetId};
+  const {results, resultCount} = await modelEngine.findEvents(queryParams);
+  res.status(200)
+    .type('json')
+    .send(JSON.stringify({
+      results,
+      resultCount
+    }));
+};
+
 const assetRouter = (identityManager, modelEngine) => {
   const router = new express.Router();
 
@@ -68,6 +79,10 @@ const assetRouter = (identityManager, modelEngine) => {
 
   router.get('/:assetId/events/:eventId',
     asyncMiddleware(fetchEventHandler(modelEngine))
+  );
+
+  router.get('/:assetId/events/',
+    asyncMiddleware(findEventsPerAssetHandler(modelEngine))
   );
 
   return router;
