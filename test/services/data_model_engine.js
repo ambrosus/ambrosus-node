@@ -70,7 +70,8 @@ describe('Data Model Engine', () => {
 
     it('validates with mockIdentityManager and delegates to accountRepository', async () => {
       const request = createAccountRequest();
-      expect(await modelEngine.createAccount(request, createTokenFor(request))).to.deep.equal(put(pkPair, {permissions : [], createdBy : adminAccount.address}));
+      const creationResponse = put(pkPair, {permissions : [], createdBy : adminAccount.address});
+      expect(await modelEngine.createAccount(request, createTokenFor(request))).to.deep.equal(creationResponse);
       expect(mockAccountAccessDefinitions.validateNewAccountRequest).to.have.been.called;
       expect(mockAccountRepository.store).to.have.been.calledWith({
         ...pkPair,
@@ -145,7 +146,7 @@ describe('Data Model Engine', () => {
         validateNewAccountRequest: sinon.stub()
       };
       modelEngine = new DataModelEngine({}, {}, {}, {}, {}, mockAccountRepository, mockAccountAccessDefinitions);
-      account = put(accountWithSecret, {createdBy : '0x123', permissions : ['perm1', 'perm2']});
+      account = put(accountWithSecret, {createdBy : adminAccount.address, permissions : ['perm1', 'perm2']});
       accountWithoutSecret = pick(account, 'secret');
     });
 
@@ -158,19 +159,19 @@ describe('Data Model Engine', () => {
     });
 
     it('delegates to accountRepository', async () => {
-      expect(await modelEngine.getAccount(account.address, {createdBy : account.address})).to.eq(accountWithoutSecret);
+      expect(await modelEngine.getAccount(account.address, {createdBy : adminAccount.address})).to.eq(accountWithoutSecret);
       expect(mockAccountRepository.get).to.have.been.called;
     });
 
     it('throws PermissionError if non-existing sender', async () => {
       mockAccountRepository.get.resolves(null);
-      await expect(modelEngine.getAccount(account.address, {createdBy : account.address})).to.be.rejectedWith(PermissionError);
+      await expect(modelEngine.getAccount(account.address, {createdBy : adminAccount.address})).to.be.rejectedWith(PermissionError);
     });
 
     it('throws NotFoundError if non-existing account requested', async () => {
-      mockAccountRepository.get.onFirstCall().resolves(true);
-      mockAccountRepository.get.onSecondCall().resolves(null);
-      await expect(modelEngine.getAccount(account.address, {createdBy : account.address})).to.be.rejectedWith(NotFoundError);
+      mockAccountRepository.get.withArgs(adminAccount.address).resolves(adminAccount);
+      mockAccountRepository.get.withArgs(account.address).resolves(null);
+      await expect(modelEngine.getAccount(account.address, {createdBy : adminAccount.address})).to.be.rejectedWith(NotFoundError);
     });
   });
 

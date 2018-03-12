@@ -47,7 +47,6 @@ export default class DataModelEngine {
     if (!sender) {
       throw new PermissionError(`Sender account ${address} not found.`);
     }
-    this.accountAccessDefinitions.ensureHasPermission(sender, 'create_account');
     const result = await this.accountRepository.get(address);
     if (!result) {
       throw new NotFoundError(`Account ${address} not found.`);

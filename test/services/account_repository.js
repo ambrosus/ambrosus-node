@@ -16,11 +16,9 @@ describe('Account Repository', () => {
   });
 
   it('account round database trip', async () => {
-    let accountToStore = accountWithSecret;
-    accountToStore = put(accountToStore, {createdBy : '0x123', permissions : ['perm1', 'perm2']});
-
-    let accountToReceive = account;
-    accountToReceive = put(accountToReceive, {createdBy : '0x123', permissions : ['perm1', 'perm2']});
+    const additionalFields = {createdBy : '0x123', permissions : ['perm1', 'perm2']};
+    const accountToStore = put(accountWithSecret, additionalFields);
+    const accountToReceive = put(account, additionalFields);
 
     await accountStore.store(accountToStore);
     const result = await accountStore.get(accountToStore.address);

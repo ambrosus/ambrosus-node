@@ -5,7 +5,6 @@ import {properAddress, properSecret} from '../helpers/web3chai';
 import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
 import {createAccountRequest, adminAccountWithSecret, accountWithSecret} from '../fixtures/account';
 import ScenarioBuilder from '../fixtures/scenario_builder';
-import {put} from '../../src/utils/dict_utils';
 
 
 chai.use(chaiHttp);
@@ -28,7 +27,7 @@ describe('Accounts - Integrations', async () => {
   beforeEach(async () => {
     await apparatus.cleanDB();
     scenario.reset();
-    await scenario.injectAccount(put(adminAccountWithSecret, 'permissions', ['create_account']));
+    await scenario.injectAccount(adminAccountWithSecret);
   });
 
   describe('Create an account', () => {
