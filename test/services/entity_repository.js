@@ -1,4 +1,5 @@
 import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import {connectToMongo, cleanDatabase} from '../../src/utils/db_utils';
 import {put} from '../../src/utils/dict_utils';
 
@@ -11,6 +12,7 @@ import {adminAccountWithSecret} from '../fixtures/account';
 import EntityRepository from '../../src/services/entity_repository';
 
 const {expect} = chai;
+chai.use(chaiAsPromised);
 
 describe('Entity Repository', () => {
   let db;
@@ -200,8 +202,10 @@ describe('Entity Repository', () => {
     it('db round trip works', async () => {
       const exampleBundleId = '0xabcdef';
       const exampleBundle = put(createBundle(), 'bundleId', exampleBundleId);
+      const exampleBundleWithMetadata = put(exampleBundle, 'metadata.proofBlock', 10);
       await storage.storeBundle(exampleBundle);
-      await expect(storage.getBundle(exampleBundleId)).to.eventually.be.deep.equal(exampleBundle);
+      await storage.storeBundleProofBlock(exampleBundleId, 10);
+      await expect(storage.getBundle(exampleBundleId)).to.eventually.be.deep.equal(exampleBundleWithMetadata);
     });
 
     it('returns null for non-existing bundle', async () => {

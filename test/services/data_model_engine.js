@@ -537,6 +537,7 @@ describe('Data Model Engine', () => {
 
     const bundleStubId = 'abc';
     const nodeSecret = 'nodeSecret';
+    const blockNumber = 10;
     let unbundledAssets;
     let unbundledEvents;
     let assembledBundle;
@@ -575,7 +576,8 @@ describe('Data Model Engine', () => {
       mockEntityRepository = {
         beginBundle: sinon.stub(),
         endBundle: sinon.stub(),
-        storeBundle: sinon.stub()
+        storeBundle: sinon.stub(),
+        storeBundleProofBlock: sinon.stub()
       };
 
       mockIdentityManager = {
@@ -594,7 +596,7 @@ describe('Data Model Engine', () => {
       });
       mockEntityRepository.endBundle.resolves();
       mockEntityRepository.storeBundle.resolves();
-      mockProofRepository.uploadProof.resolves();
+      mockProofRepository.uploadProof.resolves({blockNumber});
 
       modelEngine = new DataModelEngine(mockIdentityManager, {}, mockEntityBuilder, mockEntityRepository, mockProofRepository, {}, {});
 
@@ -631,6 +633,10 @@ describe('Data Model Engine', () => {
 
     it('returns the bundle', () => {
       expect(ret).to.be.deep.eq(assembledBundle);
+    });
+
+    it('stores block number in metadata', async () => {
+      expect(mockEntityRepository.storeBundleProofBlock).to.have.been.calledWith(assembledBundle.bundleId, blockNumber);
     });
   });
 });
