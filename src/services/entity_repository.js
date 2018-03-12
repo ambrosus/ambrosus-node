@@ -140,6 +140,14 @@ export default class EntityRepository {
     await this.db.collection('bundles').insertOne({...bundle});
   }
 
+  async storeBundleProofBlock(bundleId, proofBlock) {
+    await this.db.collection('bundles').update({bundleId}, {
+      $set: {
+        'metadata.proofBlock': proofBlock
+      }
+    });
+  }
+
   async getBundle(bundleId) {
     return await this.db.collection('bundles').findOne({bundleId}, {fields: this.blacklistedFields});
   }

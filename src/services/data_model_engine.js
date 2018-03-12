@@ -129,7 +129,9 @@ export default class DataModelEngine {
 
     await this.entityRepository.endBundle(bundleStubId, newBundle.bundleId);
 
-    await this.proofRepository.uploadProof(newBundle.bundleId);
+    const {blockNumber} = await this.proofRepository.uploadProof(newBundle.bundleId);
+
+    await this.entityRepository.storeBundleProofBlock(newBundle.bundleId, blockNumber);
 
     return newBundle;
   }

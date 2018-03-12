@@ -78,6 +78,7 @@ describe('Bundles - Integrations', () => {
         .get(`/bundle/${res.bundleId}`);
       expect(response.body.content).to.deep.equal(res.content);
       expect(response.body.bundleId).to.equal(res.bundleId);
+      expect(response.body.metadata).to.have.key('proofBlock');
     });
 
     it('return 404 if bundle with requested id does not exist', async () => {

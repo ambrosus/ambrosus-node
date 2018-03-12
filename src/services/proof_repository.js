@@ -10,7 +10,7 @@ export default class ProofRepository {
   async uploadProof(bundleId) {
     const nodeAddress = this.identityManager.nodeAddress();
     const registryContract = this.contractManager.bundleProofRegistryContract();
-    await registryContract
+    return await registryContract
       .methods
       .addBundle(bundleId, nodeAddress)
       .send({
