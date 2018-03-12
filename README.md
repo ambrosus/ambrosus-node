@@ -45,4 +45,18 @@ To run node on production use:
 ```
 yarn start
 ```
-    
+
+## Running using Docker
+
+There is a docker-compose file prepared. It declares two services for our app and a mongod instance. To start:
+
+```
+docker-compose up -d
+```
+
+You will also have to create yourself an admin account in the app:
+
+```
+docker-compose exec ambnode yarn ops:admin:create
+```
+
