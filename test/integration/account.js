@@ -36,8 +36,10 @@ describe('Accounts - Integrations', async () => {
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send(createAccountRequest());
-      expect(account.body.content.address).to.be.properAddress;
-      expect(account.body.content.secret).to.be.properSecret;
+      expect(account.body.address).to.be.properAddress;
+      expect(account.body.secret).to.be.properSecret;
+      expect(account.body.permissions).to.be.deep.equal([]);
+      expect(account.body.createdBy).to.be.equal(adminAccountWithSecret.address);
       expect(account.status).to.eq(201);
     });
 
@@ -58,7 +60,7 @@ describe('Accounts - Integrations', async () => {
         .send(createAccountRequest({createdBy: nonExistingUser.address}));
       await expect(pendingRequest)
         .to.eventually.be.rejected
-        .and.have.property('status', 404);
+        .and.have.property('status', 403);
     });
 
     it('should fail to create account if session user and createdBy mismatch', async () => {
@@ -79,15 +81,19 @@ describe('Accounts - Integrations', async () => {
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send(createAccountRequest());
       const response = await apparatus.request()
-        .get(`/accounts/${account.body.content.address}`)
+        .get(`/accounts/${account.body.address}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send({});
-      expect(response.body.content.address).to.equal(account.body.content.address);
-      expect(response.body.content.secret).to.be.undefined;
+      expect(response.body.address).to.equal(account.body.address);
+      expect(response.body.secret).to.be.undefined;
+      expect(account.body.permissions).to.be.deep.equal([]);
+      expect(account.body.createdBy).to.be.equal(adminAccountWithSecret.address);
     });
 
     it('should return 404 code if non-existing account', async () => {
       const pendingRequest = apparatus.request()
         .get(`/accounts/0x1234567`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send({});
       await expect(pendingRequest)
         .to.eventually.be.rejected

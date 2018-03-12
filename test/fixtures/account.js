@@ -1,11 +1,7 @@
 const createAccountRequest = (fields) => ({
-  content: {
-    idData: {
-      createdBy: adminAccountWithSecret.address,
-      permissions: [],
-      ...fields
-    }
-  }
+  createdBy: adminAccountWithSecret.address,
+  permissions: [],
+  ...fields
 });
 
 const account = {

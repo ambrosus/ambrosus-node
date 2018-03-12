@@ -26,21 +26,27 @@ export default class DataModelEngine {
 
   async createAccount(accountRequest, tokenData) {
     this.accountAccessDefinitions.validateNewAccountRequest(accountRequest);
-    if (tokenData.createdBy.toLowerCase() !== accountRequest.idData.createdBy.toLowerCase()) {
+    if (tokenData.createdBy.toLowerCase() !== accountRequest.createdBy.toLowerCase()) {
       throw new AuthenticationError('Session user and createdBy mismatch.');
     }
-    const creatorAccount = await this.getAccount(accountRequest.idData.createdBy);
+    const creatorAccount = await this.getAccount(accountRequest.createdBy, tokenData);
+    
     this.accountAccessDefinitions.ensureHasPermission(creatorAccount, 'create_account');
     const account = this.identityManager.createKeyPair();
     const accountWithPermissions = {
       ...account,
-      permissions: accountRequest.idData.permissions
+      permissions: accountRequest.permissions,
+      createdBy : tokenData.createdBy
     };
     await this.accountRepository.store(accountWithPermissions);
-    return account;
+    return accountWithPermissions;
   }
 
-  async getAccount(address) {
+  async getAccount(address, tokenData) {
+    const sender = await this.accountRepository.get(tokenData.createdBy);
+    if (!sender) {
+      throw new PermissionError(`Sender account ${address} not found.`);
+    }
     const result = await this.accountRepository.get(address);
     if (!result) {
       throw new NotFoundError(`Account ${address} not found.`);

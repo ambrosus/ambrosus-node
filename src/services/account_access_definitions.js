@@ -22,8 +22,8 @@ export default class AccountAccessDefinitions {
 
   validateNewAccountRequest(account) {
     validatePathsNotEmpty(account, [
-      'idData',
-      'idData.createdBy'
+      'createdBy',
+      'permissions'
     ]);
   }
 }

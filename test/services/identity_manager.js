@@ -100,7 +100,7 @@ describe('Identity manager', () => {
   describe('Gets address from secret', () => {
     it('should get address from secret', () => {
       const address = identityManager.addressFromSecret(pkPair.secret);
-      expect(address).to.eq(pkPair.address.toLocaleLowerCase());
+      expect(address).to.eq(pkPair.address);
     });
 
     it('should throw if invalid secret', () => {
