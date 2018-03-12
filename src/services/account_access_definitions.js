@@ -17,7 +17,7 @@ export default class AccountAccessDefinitions {
   }
 
   defaultAdminPermissions() {
-    return ['change_account_permissions', 'create_account'];
+    return ['change_account_permissions', 'create_account', 'create_entity'];
   }
 
   validateNewAccountRequest(account) {

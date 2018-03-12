@@ -40,6 +40,11 @@ describe('Account Access Definitions', () => {
     expect(() => accountAccessDefinitions.ensureHasPermission(mockAccount, 'topsecret')).to.throw(PermissionError);
   });
 
+  it('defaultAdminPermissions returns correct list', async () => {
+    expect(accountAccessDefinitions.defaultAdminPermissions())
+      .to.deep.eq(['change_account_permissions', 'create_account', 'create_entity']);
+  });
+
   describe('validating account', () => {
     let account;
 
