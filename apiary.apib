@@ -487,7 +487,7 @@ Fetches an event by identifier
 
     + Body
     
-### /events{?assetId,fromTimestamp,toTimestamp,perPage,page}
+### /events{?assetId,fromTimestamp,toTimestamp,perPage,page,createdBy}
 
 #### Find events [GET]
 
@@ -500,6 +500,7 @@ Finds event satisfying provided cryteria.
     + toTimestamp : 1503424924 (integer, optional) - latest timestamp for the events
     + perPage : 150 (integer, optional) - number of events to return per page
     + page : 20 (integer, optional) - number of page (more search results than specified in perPage parameter concludes more than one page)
+    + createdBy : 0xc5cfd04.....30755ed65 (string, optional) - address of account that created targeting events
 
 + Response 200 (application/json)
 

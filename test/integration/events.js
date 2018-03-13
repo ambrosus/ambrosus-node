@@ -111,12 +111,13 @@ describe('Events - Integrations', () => {
   describe('finding events', () => {
     before(async () => {
       await scenario.injectAccount(adminAccountWithSecret);
+      await scenario.addAccount(0, ['create_entity']);
       await scenario.addAsset(0);
       await scenario.addAsset(0);
       await scenario.generateEvents(
         12,
         (inx) => ({
-          accountInx: 0,
+          accountInx: inx % 4 === 0 ? 1 : 0,
           subjectInx: inx % 3 === 0 ? 1 : 0,
           fields: {timestamp: inx},
           data: {}
@@ -182,6 +183,16 @@ describe('Events - Integrations', () => {
       body.results.forEach((element) => expect(element.content.idData.assetId).to.equal(targetAssetId));      
     });
 
+
+    it('with createdBy returns only events for target creator', async () => {
+      const targetCreatorAddress = scenario.accounts[1].address;
+      const response = await apparatus.request().get(`/events?createdBy=${targetCreatorAddress}`);
+      const {body} = response;
+
+      expect(body.results).to.have.lengthOf(3);
+      expect(body.resultCount).to.equal(3);
+      body.results.forEach((element) => expect(element.content.idData.createdBy).to.equal(targetCreatorAddress));
+    });
 
     it('with fromTimestamp returns only events newer than selected timestamp', async () => {
       const fromTimestamp = 5;
