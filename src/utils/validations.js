@@ -27,10 +27,10 @@ const validateIntegerParameterAndCast = (value, errorMsg) => {
   }
 };
 
-const assert = (value, errorMsg = '') => {
-  if (!value) {
+const validateNonNegativeInteger = (value, errorMsg = '') => {
+  if (!Number.isInteger(value) || value < 0) {
     throw new ValidationError(errorMsg);
   }
 };
 
-export {validatePathsNotEmpty, validateFieldsConstrainedToSet, validateIntegerParameterAndCast, assert};
+export {validatePathsNotEmpty, validateFieldsConstrainedToSet, validateIntegerParameterAndCast, validateNonNegativeInteger};

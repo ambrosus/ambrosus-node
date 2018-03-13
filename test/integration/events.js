@@ -127,7 +127,8 @@ describe('Events - Integrations', () => {
 
     it('with perPage returns only requested number of newest (by timestamp) events', async () => {
       const perPage = 4;
-      const response = await apparatus.request().get(`/events?perPage=${perPage}`);
+      const response = await apparatus.request().get(`/events?perPage=${perPage}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`);
       const {body} = response;
 
       expect(body.results).to.have.lengthOf(perPage);
@@ -139,17 +140,19 @@ describe('Events - Integrations', () => {
     it('with page and perPage returns events from selected page', async () => {
       const perPage = 4;
       const page = 2;
-      const response = await apparatus.request().get(`/events?perPage=${perPage}&page=${page}`);
+      const response = await apparatus.request().get(`/events?perPage=${perPage}&page=${page}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`);
       const {body} = response;
 
       expect(body.results).to.have.lengthOf(perPage);
       expect(body.resultCount).to.equal(12);
-      expect(body.results).to.deep.equal([scenario.events[0], scenario.events[1], scenario.events[2], scenario.events[3]].reverse());
+      expect(body.results).to.deep.equal(scenario.events.slice(0, 4).reverse());
     });
 
     it('with assetId returns only events for target asset (default syntax)', async () => {
       const targetAssetId = scenario.assets[0].assetId;
-      const response = await apparatus.request().get(`/events?assetId=${targetAssetId}`);
+      const response = await apparatus.request().get(`/events?assetId=${targetAssetId}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`);
       const {body} = response;
 
       expect(body.results).to.have.lengthOf(8);
@@ -160,7 +163,9 @@ describe('Events - Integrations', () => {
     
     it('alias syntax for assetId search returns only events for target asset', async () => {
       const targetAssetId = scenario.assets[0].assetId;
-      const response = await apparatus.request().get(`/assets/${targetAssetId}/events`);
+      const response = await apparatus.request()
+        .get(`/assets/${targetAssetId}/events`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`);
       const {body} = response;
 
       expect(body.results).to.have.lengthOf(8);
@@ -174,7 +179,9 @@ describe('Events - Integrations', () => {
       const toTimestamp = 10;
       const perPage = 4;
       const page = 1;
-      const response = await apparatus.request().get(`/assets/${targetAssetId}/events?fromTimestamp=${fromTimestamp}&toTimestamp=${toTimestamp}&perPage=${perPage}&page=${page}`);
+      const response = await apparatus.request()
+        .get(`/assets/${targetAssetId}/events?fromTimestamp=${fromTimestamp}&toTimestamp=${toTimestamp}&perPage=${perPage}&page=${page}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`);
       const {body} = response;
 
       expect(body.results).to.have.lengthOf(2);
@@ -186,7 +193,9 @@ describe('Events - Integrations', () => {
 
     it('with createdBy returns only events for target creator', async () => {
       const targetCreatorAddress = scenario.accounts[1].address;
-      const response = await apparatus.request().get(`/events?createdBy=${targetCreatorAddress}`);
+      const response = await apparatus.request()
+        .get(`/events?createdBy=${targetCreatorAddress}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`);
       const {body} = response;
 
       expect(body.results).to.have.lengthOf(3);
@@ -196,7 +205,8 @@ describe('Events - Integrations', () => {
 
     it('with fromTimestamp returns only events newer than selected timestamp', async () => {
       const fromTimestamp = 5;
-      const response = await apparatus.request().get(`/events?fromTimestamp=${fromTimestamp}`);
+      const response = await apparatus.request().get(`/events?fromTimestamp=${fromTimestamp}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`);
       const {body} = response;
 
       expect(body.results).to.have.lengthOf(7);
@@ -206,7 +216,8 @@ describe('Events - Integrations', () => {
 
     it('with toTimestamp returns only events older than selected timestamp', async () => {
       const toTimestamp = 5;
-      const response = await apparatus.request().get(`/events?toTimestamp=${toTimestamp}`);
+      const response = await apparatus.request().get(`/events?toTimestamp=${toTimestamp}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`);
       const {body} = response;
 
       expect(body.results).to.have.lengthOf(6);
@@ -218,7 +229,8 @@ describe('Events - Integrations', () => {
       const fromTimestamp = 2;
       const toTimestamp = 10;
       const response = await apparatus.request()
-        .get(`/events?fromTimestamp=${fromTimestamp}&toTimestamp=${toTimestamp}`);
+        .get(`/events?fromTimestamp=${fromTimestamp}&toTimestamp=${toTimestamp}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`);
       const {body} = response;
 
       expect(body.results).to.have.lengthOf(9);
@@ -231,7 +243,9 @@ describe('Events - Integrations', () => {
       const toTimestamp = 10;
       const perPage = 4;
       const page = 1;
-      const response = await apparatus.request().get(`/events?fromTimestamp=${fromTimestamp}&toTimestamp=${toTimestamp}&perPage=${perPage}&page=${page}`);
+      const response = await apparatus.request()
+        .get(`/events?fromTimestamp=${fromTimestamp}&toTimestamp=${toTimestamp}&perPage=${perPage}&page=${page}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`);
       const {body} = response;
 
       expect(body.results).to.have.lengthOf(4);

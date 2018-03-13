@@ -4,7 +4,7 @@ import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import AccountAccessDefinitions from '../../src/services/account_access_definitions';
-import {PermissionError, ValidationError, InvalidParametersError} from '../../src/errors/errors';
+import {PermissionError, ValidationError} from '../../src/errors/errors';
 import {account, addAccountRequest} from '../fixtures/account';
 import {pick, put} from '../../src/utils/dict_utils';
 
@@ -19,6 +19,7 @@ describe('Account Access Definitions', () => {
     permissions
   };
   let mockIdentityManager = null;
+  let mockAccountRepository;
   let accountAccessDefinitions;
 
   before(() => {
@@ -26,7 +27,14 @@ describe('Account Access Definitions', () => {
       validateSignature: sinon.stub(),
       sign: sinon.stub()
     };
-    accountAccessDefinitions = new AccountAccessDefinitions(mockIdentityManager);
+    mockAccountRepository = {
+      get: sinon.stub()
+    };
+    accountAccessDefinitions = new AccountAccessDefinitions(mockIdentityManager, mockAccountRepository);
+  });
+
+  beforeEach(() => {
+    mockAccountRepository.get.resolves(mockAccount);
   });
 
   it('hasPermission returns true only if an account has permission', () => {
@@ -35,9 +43,22 @@ describe('Account Access Definitions', () => {
     expect(accountAccessDefinitions.hasPermission(mockAccount, 'topsecret')).to.eq(false);
   });
 
-  it('ensurePermission throws PermissionError when account has no permission', () => {
-    expect(() => accountAccessDefinitions.ensureHasPermission(mockAccount, permissions[0])).to.not.throw();
-    expect(() => accountAccessDefinitions.ensureHasPermission(mockAccount, 'topsecret')).to.throw(PermissionError);
+  it('ensurePermission asks accountRepository for acocunt', async () => {
+    await accountAccessDefinitions.ensureHasPermission(mockAccount.address, permissions[0]);
+    expect(mockAccountRepository.get).to.be.calledWith(mockAccount.address);
+  });
+
+  it('ensurePermission throws PermissionError when account has no permission', async () => {
+    await expect(accountAccessDefinitions.ensureHasPermission(mockAccount.address, permissions[0]))
+      .to.be.fulfilled;
+    await expect(accountAccessDefinitions.ensureHasPermission(mockAccount.address, 'topsecret'))
+      .to.be.rejectedWith(PermissionError);
+  });
+
+  it('ensurePermission throws PermissionError when account with this address not found', async () => {
+    mockAccountRepository.get.resolves(null);
+    await expect(accountAccessDefinitions.ensureHasPermission(mockAccount.address, permissions[0]))
+      .to.be.rejectedWith(PermissionError);
   });
 
   it('defaultAdminPermissions returns correct list', async () => {
@@ -80,12 +101,14 @@ describe('Account Access Definitions', () => {
   describe('validating account modification', () => {
     it(`throws if surplus parameters are passed`, () => {
       const notSupportedParams = {permissions : ['param1', 'param2'], extraParam : 'extraValue'};
-      expect(() => accountAccessDefinitions.validateModifyAccountRequest(notSupportedParams)).to.throw(InvalidParametersError);
+      expect(() => accountAccessDefinitions.validateModifyAccountRequest(notSupportedParams)).to.throw(ValidationError);
     });
 
     it(`throws if any parameters is invalid`, () => {
-      const invalidParams = {permissions : 'notArrayPermission'};
-      expect(() => accountAccessDefinitions.validateModifyAccountRequest(invalidParams)).to.throw(InvalidParametersError);
+      const invalidParams1 = {permissions : 'notArrayPermission'};
+      const invalidParams2 = {accessLevel: -5};
+      expect(() => accountAccessDefinitions.validateModifyAccountRequest(invalidParams1)).to.throw(ValidationError);
+      expect(() => accountAccessDefinitions.validateModifyAccountRequest(invalidParams2)).to.throw(ValidationError);
     });
   });
 });

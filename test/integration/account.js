@@ -96,6 +96,7 @@ describe('Accounts - Integrations', async () => {
   describe('Modify an account', () => {
     let storedAccount;
     const changedPermissions = ['perm1', 'perm2', 'perm3'];
+    const accessLevel = 4;
     let modifyRequest;
 
     beforeEach(async () => {
@@ -103,7 +104,7 @@ describe('Accounts - Integrations', async () => {
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send(addAccountRequest());
-      modifyRequest = {permissions : changedPermissions};
+      modifyRequest = {permissions : changedPermissions, accessLevel};
     });
 
     it('should modify the targeted account', async () => {
@@ -114,6 +115,7 @@ describe('Accounts - Integrations', async () => {
       expect(modifiedAccount.body.address).to.equal(storedAccount.body.address);
       expect(modifiedAccount.body.secret).to.be.undefined;
       expect(modifiedAccount.body.permissions).to.be.deep.equal(changedPermissions);
+      expect(modifiedAccount.body.accessLevel).to.be.equal(accessLevel);
       expect(modifiedAccount.body.registeredBy).to.be.equal(adminAccountWithSecret.address);
     });
 

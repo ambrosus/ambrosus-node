@@ -18,8 +18,8 @@ export default class Server {
     const app = express();
 
     app.use('/accounts', accountsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine));  
-    app.use('/assets', assetsRouter(this.modelEngine.identityManager, this.modelEngine));
-    app.use('/events', eventsRouter(this.modelEngine.identityManager, this.modelEngine));
+    app.use('/assets', assetsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine));
+    app.use('/events', eventsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine));
     app.use('/token', tokenRouter(this.modelEngine.tokenAuthenticator));
     app.use('/bundle', bundlesRouter(this.modelEngine));
 

@@ -227,7 +227,6 @@ describe('Data Model Engine', () => {
   describe('Creating an asset', () => {
     let mockEntityBuilder;
     let mockEntityRepository;
-    let mockAccountRepository;
     let mockAccountAccessDefinitions;
     let modelEngine;
 
@@ -239,24 +238,20 @@ describe('Data Model Engine', () => {
       mockEntityRepository = {
         storeAsset: sinon.stub()
       };
-      mockAccountRepository = {
-        get: sinon.stub()
-      };
       mockAccountAccessDefinitions = {
         ensureHasPermission: sinon.stub()
       };
 
-      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository,{}, mockAccountRepository, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository,{}, {}, mockAccountAccessDefinitions);
     });
 
     const restoreDefaultBehaviour = () => {
-      resetHistory(mockEntityBuilder, mockEntityRepository, mockAccountRepository);
+      resetHistory(mockEntityBuilder, mockEntityRepository);
 
       mockEntityBuilder.validateAsset.returns();
       mockEntityBuilder.setBundle.returns(mockAsset);
       mockEntityRepository.storeAsset.resolves();
-      mockAccountRepository.get.resolves(accountWithSecret);
-      mockAccountAccessDefinitions.ensureHasPermission.returns();
+      mockAccountAccessDefinitions.ensureHasPermission.resolves();
     };
 
     describe('positive case', () => {
@@ -269,14 +264,9 @@ describe('Data Model Engine', () => {
         expect(mockEntityBuilder.validateAsset).to.have.been.calledWith(mockAsset);
       });
 
-      it('checks if creator address is registered', () => {
-        expect(mockAccountRepository.get).to.have.been.calledWith(mockAsset.content.idData.createdBy);
-        expect(mockAccountRepository.get).to.have.been.calledOnce;
-      });
-
       it('checks if creator has required permission', async () => {
         expect(mockAccountAccessDefinitions.ensureHasPermission)
-          .to.have.been.calledWith(accountWithSecret, 'create_entity');
+          .to.have.been.calledWith(mockAsset.content.idData.createdBy, 'create_entity');
       });
 
       it('sets the bundle to be null', () => {
@@ -291,11 +281,6 @@ describe('Data Model Engine', () => {
     describe('negative case', () => {
       beforeEach(() => {
         restoreDefaultBehaviour();
-      });
-
-      it('throws if creator address is not registered', async () => {
-        mockAccountRepository.get.resolves(null);
-        await expect(modelEngine.createAsset(mockAsset)).to.be.rejectedWith(PermissionError);
       });
 
       it('throws if creator has no permission for adding assets', async () => {
@@ -347,7 +332,6 @@ describe('Data Model Engine', () => {
   describe('Creating an event', () => {
     let mockEntityBuilder;
     let mockEntityRepository;
-    let mockAccountRepository;
     let mockAccountAccessDefinitions;
     let modelEngine;
 
@@ -360,25 +344,21 @@ describe('Data Model Engine', () => {
         storeEvent: sinon.stub(),
         getAsset: sinon.stub()
       };
-      mockAccountRepository = {
-        get: sinon.stub()
-      };
       mockAccountAccessDefinitions = {
         ensureHasPermission: sinon.stub()
       };
 
-      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository,{}, mockAccountRepository, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository,{}, {}, mockAccountAccessDefinitions);
     });
 
     const restoreDefaultBehaviour = () => {
-      resetHistory(mockEntityBuilder, mockEntityRepository, mockAccountRepository);
+      resetHistory(mockEntityBuilder, mockEntityRepository);
 
       mockEntityBuilder.validateEvent.returns();
       mockEntityBuilder.setBundle.returns(mockEvent);
       mockEntityRepository.storeEvent.resolves();
       mockEntityRepository.getAsset.resolves(mockAsset);
-      mockAccountRepository.get.resolves(accountWithSecret);
-      mockAccountAccessDefinitions.ensureHasPermission.returns();
+      mockAccountAccessDefinitions.ensureHasPermission.resolves();
     };
 
     describe('positive case', () => {
@@ -391,14 +371,9 @@ describe('Data Model Engine', () => {
         expect(mockEntityBuilder.validateEvent).to.have.been.calledWith(mockEvent);
       });
 
-      it('checks if creator address is registered', () => {
-        expect(mockAccountRepository.get).to.have.been.calledWith(mockEvent.content.idData.createdBy);
-        expect(mockAccountRepository.get).to.have.been.calledOnce;
-      });
-
       it('checks if creator has required permission', async () => {
         expect(mockAccountAccessDefinitions.ensureHasPermission)
-          .to.have.been.calledWith(accountWithSecret, 'create_entity');
+          .to.have.been.calledWith(mockEvent.content.idData.createdBy, 'create_entity');
       });
 
       it('checks if target asset exists', () => {
@@ -417,11 +392,6 @@ describe('Data Model Engine', () => {
     describe('negative', () => {
       beforeEach(() => {
         restoreDefaultBehaviour();
-      });
-
-      it('throws if creator address is not registered', async () => {
-        mockAccountRepository.get.resolves(null);
-        await expect(modelEngine.createEvent(mockEvent)).to.be.rejectedWith(PermissionError);
       });
 
       it('throws if creator has no required permission', async () => {
@@ -446,41 +416,60 @@ describe('Data Model Engine', () => {
 
   describe('Getting an event by id', () => {
     let mockEntityRepository;
+    let mockAccountRepository;
     let modelEngine;
     const exampleEventId = '0x123';
+    const accessLevel = 4;
+    const mockToken = createTokenFor({createdBy: accountWithSecret.address});
 
     before(() => {
       mockEntityRepository = {
         getEvent: sinon.stub()
       };
-
-      modelEngine = new DataModelEngine({}, {}, {}, mockEntityRepository, {}, {}, {}, {});
+      mockAccountRepository = {
+        get: sinon.stub()
+      };
+      modelEngine = new DataModelEngine({}, {}, {}, mockEntityRepository, {}, mockAccountRepository, {});
     });
 
     beforeEach(() => {
-      resetHistory(mockEntityRepository);
+      resetHistory(mockEntityRepository, mockAccountRepository);
+      mockEntityRepository.getEvent.resolves(mockEvent);
+      mockAccountRepository.get.resolves({...accountWithSecret, accessLevel});
     });
 
     it('asks the repository for the event', async () => {
-      mockEntityRepository.getEvent.resolves(mockEvent);
+      const event = await modelEngine.getEvent(exampleEventId, mockToken);
 
-      const event = await modelEngine.getEvent(exampleEventId);
-
-      expect(mockEntityRepository.getEvent).to.have.been.calledWith(exampleEventId);
+      expect(mockEntityRepository.getEvent).to.have.been.calledWith(exampleEventId, accessLevel);
       expect(event).to.deep.equal(mockEvent);
+    });
+
+    it('assumes access level = 0 when no token provided', async () => {
+      await modelEngine.getEvent(exampleEventId);
+      expect(mockEntityRepository.getEvent).to.have.been.calledWith(exampleEventId, 0);
+    });
+
+    it('assumes access level = 0 when user not registered', async () => {
+      mockAccountRepository.get.resolves(null);
+      await modelEngine.getEvent(exampleEventId, mockToken);
+      expect(mockEntityRepository.getEvent).to.have.been.calledWith(exampleEventId, 0);
     });
 
     it('throws if event not found', async () => {
       mockEntityRepository.getEvent.resolves(null);
 
-      await expect(modelEngine.getEvent(exampleEventId)).to.be.rejectedWith(NotFoundError);
+      await expect(modelEngine.getEvent(exampleEventId, mockToken)).to.be.rejectedWith(NotFoundError);
     });
   });
 
   describe('Finding events', () => {
     let mockEntityRepository;
+    let mockAccountRepository;
     let mockEntityBuilder;
     let modelEngine;
+    const accessLevel = 4;
+    const mockToken = createTokenFor({createdBy: accountWithSecret.address});
 
     let scenario;
     let eventSet;
@@ -498,6 +487,11 @@ describe('Data Model Engine', () => {
         validateAndCastFindEventsParams: sinon.stub()
       };
 
+      mockAccountRepository = {
+        get: sinon.stub()
+      };
+
+
       scenario = new ScenarioBuilder(identityManager);
       await scenario.injectAccount(adminAccountWithSecret);
       await scenario.addAsset(0);
@@ -506,10 +500,11 @@ describe('Data Model Engine', () => {
       ];
       mockEntityRepository.findEvents.resolves({results: eventSet, resultCount: 165});
       mockEntityBuilder.validateAndCastFindEventsParams.returns(mockParams2);
+      mockAccountRepository.get.resolves({...accountWithSecret, accessLevel});
 
-      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository, {}, {}, {}, {});
+      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository, {}, mockAccountRepository, {});
 
-      ret = await expect(modelEngine.findEvents(mockParams)).to.fulfilled;
+      ret = await expect(modelEngine.findEvents(mockParams, mockToken)).to.fulfilled;
     });
 
     it('asks the entity builder for parameters validation', () => {
@@ -517,12 +512,23 @@ describe('Data Model Engine', () => {
     });
 
     it('asks the entity repository for the events', async () => {
-      expect(mockEntityRepository.findEvents).to.have.been.calledWith(mockParams2);
+      expect(mockEntityRepository.findEvents).to.have.been.calledWith(mockParams2, accessLevel);
     });
 
     it('properly assembles the result', () => {
       expect(ret.results).to.equal(eventSet);
       expect(ret.resultCount).to.equal(165);
+    });
+
+    it('assumes access level = 0 when no token provided', async () => {
+      await modelEngine.findEvents(mockParams);
+      expect(mockEntityRepository.findEvents).to.have.been.calledWith(mockParams2, 0);
+    });
+
+    it('assumes access level = 0 when user not registered', async () => {
+      mockAccountRepository.get.resolves(null);
+      await modelEngine.findEvents(mockParams);
+      expect(mockEntityRepository.findEvents).to.have.been.calledWith(mockParams2, 0);
     });
 
     it('throws InvalidParametersError when parameter validation is not successful', async () => {

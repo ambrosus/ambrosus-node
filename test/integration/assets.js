@@ -4,8 +4,8 @@ import chaiAsPromised from 'chai-as-promised';
 import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
 import chaiHttp from 'chai-http';
 
-import {pick, get} from '../../src/utils/dict_utils';
-import {createFullAsset, createFullEvent} from '../fixtures/assets_events';
+import {pick} from '../../src/utils/dict_utils';
+import {createFullAsset} from '../fixtures/assets_events';
 import pkPair from '../fixtures/pk_pair';
 import {adminAccountWithSecret, notRegisteredAccount, accountWithSecret} from '../fixtures/account';
 import ScenarioBuilder from '../fixtures/scenario_builder';
@@ -130,13 +130,15 @@ describe('Assets - Integrations', () => {
 
     it('works for existing event', async () => {
       const response = await apparatus.request()
-        .get(`/assets/${asset.assetId}/events/${event.eventId}`);
+        .get(`/assets/${asset.assetId}/events/${event.eventId}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`);
       expect(response.body).to.deep.equal(event);
     });
 
     it('should return 404 if asset with that id doesn\'t exist', async () => {
       const request = apparatus.request()
-        .get(`/assets/${asset.assetId}/events/nonexistingEvent`);
+        .get(`/assets/${asset.assetId}/events/nonexistingEvent`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`);
       await expect(request).to.eventually.be.rejected
         .and.have.property('status', 404);
     });

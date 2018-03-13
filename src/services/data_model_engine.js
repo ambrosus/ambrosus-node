@@ -25,10 +25,8 @@ export default class DataModelEngine {
   }
 
   async addAccount(accountRequest, tokenData) {
-    const registratorAccount = await this.getAccount(tokenData.createdBy, tokenData);
-    this.accountAccessDefinitions.ensureHasPermission(registratorAccount, 'register_account');
-
     this.accountAccessDefinitions.validateAddAccountRequest(accountRequest);
+    await this.accountAccessDefinitions.ensureHasPermission(accountRequest.createdBy, 'create_account');
 
     const accountToStore = {
       address: accountRequest.address,
@@ -38,6 +36,17 @@ export default class DataModelEngine {
     };
     await this.accountRepository.store(accountToStore);
     return accountToStore;
+  }
+
+  async getTokenCreatorAccessLevel(tokenData) {
+    if (!tokenData) {
+      return 0;
+    }
+    const creatorAccount = await this.accountRepository.get(tokenData.createdBy);
+    if (creatorAccount === null) {
+      return 0;
+    }
+    return creatorAccount.accessLevel;
   }
 
   async getAccount(address, tokenData) {
@@ -53,8 +62,7 @@ export default class DataModelEngine {
   }
 
   async modifyAccount(accountToChange, accountRequest, tokenData) {
-    const modifierAccount = await this.getAccount(tokenData.createdBy, tokenData);
-    this.accountAccessDefinitions.ensureHasPermission(modifierAccount, 'register_account');
+    await this.accountAccessDefinitions.ensureHasPermission(tokenData.createdBy, 'register_account');
     this.accountAccessDefinitions.validateModifyAccountRequest(accountRequest);
     await this.getAccount(accountToChange, tokenData);
     return await this.accountRepository.update(accountToChange, accountRequest);
@@ -64,11 +72,7 @@ export default class DataModelEngine {
     this.entityBuilder.validateAsset(asset);
     const {createdBy: creatorAddress} = asset.content.idData;
 
-    const creatorAccount = await this.accountRepository.get(creatorAddress);
-    if (creatorAccount === null) {
-      throw new PermissionError(`Address ${creatorAddress} doesn't exist`);
-    }
-    this.accountAccessDefinitions.ensureHasPermission(creatorAccount, 'create_entity');
+    await this.accountAccessDefinitions.ensureHasPermission(creatorAddress, 'create_entity');
 
     const augmentedAsset = this.entityBuilder.setBundle(asset, null);
     await this.entityRepository.storeAsset(augmentedAsset);
@@ -88,11 +92,7 @@ export default class DataModelEngine {
     this.entityBuilder.validateEvent(event);
     const {createdBy: creatorAddress, assetId} = event.content.idData;
 
-    const creatorAccount = await this.accountRepository.get(creatorAddress);
-    if (creatorAccount === null) {
-      throw new PermissionError(`Address ${creatorAddress} doesn't exist`);
-    }
-    this.accountAccessDefinitions.ensureHasPermission(creatorAccount, 'create_entity');
+    await this.accountAccessDefinitions.ensureHasPermission(creatorAddress, 'create_entity');
 
     if (await this.entityRepository.getAsset(assetId) === null) {
       throw new InvalidParametersError(`Target asset with id=${assetId} doesn't exist`);
@@ -104,17 +104,19 @@ export default class DataModelEngine {
     return augmentedEvent;
   }
 
-  async getEvent(eventId) {
-    const event = await this.entityRepository.getEvent(eventId);
+  async getEvent(eventId, tokenData) {
+    const accessLevel = await this.getTokenCreatorAccessLevel(tokenData);
+    const event = await this.entityRepository.getEvent(eventId, accessLevel);
     if (event === null) {
       throw new NotFoundError(`No event with id = ${eventId} found`);
     }
     return event;
   }
 
-  async findEvents(params) {
+  async findEvents(params, tokenData) {
     const validatedParams = this.entityBuilder.validateAndCastFindEventsParams(params);
-    return this.entityRepository.findEvents(validatedParams);
+    const accessLevel = await this.getTokenCreatorAccessLevel(tokenData);
+    return this.entityRepository.findEvents(validatedParams, accessLevel);
   }
 
   async getBundle(bundleId) {

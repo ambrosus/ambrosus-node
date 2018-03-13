@@ -20,7 +20,7 @@ export default async function build() {
   const entityRepository = new EntityStorage(db);
   const proofRepository = new ProofRepository(web3, contractManager, identityManager);
   const accountRepository = new AccountRepository(db);
-  const accountAccessDefinitions = new AccountAccessDefinitions(identityManager);
+  const accountAccessDefinitions = new AccountAccessDefinitions(identityManager, accountRepository);
   const dataModelEngine = new DataModelEngine(
     identityManager, 
     tokenAuthenticator, 

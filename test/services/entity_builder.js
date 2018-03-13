@@ -99,14 +99,14 @@ describe('Entity Builder', () => {
           const brokenEvent = pick(exampleEvent, field);
           expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
         });
-
-        it('throws if accessLevel not positive integer', async () => {
-          let brokenEvent = put('content.idData.accessLevel', exampleEvent, 1.1);
-          expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
-          brokenEvent = put('content.idData.accessLevel', exampleEvent, -1);
-          expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
-        });
       }
+
+      it('throws if accessLevel not positive integer', () => {
+        let brokenEvent = put('content.idData.accessLevel', exampleEvent, 1.1);
+        expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
+        brokenEvent = put('content.idData.accessLevel', exampleEvent, -1);
+        expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
+      });
 
       it('uses the IdentityManager for checking signature (correct)', () => {
         expect(() => entityBuilder.validateEvent(exampleEvent)).to.not.throw();

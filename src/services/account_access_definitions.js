@@ -1,12 +1,17 @@
-import {assert, validatePathsNotEmpty, validateFieldsConstrainedToSet} from '../utils/validations';
-import {PermissionError, InvalidParametersError} from '../errors/errors';
+import {validateFieldsConstrainedToSet, validateNonNegativeInteger, validatePathsNotEmpty, validateFieldsConstrainedToSet} from '../utils/validations';
+import {PermissionError, ValidationError} from '../errors/errors';
 
 export default class AccountAccessDefinitions {
-  constructor(identityManager) {
+  constructor(identityManager, accountRepository) {
     this.identityManager = identityManager;
+    this.accountRepository = accountRepository;
   }
 
-  ensureHasPermission(account, permissionName) {
+  async ensureHasPermission(address, permissionName) {
+    const account = await this.accountRepository.get(address);
+    if (account === null) {
+      throw new PermissionError(`Address ${account} doesn't exist`);
+    }
     if (!this.hasPermission(account, permissionName)) {
       throw new PermissionError(`${account.address} has no '${permissionName}' permission`);
     }
@@ -27,16 +32,17 @@ export default class AccountAccessDefinitions {
     ];
     validatePathsNotEmpty(account, registrationFields);
     validateFieldsConstrainedToSet(account, registrationFields);
+    validateNonNegativeInteger(account.accessLevel, 'AccessLevel should be a not negative integer');
   }
 
   validateModifyAccountRequest(params) {
-    const allowedParametersList = ['permissions'];
-    const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
-    if (invalidFields.length > 0) {
-      throw new InvalidParametersError(`Some parameters (${invalidFields.join(',')}) are not supported`);
+    const allowedParametersList = ['permissions', 'accessLevel'];
+    validateFieldsConstrainedToSet(params, allowedParametersList);
+    if (params.accessLevel) {
+      validateNonNegativeInteger(params.accessLevel, 'Access level should be a non-negative integer');
     }
     if (params.permissions && !Array.isArray(params.permissions)) {
-      throw new InvalidParametersError(`Invalid permissions parameter value`);
+      throw new ValidationError(`Invalid permissions parameter value`);
     }
   }
 }

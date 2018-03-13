@@ -1,7 +1,7 @@
 import chai from 'chai';
 import {
   validatePathsNotEmpty, validateFieldsConstrainedToSet, validateIntegerParameterAndCast,
-  assert
+  validateNonNegativeInteger
 } from '../../src/utils/validations';
 import {ValidationError, InvalidParametersError} from '../../src/errors/errors';
 
@@ -57,10 +57,17 @@ describe('validation', () => {
     });
   });
 
-  describe('assert', () => {
-    it('throws if false provided', async () => {
-      expect(() => assert(true)).to.not.throw;
-      expect(() => assert(false)).to.throw(ValidationError);
+  describe('validateNonNegativeInteger', () => {
+    it('throws if not integer provided', async () => {
+      expect(() => validateNonNegativeInteger(1)).to.not.throw;
+      expect(() => validateNonNegativeInteger(1.5)).to.throw(ValidationError);
+      expect(() => validateNonNegativeInteger('1')).to.throw(ValidationError);
+      expect(() => validateNonNegativeInteger([1])).to.throw(ValidationError);
+    });
+
+    it('throws if negative integer provided', async () => {
+      expect(() => validateNonNegativeInteger(0)).to.not.throw;
+      expect(() => validateNonNegativeInteger(-1)).to.throw(ValidationError);
     });
   });
 });

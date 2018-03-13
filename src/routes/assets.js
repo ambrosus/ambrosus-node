@@ -6,6 +6,7 @@ import prehasherMiddleware from '../middlewares/prehasher_middleware';
 
 import {ValidationError} from '../errors/errors';
 import ambAuthorizationHeaderMiddleware from '../middlewares/amb_authorization_header_middleware';
+import accessTokenMiddleware from '../middlewares/access_token_middleware';
 
 export const createAssetHandler = (modelEngine) => async (req, res) => {
   const createdAsset = await modelEngine.createAsset(req.body);
@@ -36,7 +37,7 @@ export const createEventHandler = (modelEngine) => async (req, res) => {
 };
 
 export const fetchEventHandler = (modelEngine) => async (req, res) => {
-  const event = await modelEngine.getEvent(req.params.eventId);
+  const event = await modelEngine.getEvent(req.params.eventId, req.tokenData);
   res.status(200)
     .type('json')
     .send(JSON.stringify(event));
@@ -44,7 +45,7 @@ export const fetchEventHandler = (modelEngine) => async (req, res) => {
 
 export const findEventsPerAssetHandler = (modelEngine) => async (req, res) => {
   const queryParams = {...req.query, assetId: req.params.assetId};
-  const {results, resultCount} = await modelEngine.findEvents(queryParams);
+  const {results, resultCount} = await modelEngine.findEvents(queryParams, req.tokenData);
   res.status(200)
     .type('json')
     .send(JSON.stringify({
@@ -53,7 +54,7 @@ export const findEventsPerAssetHandler = (modelEngine) => async (req, res) => {
     }));
 };
 
-const assetRouter = (identityManager, modelEngine) => {
+const assetRouter = (tokenAuthenticator, identityManager, modelEngine) => {
   const router = new express.Router();
 
   router.post('/',
@@ -78,10 +79,12 @@ const assetRouter = (identityManager, modelEngine) => {
   );
 
   router.get('/:assetId/events/:eventId',
+    accessTokenMiddleware(tokenAuthenticator),
     asyncMiddleware(fetchEventHandler(modelEngine))
   );
 
   router.get('/:assetId/events/',
+    accessTokenMiddleware(tokenAuthenticator),
     asyncMiddleware(findEventsPerAssetHandler(modelEngine))
   );
 
