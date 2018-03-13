@@ -37,8 +37,9 @@ export default (tokenAuthenticator, dataModelEngine) => {
     asyncMiddleware(getAccountHandler(dataModelEngine)));
 
   router.put('/',
+    bodyParser.json(),  
     accessTokenMiddleware(tokenAuthenticator),
-    asyncMiddleware(getAccountHandler(dataModelEngine)));
+    asyncMiddleware(modifyAccountHandler(dataModelEngine)));
 
 
   return router;
