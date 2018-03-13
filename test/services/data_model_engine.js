@@ -175,6 +175,26 @@ describe('Data Model Engine', () => {
     });
   });
 
+  describe.skip('Modify account', () => {
+    before(() => {
+    });
+
+    beforeEach(() => {
+    });
+
+    it('delegates to accountRepository', async () => {
+    });
+
+    it('throws PermissionError if non-existing sender', async () => {
+    });
+
+    it('throws PermissionError if account misses required permissions', async () => {
+    });
+
+    it('throws NotFoundError if modification of non-existing account requested', async () => {
+    });
+  });
+
   describe('Creating an asset', () => {
     let mockEntityBuilder;
     let mockEntityRepository;

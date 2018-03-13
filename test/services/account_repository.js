@@ -25,6 +25,21 @@ describe('Account Repository', () => {
     expect(result).to.deep.equal(accountToReceive);
   });
 
+  it('account modification in database', async () => {
+    const additionalFields = {createdBy : '0x123', permissions : ['perm1', 'perm2']};
+    const accountToStore = put(accountWithSecret, additionalFields);
+
+    const changedPermissions = {permissions : ['perm100', 'perm200']};
+    const accountToUpdate = put(account, changedPermissions);
+
+    const accountToReceive = put(accountToUpdate, 'createdBy', '0x123');
+
+    await accountStore.store(accountToStore);
+    await accountStore.update(accountToUpdate);
+    const result = await accountStore.get(accountToStore.address);
+    expect(result).to.deep.equal(accountToReceive);
+  });
+
   afterEach(async () => {
     await cleanDatabase(db);
   });

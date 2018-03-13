@@ -17,6 +17,13 @@ export const getAccountHandler = (dataModelEngine) => async (req, res) => {
     .send(JSON.stringify(content));
 };
 
+export const modifyAccountHandler = (dataModelEngine) => async (req, res) => {
+  const content = await dataModelEngine.modifyAccount(req.body, req.tokenData);
+  res.status(200)
+    .type('json')
+    .send(JSON.stringify(content));
+};
+
 export default (tokenAuthenticator, dataModelEngine) => {
   const router = new express.Router();
 
@@ -28,6 +35,12 @@ export default (tokenAuthenticator, dataModelEngine) => {
   router.get('/:id',
     accessTokenMiddleware(tokenAuthenticator),
     asyncMiddleware(getAccountHandler(dataModelEngine)));
+
+  router.put('/',
+    accessTokenMiddleware(tokenAuthenticator),
+    asyncMiddleware(getAccountHandler(dataModelEngine)));
+
+
   return router;
 };
 

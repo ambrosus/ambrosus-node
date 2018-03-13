@@ -54,6 +54,18 @@ export default class DataModelEngine {
     return result;
   }
 
+  async modifyAccount(accountRequest, tokenData) {
+    const modifierAccount = await this.getAccount(tokenData.createdBy, tokenData);
+    this.accountAccessDefinitions.ensureHasPermission(modifierAccount, 'create_account');
+    const account = await this.getAccount(accountRequest.address, tokenData);
+    const modifiedAccount = {
+      ...account,
+      permissions: accountRequest.permissions
+    };
+    await this.accountRepository.update(modifiedAccount);
+    return modifiedAccount;
+  }
+
   async createAsset(asset) {
     this.entityBuilder.validateAsset(asset);
     const {createdBy: creatorAddress} = asset.content.idData;
