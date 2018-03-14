@@ -1,5 +1,5 @@
 import {validatePathsNotEmpty} from '../utils/validations';
-import {PermissionError} from '../errors/errors';
+import {PermissionError, InvalidParametersError} from '../errors/errors';
 
 export default class AccountAccessDefinitions {
   constructor(identityManager) {
@@ -25,5 +25,16 @@ export default class AccountAccessDefinitions {
       'createdBy',
       'permissions'
     ]);
+  }
+
+  validateModifyAccountRequest(params) {
+    const allowedParametersList = ['permissions'];
+    const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
+    if (invalidFields.length > 0) {
+      throw new InvalidParametersError(`Some parameters (${invalidFields.join(',')}) are not supported`);
+    }
+    if (params.permissions && !Array.isArray(params.permissions)) {
+      throw new InvalidParametersError(`Invalid permissions parameter value`);
+    }
   }
 }

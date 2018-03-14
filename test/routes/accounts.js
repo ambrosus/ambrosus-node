@@ -3,7 +3,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import {createAccountHandler, getAccountHandler} from '../../src/routes/accounts';
+import {createAccountHandler, getAccountHandler, modifyAccountHandler} from '../../src/routes/accounts';
 import {accountWithSecret, adminAccountWithSecret, account} from '../fixtures/account';
 import {put} from '../../src/utils/dict_utils';
 
@@ -19,7 +19,8 @@ describe('Accounts', () => {
   beforeEach(async () => {
     mockModelEngine = {
       createAccount: sinon.stub(),
-      getAccount: sinon.stub()
+      getAccount: sinon.stub(),
+      modifyAccount: sinon.stub()
     };
     req = httpMocks.createRequest({});
     res = httpMocks.createResponse();
@@ -68,6 +69,32 @@ describe('Accounts', () => {
       await injectedHandler(req, res);
 
       expect(mockModelEngine.getAccount).to.have.been.calledWith(mockAccount.address, tokenData);
+    
+      expect(res._getStatusCode()).to.eq(200);
+      expect(res._isJSON()).to.be.true;
+    });
+  });
+
+  describe('modify account', () => {
+    let injectedHandler;
+    let mockAccount;
+    const requestedPermissions = ['perm1', 'perm2'];
+    const tokenData = {createdBy : adminAccountWithSecret.address, validUntil: 423543253453};
+    const accountModificationRequest = {permissions : requestedPermissions};
+
+    beforeEach(async () => {
+      mockAccount = put(accountWithSecret, {permissions : requestedPermissions, createdBy : adminAccountWithSecret.address});
+      mockModelEngine.modifyAccount.resolves(mockAccount);
+      req.body = accountModificationRequest;
+      req.params.id = account.address;
+      req.tokenData = tokenData;
+      injectedHandler = modifyAccountHandler(mockModelEngine);
+    });
+
+    it('pushes json body into Data Model Engine and proxies result', async () => {
+      await injectedHandler(req, res);
+
+      expect(mockModelEngine.modifyAccount).to.have.been.calledWith(account.address, accountModificationRequest, tokenData);
     
       expect(res._getStatusCode()).to.eq(200);
       expect(res._isJSON()).to.be.true;
