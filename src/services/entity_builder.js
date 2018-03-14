@@ -83,7 +83,7 @@ export default class EntityBuilder {
 
 
   validateAndCastFindEventsParams(params) {
-    const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage'];
+    const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage', 'createdBy'];
     const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
     if (invalidFields.length > 0) {
       throw new InvalidParametersError(`Some parameters (${invalidFields.join(',')}) are not supported`);

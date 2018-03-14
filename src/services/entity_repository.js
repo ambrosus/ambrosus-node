@@ -28,6 +28,9 @@ export default class EntityRepository {
     if (params.assetId) {
       query = this.addToQuery(query, {'content.idData.assetId': params.assetId});
     }
+    if (params.createdBy) {
+      query = this.addToQuery(query, {'content.idData.createdBy': params.createdBy});
+    }
     if (params.fromTimestamp) {
       query = this.addToQuery(query, {'content.idData.timestamp': {$gte: params.fromTimestamp}});
     }
