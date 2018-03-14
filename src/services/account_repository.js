@@ -9,9 +9,8 @@ export default class AccountRepository {
     await this.db.collection('accounts').insertOne(accountWithoutSecret);
   }
 
-  async update(account) {
-    const {address} = account;
-    await this.db.collection('accounts').updateOne({address}, {$set : {permissions : account.permissions}});
+  async update(address, changedParams) {
+    await this.db.collection('accounts').updateOne({address}, {$set : changedParams});
   }
 
   async get(address) {

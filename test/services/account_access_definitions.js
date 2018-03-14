@@ -4,7 +4,7 @@ import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import AccountAccessDefinitions from '../../src/services/account_access_definitions';
-import {PermissionError, ValidationError} from '../../src/errors/errors';
+import {PermissionError, ValidationError, InvalidParametersError} from '../../src/errors/errors';
 import {account, createAccountRequest} from '../fixtures/account';
 import {pick} from '../../src/utils/dict_utils';
 
@@ -45,7 +45,7 @@ describe('Account Access Definitions', () => {
       .to.deep.eq(['change_account_permissions', 'create_account', 'create_entity']);
   });
 
-  describe('validating account', () => {
+  describe('validating account creation', () => {
     let account;
 
     before(() => {
@@ -60,5 +60,17 @@ describe('Account Access Definitions', () => {
         expect(() => accountAccessDefinitions.validateNewAccountRequest(brokenData)).to.throw(ValidationError);
       });
     }
+  });
+
+  describe('validating account modification', () => {
+    it(`throws if surplus parameters are passed`, () => {
+      const notSupportedParams = {permissions : ['param1', 'param2'], extraParam : 'extraValue'};
+      expect(() => accountAccessDefinitions.validateModifyAccountRequest(notSupportedParams)).to.throw(InvalidParametersError);
+    });
+
+    it(`throws if any parameters is invalid`, () => {
+      const invalidParams = {permissions : 'notArrayPermission'};
+      expect(() => accountAccessDefinitions.validateModifyAccountRequest(invalidParams)).to.throw(InvalidParametersError);
+    });
   });
 });

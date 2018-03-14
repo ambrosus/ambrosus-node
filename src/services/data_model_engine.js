@@ -54,16 +54,13 @@ export default class DataModelEngine {
     return result;
   }
 
-  async modifyAccount(accountRequest, tokenData) {
+  async modifyAccount(accountToChange, accountRequest, tokenData) {
     const modifierAccount = await this.getAccount(tokenData.createdBy, tokenData);
     this.accountAccessDefinitions.ensureHasPermission(modifierAccount, 'create_account');
-    const account = await this.getAccount(accountRequest.address, tokenData);
-    const modifiedAccount = {
-      ...account,
-      permissions: accountRequest.permissions
-    };
-    await this.accountRepository.update(modifiedAccount);
-    return modifiedAccount;
+    this.accountAccessDefinitions.validateModifyAccountRequest(accountRequest);
+    await this.getAccount(accountToChange, tokenData);
+    await this.accountRepository.update(accountToChange, accountRequest);
+    return await this.getAccount(accountToChange, tokenData);
   }
 
   async createAsset(asset) {

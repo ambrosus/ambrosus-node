@@ -2,7 +2,7 @@ import chai from 'chai';
 import AccountStore from '../../src/services/account_repository';
 import {connectToMongo, cleanDatabase} from '../../src/utils/db_utils';
 import {accountWithSecret, account} from '../fixtures/account.js';
-import {put} from '../../src/utils/dict_utils';
+import {put, pick} from '../../src/utils/dict_utils';
 const {expect} = chai;
 
 describe('Account Repository', () => {
@@ -29,13 +29,12 @@ describe('Account Repository', () => {
     const additionalFields = {createdBy : '0x123', permissions : ['perm1', 'perm2']};
     const accountToStore = put(accountWithSecret, additionalFields);
 
-    const changedPermissions = {permissions : ['perm100', 'perm200']};
-    const accountToUpdate = put(account, changedPermissions);
+    const changedParams = {permissions : ['perm100', 'perm200']};
 
-    const accountToReceive = put(accountToUpdate, 'createdBy', '0x123');
+    const accountToReceive = pick(put(accountToStore, changedParams), 'secret');
 
     await accountStore.store(accountToStore);
-    await accountStore.update(accountToUpdate);
+    await accountStore.update(accountToStore.address, changedParams);
     const result = await accountStore.get(accountToStore.address);
     expect(result).to.deep.equal(accountToReceive);
   });

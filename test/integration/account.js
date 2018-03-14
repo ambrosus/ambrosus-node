@@ -112,12 +112,12 @@ describe('Accounts - Integrations', async () => {
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send(createAccountRequest());
-      modifyRequest = {address : storedAccount.body.address, permissions : changedPermissions};
+      modifyRequest = {permissions : changedPermissions};
     });
 
-    it('should modify an account', async () => {
+    it('should modify the targeted account', async () => {
       const modifiedAccount = await apparatus.request()
-        .put('/accounts')
+        .put(`/accounts/${storedAccount.body.address}`)
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send(modifyRequest);
       expect(modifiedAccount.body.address).to.equal(storedAccount.body.address);
@@ -128,17 +128,17 @@ describe('Accounts - Integrations', async () => {
 
     it('should fail to modify if no token', async () => {
       const pendingRequest = apparatus.request()
-        .put('/accounts')
+        .put(`/accounts/${storedAccount.body.address}`)
         .send(modifyRequest);
       await expect(pendingRequest)
         .to.eventually.be.rejected
         .and.have.property('status', 401);
     });
 
-    it('should fail to modify account if non-existing user', async () => {
+    it('should fail to modify account if non-existing requester user', async () => {
       const nonExistingUser = accountWithSecret;
       const pendingRequest = apparatus.request()
-        .put('/accounts')
+        .put(`/accounts/${storedAccount.body.address}`)
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(nonExistingUser.secret)}`)
         .send(modifyRequest);
       await expect(pendingRequest)
@@ -150,10 +150,30 @@ describe('Accounts - Integrations', async () => {
       const pendingRequest = apparatus.request()
         .put(`/accounts/0x1234567`)
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
-        .send(put(modifyRequest, 'address', '0x9876'));
+        .send(modifyRequest);
       await expect(pendingRequest)
         .to.eventually.be.rejected
         .and.have.property('status', 404);
+    });
+
+    it('should fail to modify if not supported parameters passed', async () => {
+      const pendingRequest = apparatus.request()
+        .put(`/accounts/${storedAccount.body.address}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+        .send(put(modifyRequest, 'extraParam', 'superValue'));
+      await expect(pendingRequest)
+        .to.eventually.be.rejected
+        .and.have.property('status', 400);
+    });
+
+    it('should fail to modify if not parameters are invalid type', async () => {
+      const pendingRequest = apparatus.request()
+        .put(`/accounts/${storedAccount.body.address}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+        .send(put(modifyRequest, 'permissions', 'notArrayValue'));
+      await expect(pendingRequest)
+        .to.eventually.be.rejected
+        .and.have.property('status', 400);
     });
   });
 
