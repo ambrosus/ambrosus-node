@@ -8,8 +8,7 @@ import DataModelEngine from '../../src/services/data_model_engine';
 import {InvalidParametersError, NotFoundError, PermissionError, ValidationError} from '../../src/errors/errors';
 
 import {createAsset, createEvent, createBundle} from '../fixtures/assets_events';
-import {accountWithSecret, adminAccount, adminAccountWithSecret, createAccountRequest} from '../fixtures/account';
-import pkPair from '../fixtures/pk_pair';
+import {accountWithSecret, adminAccount, adminAccountWithSecret, createAccountRequest, account} from '../fixtures/account';
 
 import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
@@ -62,7 +61,6 @@ describe('Data Model Engine', () => {
     beforeEach(() => {
       resetHistory(mockIdentityManager, mockAccountRepository, mockAccountAccessDefinitions);
 
-      mockIdentityManager.createKeyPair.returns(pkPair);
       mockAccountRepository.get.returns(adminAccount);
       mockAccountAccessDefinitions.validateNewAccountRequest.resolves();
       mockAccountAccessDefinitions.ensureHasPermission.resolves();
@@ -70,36 +68,36 @@ describe('Data Model Engine', () => {
 
     it('validates with mockIdentityManager and delegates to accountRepository', async () => {
       const request = createAccountRequest();
-      const creationResponse = put(pkPair, {permissions : [], createdBy : adminAccount.address});
-      expect(await modelEngine.createAccount(request, createTokenFor(request))).to.deep.equal(creationResponse);
+      const creationResponse = {address: account.address, permissions : [], createdBy : adminAccount.address};
+      expect(await modelEngine.createAccount(request, createTokenFor(adminAccount.address))).to.deep.equal(creationResponse);
       expect(mockAccountAccessDefinitions.validateNewAccountRequest).to.have.been.called;
       expect(mockAccountRepository.store).to.have.been.calledWith({
-        ...pkPair,
+        address: request.address,
         permissions: request.permissions,
-        createdBy: request.createdBy
+        createdBy : adminAccount.address
       });
-      expect(mockAccountRepository.get).to.have.been.calledWith(request.createdBy);
+      expect(mockAccountRepository.get).to.have.been.calledWith(adminAccount.address);
     });
 
     it('throws ValidationError if wrong request format', async () => {
       mockAccountAccessDefinitions.validateNewAccountRequest.throws(new ValidationError('an error'));
 
       const request = createAccountRequest();
-      await expect(modelEngine.createAccount(request, createTokenFor(request))).to.be.rejectedWith(ValidationError);
+      await expect(modelEngine.createAccount(request, createTokenFor(adminAccount.address))).to.be.rejectedWith(ValidationError);
     });
 
     it('throws PermissionError if account sender account does not exist', async () => {
       mockAccountRepository.get.returns(null);
 
       const request = createAccountRequest();
-      await expect(modelEngine.createAccount(request, createTokenFor(request))).to.be.rejectedWith(PermissionError);
+      await expect(modelEngine.createAccount(request, createTokenFor(adminAccount.address))).to.be.rejectedWith(PermissionError);
     });
 
     it('throws PermissionError if account misses required permissions', async () => {
       mockAccountAccessDefinitions.ensureHasPermission.throws(new PermissionError());
 
       const request = createAccountRequest();
-      await expect(modelEngine.createAccount(request, createTokenFor(request))).to.be.rejectedWith(PermissionError);
+      await expect(modelEngine.createAccount(request, createTokenFor(adminAccount.address))).to.be.rejectedWith(PermissionError);
     });
 
     it('gives needed permissions to admin account', async () => {

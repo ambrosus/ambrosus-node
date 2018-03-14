@@ -1,5 +1,5 @@
 const createAccountRequest = (fields) => ({
-  createdBy: adminAccountWithSecret.address,
+  address: account.address,
   permissions: [],
   ...fields
 });

@@ -1,7 +1,7 @@
-function createTokenFor(request) {
+function createTokenFor(address) {
   const defaultExpiryPeriod = 10000;
   return {
-    createdBy: request.createdBy,
+    createdBy: address,
     validBy: Date.now() + defaultExpiryPeriod
   };
 }

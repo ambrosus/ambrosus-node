@@ -1,4 +1,4 @@
-import {validatePathsNotEmpty} from '../utils/validations';
+import {validatePathsNotEmpty, validateFieldsConstrainedToSet} from '../utils/validations';
 import {PermissionError, InvalidParametersError} from '../errors/errors';
 
 export default class AccountAccessDefinitions {
@@ -21,10 +21,12 @@ export default class AccountAccessDefinitions {
   }
 
   validateNewAccountRequest(account) {
-    validatePathsNotEmpty(account, [
-      'createdBy',
+    const registrationFields = [
+      'address',
       'permissions'
-    ]);
+    ];
+    validatePathsNotEmpty(account, registrationFields);
+    validateFieldsConstrainedToSet(account, registrationFields);
   }
 
   validateModifyAccountRequest(params) {

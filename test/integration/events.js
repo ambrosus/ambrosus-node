@@ -15,7 +15,7 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-describe('Events - Integrations', () => {
+describe.skip('Events - Integrations', () => {
   let apparatus;
   let scenario;
 
