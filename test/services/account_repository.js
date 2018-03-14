@@ -34,8 +34,7 @@ describe('Account Repository', () => {
     const accountToReceive = pick(put(accountToStore, changedParams), 'secret');
 
     await accountStore.store(accountToStore);
-    await accountStore.update(accountToStore.address, changedParams);
-    const result = await accountStore.get(accountToStore.address);
+    const result = await accountStore.update(accountToStore.address, changedParams);
     expect(result).to.deep.equal(accountToReceive);
   });
 

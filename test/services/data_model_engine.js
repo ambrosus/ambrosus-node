@@ -201,10 +201,7 @@ describe('Data Model Engine', () => {
       resetHistory(mockAccountRepository);
       mockAccountRepository.update.returns(modifiedAccount);
       mockAccountRepository.get.withArgs(adminAccount.address).returns(adminAccount);
-      mockAccountRepository.get.withArgs(accountToModify).onFirstCall()
-        .returns(accountWithoutSecret);
-      mockAccountRepository.get.withArgs(accountToModify).onSecondCall()
-        .returns(modifiedAccount);
+      mockAccountRepository.get.withArgs(accountToModify).returns(accountWithoutSecret);
       mockAccountAccessDefinitions.ensureHasPermission.resolves();
       mockAccountAccessDefinitions.validateModifyAccountRequest.resolves();
     });

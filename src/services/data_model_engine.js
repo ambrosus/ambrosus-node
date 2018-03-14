@@ -59,8 +59,7 @@ export default class DataModelEngine {
     this.accountAccessDefinitions.ensureHasPermission(modifierAccount, 'create_account');
     this.accountAccessDefinitions.validateModifyAccountRequest(accountRequest);
     await this.getAccount(accountToChange, tokenData);
-    await this.accountRepository.update(accountToChange, accountRequest);
-    return await this.getAccount(accountToChange, tokenData);
+    return await this.accountRepository.update(accountToChange, accountRequest);
   }
 
   async createAsset(asset) {

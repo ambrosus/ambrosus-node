@@ -166,7 +166,7 @@ describe('Accounts - Integrations', async () => {
         .and.have.property('status', 400);
     });
 
-    it('should fail to modify if not parameters are invalid type', async () => {
+    it('should fail to modify if any of parameters are invalid', async () => {
       const pendingRequest = apparatus.request()
         .put(`/accounts/${storedAccount.body.address}`)
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
