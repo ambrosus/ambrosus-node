@@ -25,6 +25,43 @@ The majority of errors along to the error code provide additional information in
 }
 ```
 
+## Group Token
+
+Some requests require an access token for authorisation.
+
+### /token
+
+#### Create token [POST]
+
+__Warning__ This call can be used for developement purposes only. Never provide your secret address to anyone.
+
++ Request
+    + Headers
+
+            Accept: application/json
+            Authorization: AMB ...
+
+    + Attributes (object)
+        + validUntil: 1546300800 (number) - Unix timestamp in the future specifying the token expiration time.
+
+    + Body
+
+            {
+                "validUntil": 1546300800
+            }
++ Response 201 (application/json)
+
+    Created
+
+    + Attributes (object)
+        + token (string) - Base64 encoded signed token data.
+
+    + Body
+
+            {
+                "token": "eyJpZERhdGEiOnsiY3JlYXRlZEJ5IjoiMHg3NDJFNjJDQzdBMTlFZjdEOWM0NDMwNkMwN0ZBZDU0QjViRjZkNGJFIiwidmFsaWRVbnRpbCI6NDJ9LCJzaWduYXR1cmUiOiIweDY4MWVjZjRiNzM3YzViNGY5ZjlhYTZlMDUzOWIzMzAyNzY0NDQzYWRlNWNmMWJhMTIxMGFmNzA1MTdkYTczOWY1MzBlNTEwYmI0NTc1N2YyNWZiZTE3NzczMWVhNzAxYjVmOTU5NGZlYmQ0ZDA2YjEwOGYyM2NhYjAyMmU5MzNmMWIifQ"
+            }
+
 
 ## Group Account
 
@@ -34,19 +71,25 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 
 ### /accounts
 
-#### Create account [POST]
+#### Add account [POST]
 
 + Request (application/json)
 
     + Headers
 
             Accept: application/json
+            Authorization: AMB_TOKEN ...
+
+    + Attributes (object)
+        + permissions (array) - A list of permissions granted to this account
+            + "register_account" (string) - Permission name
+        + accessLevel (number) - Access level of the account. Should be a non-negative integer.
 
     + Body
 
             {
-                "createdBy": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
-                "permissions" : ['register_account','change_account_permissions']
+                "permissions" : ['register_account','change_account_permissions'],
+                "accessLevel" : 0
             }
 
 
@@ -59,9 +102,9 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 
             {
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
-                "secret": "0x17d08f5fe8c77af811caa0c9a187e668ce3b74a99acc3f6d976f075fa8e0be55",
-                "createdBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
-                "permissions": ["register_account", "change_account_permissions"]
+                "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
+                "permissions": ["register_account", "change_account_permissions"],
+                "accessLevel": 0
             }
 
     + Schema
@@ -73,11 +116,84 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
                   "type": "string",
                   "example": "0x162a44701727a31f457a53801cd181cd38eb5bbd"
                 },
-                "secret": {
+                "registeredBy": {
                   "type": "string",
-                  "example": "0x17d08f5fe8c77af811caa0c9a187e668ce3b74a99acc3f6d976f075fa8e0be55"
+                  "example": "0x345b44701723a31f457a534801cd181cd38eb5bcd"
                 },
-                "createdBy": {
+                "accessLevel": {
+                  "type": "integer"
+                },
+                "permissions": {
+                  "type": "array",
+                  "items" : {
+                  "type" : "string"
+                  }
+                  "example": ["register_account", "change_account_permissions"]
+                }
+              }
+            }
+
++ Response 400 (application/json)
+
+    Validation error
+
+    + Body
+
++ Response 401 (application/json)
+
+    Authentication error
+
+    + Body
+
++ Response 403 (application/json)
+
+    Invalid signature or missing register_account permission
+
+    + Body
+
+### /accounts/{accountAddress}
+
+#### Get account [GET]
+
++ Parameters
+    + accountAddress: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - An address of the account
+
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            Authorization: AMB_TOKEN ...
+
+
++ Response 200 (application/json)
+
+    + Attributes (object)
+        + registeredBy (string) - The address which has registered the account.
+        + permissions (array) - A list of permissions granted to this account
+            + "register_account" (string) - Permission name
+        + accessLevel (number) - Access level of the account. Should be a non-negative integer.
+
+    + Body
+
+            {
+                "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
+                "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
+                "permissions": ["register_account", "change_account_permissions"],
+                "accessLevel": 4
+            }
+
+    + Schema
+
+            {
+              "type": "object",
+              "properties": {
+                "address": {
+                  "type": "string",
+                  "example": "0x162a44701727a31f457a53801cd181cd38eb5bbd"
+                },
+                "registeredBy": {
                   "type": "string",
                   "example": "0x345b44701723a31f457a534801cd181cd38eb5bcd"
                 },
@@ -105,24 +221,35 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 
 + Response 403 (application/json)
 
-    Invalid createdBy, invalid signature or missing register_account permission
+    Invalid signature or missing register_account permission
 
     + Body
 
-### /accounts/{accountAddress}
++ Response 404 (application/json)
 
-#### Get account [GET]
+    Requested account does not exist
+
+    + Body
+
+#### Modify account [PUT]
 
 + Request (application/json)
 
     + Headers
 
             Accept: application/json
+            Authorization: AMB_TOKEN ...
+
+    + Attributes (object)
+        + permissions (array) - A list of permissions granted to this account
+            + "register_account" (string) - Permission name
+        + accessLevel (number) - Access level of the account. Should be a non-negative integer.
 
     + Body
 
             {
-                "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd"
+                "permissions" : ['register_account','change_account_permissions'],
+                "accessLevel" : 0
             }
 
 
@@ -133,7 +260,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 
             {
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
-                "createdBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
+                "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
                 "permissions": ["register_account", "change_account_permissions"]
             }
 
@@ -146,7 +273,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
                   "type": "string",
                   "example": "0x162a44701727a31f457a53801cd181cd38eb5bbd"
                 },
-                "createdBy": {
+                "registeredBy": {
                   "type": "string",
                   "example": "0x345b44701723a31f457a534801cd181cd38eb5bcd"
                 },
@@ -174,15 +301,10 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 
 + Response 403 (application/json)
 
-    Invalid createdBy, invalid signature or missing register_account permission
+    Invalid signature or missing register_account permission
 
     + Body
 
-+ Response 404 (application/json)
-
-    Requested account does not exist
-
-    + Body
 
 ## Group Asset
 
@@ -205,9 +327,20 @@ Places (after intensive validations) the provided asset object into the system.
             Accept: application/json
             Authorization: AMB ...
 
+    + Attributes (object)
+        + assetId (string) - Content-addressable identificator of the asset.
+        + content (object) - All meaningfull content of the asset, base of assetId.
+            + signature: "0x30755ed65396facf86c53e6...65c5cfd04be400" (string) - Eliptic-curve signature of the idData field. Should be signed with the creator's private address.
+            + idData (object) - General information about an asset.
+                + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the asset creator.
+                + timestamp: 1503424923 (number) - UNIX timestamp of asset creation.
+                + sequenceNumber: 3 (number) - Used to assure that all assets are unique
+
+
     + Body
 
             {
+                "assetId": "0xc5cfd04.....30755ed65",
                 "content": {
                     "signature": "0x30755ed65396facf86c53e6...65c5cfd04be400",
                     "idData": {
@@ -305,6 +438,17 @@ Finds asset with provided assetId in the system.
 
     Asset with provided assetId
 
+    + Attributes (object)
+        + assetId (string) - Content-addressable identificator of the asset.
+        + content (object) - All meaningfull content of the asset, base of assetId.
+            + signature: "0x30755ed65396facf86c53e6...65c5cfd04be400" (string) - Eliptic-curve signature of the idData field signed with the creator's private address.
+            + idData (object) - General information about an asset.
+                + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the asset creator.
+                + timestamp: 1503424923 (number) - UNIX timestamp of asset creation.
+                + sequenceNumber: 3 (number) - Used to assure that all assets are unique
+
+
+
     + Body
 
             {
@@ -335,7 +479,7 @@ Places (after intensive validations) the provided event object into the system.
 
 + Parameters
 
-    + assetId (string, required) - ID of an asset
+    + assetId: "0xc5cfd04.....30755ed65" (string, required) - ID of an asset
 
 + Request (application/json)
 
@@ -344,14 +488,28 @@ Places (after intensive validations) the provided event object into the system.
             Accept: application/json
             Authorization: AMB ...
 
+    + Attributes (object)
+        + eventId (string) - Content-addressable identificator of the event.
+        + content (object) - All meaningfull content of the event, base of eventId.
+            + signature: "0x30755ed65396facf86c53e6...65c5cfd04be400" (string) - Eliptic-curve signature of the idData field signed with the creator's private address.
+            + idData (object) - Public information about an event.
+                + assetId: "0xc5cfd04.....30755ed65" (string) - Id of an asset with which the event is connected.
+                + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the event creator.
+                + accessLevel: 4 (number) - The access level of the event. Should be a non-negative integer.
+                + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
+            + data (object) - Private information about an event.
+
+
     + Body
 
             {
+                "eventId": "0xc5cfd04.....30755ed65"
                 "content": {
                     "signature": "0x30755ed65396facf86c53e6...65c5cfd04be400",
                     "idData": {
                         "assetId": "0xc5cfd04.....30755ed65",
                         "createdBy": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
+                        "accessLevel": 4,
                         "timestamp": 1503424923,
                         "dataHash": "0x01cd181cd38eb5bbd162a44701727a31f457a538"
                     },
@@ -392,6 +550,10 @@ Places (after intensive validations) the provided event object into the system.
                           "format": "int64",
                           "example": "0x162a44701727a31f457a53801cd181cd38eb5bbd"
                         },
+                        "accessLevel": {
+                            "type": "integer",
+                            "example": 4
+                        }
                         "timestamp": {
                           "type": "integer",
                           "format": "timestamp",
@@ -425,6 +587,7 @@ Places (after intensive validations) the provided event object into the system.
                     "idData": {
                         "assetId": "0xc5cfd04.....30755ed65",
                         "createdBy": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
+                        "accessLevel": 4,
                         "timestamp": 1503424923,
                         "dataHash": "0x01cd181cd38eb5bbd162a44701727a31f457a538"
                     },
@@ -463,6 +626,18 @@ Fetches an event by identifier
 
     The requested event
 
+    + Attributes (object)
+        + eventId (string) - Content-addressable identificator of the event.
+        + content (object) - All meaningfull content of the event, base of eventId.
+            + signature: "0x30755ed65396facf86c53e6...65c5cfd04be400" (string) - Eliptic-curve signature of the idData field signed with the creator's private address.
+            + idData (object) - Public information about an event.
+                + assetId: "0xc5cfd04.....30755ed65" (string) - Id of an asset with which the event is connected.
+                + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the event creator.
+                + accessLevel: 4 (number) - The access level of the event. If the user's access level if lower than event's, the data field will not be returned.
+                + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
+            + data (object) - Private information about an event.
+
+
     + Body
 
             {
@@ -472,6 +647,7 @@ Fetches an event by identifier
                     "idData": {
                         "assetId": "0xc5cfd04.....30755ed65",
                         "createdBy": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
+                        "accessLevel": 4,
                         "timestamp": 1503424923,
                         "dataHash": "0x01cd181cd38eb5bbd162a44701727a31f457a538"
                     },
@@ -506,10 +682,24 @@ Finds event satisfying provided cryteria.
 
     The requested event
 
+    + Attributes (object)
+        + results (array) - Events matching provided criterias on the page
+            + (object) - Event.
+                + eventId: "0xc5cfd04.....30755ed65" (string) - Content-addressable identificator of the event.
+                + content (object) - All meaningfull content of the event, base of eventId.
+                    + signature: "0x30755ed65396facf86c53e6...65c5cfd04be400" (string) - Eliptic-curve signature of the idData field signed with the creator's private address.
+                    + idData (object) - Public information about an event.
+                        + assetId: "0xc5cfd04.....30755ed65" (string) - Id of an asset with which the event is connected.
+                        + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the event creator.
+                        + accessLevel: 4 (number) - The access level of the event. If the user's access level if lower than event's, the data field will not be returned.
+                        + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
+                    + data (object) - Private information about an event.
+        + resultCount: 112 (number) - Total number of vvents matching provided criterias.
+
     + Body
 
             {
-                results: [
+                "results": [
                     {
                         "eventId": "0xc5cfd04.....30755ed65",
                         "content": {
@@ -526,7 +716,7 @@ Finds event satisfying provided cryteria.
                         }
                     }
                 ],
-                resultCount: 112
+                "resultCount": 112
             }
 
 + Response 400
@@ -559,11 +749,23 @@ Fetches a bundle by identifier
 
     The requested event
 
+    + Attributes (object)
+        + bundleId (string) - Content-addressable identificator of the bundle.
+        + content (object) - All meaningfull content of the bundle, base of bundleId.
+            + signature: "0x30755ed65396facf86c53e6...65c5cfd04be400" (string) - Eliptic-curve signature of the idData field signed with the creator's private address.
+            + idData (object) - Information about an event.
+                + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the event creator.
+                + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
+                + entriesHash (string) - Hash calculated from the entries field.
+            + entries (array) - Stubs of assets and events included in the bundle.
+        + metadata (object) - Bundle service data.
+
+
     + Body
 
             {
                 "bundleId" : "<hash (content addressable) calcuated from contents field>",
-                "contents" : {
+                "content" : {
                     "signature": "<eliptic curve signature of the idData field>",
                     "idData" : {
                         "createdBy" : "<address (public key derived) of vendor holding data>",
