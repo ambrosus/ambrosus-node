@@ -146,7 +146,7 @@ describe('Events - Integrations', () => {
       expect(body.results).to.deep.equal([scenario.events[0], scenario.events[1], scenario.events[2], scenario.events[3]].reverse());
     });
 
-    it('with assetId returns only events for target asset', async () => {
+    it('with assetId returns only events for target asset (default syntax)', async () => {
       const targetAssetId = scenario.assets[0].assetId;
       const response = await apparatus.request().get(`/events?assetId=${targetAssetId}`);
       const {body} = response;
@@ -155,6 +155,33 @@ describe('Events - Integrations', () => {
       expect(body.resultCount).to.equal(8);
       body.results.forEach((element) => expect(element.content.idData.assetId).to.equal(targetAssetId));
     });
+
+    
+    it('alias syntax for assetId search returns only events for target asset', async () => {
+      const targetAssetId = scenario.assets[0].assetId;
+      const response = await apparatus.request().get(`/assets/${targetAssetId}/events`);
+      const {body} = response;
+
+      expect(body.results).to.have.lengthOf(8);
+      expect(body.resultCount).to.equal(8);
+      body.results.forEach((element) => expect(element.content.idData.assetId).to.equal(targetAssetId));
+    });
+
+    it('alias syntax with other parameters filters properly', async () => {
+      const targetAssetId = scenario.assets[0].assetId;      
+      const fromTimestamp = 2;
+      const toTimestamp = 10;
+      const perPage = 4;
+      const page = 1;
+      const response = await apparatus.request().get(`/assets/${targetAssetId}/events?fromTimestamp=${fromTimestamp}&toTimestamp=${toTimestamp}&perPage=${perPage}&page=${page}`);
+      const {body} = response;
+
+      expect(body.results).to.have.lengthOf(2);
+      expect(body.resultCount).to.equal(6);
+      body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(2, 10));
+      body.results.forEach((element) => expect(element.content.idData.assetId).to.equal(targetAssetId));      
+    });
+
 
     it('with fromTimestamp returns only events newer than selected timestamp', async () => {
       const fromTimestamp = 5;
@@ -199,7 +226,7 @@ describe('Events - Integrations', () => {
       expect(body.results).to.have.lengthOf(4);
       expect(body.resultCount).to.equal(9);
       body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(2, 10));
-    });
+    });    
   });
 
   after(async () => {
