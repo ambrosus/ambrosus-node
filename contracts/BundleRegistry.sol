@@ -4,18 +4,22 @@ import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
 contract BundleRegistry is Ownable {
 
+  struct Vendor {
+    bool whitelisted;
+    string url;
+  }
+
   mapping(bytes32 => address) public bundleVendors;
-  mapping(address => bool) public vendorWhitelist;
+  mapping(address => Vendor) public vendors;
 
   event BundleAdded(bytes32 bundleId);
 
   modifier onlyWhitelisted() {
-    require(vendorWhitelist[msg.sender]);
+    require(isWhitelisted(msg.sender));
     _;
   }
 
   function BundleRegistry() public {
-    vendorWhitelist[msg.sender] = true;
   }
 
   function addBundle(bytes32 bundleId, address vendor) onlyWhitelisted public {
@@ -23,15 +27,25 @@ contract BundleRegistry is Ownable {
     BundleAdded(bundleId);
   }
 
-  function addToWhitelist(address vendor) onlyOwner public {
-    vendorWhitelist[vendor] = true;
+  function addToWhitelist(address vendor, string url) onlyOwner public {
+    vendors[vendor].whitelisted = true;
+    vendors[vendor].url = url;
   }
 
   function removeFromWhitelist(address vendor) onlyOwner public {
-    vendorWhitelist[vendor] = false;
+    vendors[vendor].whitelisted = false;
   }
 
   function isWhitelisted(address vendor) constant public returns (bool) {
-    return vendorWhitelist[vendor];
+    return vendors[vendor].whitelisted;
   }
+
+  function changeVendorUrl(address vendor, string url) onlyOwner public {
+    vendors[vendor].url = url;
+  }
+
+  function getUrlForVendor(address vendor) public view returns (string) {
+    return vendors[vendor].url;
+  }
+  
 }

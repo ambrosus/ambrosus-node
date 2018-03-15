@@ -7,10 +7,10 @@
     "database": "ambrosus_gateway_developemnt"
   },
   "web3": {
-    "rpc": "ganache",
-    "nodePrivateKey": "0xfa654acfc59f0e4fe3bd57082ad28fbba574ac55fe96e915f17de27ad9c77696"
+    "rpc": "http://127.0.0.1:8180/",
+    "nodePrivateKey": "0x4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7"
   },
   "bundle": {
-    "registryContractAddress": "0x71062Cb25fc47E56eea95188074e62A5759096b0"
+    "registryContractAddress": "0x484Cf684Cf927161Ff051B18d6F2f24dA812c72e"
   }
 }
