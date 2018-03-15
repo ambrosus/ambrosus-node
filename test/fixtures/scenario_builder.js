@@ -27,8 +27,8 @@ class ScenarioBuilder {
     return processedAccount;
   }
 
-  async addAccount(accountInx = 0, addedPermissions = []) {
-    const accountRequest = createAccountRequest({createdBy: this.accounts[accountInx].address, permissions: addedPermissions});
+  async addAccount(addedAddress, addedPermissions = []) {
+    const accountRequest = createAccountRequest({address: addedAddress, permissions: addedPermissions});
     const processedAccount = await this.processor.onAddAccount(accountRequest);
     this.accounts.push(processedAccount);
     return processedAccount;

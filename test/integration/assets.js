@@ -7,7 +7,7 @@ import chaiHttp from 'chai-http';
 import {pick, get} from '../../src/utils/dict_utils';
 import {createFullAsset, createFullEvent} from '../fixtures/assets_events';
 import pkPair from '../fixtures/pk_pair';
-import {adminAccountWithSecret, notRegisteredAccount} from '../fixtures/account';
+import {adminAccountWithSecret, notRegisteredAccount, account} from '../fixtures/account';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 
 chai.use(chaiHttp);
@@ -15,7 +15,7 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-describe.skip('Assets - Integrations', () => {
+describe('Assets - Integrations', () => {
   let apparatus;
   let scenario;
   let adminAccount;
@@ -31,7 +31,7 @@ describe.skip('Assets - Integrations', () => {
     await apparatus.cleanDB();
     scenario.reset();
     adminAccount = await scenario.injectAccount(adminAccountWithSecret);
-    otherAccount = await scenario.addAccount(0);
+    otherAccount = await scenario.addAccount(account.address);
   });
 
   describe('creating asset', () => {
