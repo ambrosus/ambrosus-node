@@ -31,7 +31,7 @@ describe('Assets - Integrations', () => {
     await apparatus.cleanDB();
     scenario.reset();
     adminAccount = await scenario.injectAccount(adminAccountWithSecret);
-    otherAccount = await scenario.addAccount(account.address);
+    otherAccount = await scenario.addAccount(account.address, 0);
   });
 
   describe('creating asset', () => {

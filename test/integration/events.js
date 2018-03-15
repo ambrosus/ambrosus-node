@@ -33,7 +33,7 @@ describe('Events - Integrations', () => {
 
     beforeEach(async () => {
       adminAccount = await scenario.injectAccount(adminAccountWithSecret);
-      otherAccount = await scenario.addAccount(account.address);
+      otherAccount = await scenario.addAccount(account.address, 0);
       asset = await scenario.addAsset(0);
       event = createFullEvent(apparatus.identityManager, {
         createdBy: adminAccount.address,
@@ -111,7 +111,7 @@ describe('Events - Integrations', () => {
   describe('finding events', () => {
     before(async () => {
       await scenario.injectAccount(adminAccountWithSecret);
-      await scenario.addAccount(account.address, ['create_entity']);
+      await scenario.addAccount(account.address, 0, ['create_entity']);
       await scenario.addAsset(0);
       await scenario.addAsset(0);
       await scenario.generateEvents(

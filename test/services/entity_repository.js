@@ -7,7 +7,7 @@ import {createAsset, createEvent, createBundle} from '../fixtures/assets_events'
 import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
 import ScenarioBuilder from '../fixtures/scenario_builder';
-import {adminAccountWithSecret} from '../fixtures/account';
+import {adminAccountWithSecret, account} from '../fixtures/account';
 
 import EntityRepository from '../../src/services/entity_repository';
 
@@ -110,7 +110,7 @@ describe('Entity Repository', () => {
       before(async () => {
         scenario = new ScenarioBuilder(identityManager);
         await scenario.injectAccount(adminAccountWithSecret);
-        await scenario.addAccount(0, ['create_entity']);
+        await scenario.addAccount(account.address, 0, ['create_entity']);
         await scenario.addAsset(0);
         await scenario.addAsset(0);
 
