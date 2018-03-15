@@ -5,7 +5,8 @@ export default class AccountRepository {
 
   /* eslint no-unused-vars: ["error", { "varsIgnorePattern": "^secret$" }]*/
   async store(account) {
-    await this.db.collection('accounts').insertOne(account);
+    const {address} = account;
+    await this.db.collection('accounts').updateOne({address}, {$set : account}, {upsert : true});
   }
 
   async update(address, changedParams) {

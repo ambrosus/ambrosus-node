@@ -25,6 +25,17 @@ describe('Account Repository', () => {
     expect(result).to.deep.equal(accountToStore);
   });
 
+  it('does not allow to register the same account twice', async () => {
+    const additionalFields = {registeredBy : '0x123', permissions : ['perm1', 'perm2']};
+    let accountToStore = put(account, additionalFields);
+
+    await accountStore.store(accountToStore);
+    accountToStore = pick(accountToStore, '_id');
+    await accountStore.store(accountToStore);
+    const count = await accountStore.count();
+    expect(count).to.equal(1);
+  });
+
   it('account modification in database', async () => {
     const someParams = {registeredBy : '0x123', permissions : ['perm1', 'perm2']};
     const accountToStore = put(account, someParams);
