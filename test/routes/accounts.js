@@ -3,7 +3,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import {createAccountHandler, getAccountHandler, modifyAccountHandler} from '../../src/routes/accounts';
+import {addAccountHandler, getAccountHandler, modifyAccountHandler} from '../../src/routes/accounts';
 import {accountWithSecret, adminAccountWithSecret, account} from '../fixtures/account';
 import {put} from '../../src/utils/dict_utils';
 
@@ -18,7 +18,7 @@ describe('Accounts', () => {
 
   beforeEach(async () => {
     mockModelEngine = {
-      createAccount: sinon.stub(),
+      addAccount: sinon.stub(),
       getAccount: sinon.stub(),
       modifyAccount: sinon.stub()
     };
@@ -31,20 +31,20 @@ describe('Accounts', () => {
     let mockAccount;
     const requestedPermissions = ['perm1', 'perm2'];
     const tokenData = {createdBy : adminAccountWithSecret.address, validUntil: 423543253453};
-    const accountCreationRequest = {createdBy: tokenData.createdBy, permissions : requestedPermissions};
+    const accountregistrationRequest = {registeredBy: tokenData.createdBy, permissions : requestedPermissions};
 
     beforeEach(async () => {
-      mockAccount = put(accountWithSecret, {permissions : requestedPermissions, createdBy : adminAccountWithSecret.address});
-      mockModelEngine.createAccount.resolves(mockAccount);
-      req.body = accountCreationRequest;
+      mockAccount = put(accountWithSecret, {permissions : requestedPermissions, registeredBy : adminAccountWithSecret.address});
+      mockModelEngine.addAccount.resolves(mockAccount);
+      req.body = accountregistrationRequest;
       req.tokenData = tokenData;
-      injectedHandler = createAccountHandler(mockModelEngine);
+      injectedHandler = addAccountHandler(mockModelEngine);
     });
 
     it('pushes json body into Data Model Engine and proxies result', async () => {
       await injectedHandler(req, res);
 
-      expect(mockModelEngine.createAccount).to.have.been.calledWith(accountCreationRequest, tokenData);
+      expect(mockModelEngine.addAccount).to.have.been.calledWith(accountregistrationRequest, tokenData);
     
       expect(res._getStatusCode()).to.eq(201);
       expect(res._isJSON()).to.be.true;
@@ -58,8 +58,8 @@ describe('Accounts', () => {
     const tokenData = {createdBy : adminAccountWithSecret.address, validUntil: 423543253453};
 
     beforeEach(async () => {
-      mockAccount = put(account, {permissions : accountPermissions, createdBy : adminAccountWithSecret.address});
-      mockModelEngine.createAccount.resolves(mockAccount);
+      mockAccount = put(account, {permissions : accountPermissions, registeredBy : adminAccountWithSecret.address});
+      mockModelEngine.addAccount.resolves(mockAccount);
       req.params.id = mockAccount.address;
       req.tokenData = tokenData;
       injectedHandler = getAccountHandler(mockModelEngine);
@@ -83,7 +83,7 @@ describe('Accounts', () => {
     const accountModificationRequest = {permissions : requestedPermissions};
 
     beforeEach(async () => {
-      mockAccount = put(accountWithSecret, {permissions : requestedPermissions, createdBy : adminAccountWithSecret.address});
+      mockAccount = put(accountWithSecret, {permissions : requestedPermissions, registeredBy : adminAccountWithSecret.address});
       mockModelEngine.modifyAccount.resolves(mockAccount);
       req.body = accountModificationRequest;
       req.params.id = account.address;

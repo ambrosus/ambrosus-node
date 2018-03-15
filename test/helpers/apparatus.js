@@ -88,10 +88,10 @@ const apparatusScenarioProcessor = (apparatus) => ({
       .send(event);
     return response.body;
   },
-  onAddAccount: async (accountRequest) => {
+  onAddAccount: async (accountRequest, secret) => {
     const newAccount = await apparatus.request()
       .post('/accounts')
-      .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+      .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(secret)}`)
       .send(accountRequest);
     return newAccount.body;
   }

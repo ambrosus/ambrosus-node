@@ -3,7 +3,7 @@ import chaiHttp from 'chai-http';
 import chaiAsPromised from 'chai-as-promised';
 import {properAddress, properSecret} from '../helpers/web3chai';
 import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
-import {createAccountRequest, adminAccountWithSecret, accountWithSecret} from '../fixtures/account';
+import {addAccountRequest, adminAccountWithSecret, accountWithSecret, account} from '../fixtures/account';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {put} from '../../src/utils/dict_utils';
 
@@ -33,21 +33,20 @@ describe('Accounts - Integrations', async () => {
 
   describe('Create an account', () => {
     it('should create an account', async () => {
-      const account = await apparatus.request()
+      const result = await apparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
-        .send(createAccountRequest());
-      expect(account.body.address).to.be.properAddress;
-      expect(account.body.secret).to.be.properSecret;
-      expect(account.body.permissions).to.be.deep.equal([]);
-      expect(account.body.createdBy).to.be.equal(adminAccountWithSecret.address);
-      expect(account.status).to.eq(201);
+        .send(addAccountRequest());
+      expect(result.body.address).to.be.equal(account.address);
+      expect(result.body.permissions).to.be.deep.equal([]);
+      expect(result.body.registeredBy).to.be.equal(adminAccountWithSecret.address);
+      expect(result.status).to.eq(201);
     });
 
     it('should fail to create if no token', async () => {
       const pendingRequest = apparatus.request()
         .post('/accounts')
-        .send(createAccountRequest());
+        .send(addAccountRequest());
       await expect(pendingRequest)
         .to.eventually.be.rejected
         .and.have.property('status', 401);
@@ -58,37 +57,27 @@ describe('Accounts - Integrations', async () => {
       const pendingRequest = apparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(nonExistingUser.secret)}`)
-        .send(createAccountRequest({createdBy: nonExistingUser.address}));
+        .send(addAccountRequest());
       await expect(pendingRequest)
         .to.eventually.be.rejected
         .and.have.property('status', 403);
-    });
-
-    it('should fail to create account if session user and createdBy mismatch', async () => {
-      const pendingRequest = apparatus.request()
-        .post('/accounts')
-        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(accountWithSecret.secret)}`)
-        .send(createAccountRequest());
-      await expect(pendingRequest)
-        .to.eventually.be.rejected
-        .and.have.property('status', 401);
     });
   });
 
   describe('Get account detail', () => {
     it('get by account address', async () => {
-      const account = await apparatus.request()
+      const registeredAccount = await apparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
-        .send(createAccountRequest());
+        .send(addAccountRequest());
       const response = await apparatus.request()
-        .get(`/accounts/${account.body.address}`)
+        .get(`/accounts/${registeredAccount.body.address}`)
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send({});
-      expect(response.body.address).to.equal(account.body.address);
+      expect(response.body.address).to.equal(registeredAccount.body.address);
       expect(response.body.secret).to.be.undefined;
-      expect(account.body.permissions).to.be.deep.equal([]);
-      expect(account.body.createdBy).to.be.equal(adminAccountWithSecret.address);
+      expect(registeredAccount.body.permissions).to.be.deep.equal([]);
+      expect(registeredAccount.body.registeredBy).to.be.equal(adminAccountWithSecret.address);
     });
 
     it('should return 404 code if non-existing account', async () => {
@@ -111,7 +100,7 @@ describe('Accounts - Integrations', async () => {
       storedAccount = await apparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
-        .send(createAccountRequest());
+        .send(addAccountRequest());
       modifyRequest = {permissions : changedPermissions};
     });
 
@@ -123,7 +112,7 @@ describe('Accounts - Integrations', async () => {
       expect(modifiedAccount.body.address).to.equal(storedAccount.body.address);
       expect(modifiedAccount.body.secret).to.be.undefined;
       expect(modifiedAccount.body.permissions).to.be.deep.equal(changedPermissions);
-      expect(modifiedAccount.body.createdBy).to.be.equal(adminAccountWithSecret.address);
+      expect(modifiedAccount.body.registeredBy).to.be.equal(adminAccountWithSecret.address);
     });
 
     it('should fail to modify if no token', async () => {

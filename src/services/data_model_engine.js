@@ -1,4 +1,4 @@
-import {NotFoundError, InvalidParametersError, PermissionError, AuthenticationError} from '../errors/errors';
+import {NotFoundError, InvalidParametersError, PermissionError} from '../errors/errors';
 
 export default class DataModelEngine {
   constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, proofRepository, accountRepository, accountAccessDefinitions) {
@@ -24,22 +24,19 @@ export default class DataModelEngine {
     return account;
   }
 
-  async createAccount(accountRequest, tokenData) {
-    this.accountAccessDefinitions.validateNewAccountRequest(accountRequest);
-    if (tokenData.createdBy.toLowerCase() !== accountRequest.createdBy.toLowerCase()) {
-      throw new AuthenticationError('Session user and createdBy mismatch.');
-    }
-    const creatorAccount = await this.getAccount(accountRequest.createdBy, tokenData);
-    
-    this.accountAccessDefinitions.ensureHasPermission(creatorAccount, 'create_account');
-    const account = this.identityManager.createKeyPair();
-    const accountWithPermissions = {
-      ...account,
+  async addAccount(accountRequest, tokenData) {
+    const registratorAccount = await this.getAccount(tokenData.createdBy, tokenData);
+    this.accountAccessDefinitions.ensureHasPermission(registratorAccount, 'register_account');
+
+    this.accountAccessDefinitions.validateAddAccountRequest(accountRequest);
+
+    const accountToStore = {
+      address: accountRequest.address,
       permissions: accountRequest.permissions,
-      createdBy : tokenData.createdBy
+      registeredBy : tokenData.createdBy
     };
-    await this.accountRepository.store(accountWithPermissions);
-    return accountWithPermissions;
+    await this.accountRepository.store(accountToStore);
+    return accountToStore;
   }
 
   async getAccount(address, tokenData) {
@@ -56,7 +53,7 @@ export default class DataModelEngine {
 
   async modifyAccount(accountToChange, accountRequest, tokenData) {
     const modifierAccount = await this.getAccount(tokenData.createdBy, tokenData);
-    this.accountAccessDefinitions.ensureHasPermission(modifierAccount, 'create_account');
+    this.accountAccessDefinitions.ensureHasPermission(modifierAccount, 'register_account');
     this.accountAccessDefinitions.validateModifyAccountRequest(accountRequest);
     await this.getAccount(accountToChange, tokenData);
     return await this.accountRepository.update(accountToChange, accountRequest);

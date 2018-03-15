@@ -5,8 +5,8 @@ import chaiAsPromised from 'chai-as-promised';
 
 import AccountAccessDefinitions from '../../src/services/account_access_definitions';
 import {PermissionError, ValidationError, InvalidParametersError} from '../../src/errors/errors';
-import {account, createAccountRequest} from '../fixtures/account';
-import {pick} from '../../src/utils/dict_utils';
+import {account, addAccountRequest} from '../fixtures/account';
+import {pick, put} from '../../src/utils/dict_utils';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -42,24 +42,28 @@ describe('Account Access Definitions', () => {
 
   it('defaultAdminPermissions returns correct list', async () => {
     expect(accountAccessDefinitions.defaultAdminPermissions())
-      .to.deep.eq(['change_account_permissions', 'create_account', 'create_entity']);
+      .to.deep.eq(['change_account_permissions', 'register_account', 'create_entity']);
   });
 
-  describe('validating account creation', () => {
+  describe('validating account registration', () => {
     let account;
 
     before(() => {
       mockIdentityManager.sign.returns('0x1');
-      account = createAccountRequest();
+      account = addAccountRequest();
     });
 
-    for (const field of ['createdBy', 'permissions']) {
+    for (const field of ['address', 'permissions']) {
       // eslint-disable-next-line no-loop-func
       it(`throws if the ${field} field is missing`, () => {
         const brokenData = pick(account, field);
-        expect(() => accountAccessDefinitions.validateNewAccountRequest(brokenData)).to.throw(ValidationError);
+        expect(() => accountAccessDefinitions.validateAddAccountRequest(brokenData)).to.throw(ValidationError);
       });
     }
+    it(`throws if surplus fields are passed`, () => {
+      const brokenData = put(account, 'extraField', 'extraValue');
+      expect(() => accountAccessDefinitions.validateAddAccountRequest(brokenData)).to.throw(ValidationError);
+    });
   });
 
   describe('validating account modification', () => {

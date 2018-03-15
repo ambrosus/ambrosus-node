@@ -8,8 +8,7 @@ import DataModelEngine from '../../src/services/data_model_engine';
 import {InvalidParametersError, NotFoundError, PermissionError, ValidationError} from '../../src/errors/errors';
 
 import {createAsset, createEvent, createBundle} from '../fixtures/assets_events';
-import {accountWithSecret, adminAccount, adminAccountWithSecret, createAccountRequest} from '../fixtures/account';
-import pkPair from '../fixtures/pk_pair';
+import {accountWithSecret, adminAccount, adminAccountWithSecret, addAccountRequest, account} from '../fixtures/account';
 
 import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
@@ -54,7 +53,7 @@ describe('Data Model Engine', () => {
       mockAccountAccessDefinitions = {
         ensureHasPermission: sinon.stub(),
         defaultAdminPermissions: sinon.stub(),
-        validateNewAccountRequest: sinon.stub()
+        validateAddAccountRequest: sinon.stub()
       };
       modelEngine = new DataModelEngine(mockIdentityManager, {}, {}, {}, {}, mockAccountRepository, mockAccountAccessDefinitions);
     });
@@ -62,44 +61,43 @@ describe('Data Model Engine', () => {
     beforeEach(() => {
       resetHistory(mockIdentityManager, mockAccountRepository, mockAccountAccessDefinitions);
 
-      mockIdentityManager.createKeyPair.returns(pkPair);
       mockAccountRepository.get.returns(adminAccount);
-      mockAccountAccessDefinitions.validateNewAccountRequest.resolves();
+      mockAccountAccessDefinitions.validateAddAccountRequest.resolves();
       mockAccountAccessDefinitions.ensureHasPermission.resolves();
     });
 
     it('validates with mockIdentityManager and delegates to accountRepository', async () => {
-      const request = createAccountRequest();
-      const creationResponse = put(pkPair, {permissions : [], createdBy : adminAccount.address});
-      expect(await modelEngine.createAccount(request, createTokenFor(request))).to.deep.equal(creationResponse);
-      expect(mockAccountAccessDefinitions.validateNewAccountRequest).to.have.been.called;
+      const request = addAccountRequest();
+      const registrationResponse = {address: account.address, permissions : [], registeredBy : adminAccount.address};
+      expect(await modelEngine.addAccount(request, createTokenFor(adminAccount.address))).to.deep.equal(registrationResponse);
+      expect(mockAccountAccessDefinitions.validateAddAccountRequest).to.have.been.called;
       expect(mockAccountRepository.store).to.have.been.calledWith({
-        ...pkPair,
+        address: request.address,
         permissions: request.permissions,
-        createdBy: request.createdBy
+        registeredBy : adminAccount.address
       });
-      expect(mockAccountRepository.get).to.have.been.calledWith(request.createdBy);
+      expect(mockAccountRepository.get).to.have.been.calledWith(adminAccount.address);
     });
 
     it('throws ValidationError if wrong request format', async () => {
-      mockAccountAccessDefinitions.validateNewAccountRequest.throws(new ValidationError('an error'));
+      mockAccountAccessDefinitions.validateAddAccountRequest.throws(new ValidationError('an error'));
 
-      const request = createAccountRequest();
-      await expect(modelEngine.createAccount(request, createTokenFor(request))).to.be.rejectedWith(ValidationError);
+      const request = addAccountRequest();
+      await expect(modelEngine.addAccount(request, createTokenFor(adminAccount.address))).to.be.rejectedWith(ValidationError);
     });
 
     it('throws PermissionError if account sender account does not exist', async () => {
       mockAccountRepository.get.returns(null);
 
-      const request = createAccountRequest();
-      await expect(modelEngine.createAccount(request, createTokenFor(request))).to.be.rejectedWith(PermissionError);
+      const request = addAccountRequest();
+      await expect(modelEngine.addAccount(request, createTokenFor(adminAccount.address))).to.be.rejectedWith(PermissionError);
     });
 
     it('throws PermissionError if account misses required permissions', async () => {
       mockAccountAccessDefinitions.ensureHasPermission.throws(new PermissionError());
 
-      const request = createAccountRequest();
-      await expect(modelEngine.createAccount(request, createTokenFor(request))).to.be.rejectedWith(PermissionError);
+      const request = addAccountRequest();
+      await expect(modelEngine.addAccount(request, createTokenFor(adminAccount.address))).to.be.rejectedWith(PermissionError);
     });
 
     it('gives needed permissions to admin account', async () => {
@@ -143,10 +141,10 @@ describe('Data Model Engine', () => {
       mockAccountAccessDefinitions = {
         ensureHasPermission: sinon.stub(),
         defaultAdminPermissions: sinon.stub(),
-        validateNewAccountRequest: sinon.stub()
+        validateAddAccountRequest: sinon.stub()
       };
       modelEngine = new DataModelEngine({}, {}, {}, {}, {}, mockAccountRepository, mockAccountAccessDefinitions);
-      account = put(accountWithSecret, {createdBy : adminAccount.address, permissions : ['perm1', 'perm2']});
+      account = put(accountWithSecret, {registeredBy : adminAccount.address, permissions : ['perm1', 'perm2']});
       accountWithoutSecret = pick(account, 'secret');
     });
 
@@ -177,7 +175,7 @@ describe('Data Model Engine', () => {
     let mockAccountRepository;
     let modelEngine;
     let mockAccountAccessDefinitions;
-    const account = put(accountWithSecret, {createdBy : adminAccount.address, permissions : ['perm1', 'perm2']});
+    const account = put(accountWithSecret, {registeredBy : adminAccount.address, permissions : ['perm1', 'perm2']});
     const accountWithoutSecret = pick(account, 'secret');
     const modifyRequest = {permissions : ['changedPerm1', 'changedPerm2']};
     const accountToModify = accountWithoutSecret.address;
@@ -191,7 +189,7 @@ describe('Data Model Engine', () => {
       mockAccountAccessDefinitions = {
         ensureHasPermission: sinon.stub(),
         defaultAdminPermissions: sinon.stub(),
-        validateNewAccountRequest: sinon.stub(),
+        validateAddAccountRequest: sinon.stub(),
         validateModifyAccountRequest: sinon.stub()
       };
       modelEngine = new DataModelEngine({}, {}, {}, {}, {}, mockAccountRepository, mockAccountAccessDefinitions);

@@ -1,8 +1,8 @@
 import chai from 'chai';
 import AccountStore from '../../src/services/account_repository';
 import {connectToMongo, cleanDatabase} from '../../src/utils/db_utils';
-import {accountWithSecret, account} from '../fixtures/account.js';
-import {put, pick} from '../../src/utils/dict_utils';
+import {account} from '../fixtures/account.js';
+import {put} from '../../src/utils/dict_utils';
 const {expect} = chai;
 
 describe('Account Repository', () => {
@@ -16,22 +16,30 @@ describe('Account Repository', () => {
   });
 
   it('account round database trip', async () => {
-    const additionalFields = {createdBy : '0x123', permissions : ['perm1', 'perm2']};
-    const accountToStore = put(accountWithSecret, additionalFields);
-    const accountToReceive = put(account, additionalFields);
+    const additionalFields = {registeredBy : '0x123', permissions : ['perm1', 'perm2']};
+    const accountToStore = put(account, additionalFields);
 
     await accountStore.store(accountToStore);
-    const result = await accountStore.get(accountToStore.address);
-    expect(result).to.deep.equal(accountToReceive);
+    const result = await accountStore.get(account.address);
+    expect(result).to.deep.equal(accountToStore);
+  });
+
+  it('does not allow to register the same account twice', async () => {
+    const additionalFields = {registeredBy : '0x123', permissions : ['perm1', 'perm2']};
+    const accountToStore = put(account, additionalFields);
+
+    await accountStore.store(accountToStore);
+    await accountStore.store(accountToStore);
+    const count = await accountStore.count();
+    expect(count).to.equal(1);
   });
 
   it('account modification in database', async () => {
-    const additionalFields = {createdBy : '0x123', permissions : ['perm1', 'perm2']};
-    const accountToStore = put(accountWithSecret, additionalFields);
+    const someParams = {registeredBy : '0x123', permissions : ['perm1', 'perm2']};
+    const accountToStore = put(account, someParams);
 
     const changedParams = {permissions : ['perm100', 'perm200']};
-
-    const accountToReceive = pick(put(accountToStore, changedParams), 'secret');
+    const accountToReceive = put(accountToStore, changedParams);
 
     await accountStore.store(accountToStore);
     const result = await accountStore.update(accountToStore.address, changedParams);

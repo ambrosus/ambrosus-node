@@ -4,7 +4,7 @@ import chaiAsPromised from 'chai-as-promised';
 import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
 import chaiHttp from 'chai-http';
 
-import {adminAccountWithSecret, notRegisteredAccount} from '../fixtures/account';
+import {adminAccountWithSecret, notRegisteredAccount, accountWithSecret} from '../fixtures/account';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {createFullEvent} from '../fixtures/assets_events';
 import {pick} from '../../src/utils/dict_utils';
@@ -33,7 +33,7 @@ describe('Events - Integrations', () => {
 
     beforeEach(async () => {
       adminAccount = await scenario.injectAccount(adminAccountWithSecret);
-      otherAccount = await scenario.addAccount(0);
+      otherAccount = await scenario.addAccount(0, accountWithSecret);
       asset = await scenario.addAsset(0);
       event = createFullEvent(apparatus.identityManager, {
         createdBy: adminAccount.address,
@@ -111,7 +111,7 @@ describe('Events - Integrations', () => {
   describe('finding events', () => {
     before(async () => {
       await scenario.injectAccount(adminAccountWithSecret);
-      await scenario.addAccount(0, ['create_entity']);
+      await scenario.addAccount(0, accountWithSecret, {permissions : ['create_entity']});
       await scenario.addAsset(0);
       await scenario.addAsset(0);
       await scenario.generateEvents(
