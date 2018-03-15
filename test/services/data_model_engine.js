@@ -53,7 +53,7 @@ describe('Data Model Engine', () => {
       mockAccountAccessDefinitions = {
         ensureHasPermission: sinon.stub(),
         defaultAdminPermissions: sinon.stub(),
-        validateNewAccountRequest: sinon.stub()
+        validateAddAccountRequest: sinon.stub()
       };
       modelEngine = new DataModelEngine(mockIdentityManager, {}, {}, {}, {}, mockAccountRepository, mockAccountAccessDefinitions);
     });
@@ -62,7 +62,7 @@ describe('Data Model Engine', () => {
       resetHistory(mockIdentityManager, mockAccountRepository, mockAccountAccessDefinitions);
 
       mockAccountRepository.get.returns(adminAccount);
-      mockAccountAccessDefinitions.validateNewAccountRequest.resolves();
+      mockAccountAccessDefinitions.validateAddAccountRequest.resolves();
       mockAccountAccessDefinitions.ensureHasPermission.resolves();
     });
 
@@ -70,7 +70,7 @@ describe('Data Model Engine', () => {
       const request = createAccountRequest();
       const creationResponse = {address: account.address, permissions : [], createdBy : adminAccount.address};
       expect(await modelEngine.createAccount(request, createTokenFor(adminAccount.address))).to.deep.equal(creationResponse);
-      expect(mockAccountAccessDefinitions.validateNewAccountRequest).to.have.been.called;
+      expect(mockAccountAccessDefinitions.validateAddAccountRequest).to.have.been.called;
       expect(mockAccountRepository.store).to.have.been.calledWith({
         address: request.address,
         permissions: request.permissions,
@@ -80,7 +80,7 @@ describe('Data Model Engine', () => {
     });
 
     it('throws ValidationError if wrong request format', async () => {
-      mockAccountAccessDefinitions.validateNewAccountRequest.throws(new ValidationError('an error'));
+      mockAccountAccessDefinitions.validateAddAccountRequest.throws(new ValidationError('an error'));
 
       const request = createAccountRequest();
       await expect(modelEngine.createAccount(request, createTokenFor(adminAccount.address))).to.be.rejectedWith(ValidationError);
@@ -141,7 +141,7 @@ describe('Data Model Engine', () => {
       mockAccountAccessDefinitions = {
         ensureHasPermission: sinon.stub(),
         defaultAdminPermissions: sinon.stub(),
-        validateNewAccountRequest: sinon.stub()
+        validateAddAccountRequest: sinon.stub()
       };
       modelEngine = new DataModelEngine({}, {}, {}, {}, {}, mockAccountRepository, mockAccountAccessDefinitions);
       account = put(accountWithSecret, {createdBy : adminAccount.address, permissions : ['perm1', 'perm2']});
@@ -189,7 +189,7 @@ describe('Data Model Engine', () => {
       mockAccountAccessDefinitions = {
         ensureHasPermission: sinon.stub(),
         defaultAdminPermissions: sinon.stub(),
-        validateNewAccountRequest: sinon.stub(),
+        validateAddAccountRequest: sinon.stub(),
         validateModifyAccountRequest: sinon.stub()
       };
       modelEngine = new DataModelEngine({}, {}, {}, {}, {}, mockAccountRepository, mockAccountAccessDefinitions);

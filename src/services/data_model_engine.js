@@ -25,7 +25,7 @@ export default class DataModelEngine {
   }
 
   async createAccount(accountRequest, tokenData) {
-    this.accountAccessDefinitions.validateNewAccountRequest(accountRequest);
+    this.accountAccessDefinitions.validateAddAccountRequest(accountRequest);
 
     const creatorAccount = await this.getAccount(tokenData.createdBy, tokenData);
     this.accountAccessDefinitions.ensureHasPermission(creatorAccount, 'create_account');

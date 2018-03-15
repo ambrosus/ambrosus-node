@@ -57,12 +57,12 @@ describe('Account Access Definitions', () => {
       // eslint-disable-next-line no-loop-func
       it(`throws if the ${field} field is missing`, () => {
         const brokenData = pick(account, field);
-        expect(() => accountAccessDefinitions.validateNewAccountRequest(brokenData)).to.throw(ValidationError);
+        expect(() => accountAccessDefinitions.validateAddAccountRequest(brokenData)).to.throw(ValidationError);
       });
     }
     it(`throws if surplus fields are passed`, () => {
       const brokenData = put(account, 'extraField', 'extraValue');
-      expect(() => accountAccessDefinitions.validateNewAccountRequest(brokenData)).to.throw(ValidationError);
+      expect(() => accountAccessDefinitions.validateAddAccountRequest(brokenData)).to.throw(ValidationError);
     });
   });
 

@@ -20,7 +20,7 @@ export default class AccountAccessDefinitions {
     return ['change_account_permissions', 'create_account', 'create_entity'];
   }
 
-  validateNewAccountRequest(account) {
+  validateAddAccountRequest(account) {
     const registrationFields = [
       'address',
       'permissions'
