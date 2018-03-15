@@ -5,7 +5,7 @@ import chaiAsPromised from 'chai-as-promised';
 
 import AccountAccessDefinitions from '../../src/services/account_access_definitions';
 import {PermissionError, ValidationError, InvalidParametersError} from '../../src/errors/errors';
-import {account, createAccountRequest} from '../fixtures/account';
+import {account, addAccountRequest} from '../fixtures/account';
 import {pick, put} from '../../src/utils/dict_utils';
 
 chai.use(sinonChai);
@@ -42,15 +42,15 @@ describe('Account Access Definitions', () => {
 
   it('defaultAdminPermissions returns correct list', async () => {
     expect(accountAccessDefinitions.defaultAdminPermissions())
-      .to.deep.eq(['change_account_permissions', 'create_account', 'create_entity']);
+      .to.deep.eq(['change_account_permissions', 'register_account', 'create_entity']);
   });
 
-  describe('validating account creation', () => {
+  describe('validating account registration', () => {
     let account;
 
     before(() => {
       mockIdentityManager.sign.returns('0x1');
-      account = createAccountRequest();
+      account = addAccountRequest();
     });
 
     for (const field of ['address', 'permissions']) {

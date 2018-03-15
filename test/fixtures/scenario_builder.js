@@ -1,5 +1,5 @@
 import {createFullAsset, createFullEvent} from './assets_events';
-import {createAccountRequest} from './account';
+import {addAccountRequest} from './account';
 
 const defaultScenarioProcessor = (identityManager) => ({
   onInjectAccount: async (account) => account,
@@ -28,7 +28,7 @@ class ScenarioBuilder {
   }
 
   async addAccount(addedAddress, addedPermissions = []) {
-    const accountRequest = createAccountRequest({address: addedAddress, permissions: addedPermissions});
+    const accountRequest = addAccountRequest({address: addedAddress, permissions: addedPermissions});
     const processedAccount = await this.processor.onAddAccount(accountRequest);
     this.accounts.push(processedAccount);
     return processedAccount;

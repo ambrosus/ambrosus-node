@@ -3,7 +3,7 @@ import chaiHttp from 'chai-http';
 import chaiAsPromised from 'chai-as-promised';
 import {properAddress, properSecret} from '../helpers/web3chai';
 import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
-import {createAccountRequest, adminAccountWithSecret, accountWithSecret, account} from '../fixtures/account';
+import {addAccountRequest, adminAccountWithSecret, accountWithSecret, account} from '../fixtures/account';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {put} from '../../src/utils/dict_utils';
 
@@ -36,17 +36,17 @@ describe('Accounts - Integrations', async () => {
       const result = await apparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
-        .send(createAccountRequest());
+        .send(addAccountRequest());
       expect(result.body.address).to.be.equal(account.address);
       expect(result.body.permissions).to.be.deep.equal([]);
-      expect(result.body.createdBy).to.be.equal(adminAccountWithSecret.address);
+      expect(result.body.registeredBy).to.be.equal(adminAccountWithSecret.address);
       expect(result.status).to.eq(201);
     });
 
     it('should fail to create if no token', async () => {
       const pendingRequest = apparatus.request()
         .post('/accounts')
-        .send(createAccountRequest());
+        .send(addAccountRequest());
       await expect(pendingRequest)
         .to.eventually.be.rejected
         .and.have.property('status', 401);
@@ -57,7 +57,7 @@ describe('Accounts - Integrations', async () => {
       const pendingRequest = apparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(nonExistingUser.secret)}`)
-        .send(createAccountRequest());
+        .send(addAccountRequest());
       await expect(pendingRequest)
         .to.eventually.be.rejected
         .and.have.property('status', 403);
@@ -66,18 +66,18 @@ describe('Accounts - Integrations', async () => {
 
   describe('Get account detail', () => {
     it('get by account address', async () => {
-      const createdAccount = await apparatus.request()
+      const registeredAccount = await apparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
-        .send(createAccountRequest());
+        .send(addAccountRequest());
       const response = await apparatus.request()
-        .get(`/accounts/${createdAccount.body.address}`)
+        .get(`/accounts/${registeredAccount.body.address}`)
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send({});
-      expect(response.body.address).to.equal(createdAccount.body.address);
+      expect(response.body.address).to.equal(registeredAccount.body.address);
       expect(response.body.secret).to.be.undefined;
-      expect(createdAccount.body.permissions).to.be.deep.equal([]);
-      expect(createdAccount.body.createdBy).to.be.equal(adminAccountWithSecret.address);
+      expect(registeredAccount.body.permissions).to.be.deep.equal([]);
+      expect(registeredAccount.body.registeredBy).to.be.equal(adminAccountWithSecret.address);
     });
 
     it('should return 404 code if non-existing account', async () => {
@@ -100,7 +100,7 @@ describe('Accounts - Integrations', async () => {
       storedAccount = await apparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
-        .send(createAccountRequest());
+        .send(addAccountRequest());
       modifyRequest = {permissions : changedPermissions};
     });
 
@@ -112,7 +112,7 @@ describe('Accounts - Integrations', async () => {
       expect(modifiedAccount.body.address).to.equal(storedAccount.body.address);
       expect(modifiedAccount.body.secret).to.be.undefined;
       expect(modifiedAccount.body.permissions).to.be.deep.equal(changedPermissions);
-      expect(modifiedAccount.body.createdBy).to.be.equal(adminAccountWithSecret.address);
+      expect(modifiedAccount.body.registeredBy).to.be.equal(adminAccountWithSecret.address);
     });
 
     it('should fail to modify if no token', async () => {

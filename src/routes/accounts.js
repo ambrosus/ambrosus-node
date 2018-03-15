@@ -3,8 +3,8 @@ import asyncMiddleware from '../middlewares/async_middleware';
 import bodyParser from 'body-parser';
 import accessTokenMiddleware from '../middlewares/access_token_middleware';
 
-export const createAccountHandler = (dataModelEngine) => async (req, res) => {
-  const content = await dataModelEngine.createAccount(req.body, req.tokenData);
+export const addAccountHandler = (dataModelEngine) => async (req, res) => {
+  const content = await dataModelEngine.addAccount(req.body, req.tokenData);
   res.status(201)
     .type('json')
     .send(JSON.stringify(content));
@@ -30,7 +30,7 @@ export default (tokenAuthenticator, dataModelEngine) => {
   router.post('/', 
     bodyParser.json(),  
     accessTokenMiddleware(tokenAuthenticator),
-    asyncMiddleware(createAccountHandler(dataModelEngine)));
+    asyncMiddleware(addAccountHandler(dataModelEngine)));
 
   router.get('/:id',
     accessTokenMiddleware(tokenAuthenticator),

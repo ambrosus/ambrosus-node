@@ -16,7 +16,7 @@ describe('Account Repository', () => {
   });
 
   it('account round database trip', async () => {
-    const additionalFields = {createdBy : '0x123', permissions : ['perm1', 'perm2']};
+    const additionalFields = {registeredBy : '0x123', permissions : ['perm1', 'perm2']};
     let accountToStore = put(account, additionalFields);
 
     await accountStore.store(accountToStore);
@@ -26,7 +26,7 @@ describe('Account Repository', () => {
   });
 
   it('account modification in database', async () => {
-    const someParams = {createdBy : '0x123', permissions : ['perm1', 'perm2']};
+    const someParams = {registeredBy : '0x123', permissions : ['perm1', 'perm2']};
     const accountToStore = put(account, someParams);
 
     const changedParams = {permissions : ['perm100', 'perm200']};

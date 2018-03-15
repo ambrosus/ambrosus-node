@@ -1,4 +1,4 @@
-const createAccountRequest = (fields) => ({
+const addAccountRequest = (fields) => ({
   address: account.address,
   permissions: [],
   ...fields
@@ -30,6 +30,6 @@ const notRegisteredAccount = {
 };
 
 export {
-  createAccountRequest, accountWithSecret, account, adminAccount, adminAccountWithSecret,
+  addAccountRequest, accountWithSecret, account, adminAccount, adminAccountWithSecret,
   notRegisteredAccount
 };
