@@ -1,10 +1,12 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import {createWeb3} from '../../src/utils/web3_tools';
 import deployContracts from '../helpers/contracts';
 import {adminAccount} from '../fixtures/account';
+import web3jsChai from '../helpers/events';
+
+chai.use(web3jsChai());
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -13,11 +15,22 @@ const {expect} = chai;
 
 describe('Bundle Registry Contract', () => {
   const bundleId = 'bundleId';
+  const vendorUrl = 'node.ambrosus.com';
   const vendor = adminAccount.address;
   let bundleRegistry;
   let web3;
   let ownerAddress;
   let otherAddress;
+
+  const asciiToHex = (arg) => web3.utils.asciiToHex(arg);
+  const addVendor = (who, url, from = ownerAddress) => bundleRegistry.methods.addToWhitelist(who, url).send({from});
+  const removeVendor = (who, from = ownerAddress) => bundleRegistry.methods.removeFromWhitelist(who).send({from});
+  const isWhitelisted = (who) => bundleRegistry.methods.isWhitelisted(who).call();  
+  const addBundle = (bundleId, vendor, from = ownerAddress) => bundleRegistry.methods.addBundle(asciiToHex(bundleId), vendor).send({from});
+  const getBundleVendor = (bundleId) => bundleRegistry.methods.bundleVendors(asciiToHex(bundleId)).call();
+  const getUrlForVendor = (vendor) => bundleRegistry.methods.getUrlForVendor(vendor).call();
+  const changeVendorUrl = (vendor, url, from = ownerAddress) => bundleRegistry.methods.changeVendorUrl(vendor, url).send({from});
+
 
   beforeEach(async () => {
     web3 = await createWeb3();
@@ -25,93 +38,73 @@ describe('Bundle Registry Contract', () => {
     [ownerAddress, otherAddress] = await web3.eth.getAccounts();
   });
 
-  describe('Whitelisthig', () => {
-    it('only owner should be whitelisted at the beginning', async () => {
-      expect(await bundleRegistry.methods.isWhitelisted(ownerAddress).call()).to.eq(true);
-      expect(await bundleRegistry.methods.isWhitelisted(otherAddress).call()).to.eq(false);
-    });
-
+  describe('Whitelisting', () => {
     it('owner can add/remove whitelisted addresses', async () => {
-      await bundleRegistry.methods.addToWhitelist(otherAddress).send({
-        from: ownerAddress
-      });
-      expect(await bundleRegistry.methods.isWhitelisted(otherAddress).call()).to.eq(true);
-      await bundleRegistry.methods.removeFromWhitelist(otherAddress).send({
-        from: ownerAddress
-      });
-      expect(await bundleRegistry.methods.isWhitelisted(otherAddress).call()).to.eq(false);
+      await addVendor(otherAddress, vendorUrl);
+      expect(await isWhitelisted(otherAddress)).to.eq(true);
+
+      await removeVendor(otherAddress);
+      expect(await isWhitelisted(otherAddress)).to.eq(false);
     });
 
     it('not whitelisted non-owner cannot add/remove whitelisted addresses', async () => {
-      await expect(bundleRegistry.methods.addToWhitelist(otherAddress).send({
-        from: otherAddress
-      })).to.be.rejected;
-      await expect(bundleRegistry.methods.removeFromWhitelist(otherAddress).send({
-        from: otherAddress
-      })).to.be.rejected;
+      expect(addVendor(otherAddress, vendorUrl, otherAddress)).to.be.eventually.rejected;      
+      expect(removeVendor(otherAddress, otherAddress)).to.be.eventually.rejected;
     });
 
     it('whitelisted non-owner cannot add/remove whitelisted addresses', async () => {
-      await bundleRegistry.methods.addToWhitelist(otherAddress).send({
-        from: ownerAddress
-      });
-      await expect(bundleRegistry.methods.addToWhitelist(otherAddress).send({
-        from: otherAddress
-      })).to.be.rejected;
-      await expect(bundleRegistry.methods.removeFromWhitelist(otherAddress).send({
-        from: otherAddress
-      })).to.be.rejected;
+      addVendor(otherAddress, vendorUrl, ownerAddress);
+      expect(addVendor(otherAddress, vendorUrl, otherAddress)).to.be.eventually.rejected;
+      expect(removeVendor(otherAddress, otherAddress)).to.be.eventually.rejected;      
     });
   });
 
+  describe('Updating vendor url', () => {
+    beforeEach(async () => {
+      await addVendor(otherAddress, vendorUrl);
+    });
+
+    it('can get Url', async () => {
+      expect(await getUrlForVendor(otherAddress)).to.eq(vendorUrl);
+    });
+
+    it('owner can update Url', async () => {
+      await changeVendorUrl(otherAddress, 'some.other.url.com');
+      expect(await getUrlForVendor(otherAddress)).to.eq('some.other.url.com');
+    });
+
+    it('non-owner Url update throws', async () => {
+      expect(changeVendorUrl(otherAddress, 'some.other.url.com', otherAddress)).to.be.eventually.rejected;
+      expect(await getUrlForVendor(otherAddress)).to.eq(vendorUrl);
+    });
+  });
 
   describe('Adding bundles', () => {
     it('returns empty address if no bundle with such id stored', async () => {
-      const emptyAddress = await bundleRegistry.methods.bundleVendors(web3.utils.utf8ToHex('notExists')).call();
+      const emptyAddress = await bundleRegistry.methods.bundleVendors(asciiToHex('notExists')).call();
       expect(emptyAddress).to.match(/0x0{32}/);
     });
 
     it('stores bundleId/uploader_vendorId pairs', async () => {
-      await bundleRegistry.methods.addBundle(web3.utils.utf8ToHex(bundleId), vendor).send({
-        from: ownerAddress
-      });
-      const vendorAddress = await bundleRegistry.methods.bundleVendors(web3.utils.utf8ToHex(bundleId)).call();
-      expect(vendorAddress).to.eq(vendor);
+      await addVendor(ownerAddress, vendorUrl);
+      await addBundle(bundleId, vendor);
+      expect(await getBundleVendor(bundleId)).to.eq(vendor);
     });
 
     it('non-whitelisted address cannot add bundle', async () => {
-      await expect(bundleRegistry.methods.addBundle(web3.utils.utf8ToHex(bundleId), vendor).send({
-        from: otherAddress
-      })).to.be.rejected;
+      await expect(addBundle(bundleId, vendor)).to.be.eventually.rejected;
     });
 
     it('non-owner can add bundle after being whitelisted', async () => {
-      await bundleRegistry.methods.addToWhitelist(otherAddress).send({
-        from: ownerAddress
-      });
-      await bundleRegistry.methods.addBundle(web3.utils.utf8ToHex(bundleId), vendor).send({
-        from: otherAddress
-      });
-      const vendorAddress = await bundleRegistry.methods.bundleVendors(web3.utils.utf8ToHex(bundleId)).call();
-      expect(vendorAddress).to.eq(vendor);
+      await addVendor(otherAddress, vendorUrl);
+      await addBundle(bundleId, vendor, otherAddress);
+      expect(await getBundleVendor(bundleId)).to.eq(vendor);
     });
 
     it('emits event when bundle added', async () => {
-      const callback = sinon.spy();
-      // eslint-disable-next-line new-cap
-      bundleRegistry.events.BundleAdded().on('data', callback);
-      expect(callback).to.be.not.called;
-      await bundleRegistry.methods.addBundle(web3.utils.utf8ToHex(bundleId), vendor).send({
-        from: ownerAddress
-      });
-      await bundleRegistry.methods.addBundle(web3.utils.utf8ToHex('bundle2'), vendor).send({
-        from: ownerAddress
-      });
-      expect(callback).to.be.calledTwice;
-      const [event] = callback.getCall(0).args;
-      expect(web3.utils.hexToUtf8(event.returnValues.bundleId)).to.eq(bundleId);
-      const [event2] = callback.getCall(1).args;
-      expect(web3.utils.hexToUtf8(event2.returnValues.bundleId)).to.eq('bundle2');
+      await addVendor(ownerAddress, vendorUrl);      
+      expect(await addBundle(bundleId, vendor)).to.emitEvent('BundleAdded');
+      expect(await addBundle('bundle2', vendor)).to.emitEvent('BundleAdded');
     });
   });
 });

@@ -6,6 +6,7 @@ import chaiHttp from 'chai-http';
 import {adminAccountWithSecret} from '../fixtures/account';
 import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
 import ScenarioBuilder from '../fixtures/scenario_builder';
+import {getDefaultAddress, createWeb3} from '../../src/utils/web3_tools';
 
 chai.use(chaiHttp);
 chai.use(sinonChai);
@@ -13,6 +14,7 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Bundles - Integrations', () => {
+  const url = 'node.ambrosus.com';  
   let apparatus;
   let scenario;
   let res;
@@ -34,6 +36,9 @@ describe('Bundles - Integrations', () => {
 
     scenario = new ScenarioBuilder(apparatus.identityManager, apparatusScenarioProcessor(apparatus));
     await scenario.injectAccount(adminAccountWithSecret);
+
+    const from = getDefaultAddress(await createWeb3());
+    await apparatus.contractManager.bundleRegistry.methods.addToWhitelist(from, url).send({from});
 
     // this 2 assets and 3 events will go into the bundle
     entitiesIds = [
