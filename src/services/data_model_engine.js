@@ -25,10 +25,10 @@ export default class DataModelEngine {
   }
 
   async addAccount(accountRequest, tokenData) {
-    this.accountAccessDefinitions.validateAddAccountRequest(accountRequest);
-
     const registratorAccount = await this.getAccount(tokenData.createdBy, tokenData);
     this.accountAccessDefinitions.ensureHasPermission(registratorAccount, 'register_account');
+
+    this.accountAccessDefinitions.validateAddAccountRequest(accountRequest);
 
     const accountToStore = {
       address: accountRequest.address,

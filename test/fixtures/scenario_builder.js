@@ -28,8 +28,8 @@ class ScenarioBuilder {
   }
 
   async addAccount(accountInx = 0, addressWithSecret = null, fields = {}) {
-    const newAccount = addressWithSecret === null ? this.identityManager.createKeyPair() : addressWithSecret;
-    const accountRequest = addAccountRequest({address: newAccount.address, ...fields});
+    const newScenarioAccount = addressWithSecret === null ? this.identityManager.createKeyPair() : addressWithSecret;
+    const accountRequest = addAccountRequest({address: newScenarioAccount.address, secret: newScenarioAccount.secret, ...fields});
     const processedAccount = await this.processor.onAddAccount(accountRequest, this.accounts[accountInx].secret);
     this.accounts.push(processedAccount);
     return processedAccount;

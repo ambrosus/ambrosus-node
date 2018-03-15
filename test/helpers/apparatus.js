@@ -13,6 +13,7 @@ import AccountAccessDefinitions from '../../src/services/account_access_definiti
 import {adminAccountWithSecret} from '../fixtures/account';
 import ProofRepository from '../../src/services/proof_repository';
 import ContractManager from '../../src/services/contract_manager';
+import {pick} from '../../src/utils/dict_utils';
 
 chai.use(chaiHttp);
 
@@ -92,7 +93,7 @@ const apparatusScenarioProcessor = (apparatus) => ({
     const newAccount = await apparatus.request()
       .post('/accounts')
       .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(secret)}`)
-      .send(accountRequest);
+      .send(pick(accountRequest, 'secret'));
     return newAccount.body;
   }
 });
