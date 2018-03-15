@@ -4,7 +4,7 @@ import chaiAsPromised from 'chai-as-promised';
 import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
 import chaiHttp from 'chai-http';
 
-import {adminAccountWithSecret, notRegisteredAccount, accountWithSecret} from '../fixtures/account';
+import {accountWithSecret, adminAccountWithSecret, notRegisteredAccount} from '../fixtures/account';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {createFullEvent} from '../fixtures/assets_events';
 import {pick} from '../../src/utils/dict_utils';
@@ -108,10 +108,69 @@ describe('Events - Integrations', () => {
     });
   });
 
-  describe('finding events', () => {
+  describe('fetching event', () => {
+    let asset;
+    let event;
+
     before(async () => {
-      await scenario.injectAccount(adminAccountWithSecret);
-      await scenario.addAccount(0, accountWithSecret, {permissions : ['create_entity']});
+      await scenario.injectAccount({...adminAccountWithSecret, accessLevel: 6});
+      await scenario.addAccount(0, accountWithSecret, {permissions : ['create_entity'], accessLevel: 2});
+      asset = await scenario.addAsset();
+      event = await scenario.addEvent(0, 0, {accessLevel: 4});
+    });
+
+    it('works for existing event', async () => {
+      const response = await apparatus.request()
+        .get(`/assets/${asset.assetId}/events/${event.eventId}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`);
+      expect(response.body).to.deep.equal(event);
+    });
+
+    it('hides data field if access level is too low', async () => {
+      const response = await apparatus.request()
+        .get(`/assets/${asset.assetId}/events/${event.eventId}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(scenario.accounts[1].secret)}`);
+      const {body} = response;
+
+      expect(body).to.deep.equal(pick(event, 'content.data'));
+    });
+
+    it('accessLevel = 0 when no token provided', async () => {
+      const response = await apparatus.request()
+        .get(`/assets/${asset.assetId}/events/${event.eventId}`);
+      const {body} = response;
+
+      expect(body).to.deep.equal(pick(event, 'content.data'));
+    });
+
+    it('accessLevel = 0 when address not registered', async () => {
+      const response = await apparatus.request()
+        .get(`/assets/${asset.assetId}/events/${event.eventId}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(accountWithSecret.secret)}`);
+      const {body} = response;
+
+      expect(body).to.deep.equal(pick(event, 'content.data'));
+    });
+
+    it('should return 404 if event with that id doesn\'t exist', async () => {
+      const request = apparatus.request()
+        .get(`/assets/${asset.assetId}/events/nonexistingEvent`);
+      await expect(request).to.eventually.be.rejected
+        .and.have.property('status', 404);
+    });
+
+    after(async () => {
+      await apparatus.cleanDB();
+      scenario.reset();
+    });
+  });
+
+  describe('finding events', () => {
+    const accessLevel = 3;
+
+    before(async () => {
+      await scenario.injectAccount({...adminAccountWithSecret, accessLevel: 10});
+      await scenario.addAccount(0, accountWithSecret, {permissions : ['create_entity'], accessLevel});
       await scenario.addAsset(0);
       await scenario.addAsset(0);
       await scenario.generateEvents(
@@ -119,7 +178,7 @@ describe('Events - Integrations', () => {
         (inx) => ({
           accountInx: inx % 4 === 0 ? 1 : 0,
           subjectInx: inx % 3 === 0 ? 1 : 0,
-          fields: {timestamp: inx},
+          fields: {timestamp: inx, accessLevel: inx % 10},
           data: {}
         })
       );
@@ -135,6 +194,50 @@ describe('Events - Integrations', () => {
       expect(body.resultCount).to.equal(12);
       expect(body.results[0]).to.deep.equal(scenario.events[11]);
       expect(body.results[3]).to.deep.equal(scenario.events[8]);
+    });
+
+    it('hides data field if access level is too low', async () => {
+      const response = await apparatus.request().get(`/events`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(scenario.accounts[1].secret)}`);
+      const {body} = response;
+
+      expect(body.results).to.have.length(12);
+      body.results.forEach((event) => {
+        if (event.content.idData.accessLevel <= accessLevel) {
+          expect(event.content).to.include.key('data');
+        } else {
+          expect(event.content).to.not.include.key('data');
+        }
+      });
+      expect(body.results.filter((event) => event.content.data)).to.have.length(6);
+    });
+
+    it('accessLevel = 0 when no token provided', async () => {
+      const response = await apparatus.request().get(`/events`);
+      const {body} = response;
+
+      expect(body.results).to.have.length(12);
+      body.results.forEach((event) => {
+        if (event.content.idData.accessLevel === 0) {
+          expect(event.content).to.include.key('data');
+        } else {
+          expect(event.content).to.not.include.key('data');
+        }
+      });
+    });
+
+    it('accessLevel = 0 when address not registered', async () => {
+      const response = await apparatus.request().get(`/events`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(notRegisteredAccount.secret)}`);
+      const {body} = response;
+
+      body.results.forEach((event) => {
+        if (event.content.idData.accessLevel === 0) {
+          expect(event.content).to.include.key('data');
+        } else {
+          expect(event.content).to.not.include.key('data');
+        }
+      });
     });
 
     it('with page and perPage returns events from selected page', async () => {
@@ -251,7 +354,12 @@ describe('Events - Integrations', () => {
       expect(body.results).to.have.lengthOf(4);
       expect(body.resultCount).to.equal(9);
       body.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(2, 10));
-    });    
+    });
+
+    after(async () => {
+      await apparatus.cleanDB();
+      scenario.reset();
+    });
   });
 
   after(async () => {

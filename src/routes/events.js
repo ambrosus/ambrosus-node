@@ -16,7 +16,7 @@ const eventsRouter = (tokenAuthenticator, identityManager, modelEngine) => {
   const router = new express.Router();
 
   router.get('/',
-    accessTokenMiddleware(tokenAuthenticator),
+    accessTokenMiddleware(tokenAuthenticator, false),
     asyncMiddleware(findEventsHandler(modelEngine))
   );
 

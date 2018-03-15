@@ -23,6 +23,10 @@ export default class EntityRepository {
 
   async getEvent(eventId, accessLevel = 0) {
     const event = await this.db.collection('events').findOne({eventId}, {fields: this.blacklistedFields});
+    return this.hideEventDataIfNecessary(event, accessLevel);
+  }
+
+  hideEventDataIfNecessary(event, accessLevel) {
     if (!event) {
       return null;
     }
@@ -82,12 +86,7 @@ export default class EntityRepository {
           fields: this.blacklistedFields
         }
       )
-      .map((event) => {
-        if (event.content.idData.accessLevel <= accessLevel) {
-          return event;
-        }
-        return pick(event, 'content.data');
-      });
+      .map((event) => this.hideEventDataIfNecessary(event, accessLevel));
     return {
       results: await cursor.toArray(),
       resultCount: await cursor.count(false)

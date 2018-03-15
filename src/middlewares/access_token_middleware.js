@@ -1,14 +1,24 @@
 import {InvalidParametersError, AuthenticationError} from '../errors/errors';
 
-const accessTokenMiddleware = (tokenAuthenticator) => ((req, res, next) => {
+const accessTokenMiddleware = (tokenAuthenticator, required = true) => ((req, res, next) => {
   const authorizationHeader = req.headers.authorization;
   if (!authorizationHeader) {
-    throw new AuthenticationError('Authorization AMB_TOKEN header not found');
+    if (required) {
+      throw new AuthenticationError('Authorization AMB_TOKEN header not found');
+    } else {
+      next();
+      return;
+    }
   }
 
   const [type, token] = authorizationHeader.split(' ');
   if (type !== 'AMB_TOKEN') {
-    throw new InvalidParametersError(`Expected Authorization type AMB_TOKEN`);
+    if (required) {
+      throw new InvalidParametersError(`Expected Authorization type AMB_TOKEN`);
+    } else {
+      next();
+      return;
+    }
   }
 
   const {idData} = tokenAuthenticator.decodeToken(token, Date.now());  

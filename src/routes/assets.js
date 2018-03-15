@@ -79,12 +79,12 @@ const assetRouter = (tokenAuthenticator, identityManager, modelEngine) => {
   );
 
   router.get('/:assetId/events/:eventId',
-    accessTokenMiddleware(tokenAuthenticator),
+    accessTokenMiddleware(tokenAuthenticator, false),
     asyncMiddleware(fetchEventHandler(modelEngine))
   );
 
   router.get('/:assetId/events/',
-    accessTokenMiddleware(tokenAuthenticator),
+    accessTokenMiddleware(tokenAuthenticator, false),
     asyncMiddleware(findEventsPerAssetHandler(modelEngine))
   );
 

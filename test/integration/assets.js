@@ -118,32 +118,6 @@ describe('Assets - Integrations', () => {
     });
   });
 
-  describe('fetching event', () => {
-    let asset;
-    let event;
-
-
-    beforeEach(async () => {
-      asset = await scenario.addAsset();
-      event = await scenario.addEvent();
-    });
-
-    it('works for existing event', async () => {
-      const response = await apparatus.request()
-        .get(`/assets/${asset.assetId}/events/${event.eventId}`)
-        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`);
-      expect(response.body).to.deep.equal(event);
-    });
-
-    it('should return 404 if asset with that id doesn\'t exist', async () => {
-      const request = apparatus.request()
-        .get(`/assets/${asset.assetId}/events/nonexistingEvent`)
-        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`);
-      await expect(request).to.eventually.be.rejected
-        .and.have.property('status', 404);
-    });
-  });
-
   after(async () => {
     apparatus.stop();
   });

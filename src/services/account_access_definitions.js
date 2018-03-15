@@ -1,4 +1,4 @@
-import {validateFieldsConstrainedToSet, validateNonNegativeInteger, validatePathsNotEmpty, validateFieldsConstrainedToSet} from '../utils/validations';
+import {validateFieldsConstrainedToSet, validateNonNegativeInteger, validatePathsNotEmpty} from '../utils/validations';
 import {PermissionError, ValidationError} from '../errors/errors';
 
 export default class AccountAccessDefinitions {
@@ -17,6 +17,17 @@ export default class AccountAccessDefinitions {
     }
   }
 
+  async getTokenCreatorAccessLevel(tokenData) {
+    if (!tokenData) {
+      return 0;
+    }
+    const creatorAccount = await this.accountRepository.get(tokenData.createdBy);
+    if (creatorAccount === null) {
+      return 0;
+    }
+    return creatorAccount.accessLevel;
+  }
+
   hasPermission(account, permissionName) {
     return account.permissions.indexOf(permissionName) >= 0;
   }
@@ -25,14 +36,15 @@ export default class AccountAccessDefinitions {
     return ['change_account_permissions', 'register_account', 'create_entity'];
   }
 
-  validateNewAccountRequest(account) {
+  validateAddAccountRequest(account) {
     const registrationFields = [
       'address',
-      'permissions'
+      'permissions',
+      'accessLevel'
     ];
     validatePathsNotEmpty(account, registrationFields);
     validateFieldsConstrainedToSet(account, registrationFields);
-    validateNonNegativeInteger(account.accessLevel, 'AccessLevel should be a not negative integer');
+    validateNonNegativeInteger(account.accessLevel, 'AccessLevel should be a non-negative integer');
   }
 
   validateModifyAccountRequest(params) {

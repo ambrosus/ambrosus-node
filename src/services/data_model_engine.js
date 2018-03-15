@@ -25,8 +25,8 @@ export default class DataModelEngine {
   }
 
   async addAccount(accountRequest, tokenData) {
+    await this.accountAccessDefinitions.ensureHasPermission(tokenData.createdBy, 'register_account');
     this.accountAccessDefinitions.validateAddAccountRequest(accountRequest);
-    await this.accountAccessDefinitions.ensureHasPermission(accountRequest.createdBy, 'create_account');
 
     const accountToStore = {
       address: accountRequest.address,
@@ -36,17 +36,6 @@ export default class DataModelEngine {
     };
     await this.accountRepository.store(accountToStore);
     return accountToStore;
-  }
-
-  async getTokenCreatorAccessLevel(tokenData) {
-    if (!tokenData) {
-      return 0;
-    }
-    const creatorAccount = await this.accountRepository.get(tokenData.createdBy);
-    if (creatorAccount === null) {
-      return 0;
-    }
-    return creatorAccount.accessLevel;
   }
 
   async getAccount(address, tokenData) {
@@ -105,7 +94,7 @@ export default class DataModelEngine {
   }
 
   async getEvent(eventId, tokenData) {
-    const accessLevel = await this.getTokenCreatorAccessLevel(tokenData);
+    const accessLevel = await this.accountAccessDefinitions.getTokenCreatorAccessLevel(tokenData);
     const event = await this.entityRepository.getEvent(eventId, accessLevel);
     if (event === null) {
       throw new NotFoundError(`No event with id = ${eventId} found`);
@@ -115,7 +104,7 @@ export default class DataModelEngine {
 
   async findEvents(params, tokenData) {
     const validatedParams = this.entityBuilder.validateAndCastFindEventsParams(params);
-    const accessLevel = await this.getTokenCreatorAccessLevel(tokenData);
+    const accessLevel = await this.accountAccessDefinitions.getTokenCreatorAccessLevel(tokenData);
     return this.entityRepository.findEvents(validatedParams, accessLevel);
   }
 

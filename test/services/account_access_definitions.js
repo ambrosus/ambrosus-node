@@ -7,6 +7,8 @@ import AccountAccessDefinitions from '../../src/services/account_access_definiti
 import {PermissionError, ValidationError} from '../../src/errors/errors';
 import {account, addAccountRequest} from '../fixtures/account';
 import {pick, put} from '../../src/utils/dict_utils';
+import resetHistory from '../helpers/reset_history';
+import createTokenFor from '../fixtures/create_token_for';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -14,9 +16,11 @@ const {expect} = chai;
 
 describe('Account Access Definitions', () => {
   const permissions = ['permission1', 'permission2'];
+  const accessLevel = 4;
   const mockAccount = {
     ...account,
-    permissions
+    permissions,
+    accessLevel
   };
   let mockIdentityManager = null;
   let mockAccountRepository;
@@ -34,6 +38,7 @@ describe('Account Access Definitions', () => {
   });
 
   beforeEach(() => {
+    resetHistory(mockIdentityManager, mockAccountRepository);
     mockAccountRepository.get.resolves(mockAccount);
   });
 
@@ -43,27 +48,51 @@ describe('Account Access Definitions', () => {
     expect(accountAccessDefinitions.hasPermission(mockAccount, 'topsecret')).to.eq(false);
   });
 
-  it('ensurePermission asks accountRepository for acocunt', async () => {
-    await accountAccessDefinitions.ensureHasPermission(mockAccount.address, permissions[0]);
-    expect(mockAccountRepository.get).to.be.calledWith(mockAccount.address);
-  });
+  describe('ensurePermission', () => {
+    it('asks accountRepository for acocunt', async () => {
+      await expect(accountAccessDefinitions.ensureHasPermission(mockAccount.address, permissions[0]))
+        .to.be.fulfilled;
+      expect(mockAccountRepository.get).to.be.calledWith(mockAccount.address);
+    });
 
-  it('ensurePermission throws PermissionError when account has no permission', async () => {
-    await expect(accountAccessDefinitions.ensureHasPermission(mockAccount.address, permissions[0]))
-      .to.be.fulfilled;
-    await expect(accountAccessDefinitions.ensureHasPermission(mockAccount.address, 'topsecret'))
-      .to.be.rejectedWith(PermissionError);
-  });
+    it('throws PermissionError when account has no permission', async () => {
+      await expect(accountAccessDefinitions.ensureHasPermission(mockAccount.address, 'topsecret'))
+        .to.be.rejectedWith(PermissionError);
+    });
 
-  it('ensurePermission throws PermissionError when account with this address not found', async () => {
-    mockAccountRepository.get.resolves(null);
-    await expect(accountAccessDefinitions.ensureHasPermission(mockAccount.address, permissions[0]))
-      .to.be.rejectedWith(PermissionError);
+    it('throws PermissionError when account with this address not found', async () => {
+      mockAccountRepository.get.resolves(null);
+      await expect(accountAccessDefinitions.ensureHasPermission(mockAccount.address, permissions[0]))
+        .to.be.rejectedWith(PermissionError);
+    });
   });
 
   it('defaultAdminPermissions returns correct list', async () => {
     expect(accountAccessDefinitions.defaultAdminPermissions())
       .to.deep.eq(['change_account_permissions', 'register_account', 'create_entity']);
+  });
+
+  describe('getTokenCreatorAccessLevel', () => {
+    const mockToken = createTokenFor({createdBy: mockAccount.address});
+
+    it('returns accessLevel of the account if registered', async () => {
+      await expect(accountAccessDefinitions.getTokenCreatorAccessLevel(mockToken))
+        .to.be.eventually.equal(accessLevel);
+      expect(mockAccountRepository.get).to.be.calledWith(mockToken.createdBy);
+    });
+
+    it('assumes access level = 0 when no token provided', async () => {
+      await expect(accountAccessDefinitions.getTokenCreatorAccessLevel())
+        .to.be.eventually.equal(0);
+      await expect(accountAccessDefinitions.getTokenCreatorAccessLevel(null))
+        .to.be.eventually.equal(0);
+    });
+
+    it('assumes access level = 0 when user not registered', async () => {
+      mockAccountRepository.get.resolves(null);
+      await expect(accountAccessDefinitions.getTokenCreatorAccessLevel(mockToken))
+        .to.be.eventually.equal(0);
+    });
   });
 
   describe('validating account registration', () => {
@@ -89,12 +118,12 @@ describe('Account Access Definitions', () => {
 
     it('throws if accessLevel is not integer', async () => {
       const brokenData = put(account, 'accessLevel', 3.14);
-      expect(() => accountAccessDefinitions.validateNewAccountRequest(brokenData)).to.throw(ValidationError);
+      expect(() => accountAccessDefinitions.validateAddAccountRequest(brokenData)).to.throw(ValidationError);
     });
 
     it('throws if accessLevel is negative', async () => {
       const brokenData = put(account, 'accessLevel', -10);
-      expect(() => accountAccessDefinitions.validateNewAccountRequest(brokenData)).to.throw(ValidationError);
+      expect(() => accountAccessDefinitions.validateAddAccountRequest(brokenData)).to.throw(ValidationError);
     });
   });
 
@@ -105,10 +134,10 @@ describe('Account Access Definitions', () => {
     });
 
     it(`throws if any parameters is invalid`, () => {
-      const invalidParams1 = {permissions : 'notArrayPermission'};
-      const invalidParams2 = {accessLevel: -5};
-      expect(() => accountAccessDefinitions.validateModifyAccountRequest(invalidParams1)).to.throw(ValidationError);
-      expect(() => accountAccessDefinitions.validateModifyAccountRequest(invalidParams2)).to.throw(ValidationError);
+      expect(() => accountAccessDefinitions.validateModifyAccountRequest({permissions : 'notArrayPermission'}))
+        .to.throw(ValidationError);
+      expect(() => accountAccessDefinitions.validateModifyAccountRequest({accessLevel: -5}))
+        .to.throw(ValidationError);
     });
   });
 });
