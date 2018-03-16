@@ -60,3 +60,49 @@ You will also have to create yourself an admin account in the app:
 docker-compose exec ambnode yarn ops:admin:create
 ```
 
+## Workers
+Following workers are required for Ambrosus node to work.
+
+Bundle finalization worker gathers entities, packs them in bundles and stores the proofs on the blockchain. To lunch the worker type:
+
+```
+ops:bundle:finalisation
+```
+
+You can run the worker in dev mode with:
+```
+dev:bundle:finalisation
+```
+
+## Bundle contract tasks
+Entities (assets and events) are packaged together into bundles. Proof (hash) of the bundle is then uploaded to the bundle management smart contract.
+There are a couple of handy tasks to manage bundle contract.
+
+To use those tasks you need set node environment first, i.e. to run in development mode:
+```
+export NODE_ENV=dev && ...
+```
+
+Available commands:
+
+```
+//deploy new instance of a contract (don't forget to update /config/{env}.json)
+yarn run ops:deploy:bundleregistry                                                        
+
+//add an address to the whitelist 
+yarn run ops:bundle:whitelist --add -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466" -u "node.ambrosus.com"      
+
+//check if address is on a whitelist
+yarn run ops:bundle:whitelist --check -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"    
+
+//remove address from whitelist
+yarn run ops:bundle:whitelist --remove -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"   
+
+//get url of the node
+yarn run ops:bundle:whitelist --geturl -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"
+
+//set node url
+yarn run ops:bundle:whitelist --seturl -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466" -u "node.amb.to"
+```
+
+
