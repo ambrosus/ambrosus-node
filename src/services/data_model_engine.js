@@ -1,11 +1,12 @@
 import {NotFoundError, InvalidParametersError, PermissionError} from '../errors/errors';
 
 export default class DataModelEngine {
-  constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, proofRepository, accountRepository, accountAccessDefinitions) {
+  constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, proofRepository, accountRepository, accountAccessDefinitions) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
     this.entityRepository = entityRepository;
+    this.entityDownloader = entityDownloader;
     this.proofRepository = proofRepository;
     this.accountRepository = accountRepository;
     this.accountAccessDefinitions = accountAccessDefinitions;
@@ -131,5 +132,16 @@ export default class DataModelEngine {
     await this.entityRepository.storeBundleProofBlock(newBundle.bundleId, blockNumber);
 
     return newBundle;
+  }
+
+  async downloadBundle(bundleId, vendorId) {
+    const processedBundle = await this.entityRepository.getBundle(bundleId);
+    if (processedBundle) {
+      return processedBundle;
+    }
+    const vendorUrl = await this.proofRepository.getVendorUrl(vendorId);
+    const bundle = await this.entityDownloader.downloadBundle(vendorUrl, bundleId);
+    await this.entityRepository.storeBundle(bundle);
+    return bundle;
   }
 }

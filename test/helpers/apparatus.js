@@ -2,6 +2,7 @@ import Server from '../../src/server';
 import {connectToMongo, cleanDatabase} from '../../src/utils/db_utils';
 import {createWeb3} from '../../src/utils/web3_tools';
 import TokenAuthenticator from '../../src/utils/token_authenticator';
+import HttpsClient from '../../src/utils/https_client';
 import IdentityManager from '../../src/services/identity_manager';
 import AccountRepository from '../../src/services/account_repository';
 import EntityBuilder from '../../src/services/entity_builder';
@@ -13,6 +14,7 @@ import AccountAccessDefinitions from '../../src/services/account_access_definiti
 import {adminAccountWithSecret} from '../fixtures/account';
 import ProofRepository from '../../src/services/proof_repository';
 import ContractManager from '../../src/services/contract_manager';
+import EntityDownloader from '../../src/services/entity_downloader';
 
 chai.use(chaiHttp);
 
@@ -33,6 +35,8 @@ export default class Apparatus {
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
     this.entityBuilder = new EntityBuilder(this.identityManager);
     this.entityRepository = new EntityRepository(db);
+    this.httpsClient = new HttpsClient();
+    this.entityDownloader = new EntityDownloader(this.httpsClient);
     this.proofRepository = new ProofRepository(this.web3, this.contractManager, this.identityManager);
     this.accountRepository = new AccountRepository(db);
     this.accountAccessDefinitions = new AccountAccessDefinitions(this.identityManager, this.accountRepository);
@@ -41,6 +45,7 @@ export default class Apparatus {
       this.tokenAuthenticator, 
       this.entityBuilder, 
       this.entityRepository,
+      this.entityDownloader,
       this.proofRepository,
       this.accountRepository,
       this.accountAccessDefinitions);

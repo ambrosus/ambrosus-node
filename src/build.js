@@ -1,5 +1,6 @@
 import {connectToMongo} from './utils/db_utils';
 import {createWeb3} from './utils/web3_tools';
+import HttpsClient from './utils/https_client';
 import IdentityManager from './services/identity_manager';
 import TokenAuthenticator from './utils/token_authenticator';
 import EntityBuilder from './services/entity_builder';
@@ -9,6 +10,7 @@ import DataModelEngine from './services/data_model_engine';
 import AccountAccessDefinitions from './services/account_access_definitions';
 import ProofRepository from './services/proof_repository';
 import ContractManager from './services/contract_manager';
+import EntityDownloader from './services/entity_downloader';
 
 export default async function build() {
   const {db, client} = await connectToMongo();
@@ -21,11 +23,14 @@ export default async function build() {
   const proofRepository = new ProofRepository(web3, contractManager, identityManager);
   const accountRepository = new AccountRepository(db);
   const accountAccessDefinitions = new AccountAccessDefinitions(identityManager, accountRepository);
+  const httpsClient = new HttpsClient();
+  const entityDownloader = new EntityDownloader(httpsClient);
   const dataModelEngine = new DataModelEngine(
     identityManager, 
     tokenAuthenticator, 
     entityBuilder, 
-    entityRepository, 
+    entityRepository,
+    entityDownloader,
     proofRepository, 
     accountRepository,
     accountAccessDefinitions);
