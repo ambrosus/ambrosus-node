@@ -60,7 +60,21 @@ You will also have to create yourself an admin account in the app:
 docker-compose exec ambnode yarn ops:admin:create
 ```
 
-## Bundle contract routines
+## Workers
+Following workers are required for Ambrosus node to work.
+
+Bundle finalization worker gathers entities, packs them in bundles and stores the proofs on the blockchain. To lunch the worker type:
+
+```
+ops:bundle:finalisation
+```
+
+You can run the worker in dev mode with:
+```
+dev:bundle:finalisation
+```
+
+## Bundle contract tasks
 Entities (assets and events) are packaged together into bundles. Proof (hash) of the bundle is then uploaded to the bundle management smart contract.
 There are a couple of handy tasks to manage bundle contract.
 
