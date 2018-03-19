@@ -1,4 +1,5 @@
-import {InvalidParametersError} from '../errors/errors';
+import {InvalidParametersError, PermissionError} from '../errors/errors';
+import Config from '../utils/config';
 
 const ambAuthorizationHeaderMiddleware = (req, res, next) => {
   const authorizationHeader = req.headers.authorization;
@@ -7,6 +8,9 @@ const ambAuthorizationHeaderMiddleware = (req, res, next) => {
     return;
   }
 
+  if (!Config.isAuthorizationWithSecretKeyEnabled()) {
+    throw new PermissionError('Authorization by secret key is not possible');
+  }
   const [type, secret] = authorizationHeader.split(' ');
   if (type !== 'AMB') {
     throw new InvalidParametersError(`Only Authorization type AMB is supported`);

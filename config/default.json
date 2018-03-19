@@ -1,5 +1,6 @@
 {
   "bundle": {
     "finalisationInterval": 15000
-  }
+  },
+  "authorizationWithSecretEnabled": false
 }

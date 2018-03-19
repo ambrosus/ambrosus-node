@@ -35,4 +35,8 @@ export default class Config {
   static web3Rpc() {
     return Config.get('web3.rpc', process.env.WEB3_RPC);
   }
+
+  static isAuthorizationWithSecretKeyEnabled() {
+    return Config.get('authorizationWithSecretEnabled');
+  }
 }
