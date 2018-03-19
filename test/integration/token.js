@@ -15,20 +15,21 @@ describe('Token - Integrations', async () => {
   const requestData = {
     validUntil: 42
   };
+
   const expectedToken = 'eyJpZERhdGEiOnsiY3JlYXRlZEJ5IjoiMHg3NDJFNjJDQzdBMTlFZjdEOWM0NDMwNkMwN0ZBZDU0QjViRjZkNGJFIiwidmFsaWRVbnRpbCI6NDJ9LCJzaWduYXR1cmUiOiIweDY4MWVjZjRiNzM3YzViNGY5ZjlhYTZlMDUzOWIzMzAyNzY0NDQzYWRlNWNmMWJhMTIxMGFmNzA1MTdkYTczOWY1MzBlNTEwYmI0NTc1N2YyNWZiZTE3NzczMWVhNzAxYjVmOTU5NGZlYmQ0ZDA2YjEwOGYyM2NhYjAyMmU5MzNmMWIifQ';
 
   let apparatus;
-  let ambAuthDisabledStub;
+  let ambAuthEnabledStub;
 
   before(async () => {
     apparatus = new Apparatus();
-    ambAuthDisabledStub = stub(Config, 'isAuthorizationWithSecretKeyEnabled');
+    ambAuthEnabledStub = stub(Config, 'isAuthorizationWithSecretKeyEnabled');
 
     await apparatus.start();
   });
 
   beforeEach(async () => {
-    ambAuthDisabledStub.returns(true);
+    ambAuthEnabledStub.returns(true);
     await apparatus.cleanDB();
   });
 
@@ -80,7 +81,7 @@ describe('Token - Integrations', async () => {
   });
 
   it('throws 403 if amb auth is disabled', async () => {
-    ambAuthDisabledStub.returns(false);
+    ambAuthEnabledStub.returns(false);
     const request = apparatus.request()
       .post('/token')
       .set('authorization', `AMB ${pkPair.secret}`)
@@ -89,7 +90,7 @@ describe('Token - Integrations', async () => {
   });
 
   after(async () => {
-    ambAuthDisabledStub.restore();
+    ambAuthEnabledStub.restore();
     apparatus.stop();
   });
 });
