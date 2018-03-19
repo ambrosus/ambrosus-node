@@ -17,6 +17,14 @@ export default class AccountAccessDefinitions {
     }
   }
 
+  async ensureCanRegisterAccount(address) {
+    return this.ensureHasPermission(address, 'register_account');
+  }
+
+  async ensureCanCreateEntity(address) {
+    return this.ensureHasPermission(address, 'create_entity');
+  }
+
   async getTokenCreatorAccessLevel(tokenData) {
     if (!tokenData) {
       return 0;
@@ -33,7 +41,7 @@ export default class AccountAccessDefinitions {
   }
 
   defaultAdminPermissions() {
-    return ['change_account_permissions', 'register_account', 'create_entity'];
+    return ['register_account', 'create_entity'];
   }
 
   validateAddAccountRequest(account) {
