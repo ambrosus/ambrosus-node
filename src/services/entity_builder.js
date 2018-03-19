@@ -1,4 +1,7 @@
-import {validatePathsNotEmpty, validateFieldsConstrainedToSet, validateIntegerParameterAndCast} from '../utils/validations';
+import {
+  validatePathsNotEmpty, validateFieldsConstrainedToSet,
+  validateIntegerParameterAndCast, validateNonNegativeInteger
+} from '../utils/validations';
 
 import {put, pick} from '../utils/dict_utils';
 import {InvalidParametersError} from '../errors/errors';
@@ -31,10 +34,11 @@ export default class EntityBuilder {
       'content.idData.createdBy',
       'content.idData.timestamp',
       'content.idData.dataHash',
+      'content.idData.accessLevel',
       'content.data'
     ]);
     validateFieldsConstrainedToSet(event, ['content', 'eventId']);
-
+    validateNonNegativeInteger(event.content.idData.accessLevel, `Access level should be a non-negative integer, instead got ${event.content.idData.accessLevel}`);
     this.identityManager.validateSignature(event.content.idData.createdBy, event.content.signature, event.content.idData);
   }
 

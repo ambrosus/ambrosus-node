@@ -1,3 +1,5 @@
+import {pick} from '../utils/dict_utils';
+
 export default class EntityRepository {
   constructor(db) {
     this.db = db;
@@ -19,8 +21,16 @@ export default class EntityRepository {
     await this.db.collection('events').insertOne({...event});
   }
 
-  async getEvent(eventId) {
-    return await this.db.collection('events').findOne({eventId}, {fields: this.blacklistedFields});
+  async getEvent(eventId, accessLevel = 0) {
+    const event = await this.db.collection('events').findOne({eventId}, {fields: this.blacklistedFields});
+    return this.hideEventDataIfNecessary(event, accessLevel);
+  }
+
+  hideEventDataIfNecessary(event, accessLevel) {
+    if (!event) {
+      return null;
+    }
+    return event.content.idData.accessLevel <= accessLevel ? event : pick(event, 'content.data');
   }
 
   getConfigurationForFindEventsQuery(params) {
@@ -64,7 +74,7 @@ export default class EntityRepository {
     };
   }
 
-  async findEvents(params) {
+  async findEvents(params, accessLevel = 0) {
     const {query, options} = this.getConfigurationForFindEventsQuery(params);
 
     const cursor = this.db
@@ -75,8 +85,8 @@ export default class EntityRepository {
           ...options,
           fields: this.blacklistedFields
         }
-      );
-
+      )
+      .map((event) => this.hideEventDataIfNecessary(event, accessLevel));
     return {
       results: await cursor.toArray(),
       resultCount: await cursor.count(false)

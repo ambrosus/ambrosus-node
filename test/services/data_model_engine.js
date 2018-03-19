@@ -2,13 +2,13 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import {put, pick} from '../../src/utils/dict_utils';
+import {pick, put} from '../../src/utils/dict_utils';
 
 import DataModelEngine from '../../src/services/data_model_engine';
 import {InvalidParametersError, NotFoundError, PermissionError, ValidationError} from '../../src/errors/errors';
 
-import {createAsset, createEvent, createBundle} from '../fixtures/assets_events';
-import {accountWithSecret, adminAccount, adminAccountWithSecret, addAccountRequest, account} from '../fixtures/account';
+import {createAsset, createBundle, createEvent} from '../fixtures/assets_events';
+import {account, accountWithSecret, addAccountRequest, adminAccount, adminAccountWithSecret} from '../fixtures/account';
 
 import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
@@ -68,15 +68,21 @@ describe('Data Model Engine', () => {
 
     it('validates with mockIdentityManager and delegates to accountRepository', async () => {
       const request = addAccountRequest();
-      const registrationResponse = {address: account.address, permissions : [], registeredBy : adminAccount.address};
-      expect(await modelEngine.addAccount(request, createTokenFor(adminAccount.address))).to.deep.equal(registrationResponse);
+      const registrationResponse = {
+        address: account.address,
+        permissions: ['permission1', 'permission2'],
+        registeredBy: adminAccount.address,
+        accessLevel: 7
+      };
+      expect(await modelEngine.addAccount(request, createTokenFor(adminAccount.address)))
+        .to.deep.equal(registrationResponse);
       expect(mockAccountAccessDefinitions.validateAddAccountRequest).to.have.been.called;
+      expect(mockAccountAccessDefinitions.ensureHasPermission)
+        .to.have.been.calledWith(adminAccount.address, 'register_account');
       expect(mockAccountRepository.store).to.have.been.calledWith({
-        address: request.address,
-        permissions: request.permissions,
-        registeredBy : adminAccount.address
+        registeredBy : adminAccount.address,
+        ...registrationResponse
       });
-      expect(mockAccountRepository.get).to.have.been.calledWith(adminAccount.address);
     });
 
     it('throws ValidationError if wrong request format', async () => {
@@ -87,7 +93,7 @@ describe('Data Model Engine', () => {
     });
 
     it('throws PermissionError if account sender account does not exist', async () => {
-      mockAccountRepository.get.returns(null);
+      mockAccountAccessDefinitions.ensureHasPermission.rejects(new PermissionError());
 
       const request = addAccountRequest();
       await expect(modelEngine.addAccount(request, createTokenFor(adminAccount.address))).to.be.rejectedWith(PermissionError);
@@ -228,7 +234,6 @@ describe('Data Model Engine', () => {
   describe('Creating an asset', () => {
     let mockEntityBuilder;
     let mockEntityRepository;
-    let mockAccountRepository;
     let mockAccountAccessDefinitions;
     let modelEngine;
 
@@ -240,24 +245,20 @@ describe('Data Model Engine', () => {
       mockEntityRepository = {
         storeAsset: sinon.stub()
       };
-      mockAccountRepository = {
-        get: sinon.stub()
-      };
       mockAccountAccessDefinitions = {
         ensureHasPermission: sinon.stub()
       };
 
-      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository,{}, mockAccountRepository, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository,{}, {}, mockAccountAccessDefinitions);
     });
 
     const restoreDefaultBehaviour = () => {
-      resetHistory(mockEntityBuilder, mockEntityRepository, mockAccountRepository);
+      resetHistory(mockEntityBuilder, mockEntityRepository);
 
       mockEntityBuilder.validateAsset.returns();
       mockEntityBuilder.setBundle.returns(mockAsset);
       mockEntityRepository.storeAsset.resolves();
-      mockAccountRepository.get.resolves(accountWithSecret);
-      mockAccountAccessDefinitions.ensureHasPermission.returns();
+      mockAccountAccessDefinitions.ensureHasPermission.resolves();
     };
 
     describe('positive case', () => {
@@ -270,14 +271,9 @@ describe('Data Model Engine', () => {
         expect(mockEntityBuilder.validateAsset).to.have.been.calledWith(mockAsset);
       });
 
-      it('checks if creator address is registered', () => {
-        expect(mockAccountRepository.get).to.have.been.calledWith(mockAsset.content.idData.createdBy);
-        expect(mockAccountRepository.get).to.have.been.calledOnce;
-      });
-
       it('checks if creator has required permission', async () => {
         expect(mockAccountAccessDefinitions.ensureHasPermission)
-          .to.have.been.calledWith(accountWithSecret, 'create_entity');
+          .to.have.been.calledWith(mockAsset.content.idData.createdBy, 'create_entity');
       });
 
       it('sets the bundle to be null', () => {
@@ -292,11 +288,6 @@ describe('Data Model Engine', () => {
     describe('negative case', () => {
       beforeEach(() => {
         restoreDefaultBehaviour();
-      });
-
-      it('throws if creator address is not registered', async () => {
-        mockAccountRepository.get.resolves(null);
-        await expect(modelEngine.createAsset(mockAsset)).to.be.rejectedWith(PermissionError);
       });
 
       it('throws if creator has no permission for adding assets', async () => {
@@ -348,7 +339,6 @@ describe('Data Model Engine', () => {
   describe('Creating an event', () => {
     let mockEntityBuilder;
     let mockEntityRepository;
-    let mockAccountRepository;
     let mockAccountAccessDefinitions;
     let modelEngine;
 
@@ -361,25 +351,21 @@ describe('Data Model Engine', () => {
         storeEvent: sinon.stub(),
         getAsset: sinon.stub()
       };
-      mockAccountRepository = {
-        get: sinon.stub()
-      };
       mockAccountAccessDefinitions = {
         ensureHasPermission: sinon.stub()
       };
 
-      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository,{}, mockAccountRepository, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository,{}, {}, mockAccountAccessDefinitions);
     });
 
     const restoreDefaultBehaviour = () => {
-      resetHistory(mockEntityBuilder, mockEntityRepository, mockAccountRepository);
+      resetHistory(mockEntityBuilder, mockEntityRepository);
 
       mockEntityBuilder.validateEvent.returns();
       mockEntityBuilder.setBundle.returns(mockEvent);
       mockEntityRepository.storeEvent.resolves();
       mockEntityRepository.getAsset.resolves(mockAsset);
-      mockAccountRepository.get.resolves(accountWithSecret);
-      mockAccountAccessDefinitions.ensureHasPermission.returns();
+      mockAccountAccessDefinitions.ensureHasPermission.resolves();
     };
 
     describe('positive case', () => {
@@ -392,14 +378,9 @@ describe('Data Model Engine', () => {
         expect(mockEntityBuilder.validateEvent).to.have.been.calledWith(mockEvent);
       });
 
-      it('checks if creator address is registered', () => {
-        expect(mockAccountRepository.get).to.have.been.calledWith(mockEvent.content.idData.createdBy);
-        expect(mockAccountRepository.get).to.have.been.calledOnce;
-      });
-
       it('checks if creator has required permission', async () => {
         expect(mockAccountAccessDefinitions.ensureHasPermission)
-          .to.have.been.calledWith(accountWithSecret, 'create_entity');
+          .to.have.been.calledWith(mockEvent.content.idData.createdBy, 'create_entity');
       });
 
       it('checks if target asset exists', () => {
@@ -418,11 +399,6 @@ describe('Data Model Engine', () => {
     describe('negative', () => {
       beforeEach(() => {
         restoreDefaultBehaviour();
-      });
-
-      it('throws if creator address is not registered', async () => {
-        mockAccountRepository.get.resolves(null);
-        await expect(modelEngine.createEvent(mockEvent)).to.be.rejectedWith(PermissionError);
       });
 
       it('throws if creator has no required permission', async () => {
@@ -447,27 +423,31 @@ describe('Data Model Engine', () => {
 
   describe('Getting an event by id', () => {
     let mockEntityRepository;
+    let mockAccountAccessDefinitions;
     let modelEngine;
     const exampleEventId = '0x123';
+    const accessLevel = 4;
 
     before(() => {
       mockEntityRepository = {
         getEvent: sinon.stub()
       };
-
-      modelEngine = new DataModelEngine({}, {}, {}, mockEntityRepository, {}, {}, {}, {});
+      mockAccountAccessDefinitions = {
+        getTokenCreatorAccessLevel: sinon.stub()
+      };
+      modelEngine = new DataModelEngine({}, {}, {}, mockEntityRepository, {}, {}, mockAccountAccessDefinitions);
     });
 
     beforeEach(() => {
-      resetHistory(mockEntityRepository);
+      resetHistory(mockEntityRepository, mockAccountAccessDefinitions);
+      mockEntityRepository.getEvent.resolves(mockEvent);
+      mockAccountAccessDefinitions.getTokenCreatorAccessLevel.resolves(accessLevel);
     });
 
     it('asks the repository for the event', async () => {
-      mockEntityRepository.getEvent.resolves(mockEvent);
-
       const event = await modelEngine.getEvent(exampleEventId);
 
-      expect(mockEntityRepository.getEvent).to.have.been.calledWith(exampleEventId);
+      expect(mockEntityRepository.getEvent).to.have.been.calledWith(exampleEventId, accessLevel);
       expect(event).to.deep.equal(mockEvent);
     });
 
@@ -480,8 +460,10 @@ describe('Data Model Engine', () => {
 
   describe('Finding events', () => {
     let mockEntityRepository;
+    let mockAccountAccessDefinitions;
     let mockEntityBuilder;
     let modelEngine;
+    const accessLevel = 4;
 
     let scenario;
     let eventSet;
@@ -499,6 +481,10 @@ describe('Data Model Engine', () => {
         validateAndCastFindEventsParams: sinon.stub()
       };
 
+      mockAccountAccessDefinitions = {
+        getTokenCreatorAccessLevel: sinon.stub()
+      };
+
       scenario = new ScenarioBuilder(identityManager);
       await scenario.injectAccount(adminAccountWithSecret);
       await scenario.addAsset(0);
@@ -507,8 +493,10 @@ describe('Data Model Engine', () => {
       ];
       mockEntityRepository.findEvents.resolves({results: eventSet, resultCount: 165});
       mockEntityBuilder.validateAndCastFindEventsParams.returns(mockParams2);
+      mockAccountAccessDefinitions.getTokenCreatorAccessLevel.resolves(accessLevel);
 
-      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository, {}, {}, {}, {});
+      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository,
+        {}, {}, mockAccountAccessDefinitions);
 
       ret = await expect(modelEngine.findEvents(mockParams)).to.fulfilled;
     });
@@ -518,7 +506,7 @@ describe('Data Model Engine', () => {
     });
 
     it('asks the entity repository for the events', async () => {
-      expect(mockEntityRepository.findEvents).to.have.been.calledWith(mockParams2);
+      expect(mockEntityRepository.findEvents).to.have.been.calledWith(mockParams2, accessLevel);
     });
 
     it('properly assembles the result', () => {

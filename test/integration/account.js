@@ -38,7 +38,8 @@ describe('Accounts - Integrations', async () => {
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send(addAccountRequest());
       expect(result.body.address).to.be.equal(account.address);
-      expect(result.body.permissions).to.be.deep.equal([]);
+      expect(result.body.permissions).to.be.deep.equal(['permission1', 'permission2']);
+      expect(result.body.accessLevel).to.be.equal(7);
       expect(result.body.registeredBy).to.be.equal(adminAccountWithSecret.address);
       expect(result.status).to.eq(201);
     });
@@ -76,7 +77,8 @@ describe('Accounts - Integrations', async () => {
         .send({});
       expect(response.body.address).to.equal(registeredAccount.body.address);
       expect(response.body.secret).to.be.undefined;
-      expect(registeredAccount.body.permissions).to.be.deep.equal([]);
+      expect(registeredAccount.body.permissions).to.be.deep.equal(['permission1', 'permission2']);
+      expect(response.body.accessLevel).to.be.equal(7);
       expect(registeredAccount.body.registeredBy).to.be.equal(adminAccountWithSecret.address);
     });
 
@@ -94,6 +96,7 @@ describe('Accounts - Integrations', async () => {
   describe('Modify an account', () => {
     let storedAccount;
     const changedPermissions = ['perm1', 'perm2', 'perm3'];
+    const accessLevel = 4;
     let modifyRequest;
 
     beforeEach(async () => {
@@ -101,7 +104,7 @@ describe('Accounts - Integrations', async () => {
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send(addAccountRequest());
-      modifyRequest = {permissions : changedPermissions};
+      modifyRequest = {permissions : changedPermissions, accessLevel};
     });
 
     it('should modify the targeted account', async () => {
@@ -112,6 +115,7 @@ describe('Accounts - Integrations', async () => {
       expect(modifiedAccount.body.address).to.equal(storedAccount.body.address);
       expect(modifiedAccount.body.secret).to.be.undefined;
       expect(modifiedAccount.body.permissions).to.be.deep.equal(changedPermissions);
+      expect(modifiedAccount.body.accessLevel).to.be.equal(accessLevel);
       expect(modifiedAccount.body.registeredBy).to.be.equal(adminAccountWithSecret.address);
     });
 

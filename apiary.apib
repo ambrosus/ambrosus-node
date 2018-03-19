@@ -46,7 +46,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 
             {
                 "createdBy": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
-                "permissions" : ['create_account','change_account_permissions']
+                "permissions" : ['register_account','change_account_permissions']
             }
 
 
@@ -61,7 +61,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
                 "secret": "0x17d08f5fe8c77af811caa0c9a187e668ce3b74a99acc3f6d976f075fa8e0be55",
                 "createdBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
-                "permissions": ["create_account", "change_account_permissions"]
+                "permissions": ["register_account", "change_account_permissions"]
             }
 
     + Schema
@@ -86,7 +86,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
                   "items" : {
                   "type" : "string"
                   }
-                  "example": ["create_account", "change_account_permissions"]
+                  "example": ["register_account", "change_account_permissions"]
                 }
               }
             }
@@ -105,7 +105,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 
 + Response 403 (application/json)
 
-    Invalid createdBy, invalid signature or missing create_account permission
+    Invalid createdBy, invalid signature or missing register_account permission
 
     + Body
 
@@ -134,7 +134,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
             {
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
                 "createdBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
-                "permissions": ["create_account", "change_account_permissions"]
+                "permissions": ["register_account", "change_account_permissions"]
             }
 
     + Schema
@@ -155,7 +155,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
                   "items" : {
                   "type" : "string"
                   }
-                  "example": ["create_account", "change_account_permissions"]
+                  "example": ["register_account", "change_account_permissions"]
                 }
               }
             }
@@ -174,7 +174,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 
 + Response 403 (application/json)
 
-    Invalid createdBy, invalid signature or missing create_account permission
+    Invalid createdBy, invalid signature or missing register_account permission
 
     + Body
 

@@ -1,6 +1,6 @@
 import {createFullAsset, createFullEvent} from './assets_events';
 import {addAccountRequest} from './account';
-import {pick} from '../../src/utils/dict_utils';
+import {put} from '../../src/utils/dict_utils';
 
 const defaultScenarioProcessor = (identityManager) => ({
   onInjectAccount: async (account) => account,
@@ -30,20 +30,21 @@ class ScenarioBuilder {
 
   async addAccount(accountInx = 0, addressWithSecret = null, fields = {}) {
     const newScenarioAccount = addressWithSecret === null ? this.identityManager.createKeyPair() : addressWithSecret;
-    const accountRequest = addAccountRequest({address: newScenarioAccount.address, secret: newScenarioAccount.secret, ...fields});
-    const processedAccount = await this.processor.onAddAccount(pick(accountRequest, 'secret'), this.accounts[accountInx].secret);
-    this.accounts.push(processedAccount);
-    return processedAccount;
+    const accountRequest = addAccountRequest({address: newScenarioAccount.address, ...fields});
+    const processedAccount = await this.processor.onAddAccount(accountRequest, this.accounts[accountInx].secret);
+    const processedAccountWithSecret = put(processedAccount, 'secret', newScenarioAccount.secret);
+    this.accounts.push(processedAccountWithSecret);
+    return processedAccountWithSecret;
   }
 
   async addAsset(accountInx = 0 , fields = {}) {
     const account = this.accounts[accountInx];
     const asset = createFullAsset(
-      this.identityManager, 
+      this.identityManager,
       {
-        createdBy: account.address, 
+        createdBy: account.address,
         ...fields
-      }, 
+      },
       account.secret);
     const processedAsset = await this.processor.onAddAsset(asset);
     this.assets.push(processedAsset);
@@ -53,13 +54,13 @@ class ScenarioBuilder {
   async addEvent(accountInx = 0, subjectInx = 0, fields = {}, data = {}) {
     const account = this.accounts[accountInx];
     const event = createFullEvent(
-      this.identityManager, 
+      this.identityManager,
       {
-        createdBy: account.address, 
+        createdBy: account.address,
         assetId: this.assets[subjectInx].assetId,
         ...fields
-      }, 
-      data, 
+      },
+      data,
       account.secret);
     const processedEvent = await this.processor.onAddEvent(event);
     this.events.push(processedEvent);

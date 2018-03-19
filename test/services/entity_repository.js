@@ -1,7 +1,7 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import {connectToMongo, cleanDatabase} from '../../src/utils/db_utils';
-import {put} from '../../src/utils/dict_utils';
+import {put, pick} from '../../src/utils/dict_utils';
 
 import {createAsset, createEvent, createBundle} from '../fixtures/assets_events';
 import {createWeb3} from '../../src/utils/web3_tools';
@@ -53,13 +53,20 @@ describe('Entity Repository', () => {
     const exampleEventId = '0x123456';
     const exampleEvent = put(createEvent(), 'eventId', exampleEventId);
 
-    after(async () => {
+    afterEach(async () => {
       await cleanDatabase(db);
     });
 
     it('db round trip works', async () => {
       await storage.storeEvent(exampleEvent);
       await expect(storage.getEvent(exampleEventId)).to.eventually.be.deep.equal(exampleEvent);
+    });
+
+    it('removes data field if access level is too low', async () => {
+      const highAccessLevel = put(exampleEvent, 'content.idData.accessLevel', 5);
+      await storage.storeEvent(highAccessLevel);
+      await expect(storage.getEvent(exampleEventId, 2))
+        .to.eventually.be.deep.equal(pick(highAccessLevel, 'content.data'));
     });
 
     it('returns null for non-existing event', async () => {
@@ -81,7 +88,7 @@ describe('Entity Repository', () => {
           (inx) => ({
             accountInx: 0,
             subjectInx: (inx % 3 === 0 ? 1 : 0),
-            fields: {timestamp: inx},
+            fields: {timestamp: inx, accessLevel: inx % 10},
             data: {}
           })
         );
@@ -95,11 +102,24 @@ describe('Entity Repository', () => {
       });
 
       it('returns 100 newest events without page and perPage params', async () => {
-        const ret = await expect(storage.findEvents({})).to.be.fulfilled;
+        const ret = await expect(storage.findEvents({}, 10)).to.be.fulfilled;
         expect(ret.results).have.lengthOf(100);
         expect(ret.results[0]).to.deep.equal(scenario.events[134]);
         expect(ret.results[99]).to.deep.equal(scenario.events[35]);
         expect(ret.resultCount).to.equal(135);
+      });
+
+      it('removes data field if access level is too low', async () => {
+        const ret = await expect(storage.findEvents({}, 5)).to.be.fulfilled;
+        expect(ret.results).have.lengthOf(100);
+        expect(ret.resultCount).to.equal(135);
+        ret.results.forEach((event) => {
+          if (event.content.idData.accessLevel <= 5) {
+            expect(event.content).to.include.key('data');
+          } else {
+            expect(event.content).to.not.include.key('data');
+          }
+        });
       });
     });
 

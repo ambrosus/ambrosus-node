@@ -1,5 +1,8 @@
 import chai from 'chai';
-import {validatePathsNotEmpty, validateFieldsConstrainedToSet, validateIntegerParameterAndCast} from '../../src/utils/validations';
+import {
+  validatePathsNotEmpty, validateFieldsConstrainedToSet, validateIntegerParameterAndCast,
+  validateNonNegativeInteger
+} from '../../src/utils/validations';
 import {ValidationError, InvalidParametersError} from '../../src/errors/errors';
 
 const {expect} = chai;
@@ -51,6 +54,20 @@ describe('validation', () => {
   
     it('throws if parameter not parsable', () => {
       expect(() => validateIntegerParameterAndCast('NaN', 'sampleErrMsg')).to.throw(InvalidParametersError);
+    });
+  });
+
+  describe('validateNonNegativeInteger', () => {
+    it('throws if not integer provided', async () => {
+      expect(() => validateNonNegativeInteger(1)).to.not.throw;
+      expect(() => validateNonNegativeInteger(1.5)).to.throw(ValidationError);
+      expect(() => validateNonNegativeInteger('1')).to.throw(ValidationError);
+      expect(() => validateNonNegativeInteger([1])).to.throw(ValidationError);
+    });
+
+    it('throws if negative integer provided', async () => {
+      expect(() => validateNonNegativeInteger(0)).to.not.throw;
+      expect(() => validateNonNegativeInteger(-1)).to.throw(ValidationError);
     });
   });
 });

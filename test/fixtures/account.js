@@ -1,12 +1,14 @@
 const addAccountRequest = (fields) => ({
   address: account.address,
-  permissions: [],
+  permissions: ['permission1', 'permission2'],
+  accessLevel: 7,
   ...fields
 });
 
 const account = {
-  address: '0x742e62cc7a19ef7d9c44306c07fad54b5bf6d4be',
-  permissions: []
+  address: '0x742E62CC7A19Ef7D9c44306C07FAd54B5bF6d4bE',
+  permissions: ['permission1', 'permission2'],
+  accessLevel: 7
 };
 
 const accountWithSecret = {
@@ -26,7 +28,8 @@ const adminAccountWithSecret = {
 const notRegisteredAccount = {
   address: '0x627306090abaB3A6e1400e9345bC60c78a8BEf57',
   secret: '0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3',
-  permissions: []
+  permissions: ['permission1'],
+  accessLevel: 4
 };
 
 export {
