@@ -25,7 +25,7 @@ export default class DataModelEngine {
   }
 
   async addAccount(accountRequest, tokenData) {
-    await this.accountAccessDefinitions.ensureHasPermission(tokenData.createdBy, 'register_account');
+    await this.accountAccessDefinitions.ensureCanRegisterAccount(tokenData.createdBy);
     this.accountAccessDefinitions.validateAddAccountRequest(accountRequest);
 
     const accountToStore = {
@@ -51,7 +51,7 @@ export default class DataModelEngine {
   }
 
   async modifyAccount(accountToChange, accountRequest, tokenData) {
-    await this.accountAccessDefinitions.ensureHasPermission(tokenData.createdBy, 'register_account');
+    await this.accountAccessDefinitions.ensureCanRegisterAccount(tokenData.createdBy);
     this.accountAccessDefinitions.validateModifyAccountRequest(accountRequest);
     await this.getAccount(accountToChange, tokenData);
     return await this.accountRepository.update(accountToChange, accountRequest);
@@ -61,7 +61,7 @@ export default class DataModelEngine {
     this.entityBuilder.validateAsset(asset);
     const {createdBy: creatorAddress} = asset.content.idData;
 
-    await this.accountAccessDefinitions.ensureHasPermission(creatorAddress, 'create_entity');
+    await this.accountAccessDefinitions.ensureCanCreateEntity(creatorAddress);
 
     const augmentedAsset = this.entityBuilder.setBundle(asset, null);
     await this.entityRepository.storeAsset(augmentedAsset);
@@ -81,7 +81,7 @@ export default class DataModelEngine {
     this.entityBuilder.validateEvent(event);
     const {createdBy: creatorAddress, assetId} = event.content.idData;
 
-    await this.accountAccessDefinitions.ensureHasPermission(creatorAddress, 'create_entity');
+    await this.accountAccessDefinitions.ensureCanCreateEntity(creatorAddress);
 
     if (await this.entityRepository.getAsset(assetId) === null) {
       throw new InvalidParametersError(`Target asset with id=${assetId} doesn't exist`);

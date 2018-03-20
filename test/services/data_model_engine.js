@@ -51,7 +51,7 @@ describe('Data Model Engine', () => {
         count: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        ensureHasPermission: sinon.stub(),
+        ensureCanRegisterAccount: sinon.stub(),
         defaultAdminPermissions: sinon.stub(),
         validateAddAccountRequest: sinon.stub()
       };
@@ -63,7 +63,7 @@ describe('Data Model Engine', () => {
 
       mockAccountRepository.get.returns(adminAccount);
       mockAccountAccessDefinitions.validateAddAccountRequest.resolves();
-      mockAccountAccessDefinitions.ensureHasPermission.resolves();
+      mockAccountAccessDefinitions.ensureCanRegisterAccount.resolves();
     });
 
     it('validates with mockIdentityManager and delegates to accountRepository', async () => {
@@ -77,8 +77,8 @@ describe('Data Model Engine', () => {
       expect(await modelEngine.addAccount(request, createTokenFor(adminAccount.address)))
         .to.deep.equal(registrationResponse);
       expect(mockAccountAccessDefinitions.validateAddAccountRequest).to.have.been.called;
-      expect(mockAccountAccessDefinitions.ensureHasPermission)
-        .to.have.been.calledWith(adminAccount.address, 'register_account');
+      expect(mockAccountAccessDefinitions.ensureCanRegisterAccount)
+        .to.have.been.calledWith(adminAccount.address);
       expect(mockAccountRepository.store).to.have.been.calledWith({
         registeredBy : adminAccount.address,
         ...registrationResponse
@@ -93,14 +93,14 @@ describe('Data Model Engine', () => {
     });
 
     it('throws PermissionError if account sender account does not exist', async () => {
-      mockAccountAccessDefinitions.ensureHasPermission.rejects(new PermissionError());
+      mockAccountAccessDefinitions.ensureCanRegisterAccount.rejects(new PermissionError());
 
       const request = addAccountRequest();
       await expect(modelEngine.addAccount(request, createTokenFor(adminAccount.address))).to.be.rejectedWith(PermissionError);
     });
 
     it('throws PermissionError if account misses required permissions', async () => {
-      mockAccountAccessDefinitions.ensureHasPermission.throws(new PermissionError());
+      mockAccountAccessDefinitions.ensureCanRegisterAccount.throws(new PermissionError());
 
       const request = addAccountRequest();
       await expect(modelEngine.addAccount(request, createTokenFor(adminAccount.address))).to.be.rejectedWith(PermissionError);
@@ -145,7 +145,6 @@ describe('Data Model Engine', () => {
         get: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        ensureHasPermission: sinon.stub(),
         defaultAdminPermissions: sinon.stub(),
         validateAddAccountRequest: sinon.stub()
       };
@@ -157,7 +156,6 @@ describe('Data Model Engine', () => {
     beforeEach(() => {
       resetHistory(mockAccountRepository);
       mockAccountRepository.get.returns(accountWithoutSecret);
-      mockAccountAccessDefinitions.ensureHasPermission.resolves();
     });
 
     it('delegates to accountRepository', async () => {
@@ -193,7 +191,7 @@ describe('Data Model Engine', () => {
         get: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        ensureHasPermission: sinon.stub(),
+        ensureCanRegisterAccount: sinon.stub(),
         defaultAdminPermissions: sinon.stub(),
         validateAddAccountRequest: sinon.stub(),
         validateModifyAccountRequest: sinon.stub()
@@ -206,12 +204,13 @@ describe('Data Model Engine', () => {
       mockAccountRepository.update.returns(modifiedAccount);
       mockAccountRepository.get.withArgs(adminAccount.address).returns(adminAccount);
       mockAccountRepository.get.withArgs(accountToModify).returns(accountWithoutSecret);
-      mockAccountAccessDefinitions.ensureHasPermission.resolves();
+      mockAccountAccessDefinitions.ensureCanRegisterAccount.resolves();
       mockAccountAccessDefinitions.validateModifyAccountRequest.resolves();
     });
 
     it('delegates to accountRepository', async () => {
       expect(await modelEngine.modifyAccount(accountToModify, modifyRequest, {createdBy : adminAccount.address})).to.deep.equal(modifiedAccount);
+      expect(mockAccountAccessDefinitions.ensureCanRegisterAccount).to.have.been.calledWith(adminAccount.address);
       expect(mockAccountRepository.update).to.have.been.called;
     });
 
@@ -221,7 +220,7 @@ describe('Data Model Engine', () => {
     });
 
     it('throws PermissionError if account misses required permissions', async () => {
-      mockAccountAccessDefinitions.ensureHasPermission.throws(new PermissionError());
+      mockAccountAccessDefinitions.ensureCanRegisterAccount.throws(new PermissionError());
       await expect(modelEngine.modifyAccount(accountToModify, modifyRequest, {createdBy : adminAccount.address})).to.rejectedWith(PermissionError);
     });
 
@@ -246,7 +245,7 @@ describe('Data Model Engine', () => {
         storeAsset: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        ensureHasPermission: sinon.stub()
+        ensureCanCreateEntity: sinon.stub()
       };
 
       modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository,{}, {}, mockAccountAccessDefinitions);
@@ -258,7 +257,7 @@ describe('Data Model Engine', () => {
       mockEntityBuilder.validateAsset.returns();
       mockEntityBuilder.setBundle.returns(mockAsset);
       mockEntityRepository.storeAsset.resolves();
-      mockAccountAccessDefinitions.ensureHasPermission.resolves();
+      mockAccountAccessDefinitions.ensureCanCreateEntity.resolves();
     };
 
     describe('positive case', () => {
@@ -272,8 +271,8 @@ describe('Data Model Engine', () => {
       });
 
       it('checks if creator has required permission', async () => {
-        expect(mockAccountAccessDefinitions.ensureHasPermission)
-          .to.have.been.calledWith(mockAsset.content.idData.createdBy, 'create_entity');
+        expect(mockAccountAccessDefinitions.ensureCanCreateEntity)
+          .to.have.been.calledWith(mockAsset.content.idData.createdBy);
       });
 
       it('sets the bundle to be null', () => {
@@ -291,7 +290,7 @@ describe('Data Model Engine', () => {
       });
 
       it('throws if creator has no permission for adding assets', async () => {
-        mockAccountAccessDefinitions.ensureHasPermission.throws(new PermissionError());
+        mockAccountAccessDefinitions.ensureCanCreateEntity.throws(new PermissionError());
         await expect(modelEngine.createAsset(mockAsset)).to.be.rejectedWith(PermissionError);
         expect(mockEntityRepository.storeAsset).to.have.been.not.called;
       });
@@ -352,7 +351,7 @@ describe('Data Model Engine', () => {
         getAsset: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        ensureHasPermission: sinon.stub()
+        ensureCanCreateEntity: sinon.stub()
       };
 
       modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository,{}, {}, mockAccountAccessDefinitions);
@@ -365,7 +364,7 @@ describe('Data Model Engine', () => {
       mockEntityBuilder.setBundle.returns(mockEvent);
       mockEntityRepository.storeEvent.resolves();
       mockEntityRepository.getAsset.resolves(mockAsset);
-      mockAccountAccessDefinitions.ensureHasPermission.resolves();
+      mockAccountAccessDefinitions.ensureCanCreateEntity.resolves();
     };
 
     describe('positive case', () => {
@@ -379,8 +378,8 @@ describe('Data Model Engine', () => {
       });
 
       it('checks if creator has required permission', async () => {
-        expect(mockAccountAccessDefinitions.ensureHasPermission)
-          .to.have.been.calledWith(mockEvent.content.idData.createdBy, 'create_entity');
+        expect(mockAccountAccessDefinitions.ensureCanCreateEntity)
+          .to.have.been.calledWith(mockEvent.content.idData.createdBy);
       });
 
       it('checks if target asset exists', () => {
@@ -402,7 +401,7 @@ describe('Data Model Engine', () => {
       });
 
       it('throws if creator has no required permission', async () => {
-        mockAccountAccessDefinitions.ensureHasPermission.throws(new PermissionError());
+        mockAccountAccessDefinitions.ensureCanCreateEntity.throws(new PermissionError());
         await expect(modelEngine.createEvent(mockAsset)).to.be.rejectedWith(PermissionError);
         expect(mockEntityRepository.storeEvent).to.have.been.not.called;
       });

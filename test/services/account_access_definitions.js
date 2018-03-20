@@ -67,9 +67,35 @@ describe('Account Access Definitions', () => {
     });
   });
 
+  describe('ensureCanRegisterAccount & ensureCanCreateEntity', () => {
+    let ensureHasPermissionStub;
+
+    before(() => {
+      ensureHasPermissionStub = sinon.stub(accountAccessDefinitions, 'ensureHasPermission');
+    });
+
+    it('ensureCanRegisterAccount calls ensurePermission with `register_account`', async () => {
+      await accountAccessDefinitions.ensureCanRegisterAccount(mockAccount.address);
+      expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, 'register_account');
+    });
+
+    it('ensureCanCreateEntity calls ensurePermission with `create_entity`', async () => {
+      await accountAccessDefinitions.ensureCanCreateEntity(mockAccount.address);
+      expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, 'create_entity');
+    });
+
+    afterEach(() => {
+      resetHistory({ensureHasPermissionStub});
+    });
+
+    after(() => {
+      ensureHasPermissionStub.restore();
+    });
+  });
+
   it('defaultAdminPermissions returns correct list', async () => {
     expect(accountAccessDefinitions.defaultAdminPermissions())
-      .to.deep.eq(['change_account_permissions', 'register_account', 'create_entity']);
+      .to.deep.eq(['register_account', 'create_entity']);
   });
 
   describe('getTokenCreatorAccessLevel', () => {
