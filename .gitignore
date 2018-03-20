@@ -3,3 +3,4 @@ dist
 .idea
 data
 /build/
+yarn-error.log

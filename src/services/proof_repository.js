@@ -18,4 +18,14 @@ export default class ProofRepository {
         gas: 200000
       });
   }
+
+  async getVendorUrl(vendorId) {
+    const registryContract = this.contractManager.bundleProofRegistryContract();
+    return await registryContract
+      .methods
+      .getUrlForVendor(vendorId)
+      .call({
+        from: getDefaultAddress(this.web3)
+      });
+  }
 }

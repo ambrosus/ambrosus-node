@@ -14,12 +14,15 @@ describe('Proof repository', () => {
   let mockIdentityManager;
   let mockBundleProofRegistryContract;
   let mockAddBundleContractMethod;
+  let mockGetVendorUrlContractMethod;
   let repository;
   let getDefaultAddressStub;
 
   const exampleNodeAddress = '0xABCD';
   const exampleDefaultAddress = '0xBEEF';
   const exampleBundleId = '0x1234';
+  const exampleVendorId = '0x5678';
+  const exampleVendorUrl = 'www.vendor.com';
 
   before(async () => {
     getDefaultAddressStub = sinon.stub(Web3Tools, 'getDefaultAddress').returns(exampleDefaultAddress);
@@ -36,9 +39,14 @@ describe('Proof repository', () => {
       send: sinon.stub()
     };
 
+    mockGetVendorUrlContractMethod = {
+      call: sinon.stub().resolves(exampleVendorUrl)
+    };
+
     mockBundleProofRegistryContract = {
       methods: {
-        addBundle: sinon.stub().returns(mockAddBundleContractMethod)
+        addBundle: sinon.stub().returns(mockAddBundleContractMethod),
+        getUrlForVendor: sinon.stub().returns(mockGetVendorUrlContractMethod)
       }
     };
 
@@ -58,9 +66,21 @@ describe('Proof repository', () => {
       await repository.uploadProof(exampleBundleId);
 
       expect(mockIdentityManager.nodeAddress).to.have.been.called;
+
       expect(mockContractManager.bundleProofRegistryContract).to.have.been.called;
       expect(mockBundleProofRegistryContract.methods.addBundle).to.have.been.calledWith(exampleBundleId, exampleNodeAddress);
       expect(mockAddBundleContractMethod.send).to.have.been.called;
+    });
+  });
+  describe('get vendor url', () => {
+    it('should call the contract method', async () => {
+      const result = await repository.getVendorUrl(exampleVendorId);
+
+      expect(mockContractManager.bundleProofRegistryContract).to.have.been.called;
+      expect(mockBundleProofRegistryContract.methods.getUrlForVendor).to.have.been.calledWith(exampleVendorId);
+      expect(mockGetVendorUrlContractMethod.call).to.have.been.called;
+
+      expect(result).to.deep.equal(exampleVendorUrl);
     });
   });
 });
