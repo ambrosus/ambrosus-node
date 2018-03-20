@@ -1,10 +1,14 @@
 import https from 'https';
 import {NotFoundError, PermissionError, ValidationError, AuthenticationError} from '../errors/errors';
 export default class HttpsClient {
-  async performHTTPSGet(requestOptions) {
+  async performHTTPSGet(hostname, path) {
+    const options = {
+      hostname,
+      path
+    };
     return new Promise((resolve, reject) => {
       try {
-        https.get(requestOptions, (res) => {
+        https.get(options, (res) => {
           resolve({body : res.body, statusCode : res.statusCode});
         });
       } catch (error) {

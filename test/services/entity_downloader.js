@@ -26,10 +26,6 @@ describe('Entity downloader', () => {
     const exampleVendorId = '0x123';
     const exampleBundleId = '0x321';
     const examplePath = `/bundle/${exampleBundleId}`;
-    const exampleOptions = {
-      hostname : exampleVendorId,
-      path : examplePath
-    };
     const processedBundle = createBundle();
 
     it('returns downloaded bundle', async () => {
@@ -37,7 +33,7 @@ describe('Entity downloader', () => {
       mockHttpsClient.performHTTPSGet.resolves({statusCode : OKStatusCode, body : processedBundle});
       mockHttpsClient.validateIncomingStatusCode.resolves();
       const res = await expect(entityDownloader.downloadBundle(exampleVendorId, exampleBundleId)).to.be.fulfilled;
-      expect(mockHttpsClient.performHTTPSGet).to.have.been.calledWith(exampleOptions);
+      expect(mockHttpsClient.performHTTPSGet).to.have.been.calledWith(exampleVendorId, examplePath);
       expect(mockHttpsClient.validateIncomingStatusCode).to.have.been.calledWith(OKStatusCode);
       expect(res).to.deep.equal(processedBundle);
     });
@@ -47,7 +43,7 @@ describe('Entity downloader', () => {
       mockHttpsClient.performHTTPSGet.resolves({statusCode : failureStatusCode});
       mockHttpsClient.validateIncomingStatusCode.throws(new Error());
       await expect(entityDownloader.downloadBundle(exampleVendorId, exampleBundleId)).to.be.rejectedWith(Error);
-      expect(mockHttpsClient.performHTTPSGet).to.have.been.calledWith(exampleOptions);
+      expect(mockHttpsClient.performHTTPSGet).to.have.been.calledWith(exampleVendorId, examplePath);
       expect(mockHttpsClient.validateIncomingStatusCode).to.have.been.calledWith(failureStatusCode);
     });
   });
