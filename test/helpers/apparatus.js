@@ -37,7 +37,9 @@ export default class Apparatus {
     this.entityRepository = new EntityRepository(db);
     this.httpsClient = new HttpsClient();
     this.entityDownloader = new EntityDownloader(this.httpsClient);
-    this.proofRepository = new ProofRepository(this.web3, this.contractManager, this.identityManager);
+    this.proofRepository = new ProofRepository(this.web3, 
+      this.identityManager.nodeAddress(),
+      this.contractManager.bundleProofRegistryContract());
     this.accountRepository = new AccountRepository(db);
     this.accountAccessDefinitions = new AccountAccessDefinitions(this.identityManager, this.accountRepository);
     this.modelEngine = new DataModelEngine(

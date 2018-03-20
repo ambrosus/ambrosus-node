@@ -25,5 +25,6 @@ export default class ContractManager {
     if (this.bundleRegistry === null) {
       this.bundleRegistry = await deployContract(this.web3, BundleRegistry.abi, BundleRegistry.bytecode);
     }
+    return this.bundleRegistry;
   }
 }

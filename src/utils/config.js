@@ -9,6 +9,10 @@ export default class Config {
     return config.get('bundle.finalisationInterval');
   }
 
+  static bundleDownloadInterval() {
+    return config.get('bundle.downloadInterval');
+  }
+
   static bundleRegistryContractAddress() {
     if (!config.has('bundle.registryContractAddress')) {
       return null;

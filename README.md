@@ -60,21 +60,71 @@ You will also have to create yourself an admin account in the app:
 docker-compose exec ambnode yarn ops:admin:create
 ```
 
+## Setuping dev environment:
+To work with dev environemnt you need to have parity node running on development chain:
+```
+parity --chain dev
+```
+
+as well as mongo database:
+
+```
+yarn run dev:db
+```
+
+Before start make sure you compile and deploy required contracts:
+```sh
+yarn build:contracts
+NODE_ENV=dev yarn run ops:deploy:bundleregistry
+```
+
+Now setup bundle registry in `dev.json` file, i.e.
+```js
+...
+  "bundle": {
+    "registryContractAddress": "0x73F0Ab32D78024573506cCB382fa804C8BA61C95"
+  }
+...
+``` 
+
+And make sure to whitelist yourself, before running tasks:
+```
+NODE_ENV=dev yarn run ops:bundle:whitelist --add -a "0x00a329c0648769A73afAc7F9381E08FB43dBEA72" -u "node.ambrosus.com"
+```
+
 ## Workers
 Following workers are required for Ambrosus node to work.
 
-Bundle finalization worker gathers entities, packs them in bundles and stores the proofs on the blockchain. To lunch the worker type:
+### Bundle finalization Workers
+Bundle finalization worker gathers entities, packs them in bundles and stores the proofs on the blockchain. To launch the worker type:
 
 ```
-ops:bundle:finalisation
+yarn ops:bundle:finalisation
 ```
+
+Note that NODE_ENV environment varibale needs to be set.
 
 You can run the worker in dev mode with:
+
 ```
-dev:bundle:finalisation
+yarn dev:bundle:finalisation
 ```
 
-## Bundle contract tasks
+
+### Bundle downloader Worker
+To run bundle downloader worker type in your shell in dev mode:
+```
+yarn dev:bundle:downloader
+```
+
+and to run in production mode:
+
+```
+yarn ops:bundle:downloader
+```
+
+
+## Bundle smart contract related  tasks
 Entities (assets and events) are packaged together into bundles. Proof (hash) of the bundle is then uploaded to the bundle management smart contract.
 There are a couple of handy tasks to manage bundle contract.
 
@@ -87,22 +137,22 @@ Available commands:
 
 ```
 //deploy new instance of a contract (don't forget to update /config/{env}.json)
-yarn run ops:deploy:bundleregistry
+yarn ops:deploy:bundleregistry
 
 //add an address to the whitelist 
-yarn run ops:bundle:whitelist --add -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466" -u "node.ambrosus.com"
+yarn ops:bundle:whitelist --add -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466" -u "node.ambrosus.com"
 
 //check if address is on a whitelist
-yarn run ops:bundle:whitelist --check -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"
+yarn  ops:bundle:whitelist --check -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"
 
 //remove address from whitelist
-yarn run ops:bundle:whitelist --remove -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"
+yarn ops:bundle:whitelist --remove -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"
 
 //get url of the node
-yarn run ops:bundle:whitelist --geturl -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"
+yarn ops:bundle:whitelist --geturl -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"
 
 //set node url
-yarn run ops:bundle:whitelist --seturl -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466" -u "node.amb.to"
+yarn ops:bundle:whitelist --seturl -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466" -u "node.amb.to"
 ```
 
 

@@ -9,6 +9,7 @@ async function deployBundleRegistry() {
 deployBundleRegistry()
   .then((contract) => {
     console.log(`Bundle registry has been deployed at: ${contract.options.address}`);
+    process.exit(0);
   })
   .catch((err) => {
     console.error(err);

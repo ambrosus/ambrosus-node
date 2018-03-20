@@ -9,8 +9,14 @@ contract BundleRegistry is Ownable {
     string url;
   }
 
-  mapping(bytes32 => address) public bundleVendors;
+  struct Bundle {
+    address creator;    
+  }
+
+  mapping(bytes32 => Bundle) public bundles;
   mapping(address => Vendor) public vendors;
+  
+  bytes32[] public bundleIds;
 
   event BundleAdded(bytes32 bundleId);
 
@@ -23,8 +29,17 @@ contract BundleRegistry is Ownable {
   }
 
   function addBundle(bytes32 bundleId, address vendor) onlyWhitelisted public {
-    bundleVendors[bundleId] = vendor;
+    bundleIds.push(bundleId);
+    bundles[bundleId] = Bundle(vendor);    
     BundleAdded(bundleId);
+  }
+ 
+  function getBundleCount() public view returns(uint) {
+    return bundleIds.length;
+  }
+
+  function getVendorForBundle(bytes32 bundleId) public view returns (address) {
+    return bundles[bundleId].creator;
   }
 
   function addToWhitelist(address vendor, string url) onlyOwner public {
@@ -36,7 +51,7 @@ contract BundleRegistry is Ownable {
     vendors[vendor].whitelisted = false;
   }
 
-  function isWhitelisted(address vendor) constant public returns (bool) {
+  function isWhitelisted(address vendor) view public returns (bool) {
     return vendors[vendor].whitelisted;
   }
 
@@ -47,5 +62,5 @@ contract BundleRegistry is Ownable {
   function getUrlForVendor(address vendor) public view returns (string) {
     return vendors[vendor].url;
   }
-  
+
 }
