@@ -1,8 +1,10 @@
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import chaiAsPromised from 'chai-as-promised';
+import {stub} from 'sinon';
 import Apparatus from '../helpers/apparatus';
 import pkPair from '../fixtures/pk_pair';
+import Config from '../../src/utils/config';
 
 chai.use(chaiHttp);
 chai.use(chaiAsPromised);
@@ -13,16 +15,21 @@ describe('Token - Integrations', async () => {
   const requestData = {
     validUntil: 42
   };
+
   const expectedToken = 'eyJpZERhdGEiOnsiY3JlYXRlZEJ5IjoiMHg3NDJFNjJDQzdBMTlFZjdEOWM0NDMwNkMwN0ZBZDU0QjViRjZkNGJFIiwidmFsaWRVbnRpbCI6NDJ9LCJzaWduYXR1cmUiOiIweDY4MWVjZjRiNzM3YzViNGY5ZjlhYTZlMDUzOWIzMzAyNzY0NDQzYWRlNWNmMWJhMTIxMGFmNzA1MTdkYTczOWY1MzBlNTEwYmI0NTc1N2YyNWZiZTE3NzczMWVhNzAxYjVmOTU5NGZlYmQ0ZDA2YjEwOGYyM2NhYjAyMmU5MzNmMWIifQ';
 
   let apparatus;
+  let ambAuthEnabledStub;
 
   before(async () => {
     apparatus = new Apparatus();
+    ambAuthEnabledStub = stub(Config, 'isAuthorizationWithSecretKeyEnabled');
+
     await apparatus.start();
   });
 
   beforeEach(async () => {
+    ambAuthEnabledStub.returns(true);
     await apparatus.cleanDB();
   });
 
@@ -73,7 +80,17 @@ describe('Token - Integrations', async () => {
     });
   });
 
+  it('throws 403 if amb auth is disabled', async () => {
+    ambAuthEnabledStub.returns(false);
+    const request = apparatus.request()
+      .post('/token')
+      .set('authorization', `AMB ${pkPair.secret}`)
+      .send(requestData);
+    await expect(request).to.eventually.be.rejected.and.have.property('status', 403);
+  });
+
   after(async () => {
+    ambAuthEnabledStub.restore();
     apparatus.stop();
   });
 });

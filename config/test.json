@@ -9,5 +9,6 @@
     "web3" : {
         "rpc": "ganache",
         "nodePrivateKey": "0xfa654acfc59f0e4fe3bd57082ad28fbba574ac55fe96e915f17de27ad9c77696"
-    }
+    },
+    "authorizationWithSecretEnabled": true
 }

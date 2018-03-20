@@ -12,5 +12,6 @@
   },
   "bundle": {
     "registryContractAddress": "0x484Cf684Cf927161Ff051B18d6F2f24dA812c72e"
-  }
+  },
+  "authorizationWithSecretEnabled": true
 }
