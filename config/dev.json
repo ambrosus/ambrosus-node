@@ -7,11 +7,11 @@
     "database": "ambrosus_gateway_developemnt"
   },
   "web3": {
-    "rpc": "http://127.0.0.1:8180/",
+    "rpc": "ws://127.0.0.1:8546/",
     "nodePrivateKey": "0x4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7"
   },
   "bundle": {
-    "registryContractAddress": "0x484Cf684Cf927161Ff051B18d6F2f24dA812c72e"
+    "registryContractAddress": "0x5f1B3386Beb247739d4051073C275f48E0aa0551"
   },
   "authorizationWithSecretEnabled": true
 }

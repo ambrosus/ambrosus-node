@@ -23,12 +23,15 @@ describe('Bundle Registry Contract', () => {
   let otherAddress;
 
   const asciiToHex = (arg) => web3.utils.asciiToHex(arg);
+  const hexToUtf8 = (arg) => web3.utils.hexToUtf8(arg);
   const addVendor = (who, url, from = ownerAddress) => bundleRegistry.methods.addToWhitelist(who, url).send({from});
   const removeVendor = (who, from = ownerAddress) => bundleRegistry.methods.removeFromWhitelist(who).send({from});
   const isWhitelisted = (who) => bundleRegistry.methods.isWhitelisted(who).call();  
   const addBundle = (bundleId, vendor, from = ownerAddress) => bundleRegistry.methods.addBundle(asciiToHex(bundleId), vendor).send({from});
-  const getBundleVendor = (bundleId) => bundleRegistry.methods.bundleVendors(asciiToHex(bundleId)).call();
+  const getBundleVendor = (bundleId) => bundleRegistry.methods.bundles(asciiToHex(bundleId)).call();
+  const getBundleVendorByIndex = (index) => bundleRegistry.methods.bundleIds(index).call();
   const getUrlForVendor = (vendor) => bundleRegistry.methods.getUrlForVendor(vendor).call();
+  const getBundleCount = () => bundleRegistry.methods.getBundleCount().call();
   const changeVendorUrl = (vendor, url, from = ownerAddress) => bundleRegistry.methods.changeVendorUrl(vendor, url).send({from});
 
 
@@ -80,8 +83,12 @@ describe('Bundle Registry Contract', () => {
   });
 
   describe('Adding bundles', () => {
+    it('Initialy there are 0 bundles', async () => {
+      expect(await getBundleCount()).to.eq('0');
+    });
+
     it('returns empty address if no bundle with such id stored', async () => {
-      const emptyAddress = await bundleRegistry.methods.bundleVendors(asciiToHex('notExists')).call();
+      const emptyAddress = await bundleRegistry.methods.bundles(asciiToHex('notExists')).call();
       expect(emptyAddress).to.match(/0x0{32}/);
     });
 
@@ -89,6 +96,7 @@ describe('Bundle Registry Contract', () => {
       await addVendor(ownerAddress, vendorUrl);
       await addBundle(bundleId, vendor);
       expect(await getBundleVendor(bundleId)).to.eq(vendor);
+      expect(hexToUtf8(await getBundleVendorByIndex(0)).trim()).to.eq(bundleId);      
     });
 
     it('non-whitelisted address cannot add bundle', async () => {
