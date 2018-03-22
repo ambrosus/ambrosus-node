@@ -21,11 +21,11 @@ chai.use(chaiHttp);
 export default class Apparatus {
   DEFAULT_TOKEN_EXPIRATION = 60 * 60 * 24 * 28;
 
-  async start() {
+  async start(web3) {
     const {client, db} = await connectToMongo();
     this.client = client;
     this.db = db;
-    this.web3 = await createWeb3();
+    this.web3 = web3 || await createWeb3();
     this.contractManager = new ContractManager(this.web3, true);
     await this.contractManager.deployIfNeeded();
 

@@ -1,7 +1,7 @@
 import Config from '../utils/config';
 import build from '../build';
 
-export default async function startBundleFinalisationWorker(dataModelEngine, finalisationCallback) {
+async function startBundleFinalisationWorker(dataModelEngine, finalisationCallback) {
   return setInterval(() => finalisationCallback(dataModelEngine).catch(console.error),
     Config.bundleFinalisationInterval());
 }
@@ -18,3 +18,4 @@ if (require.main === module) {
     .catch(console.error);
 }
 
+export default startBundleFinalisationWorker;
