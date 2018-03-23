@@ -27,7 +27,7 @@ describe('Bundle downloader - integration', () => {
       dbUri: 'mongodb://localhost:27017/ambrosus_gateway_test2',
       db: 'ambrosus_gateway_test2',
       bundleRegistryContract: await deployContract(web3, BundleRegistry.abi, BundleRegistry.bytecode),
-      otherVendorUri: 'http://localhost:9876'
+      otherVendorUri: 'http://127.0.0.1:9876'
     }));
 
     bundleDownloader = new BundleDownloader(dataModelEngine);
