@@ -104,3 +104,11 @@ export async function deployContract(web3, abi, bytecode, args = [], options = {
   contract.setProvider(web3.currentProvider);
   return contract;
 }
+
+export async function ensureTransactionSucceeded(pendingTransaction) {
+  const receipt = await pendingTransaction;
+  if (receipt.status === '0x0') {
+    throw new Error(`Ethereum error, tx: ${receipt.transactionHash}`);
+  }
+  return receipt;
+}

@@ -61,7 +61,7 @@ docker-compose exec ambnode yarn ops:admin:create
 ```
 
 ## Setuping dev environment:
-To work with dev environemnt you need to have parity node running on development chain:
+To work with dev environemnt you need to have parity(version 1.10+) node running on development chain:
 ```sh
 parity --chain dev --force-ui
 ```

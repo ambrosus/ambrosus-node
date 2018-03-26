@@ -1,4 +1,4 @@
-import {getDefaultAddress} from '../utils/web3_tools';
+import {ensureTransactionSucceeded, getDefaultAddress} from '../utils/web3_tools';
 
 export default class ProofRepository {
   constructor(web3, nodeAddress, registryContract, defaultGas = 2000000) {
@@ -25,23 +25,23 @@ export default class ProofRepository {
   }    
 
   async addVendor(vendorAddress, url) {
-    return this.registryContract
+    return ensureTransactionSucceeded(this.registryContract
       .methods
       .addToWhitelist(vendorAddress, url)
       .send({
         from: getDefaultAddress(this.web3),
         gas: this.defaultGas
-      });
+      }));
   }
 
   async uploadProof(bundleId) {
-    return this.registryContract
+    return ensureTransactionSucceeded(this.registryContract
       .methods
       .addBundle(bundleId, this.nodeAddress)
       .send({
         from: getDefaultAddress(this.web3),
         gas: this.defaultGas
-      });
+      }));
   }
 
   async getNodeForBundle(bundleId) {
