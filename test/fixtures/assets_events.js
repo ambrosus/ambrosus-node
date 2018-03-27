@@ -23,6 +23,7 @@ export const createEvent = (fields, data) => ({
       ...fields
     },
     data: {
+      identifiers: [],
       ...data
     }
   }
@@ -54,39 +55,39 @@ export const addEventId = (identityManager, event) => addHash(identityManager, e
 export const addEntriesHashToBundle = (identityManager, bundle) => addHash(identityManager, bundle, 'content.entries', 'content.idData.entriesHash');
 export const addBundleId = (identityManager, bundle) => addHash(identityManager, bundle, 'content', 'bundleId');
 
-export const createFullAsset = (identityManager, fields = {}, secret = pkPair.secret) => 
+export const createFullAsset = (identityManager, fields = {}, secret = pkPair.secret) =>
   addAssetId(
-    identityManager, 
+    identityManager,
     addSignature(
-      identityManager, 
-      createAsset(fields), 
+      identityManager,
+      createAsset(fields),
       secret)
   );
 
-export const createFullEvent = (identityManager, fields = {}, data = {}, secret = pkPair.secret) => 
+export const createFullEvent = (identityManager, fields = {}, data = {}, secret = pkPair.secret) =>
   addEventId(
-    identityManager, 
+    identityManager,
     addSignature(
-      identityManager, 
+      identityManager,
       addDataHashToEvent(
-        identityManager, 
+        identityManager,
         createEvent(
-          fields, 
+          fields,
           data
         )
-      ), 
+      ),
       secret));
 
-export const createFullBundle = (identityManager, fields = {}, entries = [], secret = pkPair.secret) => 
+export const createFullBundle = (identityManager, fields = {}, entries = [], secret = pkPair.secret) =>
   addBundleId(
-    identityManager, 
+    identityManager,
     addSignature(
-      identityManager, 
+      identityManager,
       addEntriesHashToBundle(
-        identityManager, 
+        identityManager,
         createBundle(
-          fields, 
+          fields,
           entries
         )
-      ), 
+      ),
       secret));

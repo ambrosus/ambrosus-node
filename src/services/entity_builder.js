@@ -2,13 +2,15 @@ import {
   validatePathsNotEmpty, validateFieldsConstrainedToSet,
   validateIntegerParameterAndCast, validateNonNegativeInteger
 } from '../utils/validations';
-
+import JsonValidator from '../utils/json_validator';
+import eventsDataSchema from '../schemas/eventsData';
 import {put, pick} from '../utils/dict_utils';
 import {InvalidParametersError} from '../errors/errors';
 
 export default class EntityBuilder {
-  constructor(identityManager) {
+  constructor(identityManager, validator = new JsonValidator()) {
     this.identityManager = identityManager;
+    this.validator = validator;
   }
 
   validateAsset(asset) {
@@ -37,6 +39,7 @@ export default class EntityBuilder {
       'content.idData.accessLevel',
       'content.data'
     ]);
+    this.validator.validate(event.content.data, eventsDataSchema);
     validateFieldsConstrainedToSet(event, ['content', 'eventId']);
     validateNonNegativeInteger(event.content.idData.accessLevel, `Access level should be a non-negative integer, instead got ${event.content.idData.accessLevel}`);
     this.identityManager.validateSignature(event.content.idData.createdBy, event.content.signature, event.content.idData);

@@ -1,0 +1,32 @@
+{
+  "title": "EventData",
+  "type": "object",
+  "properties": {
+    "identifiers": {
+      "description": "Known identifiers for an event",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "entries": {
+      "description": "Entries for an event",
+      "type": "array"
+    },
+    "location": {
+      "description": "A geographical coordinate",
+      "type": "object",
+      "properties": {
+        "latitude": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "longitude": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        }
+      }
+    }
+  },
+  "required": ["identifiers"]
+}
