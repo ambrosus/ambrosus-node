@@ -7,10 +7,14 @@ export default class BundleDownloader {
   }
 
   async start(interval = Config.bundleDownloadInterval()) {
-    this.last = await this.proofRepository.getBundleCount();
+    this.init();
     return setInterval(() => {
       this.downloadAllNew().catch(console.error);
     }, interval);
+  }
+
+  async init() {
+    this.last = await this.proofRepository.getBundleCount();
   }
 
   async downloadAllNew() {    
@@ -23,10 +27,10 @@ export default class BundleDownloader {
   }
 
   async downloadOne(index) {    
-    const bundleId = await this.proofRepository.getBundleByIndex(0);
+    const bundleId = await this.proofRepository.getBundleByIndex(index);
     const vendorId = (await this.proofRepository.getNodeForBundle(bundleId)).toLowerCase();
     const vendorUrl = await this.proofRepository.getVendorUrl(vendorId);
-    console.log(`Downloading bundle index: ${index} for vendor: ${vendorId} from ${vendorUrl}...`);    
+    console.log(`Downloading bundle ${bundleId} (index: ${index}) for vendor: ${vendorId} from ${vendorUrl}...`);    
     await this.dataModelEngine.downloadBundle(bundleId, vendorId);
     console.log(`Bundle downloaded.`);
   }

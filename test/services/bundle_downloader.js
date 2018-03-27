@@ -1,5 +1,5 @@
 import chai from 'chai';
-import {buildWith} from '../../src/build';
+import buildWith from '../helpers/build_with';
 import BundleRegistry from '../../build/contracts/BundleRegistry.json';
 import sinonChai from 'sinon-chai';
 import {deployContract, createWeb3} from '../../src/utils/web3_tools';
@@ -23,6 +23,9 @@ describe('Bundle downloader - integration', () => {
 
   before(async () => {
     web3 = await createWeb3();
+  });
+
+  beforeEach(async () => {
     ({dataModelEngine, client, registryContractAddressStub} = await buildWith({web3,
       dbUri: 'mongodb://localhost:27017/ambrosus_gateway_test2',
       db: 'ambrosus_gateway_test2',
@@ -34,9 +37,9 @@ describe('Bundle downloader - integration', () => {
     apparatus = new Apparatus();
     await apparatus.start(web3);
     
-    consoleLogStub = sinon.stub(console, 'log');
-    
+    await bundleDownloader.init();
     ({bundleId} = await apparatus.modelEngine.finaliseBundle(1));
+    consoleLogStub = sinon.stub(console, 'log');
   });
 
   it('has no bundles initialy', async () => {
@@ -45,12 +48,26 @@ describe('Bundle downloader - integration', () => {
   });
 
   it('download one bundle', async () => {
-    await bundleDownloader.downloadOne(bundleId);
+    await bundleDownloader.downloadOne(0);
     const bundle = await dataModelEngine.entityRepository.getBundle(bundleId);
     expect(bundle.bundleId).to.eq(bundleId);
   });
 
-  after(() => {
+  it('download all new bundles', async () => {
+    const bundle2 = await apparatus.modelEngine.finaliseBundle(2);
+    const bundle3 = await apparatus.modelEngine.finaliseBundle(3);
+  
+    await bundleDownloader.downloadAllNew();  
+    let bundle = await dataModelEngine.entityRepository.getBundle(bundleId);
+    expect(bundle.bundleId).to.eq(bundleId);
+    bundle = await dataModelEngine.entityRepository.getBundle(bundle2.bundleId);
+    expect(bundle.bundleId).to.eq(bundle2.bundleId);
+    bundle = await dataModelEngine.entityRepository.getBundle(bundle3.bundleId);
+    expect(bundle.bundleId).to.eq(bundle3.bundleId);
+  });
+
+
+  afterEach(() => {
     registryContractAddressStub.restore();
     consoleLogStub.restore();
     client.close();

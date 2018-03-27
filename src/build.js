@@ -1,5 +1,5 @@
 import {connectToMongo} from './utils/db_utils';
-import {createWeb3, getDefaultAddress} from './utils/web3_tools';
+import {createWeb3} from './utils/web3_tools';
 import HttpsClient from './utils/https_client';
 import IdentityManager from './services/identity_manager';
 import TokenAuthenticator from './utils/token_authenticator';
@@ -11,8 +11,6 @@ import AccountAccessDefinitions from './services/account_access_definitions';
 import ProofRepository from './services/proof_repository';
 import ContractManager from './services/contract_manager';
 import EntityDownloader from './services/entity_downloader';
-import sinon from 'sinon';
-import Config from './utils/config';
 
 async function build(_web3, mongoUri, mongoDatabase) {
   const {db, client} = await connectToMongo(mongoUri, mongoDatabase);
@@ -39,14 +37,6 @@ async function build(_web3, mongoUri, mongoDatabase) {
     accountRepository,
     accountAccessDefinitions);
   return {dataModelEngine, client};
-}
-
-export async function buildWith({web3, dbUri, db, bundleRegistryContract, otherVendorUri}) {
-  const registryContractAddressStub = sinon.stub(Config, 'bundleRegistryContractAddress');
-  registryContractAddressStub.returns(bundleRegistryContract.options.address);
-  const {dataModelEngine, client} = await build(web3, dbUri, db);  
-  await dataModelEngine.proofRepository.addVendor(getDefaultAddress(web3), otherVendorUri);
-  return {dataModelEngine, client, registryContractAddressStub};
 }
 
 export default build;

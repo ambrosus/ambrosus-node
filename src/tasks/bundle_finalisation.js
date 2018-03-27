@@ -1,16 +1,16 @@
 import Config from '../utils/config';
 import build from '../build';
 
-async function startBundleFinalisationWorker(dataModelEngine, finalisationCallback) {
-  return setInterval(() => finalisationCallback(dataModelEngine).catch(console.error),
+const startBundleFinalisationWorker = async (dataModelEngine, finalisationCallback) =>
+  setInterval(
+    () => finalisationCallback(dataModelEngine).catch(console.error),
     Config.bundleFinalisationInterval());
-}
 
-async function finalise(dataModelEngine) {
+const finalise = async (dataModelEngine) => {
   const bundleStubId = Date.now().toString();
   const bundle = await dataModelEngine.finaliseBundle(bundleStubId);
   console.log(`Bundle ${bundle.bundleId} with ${bundle.content.entries.length} entries created`);
-}
+};
 
 if (require.main === module) {
   build()
