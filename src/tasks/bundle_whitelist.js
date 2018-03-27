@@ -87,7 +87,7 @@ const checkWhiteList = async (web3, bundleRegistry, addresses) => {
   for (const address of addresses) {
     try {
       const result = await bundleRegistry.methods.isWhitelisted(address).call();
-      console.log(result ? `✔️ ${address} is whitelisted` : `🚫 ${address} is not whitelisted`);
+      console.log(result === '1' ? `✔️ ${address} is whitelisted` : `🚫 ${address} is not whitelisted`);
     } catch (err) {
       console.error(err);
     }
