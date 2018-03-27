@@ -62,35 +62,22 @@ docker-compose exec ambnode yarn ops:admin:create
 
 ## Setuping dev environment:
 To work with dev environemnt you need to have parity node running on development chain:
-```
-parity --chain dev
+```sh
+parity --chain dev --force-ui
 ```
 
 as well as mongo database:
 
-```
+```sh
 yarn run dev:db
 ```
 
 Before start make sure you compile and deploy required contracts:
 ```sh
-yarn build:contracts
-NODE_ENV=dev yarn run ops:deploy:bundleregistry
+yarn dev:setup
 ```
 
-Now setup bundle registry in `dev.json` file, i.e.
-```js
-...
-  "bundle": {
-    "registryContractAddress": "0x73F0Ab32D78024573506cCB382fa804C8BA61C95"
-  }
-...
-``` 
-
-And make sure to whitelist yourself, before running tasks:
-```
-NODE_ENV=dev yarn run ops:bundle:whitelist --add -a "0x00a329c0648769A73afAc7F9381E08FB43dBEA72" -u "node.ambrosus.com"
-```
+You might need to confirm transactions in parity.
 
 ## Workers
 Following workers are required for Ambrosus node to work.
@@ -98,7 +85,7 @@ Following workers are required for Ambrosus node to work.
 ### Bundle finalization Workers
 Bundle finalization worker gathers entities, packs them in bundles and stores the proofs on the blockchain. To launch the worker type:
 
-```
+```sh
 yarn ops:bundle:finalisation
 ```
 
@@ -106,7 +93,7 @@ Note that NODE_ENV environment varibale needs to be set.
 
 You can run the worker in dev mode with:
 
-```
+```sh
 yarn dev:bundle:finalisation
 ```
 
@@ -140,7 +127,7 @@ Available commands:
 yarn ops:deploy:bundleregistry
 
 //add an address to the whitelist 
-yarn ops:bundle:whitelist --add -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466" -u "node.ambrosus.com"
+yarn ops:bundle:whitelist --add -a "0x00a329c0648769A73afAc7F9381E08FB43dBEA72" -u "node.ambrosus.com"
 
 //check if address is on a whitelist
 yarn  ops:bundle:whitelist --check -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"

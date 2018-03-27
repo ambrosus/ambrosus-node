@@ -27,7 +27,7 @@ describe('Bundles - Integrations', () => {
       return value.eventId;
     }
 
-    throw new Error('unexpected entity type');
+    throw new Error('Unexpected entity type');
   };
 
   before(async () => {

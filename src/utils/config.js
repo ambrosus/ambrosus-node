@@ -25,7 +25,7 @@ export default class Config {
   }
 
   static mongoDbUri() {
-    return Config.get('mongo.db_uri', process.env.MONGODB_URI);
+    return Config.get('mongo.dbUri', process.env.MONGODB_URI);
   }
 
   static mongoDbDatabase() {
