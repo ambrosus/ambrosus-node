@@ -52,7 +52,6 @@ createWeb3()
       ensureSameLength(options.address, options.url);
       await setUrl(web3, bundleRegistry, options.address, options.url);
     }
-    process.exit(0);
   })
   .catch(console.error);
 
