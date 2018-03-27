@@ -4,7 +4,7 @@ import sinonChai from 'sinon-chai';
 
 import {pick, put} from '../../src/utils/dict_utils';
 import {createWeb3} from '../../src/utils/web3_tools';
-import {InvalidParametersError, ValidationError} from '../../src/errors/errors';
+import {InvalidParametersError, ValidationError, JsonValidationError} from '../../src/errors/errors';
 
 import IdentityManager from '../../src/services/identity_manager';
 import EntityBuilder from '../../src/services/entity_builder';
@@ -100,6 +100,13 @@ describe('Entity Builder', () => {
           expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
         });
       }
+
+      it('throws ValidationError if event not passing validation', () => {
+        const brokenEvent = put(exampleEvent, 'content.data.location', {latitude: 91});
+        expect(() => entityBuilder.validateEvent(brokenEvent))
+          .to.throw(JsonValidationError)
+          .and.have.nested.property('errors[0].dataPath', '.location.latitude');
+      });
 
       it('throws if accessLevel not positive integer', () => {
         let brokenEvent = put('content.idData.accessLevel', exampleEvent, 1.1);

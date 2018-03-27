@@ -35,3 +35,10 @@ export class NotFoundError extends AmbrosusError {
     super(`Entity not found: ${message}`);
   }
 }
+
+export class JsonValidationError extends ValidationError {
+  constructor(errors) {
+    super(errors.map((_e) => _e.message).join(', '));
+    this.errors = errors;
+  }
+}
