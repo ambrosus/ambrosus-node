@@ -10,6 +10,9 @@ export default class TokenAuthenticator {
     if (!timestamp || !Number.isInteger(timestamp)) {
       throw new InvalidParametersError('Unix timestamp was not provided or has an invalid format');
     }
+    if (timestamp <= Date.now()) {
+      throw new InvalidParametersError('Timestamp should be in the future');
+    }
     const address = this.identityManager.addressFromSecret(secret);
     const idData = {
       createdBy: address,

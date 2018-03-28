@@ -13,19 +13,22 @@ chai.use(sinonChai);
 const {expect} = chai;
 
 describe('Access token middleware', () => {
+  const now = 5;
   let mockTokenAuthenticator;
   let request;
   let response;
   let next;
   let tokenAuthenticator;
   let token;
+  let clock;
 
   before(async () => {
     tokenAuthenticator = new TokenAuthenticator(new IdentityManager(await createWeb3()));
+    clock = sinon.useFakeTimers(now);
   });
 
   beforeEach(() => {
-    token = tokenAuthenticator.generateToken(pkPair.secret, 1);
+    token = tokenAuthenticator.generateToken(pkPair.secret, now + 1);
     next = spy();
     mockTokenAuthenticator = {
       decodeToken: sinon.stub()
@@ -39,7 +42,7 @@ describe('Access token middleware', () => {
   });
 
   it('pass if token authenticator confirms', () => {
-    const decodedToken = {idData: {createdBy: '0x1', validUntil: 1}};
+    const decodedToken = {idData: {createdBy: '0x1', validUntil: now + 1}};
     const configuredMiddleware = accessTokenMiddleware(mockTokenAuthenticator);
     mockTokenAuthenticator.decodeToken.returns(decodedToken);
     expect(() => configuredMiddleware(request, response, next)).to.not.throw();
@@ -95,5 +98,9 @@ describe('Access token middleware', () => {
       expect(() => configuredMiddleware(request, response, next)).to.not.throw();
       expect(request).to.not.include.key('tokenData');
     });
+  });
+
+  after(() => {
+    clock.restore();
   });
 });
