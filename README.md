@@ -147,4 +147,13 @@ yarn ops:bundle:whitelist --geturl -a "0x925ea5af075bde17811e4bcdc198dc5d3675e46
 yarn ops:bundle:whitelist --seturl -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466" -u "node.amb.to"
 ```
 
+## Postman collections
+
+Additionally we provide the postman collection to make it easier to test REST queries. To use them you need to run the server, create the admin account and:
+
+1. Import the environment from `postman/AMB.postman_environment.json` and select it.
+2. Import collection from `Ambrosus.postman_collection.json`
+3. In the environment set `adminSecret` and `adminAddress` variables with admin's private and public keys respectively.
+4. If needed, change `url` variable (by default url=localhost:9876)
+5. Create token with calling the `Create Token` request
 
