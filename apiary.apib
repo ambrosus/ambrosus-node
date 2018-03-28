@@ -81,6 +81,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
             Authorization: AMB_TOKEN ...
 
     + Attributes (object)
+        + address (string) - An address of the new account
         + permissions (array) - A list of permissions granted to this account
             + "register_account" (string) - Permission name
         + accessLevel (number) - Access level of the account. Should be a non-negative integer.
@@ -88,7 +89,8 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
     + Body
 
             {
-                "permissions" : ['register_account','change_account_permissions'],
+                "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
+                "permissions" : ["register_account","change_account_permissions"],
                 "accessLevel" : 0
             }
 
@@ -248,7 +250,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
     + Body
 
             {
-                "permissions" : ['register_account','change_account_permissions'],
+                "permissions" : ["register_account","change_account_permissions"],
                 "accessLevel" : 0
             }
 

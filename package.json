@@ -22,7 +22,7 @@
     "dev:start": "export NODE_ENV=dev && nodemon --watch src --exec babel-node --inspect src/start.js",
     "dev:db": "mongod --dbpath=./data",
     "dev:lint": "eslint src test",
-    "dev:admin:create": "export NODE_ENV=dev && babel-node src/tasks/createAdminUser.js",
+    "dev:admin:create": "export NODE_ENV=dev && babel-node src/tasks/create_admin_user.js",
     "dev:bundle:finalisation": "export NODE_ENV=dev && babel-node src/tasks/bundle_finalisation.js",
     "dev:bundle:downloader": "export NODE_ENV=dev && babel-node src/tasks/bundle_downloader.js"
   },

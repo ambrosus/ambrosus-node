@@ -1,0 +1,370 @@
+{
+	"info": {
+		"name": "Ambrosus-new",
+		"_postman_id": "fc88b319-3f05-47aa-8e94-7748286fcf6f",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "555e22d2-5a4a-48d1-9018-f24d401a0931",
+						"type": "text/javascript",
+						"exec": [
+							"pm.environment.set(\"token\", JSON.parse(responseBody).token);"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "AMB {{adminSecret}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"validUntil\": 1600000000000\n}"
+				},
+				"url": {
+					"raw": "{{url}}/token",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"token"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Create account",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "8015e82b-7704-46e7-8aea-e29dd2cfaa59",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "AMB_TOKEN {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"address\": \"{{address}}\",\n    \"permissions\" : [\"register_account\",\"change_account_permissions\"],\n    \"accessLevel\" : 0\n}"
+				},
+				"url": {
+					"raw": "{{url}}/accounts",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"accounts"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get account",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "AMB_TOKEN {{token}}"
+					}
+				],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/accounts/{{address}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"accounts",
+						"{{address}}"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Modify account",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "AMB_TOKEN {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"permissions\" : [\"change_account_permissions\"],\n    \"accessLevel\" : 4\n}"
+				},
+				"url": {
+					"raw": "{{url}}/accounts/{{address}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"accounts",
+						"{{address}}"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Create asset",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "AMB {{adminSecret}}",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"assetId\": \"{{assetId}}\",\n    \"content\": {\n        \"signature\": \"0xf2e4360ce90d2869bb761609cbfeb3b4b426c947a8a83182d6bf1ea7e3d64d78241cf6ec1ab007f5853f15f7de92c7480941912f6d776916ba5088cf47d2c9c51c\",\n        \"idData\": {\n            \"createdBy\": \"{{adminAddress}}\",\n            \"timestamp\": 1503424923,\n            \"sequenceNumber\": 3\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "{{url}}/assets",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"assets"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get asset by id",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/assets/{{assetId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"assets",
+						"{{assetId}}"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Create event",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"eventId\": \"{{eventId}}\",\n    \"content\": {\n\t    \"signature\": \"0x0f9b46be568c36fb912d16d5e1caff198e78fa79248cde6526aa8a3903326f156d7ddac9ec1d5f2695239814fc58ac92862e268eb6a5949d97bbea245308708f1c\",\n        \"idData\": {\n            \"assetId\": \"{{assetId}}\",\n            \"createdBy\": \"{{adminAddress}}\",\n            \"accessLevel\": 4,\n            \"timestamp\": 1503424923,\n            \"dataHash\": \"0x01cd181cd38eb5bbd162a44701727a31f457a538\"\n        },\n        \"data\": {\n\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "{{url}}/assets/{{assetId}}/events",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"assets",
+						"{{assetId}}",
+						"events"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get event by id",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/assets/{{assetId}}/events/{{eventId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"assets",
+						"{{assetId}}",
+						"events",
+						"{{eventId}}"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Finding events",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/events?assetId={{assetId}}&fromTimestamp=0&toTimestamp=9999999999999&perPage=100&page=0&createdBy={{adminAddress}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"events"
+					],
+					"query": [
+						{
+							"key": "assetId",
+							"value": "{{assetId}}",
+							"equals": true,
+							"description": "ID of the asset the events are targeting"
+						},
+						{
+							"key": "fromTimestamp",
+							"value": "0",
+							"equals": true,
+							"description": "earliest timestamp for the events"
+						},
+						{
+							"key": "toTimestamp",
+							"value": "9999999999999",
+							"equals": true,
+							"description": "latest timestamp for the events"
+						},
+						{
+							"key": "perPage",
+							"value": "100",
+							"equals": true,
+							"description": "number of events to return per page"
+						},
+						{
+							"key": "page",
+							"value": "0",
+							"equals": true,
+							"description": "number of page"
+						},
+						{
+							"key": "createdBy",
+							"value": "{{adminAddress}}",
+							"equals": true,
+							"description": "address of account that created targeting events"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get bundle by id",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/bundle/{{bundleId}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"bundle",
+						"{{bundleId}}"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"id": "2bcd991b-93f0-4d3c-9406-ceaf349feffd",
+			"key": "url",
+			"value": "http://network.ambrosus.com",
+			"type": "text",
+			"description": ""
+		}
+	]
+}

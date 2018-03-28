@@ -10,7 +10,7 @@ export default class AccountAccessDefinitions {
   async ensureHasPermission(address, permissionName) {
     const account = await this.accountRepository.get(address);
     if (account === null) {
-      throw new PermissionError(`Address ${account} doesn't exist`);
+      throw new PermissionError(`Address ${address} doesn't exist`);
     }
     if (!this.hasPermission(account, permissionName)) {
       throw new PermissionError(`${account.address} has no '${permissionName}' permission`);
