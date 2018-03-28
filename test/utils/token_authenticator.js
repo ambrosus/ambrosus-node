@@ -1,5 +1,6 @@
 import chai from 'chai';
 import chaiString from 'chai-string';
+import sinon from 'sinon';
 import {createWeb3} from '../../src/utils/web3_tools';
 import TokenAuthenticator from '../../src/utils/token_authenticator';
 import pkPair from '../fixtures/pk_pair';
@@ -12,6 +13,7 @@ chai.use(chaiString);
 describe('TokenAuthenticator', () => {
   let authenticator;
   let identityManager;
+  let clock;
 
   const ENCODED_TOKEN = 'eyJpZERhdGEiOnsiY3JlYXRlZEJ5IjoiMHg3NDJFNjJDQzdBMTlFZjdEOWM0NDMwNkMwN0ZBZDU0QjViRjZkNGJFIiwidmFsaWRVbnRpbCI6N30sInNpZ25hdHVyZSI6IjB4MjgxZWExOWZlM2QzMDcxMjliY2QyYTFhYmMzM2NmZGM4OWU3Yzc5OWMxNWFhZDM1ODIyYmI3MjdjNGJjZTFiMTA4YTc0ZWZjMjQ0ZjIyZGY1YjUyZDk0OTFlZmIzOTAxMTQ1MzgzMzFkNzU4MTM1Mjg1NGJkMzViN2UxZWNhNzExYyJ9';
   const SIGNATURE = '0x281ea19fe3d307129bcd2a1abc33cfdc89e7c799c15aad35822bb727c4bce1b108a74efc244f22df5b52d9491efb390114538331d7581352854bd35b7e1eca711c';
@@ -22,6 +24,7 @@ describe('TokenAuthenticator', () => {
   before(async () => {
     identityManager = new IdentityManager(await createWeb3());
     authenticator = new TokenAuthenticator(identityManager);
+    clock = sinon.useFakeTimers(now);
   });
 
   describe('Valid data', () => {
@@ -49,6 +52,10 @@ describe('TokenAuthenticator', () => {
 
     it('generate token from invalid secret', async () => {
       expect(() => authenticator.generateToken('not-a-secret', 7)).to.throw(AuthenticationError);
+    });
+
+    it('generate token with past timestamp', async () => {
+      expect(() => authenticator.generateToken(pkPair.secret, past)).to.throw(InvalidParametersError);
     });
 
     it('decode token which is not base64', () => {
@@ -91,8 +98,8 @@ describe('TokenAuthenticator', () => {
     });
 
     it('decode expired token', () => {
-      const token = authenticator.generateToken(pkPair.secret, past);
-      expect(() => authenticator.decodeToken(token, now)).to.throw(AuthenticationError);
+      const token = authenticator.generateToken(pkPair.secret, future);
+      expect(() => authenticator.decodeToken(token, future + 1)).to.throw(AuthenticationError);
     });
 
     it('decode token with missing validUntil', () => {
@@ -101,6 +108,10 @@ describe('TokenAuthenticator', () => {
       };
       const token = authenticator.encode(authenticator.preparePayload(pkPair.secret, idData));
       expect(() => authenticator.decodeToken(token, now)).to.throw(AuthenticationError);
+    });
+
+    after(() => {
+      clock.restore();
     });
   });
 });
