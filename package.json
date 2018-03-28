@@ -21,7 +21,7 @@
     "dev:setup": "export NODE_ENV=dev && babel-node src/tasks/dev_setup.js",
     "dev:start": "export NODE_ENV=dev && nodemon --watch src --exec babel-node --inspect src/start.js",
     "dev:db": "mongod --dbpath=./data",
-    "dev:lint": "eslint src test",
+    "dev:lint": "eslint src test config",
     "dev:admin:create": "export NODE_ENV=dev && babel-node src/tasks/create_admin_user.js",
     "dev:bundle:finalisation": "export NODE_ENV=dev && babel-node src/tasks/bundle_finalisation.js",
     "dev:bundle:downloader": "export NODE_ENV=dev && babel-node src/tasks/bundle_downloader.js"
@@ -36,9 +36,10 @@
     "body-parser": "^1.18.2",
     "command-line-args": "^5.0.2",
     "config": "^1.29.2",
+    "cors": "^2.8.4",
     "express": "^4.16.2",
     "mongodb": "^3.0.2",
-    "web3": "1.0.0-beta.29",
+    "web3": "1.0.0-beta.30",
     "zeppelin-solidity": "^1.7.0"
   },
   "devDependencies": {

@@ -7,6 +7,7 @@ import eventsRouter from './routes/events';
 import tokenRouter from './routes/token';
 import bundlesRouter from './routes/bundles';
 import Config from './utils/config';
+import cors from 'cors';
 
 
 export default class Server {
@@ -17,7 +18,12 @@ export default class Server {
   start() {
     const app = express();
 
-    app.use('/accounts', accountsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine));  
+    app.use(cors({
+      origin : true,
+      credentials: true
+    }));
+
+    app.use('/accounts', accountsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine));
     app.use('/assets', assetsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine));
     app.use('/events', eventsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine));
     app.use('/token', tokenRouter(this.modelEngine.tokenAuthenticator));
