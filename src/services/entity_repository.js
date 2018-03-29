@@ -33,46 +33,47 @@ export default class EntityRepository {
     return event.content.idData.accessLevel <= accessLevel ? event : pick(event, 'content.data');
   }
 
-  addToQuery(query, part) {
-    const queryLength = Object.keys(query).length;
-    if (queryLength === 0) {
-      return part;
+  addToQuery(queryParts, part) {
+    return [...queryParts, part];
+  }
+
+  composeQuery(queryParts) {
+    if (queryParts.length === 0) {
+      return {};
     }
-    const conjunction = query.$and || [query];
+    if (queryParts.length === 1) {
+      return queryParts[0];
+    }
     return {
-      $and: [
-        ...conjunction,
-        part
-      ]
+      $and: queryParts
     };
   }
 
-  addToHiddenQuery(query, part, accessLevel) {
-    const hiddenDataPart = {
-      $and: [
-        {'content.idData.accessLevel': {$lte: accessLevel}},
-        part
-      ]
-    };
-    return this.addToQuery(query, hiddenDataPart);
+  addDataAccessLevelLimitationIfNeeded(queryParts, accessLevel) {
+    const part = {'content.idData.accessLevel': {$lte: accessLevel}};
+    if (queryParts.some((queryPart) => queryPart['content.idData.accessLevel'])) {
+      return queryParts;
+    }
+    return this.addToQuery(queryParts, part);
   }
 
   getConfigurationForFindEventsQuery(params, accessLevel = 0) {
-    let query = {};
+    let queryParts = [];
     if (params.assetId) {
-      query = this.addToQuery(query, {'content.idData.assetId': params.assetId});
+      queryParts = this.addToQuery(queryParts, {'content.idData.assetId': params.assetId});
     }
     if (params.createdBy) {
-      query = this.addToQuery(query, {'content.idData.createdBy': params.createdBy});
+      queryParts = this.addToQuery(queryParts, {'content.idData.createdBy': params.createdBy});
     }
     if (params.fromTimestamp) {
-      query = this.addToQuery(query, {'content.idData.timestamp': {$gte: params.fromTimestamp}});
+      queryParts = this.addToQuery(queryParts, {'content.idData.timestamp': {$gte: params.fromTimestamp}});
     }
     if (params.toTimestamp) {
-      query = this.addToQuery(query, {'content.idData.timestamp': {$lte: params.toTimestamp}});
+      queryParts = this.addToQuery(queryParts, {'content.idData.timestamp': {$lte: params.toTimestamp}});
     }
-    if (params.locationAsset) {
-      query = this.addToHiddenQuery(query, {'content.data.location.asset': params.locationAsset}, accessLevel);
+    if (params.locationAsAsset) {
+      queryParts = this.addDataAccessLevelLimitationIfNeeded(queryParts, accessLevel);
+      queryParts = this.addToQuery(queryParts, {'content.data.location.asset': params.locationAsAsset}, accessLevel);
     }
 
     const pageSize = params.perPage || 100;
@@ -84,7 +85,7 @@ export default class EntityRepository {
       limit: pageSize,
       sort: [['content.idData.timestamp', 'descending']]
     };
-    return {query, options};
+    return {query: this.composeQuery(queryParts), options};
   }
 
   async findEvents(params, accessLevel = 0) {

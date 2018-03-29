@@ -284,7 +284,8 @@ describe('Entity Builder', () => {
 
   describe('validating query parameters', () => {
     let entityBuilder;
-    const validParamsAsStrings = {assetId: '0x1234', fromTimestamp: '10', toTimestamp: '20', page: '2', perPage: '4', createdBy : '0x4321'};
+    const exampleAssetId = `0x${'1'.repeat(40)}`;
+    const validParamsAsStrings = {assetId: '0x1234', fromTimestamp: '10', toTimestamp: '20', page: '2', perPage: '4', createdBy : '0x4321', location: `asset(${exampleAssetId})`};
 
     before(() => {
       entityBuilder = new EntityBuilder({});
@@ -293,7 +294,7 @@ describe('Entity Builder', () => {
     it('passes for proper parameters', () => {
       const params = {
         assetId: '0x1234', fromTimestamp: 10, toTimestamp: 20, page: 2, perPage: 4, createdBy: '0x4321',
-        location: 'asset(0x0)'
+        location: validParamsAsStrings.location
       };
       const validatedParams = entityBuilder.validateAndCastFindEventsParams(params);
       expect(validatedParams.assetId).to.equal('0x1234');
@@ -302,7 +303,7 @@ describe('Entity Builder', () => {
       expect(validatedParams.page).to.equal(2);
       expect(validatedParams.perPage).to.equal(4);
       expect(validatedParams.createdBy).to.equal('0x4321');
-      expect(validatedParams.locationAsset).to.equal('0x0');
+      expect(validatedParams.locationAsAsset).to.equal(exampleAssetId);
     });
 
     it('casts strings on integers if needed', () => {
@@ -314,6 +315,7 @@ describe('Entity Builder', () => {
       expect(validatedParams.page).to.equal(2);
       expect(validatedParams.perPage).to.equal(4);
       expect(validatedParams.createdBy).to.equal('0x4321');
+      expect(validatedParams.locationAsAsset).to.equal(exampleAssetId);
     });
 
     it('throws if surplus parameters are passed', () => {
@@ -343,11 +345,21 @@ describe('Entity Builder', () => {
 
     describe('parsing location query', () => {
       it('extracts assetId from query', async () => {
-        expect(entityBuilder.parseLocationQuery('asset(0x0)')).to.deep.equal({locationAsset: '0x0'});
+        expect(entityBuilder.parseLocationQuery(validParamsAsStrings.location))
+          .to.deep.equal({locationAsAsset: exampleAssetId});
       });
 
       it('throws if invalid location search query', async () => {
         expect(() => entityBuilder.parseLocationQuery('wrongparam(0x0)', 1))
+          .to.throw(InvalidParametersError);
+      });
+
+      it('throws if assetId has wrong format', async () => {
+        expect(() => entityBuilder.parseLocationQuery('asset(0x0000)', 1))
+          .to.throw(InvalidParametersError);
+        expect(() => entityBuilder.parseLocationQuery(`asset(0x${'z'.repeat(40)}`, 1))
+          .to.throw(InvalidParametersError);
+        expect(() => entityBuilder.parseLocationQuery(`asset(${'0'.repeat(40)}`, 1))
           .to.throw(InvalidParametersError);
       });
     });

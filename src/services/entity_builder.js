@@ -92,15 +92,12 @@ export default class EntityBuilder {
     if (!queryString) {
       return {};
     }
-    const extractValueRegex = /^(?:asset\((.*)\))|(?:geo\((.*)\))$/;
+    const extractValueRegex = /^asset\((0x[\dA-F]{40})\)$/gi;
     const parseResult = extractValueRegex.exec(queryString);
     if (!parseResult) {
-      throw new InvalidParametersError('Location query must be of format `asset(assetId)` or `geo(lon,lat,radius)`');
+      throw new InvalidParametersError('Location query must be of format `asset(0x...)`');
     }
-    if (parseResult[1]) {
-      return {locationAsset: parseResult[1]};
-    }
-    throw new InvalidParametersError('Search by geo coordinates is not supported yet');
+    return {locationAsAsset: parseResult[1]};
   }
 
   validateAndCastFindEventsParams(params) {
