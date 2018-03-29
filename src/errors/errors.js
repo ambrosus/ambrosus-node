@@ -38,7 +38,13 @@ export class NotFoundError extends AmbrosusError {
 
 export class JsonValidationError extends ValidationError {
   constructor(errors) {
-    super(errors.map((_e) => _e.message).join(', '));
+    const messageForError = (err) => {
+      if (err.dataPath) {
+        return `${err.dataPath} ${err.message}`;
+      }
+      return err.message;
+    };
+    super(errors.map((err) => messageForError(err)).join(', '));
     this.errors = errors;
   }
 }
