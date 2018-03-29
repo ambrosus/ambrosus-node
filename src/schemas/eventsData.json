@@ -4,12 +4,22 @@
   "properties": {
     "identifiers": {
       "description": "Known identifiers for an event",
-      "type": "array",
-      "uniqueItems": true
+      "type": "object",
+      "uniqueItems": true,
+      "patternProperties": {
+        "^.*$": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
     },
     "entries": {
       "description": "Entries for an event",
-      "type": "array"
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
     },
     "location": {
       "description": "A geographical coordinate",
@@ -28,5 +38,7 @@
       }
     }
   },
-  "required": ["identifiers"]
+  "required": [
+    "identifiers"
+  ]
 }

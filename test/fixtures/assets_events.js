@@ -23,7 +23,7 @@ export const createEvent = (fields, data) => ({
       ...fields
     },
     data: {
-      identifiers: [],
+      identifiers: {},
       ...data
     }
   }

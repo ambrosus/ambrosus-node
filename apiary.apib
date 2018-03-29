@@ -500,7 +500,11 @@ Places (after intensive validations) the provided event object into the system.
                 + accessLevel: 4 (number) - The access level of the event. Should be a non-negative integer.
                 + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
             + data (object) - Private information about an event.
-
+                + identifiers (object) - Known event identifiers as a map of identifier type to array of values. (this field is required, but can be empty)
+                + location (object) - location associated with the event
+                    + longitude: 37.7749 (number) - Longitude of the location
+                    + latitude: 122.4194 (number) - Latitude of the location 
+                + entries (array) - Array of custom entries
 
     + Body
 
@@ -516,7 +520,17 @@ Places (after intensive validations) the provided event object into the system.
                         "dataHash": "0x01cd181cd38eb5bbd162a44701727a31f457a538"
                     },
                     "data": {
-
+                        "identifiers": {"someEventIdentifier": ["21938012983"]},
+                         "location": {
+                            "longitude": -122.4194,
+                            "latitude": 37.7749
+                          },
+                          "entries": [
+                            {
+                              "type": "com.ambrosus.customevent",
+                              "customField": "customValue"
+                            }
+                          ]
                     }
                 }
             }
@@ -594,7 +608,17 @@ Places (after intensive validations) the provided event object into the system.
                         "dataHash": "0x01cd181cd38eb5bbd162a44701727a31f457a538"
                     },
                     "data": {
-
+                        "identifiers": {"someEventIdentifier": ["21938012983"]},
+                         "location": {
+                            "longitude": -122.4194,
+                            "latitude": 37.7749
+                          },
+                          "entries": [
+                            {
+                              "type": "com.ambrosus.customevent",
+                              "customField": "customValue"
+                            }
+                          ]
                     }
                 }
             }
@@ -638,7 +662,11 @@ Fetches an event by identifier
                 + accessLevel: 4 (number) - The access level of the event. If the user's access level if lower than event's, the data field will not be returned.
                 + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
             + data (object) - Private information about an event.
-
+                + identifiers (object) - Known event identifiers as a map of identifier type to array of values. (this field is required, but can be empty)
+                + location (object) - location associated with the event
+                    + longitude: 37.7749 (number) - Longitude of the location
+                    + latitude: 122.4194 (number) - Latitude of the location 
+                + entries (array) - Array of custom entries as objects
 
     + Body
 
@@ -654,7 +682,17 @@ Fetches an event by identifier
                         "dataHash": "0x01cd181cd38eb5bbd162a44701727a31f457a538"
                     },
                     "data": {
-
+                        "identifiers": {"someEventIdentifier": ["21938012983"]},
+                         "location": {
+                            "longitude": -122.4194,
+                            "latitude": 37.7749
+                          },
+                          "entries": [
+                            {
+                              "type": "com.ambrosus.customevent",
+                              "customField": "customValue"
+                            }
+                          ]
                     }
                 }
             }
@@ -696,6 +734,12 @@ Finds event satisfying provided cryteria.
                         + accessLevel: 4 (number) - The access level of the event. If the user's access level if lower than event's, the data field will not be returned.
                         + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
                     + data (object) - Private information about an event.
+                        + identifiers (object) - Known event identifiers as a map of identifier type to array of values. (this field is required, but can be empty)                        
+                        + location (object) - location associated with the event
+                            + longitude: 37.7749 (number) - Longitude of the location
+                            + latitude: 122.4194 (number) - Latitude of the location 
+                        + entries (array) - Array of custom entries as objects
+                        
         + resultCount: 112 (number) - Total number of vvents matching provided criterias.
 
     + Body
@@ -713,7 +757,17 @@ Finds event satisfying provided cryteria.
                                 "dataHash": "0x01cd181cd38eb5bbd162a44701727a31f457a538"
                             },
                             "data": {
-        
+                                "identifiers": {"someEventIdentifier": ["21938012983"]},
+                                 "location": {
+                                    "longitude": -122.4194,
+                                    "latitude": 37.7749
+                                  },
+                                  "entries": [
+                                    {
+                                      "type": "com.ambrosus.customevent",
+                                      "customField": "customValue"
+                                    }
+                                  ]
                             }
                         }
                     }

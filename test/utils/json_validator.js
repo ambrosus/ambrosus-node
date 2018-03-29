@@ -28,18 +28,18 @@ describe('JsonValidator', () => {
     validator = new JsonValidator();
   });
 
-  it('throw ValidationError with informative message if validation fails', () => {
+  it('throw JsonValidationError with informative message if validation fails', () => {
     expect(() => validator.validate(dataWithMissingField, schema))
       .to.throw(JsonValidationError)
       .and.have.property('message', `Invalid data: should have required property 'aRequiredString'`);
   });
 
   it('accepts a valid event', () => {
-    const event = {identifiers: []};
+    const event = {identifiers: {}};
     expect(() => validator.validate(event, eventsSchema)).to.not.throw();
   });
 
-  it('throws on invalid event', () => {
+  it('throws JsonValidationError on invalid event', () => {
     const event = {};
     expect(() => validator.validate(event, eventsSchema))
       .to.throw(JsonValidationError)
