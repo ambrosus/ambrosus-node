@@ -33,33 +33,6 @@ export default class EntityRepository {
     return event.content.idData.accessLevel <= accessLevel ? event : pick(event, 'content.data');
   }
 
-  getConfigurationForFindEventsQuery(params) {
-    let query = {};
-    if (params.assetId) {
-      query = this.addToQuery(query, {'content.idData.assetId': params.assetId});
-    }
-    if (params.createdBy) {
-      query = this.addToQuery(query, {'content.idData.createdBy': params.createdBy});
-    }
-    if (params.fromTimestamp) {
-      query = this.addToQuery(query, {'content.idData.timestamp': {$gte: params.fromTimestamp}});
-    }
-    if (params.toTimestamp) {
-      query = this.addToQuery(query, {'content.idData.timestamp': {$lte: params.toTimestamp}});
-    }
-    
-    const pageSize = params.perPage || 100;
-    const pageNumber = params.page || 0;
-    const resultsToSkip = pageNumber * pageSize;
-
-    const options = {
-      skip: resultsToSkip,
-      limit: pageSize,
-      sort: [['content.idData.timestamp', 'descending']]
-    };
-    return {query, options};
-  }
-
   addToQuery(query, part) {
     const queryLength = Object.keys(query).length;
     if (queryLength === 0) {
@@ -74,8 +47,48 @@ export default class EntityRepository {
     };
   }
 
+  addToHiddenQuery(query, part, accessLevel) {
+    const hiddenDataPart = {
+      $and: [
+        {'content.idData.accessLevel': {$lte: accessLevel}},
+        part
+      ]
+    };
+    return this.addToQuery(query, hiddenDataPart);
+  }
+
+  getConfigurationForFindEventsQuery(params, accessLevel = 0) {
+    let query = {};
+    if (params.assetId) {
+      query = this.addToQuery(query, {'content.idData.assetId': params.assetId});
+    }
+    if (params.createdBy) {
+      query = this.addToQuery(query, {'content.idData.createdBy': params.createdBy});
+    }
+    if (params.fromTimestamp) {
+      query = this.addToQuery(query, {'content.idData.timestamp': {$gte: params.fromTimestamp}});
+    }
+    if (params.toTimestamp) {
+      query = this.addToQuery(query, {'content.idData.timestamp': {$lte: params.toTimestamp}});
+    }
+    if (params.locationAsset) {
+      query = this.addToHiddenQuery(query, {'content.data.location.asset': params.locationAsset}, accessLevel);
+    }
+
+    const pageSize = params.perPage || 100;
+    const pageNumber = params.page || 0;
+    const resultsToSkip = pageNumber * pageSize;
+
+    const options = {
+      skip: resultsToSkip,
+      limit: pageSize,
+      sort: [['content.idData.timestamp', 'descending']]
+    };
+    return {query, options};
+  }
+
   async findEvents(params, accessLevel = 0) {
-    const {query, options} = this.getConfigurationForFindEventsQuery(params);
+    const {query, options} = this.getConfigurationForFindEventsQuery(params, accessLevel);
 
     const cursor = this.db
       .collection('events')

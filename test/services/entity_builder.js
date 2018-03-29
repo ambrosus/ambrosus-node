@@ -291,7 +291,10 @@ describe('Entity Builder', () => {
     });
 
     it('passes for proper parameters', () => {
-      const params = {assetId: '0x1234', fromTimestamp: 10, toTimestamp: 20, page: 2, perPage: 4, createdBy : '0x4321'};
+      const params = {
+        assetId: '0x1234', fromTimestamp: 10, toTimestamp: 20, page: 2, perPage: 4, createdBy: '0x4321',
+        location: 'asset(0x0)'
+      };
       const validatedParams = entityBuilder.validateAndCastFindEventsParams(params);
       expect(validatedParams.assetId).to.equal('0x1234');
       expect(validatedParams.fromTimestamp).to.equal(10);
@@ -299,6 +302,7 @@ describe('Entity Builder', () => {
       expect(validatedParams.page).to.equal(2);
       expect(validatedParams.perPage).to.equal(4);
       expect(validatedParams.createdBy).to.equal('0x4321');
+      expect(validatedParams.locationAsset).to.equal('0x0');
     });
 
     it('casts strings on integers if needed', () => {
@@ -335,6 +339,17 @@ describe('Entity Builder', () => {
     it('throws if perPage value not in valid type', () => {
       const params = put(validParamsAsStrings, 'perPage', 'NaN');
       expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+    });
+
+    describe('parsing location query', () => {
+      it('extracts assetId from query', async () => {
+        expect(entityBuilder.parseLocationQuery('asset(0x0)')).to.deep.equal({locationAsset: '0x0'});
+      });
+
+      it('throws if invalid location search query', async () => {
+        expect(() => entityBuilder.parseLocationQuery('wrongparam(0x0)', 1))
+          .to.throw(InvalidParametersError);
+      });
     });
   });
 });

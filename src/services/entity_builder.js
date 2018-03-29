@@ -88,9 +88,23 @@ export default class EntityBuilder {
     };
   }
 
+  parseLocationQuery(queryString) {
+    if (!queryString) {
+      return {};
+    }
+    const extractValueRegex = /^(?:asset\((.*)\))|(?:geo\((.*)\))$/;
+    const parseResult = extractValueRegex.exec(queryString);
+    if (!parseResult) {
+      throw new InvalidParametersError('Location query must be of format `asset(assetId)` or `geo(lon,lat,radius)`');
+    }
+    if (parseResult[1]) {
+      return {locationAsset: parseResult[1]};
+    }
+    throw new InvalidParametersError('Search by geo coordinates is not supported yet');
+  }
 
   validateAndCastFindEventsParams(params) {
-    const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage', 'createdBy'];
+    const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage', 'createdBy', 'location'];
     const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
     if (invalidFields.length > 0) {
       throw new InvalidParametersError(`Some parameters (${invalidFields.join(',')}) are not supported`);
@@ -100,7 +114,7 @@ export default class EntityBuilder {
     params.toTimestamp = validateIntegerParameterAndCast(params.toTimestamp, 'toTimestamp');
     params.page = validateIntegerParameterAndCast(params.page, 'page');
     params.perPage = validateIntegerParameterAndCast(params.perPage, 'perPage');
-    
-    return params;
+
+    return {...params, ...this.parseLocationQuery(params.location)};
   }
 }
