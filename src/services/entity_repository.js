@@ -33,21 +33,49 @@ export default class EntityRepository {
     return event.content.idData.accessLevel <= accessLevel ? event : pick(event, 'content.data');
   }
 
-  getConfigurationForFindEventsQuery(params) {
-    let query = {};
+  addToQuery(queryParts, part) {
+    return [...queryParts, part];
+  }
+
+  composeQuery(queryParts) {
+    if (queryParts.length === 0) {
+      return {};
+    }
+    if (queryParts.length === 1) {
+      return queryParts[0];
+    }
+    return {
+      $and: queryParts
+    };
+  }
+
+  addDataAccessLevelLimitationIfNeeded(queryParts, accessLevel) {
+    const part = {'content.idData.accessLevel': {$lte: accessLevel}};
+    if (queryParts.some((queryPart) => queryPart['content.idData.accessLevel'])) {
+      return queryParts;
+    }
+    return this.addToQuery(queryParts, part);
+  }
+
+  getConfigurationForFindEventsQuery(params, accessLevel = 0) {
+    let queryParts = [];
     if (params.assetId) {
-      query = this.addToQuery(query, {'content.idData.assetId': params.assetId});
+      queryParts = this.addToQuery(queryParts, {'content.idData.assetId': params.assetId});
     }
     if (params.createdBy) {
-      query = this.addToQuery(query, {'content.idData.createdBy': params.createdBy});
+      queryParts = this.addToQuery(queryParts, {'content.idData.createdBy': params.createdBy});
     }
     if (params.fromTimestamp) {
-      query = this.addToQuery(query, {'content.idData.timestamp': {$gte: params.fromTimestamp}});
+      queryParts = this.addToQuery(queryParts, {'content.idData.timestamp': {$gte: params.fromTimestamp}});
     }
     if (params.toTimestamp) {
-      query = this.addToQuery(query, {'content.idData.timestamp': {$lte: params.toTimestamp}});
+      queryParts = this.addToQuery(queryParts, {'content.idData.timestamp': {$lte: params.toTimestamp}});
     }
-    
+    if (params.locationAsAsset) {
+      queryParts = this.addDataAccessLevelLimitationIfNeeded(queryParts, accessLevel);
+      queryParts = this.addToQuery(queryParts, {'content.data.location.asset': params.locationAsAsset}, accessLevel);
+    }
+
     const pageSize = params.perPage || 100;
     const pageNumber = params.page || 0;
     const resultsToSkip = pageNumber * pageSize;
@@ -57,25 +85,11 @@ export default class EntityRepository {
       limit: pageSize,
       sort: [['content.idData.timestamp', 'descending']]
     };
-    return {query, options};
-  }
-
-  addToQuery(query, part) {
-    const queryLength = Object.keys(query).length;
-    if (queryLength === 0) {
-      return part;
-    }
-    const conjunction = query.$and || [query];
-    return {
-      $and: [
-        ...conjunction,
-        part
-      ]
-    };
+    return {query: this.composeQuery(queryParts), options};
   }
 
   async findEvents(params, accessLevel = 0) {
-    const {query, options} = this.getConfigurationForFindEventsQuery(params);
+    const {query, options} = this.getConfigurationForFindEventsQuery(params, accessLevel);
 
     const cursor = this.db
       .collection('events')
