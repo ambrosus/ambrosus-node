@@ -1,6 +1,6 @@
 import {JsonValidationError} from '../../src/errors/errors';
-import JsonValidator from '../../src/utils/json_validator';
-import eventsSchema from '../../src/schemas/eventsData';
+import JsonValidator from '../../src/validators/json_validator';
+import eventsSchema from '../../src/validators/schemas/event';
 import chai from 'chai';
 
 
@@ -22,26 +22,23 @@ describe('JsonValidator', () => {
   const dataWithMissingField = {
   };
 
-  let validator;
-
-  before(() => {
-    validator = new JsonValidator();
-  });
-
   it('throw JsonValidationError with informative message if validation fails', () => {
-    expect(() => validator.validate(dataWithMissingField, schema))
+    const validator = new JsonValidator(schema);
+    expect(() => validator.validate(dataWithMissingField))
       .to.throw(JsonValidationError)
       .and.have.property('message', `Invalid data: should have required property 'aRequiredString'`);
   });
 
   it('accepts a valid event', () => {
+    const validator = new JsonValidator(eventsSchema);
     const event = {identifiers: {}};
-    expect(() => validator.validate(event, eventsSchema)).to.not.throw();
+    expect(() => validator.validate(event)).to.not.throw();
   });
 
   it('throws JsonValidationError on invalid event', () => {
-    const event = {};
-    expect(() => validator.validate(event, eventsSchema))
+    const validator = new JsonValidator(eventsSchema);
+    const event = {data: {}};
+    expect(() => validator.validate(event))
       .to.throw(JsonValidationError)
       .and.have.nested.property('errors[0].params.missingProperty', 'identifiers');
   });

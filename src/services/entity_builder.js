@@ -2,15 +2,24 @@ import {
   validatePathsNotEmpty, validateFieldsConstrainedToSet,
   validateIntegerParameterAndCast, validateNonNegativeInteger
 } from '../utils/validations';
-import JsonValidator from '../utils/json_validator';
-import eventsDataSchema from '../schemas/eventsData';
+import JsonValidator from '../validators/json_validator';
+import EventEntryValidator from '../validators/event_entry_validator.js';
+import eventSchema from '../validators/schemas/event';
+import deliveredSchema from '../../src/validators/schemas/custom/com.ambrosus.delivered.json';
+import scanSchema from '../../src/validators/schemas/custom/com.ambrosus.scan.json';
 import {put, pick} from '../utils/dict_utils';
 import {InvalidParametersError} from '../errors/errors';
 
+
+
 export default class EntityBuilder {
-  constructor(identityManager, validator = new JsonValidator()) {
+  constructor(identityManager) {
+    this.eventValidators = [
+      new JsonValidator(eventSchema),
+      new EventEntryValidator('com.ambrosus.delivered', new JsonValidator(deliveredSchema)),
+      new EventEntryValidator('com.ambrosus.scan', new JsonValidator(scanSchema))
+    ];
     this.identityManager = identityManager;
-    this.validator = validator;
   }
 
   validateAsset(asset) {
@@ -39,7 +48,7 @@ export default class EntityBuilder {
       'content.idData.accessLevel',
       'content.data'
     ]);
-    this.validator.validate(event.content.data, eventsDataSchema);
+    this.eventValidators.forEach((validator) => validator.validate(event.content));
     validateFieldsConstrainedToSet(event, ['content', 'eventId']);
     validateNonNegativeInteger(event.content.idData.accessLevel, `Access level should be a non-negative integer, instead got ${event.content.idData.accessLevel}`);
     this.identityManager.validateSignature(event.content.idData.createdBy, event.content.signature, event.content.idData);
