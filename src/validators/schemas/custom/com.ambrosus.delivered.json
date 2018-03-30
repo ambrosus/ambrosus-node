@@ -1,0 +1,24 @@
+{
+  "title": "com.ambrosus.delivered",
+  "type": "object",
+  "properties": {
+    "type": {
+      "description": "Known identifiers for an event",
+      "type": "string",
+      "const": "com.ambrosus.delivered"
+    },
+    "confirmationAddress": {
+      "description": "Address of a person or device confirming delivery",
+      "type": "string"
+    },
+    "confirmationSignature": {
+      "description": "Signature by a person or device confirming delivery",
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "confirmationAddress",
+    "confirmationSignature"
+  ]
+}
