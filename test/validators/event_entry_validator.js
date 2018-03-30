@@ -15,7 +15,6 @@ const createEventWithEntries = (entries) => ({
 });
 
 describe('EventEntryValidator', () => {
-
   let validator;
 
   beforeEach(() => {
