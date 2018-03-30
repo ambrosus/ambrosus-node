@@ -93,9 +93,13 @@ describe('Account Access Definitions', () => {
     });
   });
 
-  it('defaultAdminPermissions returns correct list', async () => {
-    expect(accountAccessDefinitions.defaultAdminPermissions())
-      .to.deep.eq(['register_account', 'create_entity']);
+  it('defaultAdminAccount returns correct object', async () => {
+    expect(accountAccessDefinitions.defaultAdminAccount('0x1234')).to.deep.eq(
+      {
+        address: '0x1234',
+        permissions: ['register_account', 'create_entity'],
+        accessLevel: 1000
+      });
   });
 
   describe('getTokenCreatorAccessLevel', () => {

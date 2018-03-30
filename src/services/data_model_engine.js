@@ -12,16 +12,14 @@ export default class DataModelEngine {
     this.accountAccessDefinitions = accountAccessDefinitions;
   }
 
-  async createAdminAccount(account = this.identityManager.createKeyPair()) {
-    const accounts = await this.accountRepository.count();
-    if (accounts > 0) {
-      throw new Error('Admin account already exist.');
+  async addAdminAccount(address = this.identityManager.nodeAddress()) {
+    const existingAccount = await this.accountRepository.get(address);
+    if (existingAccount) {
+      return existingAccount;
     }
-    const accountWithPermissions = {
-      ...account,
-      permissions: this.accountAccessDefinitions.defaultAdminPermissions()
-    };
-    await this.accountRepository.store(accountWithPermissions);
+
+    const account = this.accountAccessDefinitions.defaultAdminAccount(address);
+    await this.accountRepository.store(account);
     return account;
   }
 

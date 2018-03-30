@@ -28,7 +28,7 @@ describe('Accounts - Integrations', async () => {
   beforeEach(async () => {
     await apparatus.cleanDB();
     scenario.reset();
-    await scenario.injectAccount(adminAccountWithSecret);
+    await scenario.addAdminAccount(adminAccountWithSecret);
   });
 
   describe('Create an account', () => {

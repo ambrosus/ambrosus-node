@@ -1,7 +1,4 @@
 {
-    "server": {
-        "port": 9876
-    },
     "mongo" : {
         "dbUri": "mongodb://localhost:27017/ambrosus_gateway_test",
         "database": "ambrosus_gateway_test"

@@ -1,9 +1,0 @@
-{
-  "web3" : {
-      "rpc": "http://165.227.161.21:8545",
-      "nodePrivateKey": "0xfa654acfc59f0e4fe3bd57082ad28fbba574ac55fe96e915f17de27ad9c77696"
-  },
-  "bundle": {
-    "registryContractAddress": "0x71062Cb25fc47E56eea95188074e62A5759096b0"
-  }
-}

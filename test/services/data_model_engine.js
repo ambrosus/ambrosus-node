@@ -35,7 +35,69 @@ describe('Data Model Engine', () => {
     mockEvent = createEvent();
   });
 
-  describe('Create account', () => {
+  describe('Adding admin account', () => {
+    let mockIdentityManager;
+    let mockAccountRepository;
+    let mockAccountAccessDefinitions;
+    const exampleAccount = adminAccount;
+    const otherAccount = account;
+    let modelEngine;
+
+    before(() => {
+      mockIdentityManager = {
+        nodeAddress: sinon.stub()
+      };
+      mockAccountRepository = {
+        store: sinon.stub(),
+        get: sinon.stub()
+      };
+      mockAccountAccessDefinitions = {
+        defaultAdminAccount: sinon.stub()
+      };
+      modelEngine = new DataModelEngine(mockIdentityManager, {}, {}, {}, {}, {}, mockAccountRepository, mockAccountAccessDefinitions);
+    });
+
+    beforeEach(() => {
+      resetHistory(mockIdentityManager, mockAccountRepository, mockAccountAccessDefinitions);
+
+      mockIdentityManager.nodeAddress.returns(exampleAccount.address);
+      mockAccountRepository.get.resolves(exampleAccount);
+      mockAccountAccessDefinitions.defaultAdminAccount.returns(exampleAccount);
+    });
+
+    it('takes the nodeAddress from the identityManager if no parameter provided and registers if not already registered', async () => {
+      mockAccountRepository.get.resolves(null);
+
+      await expect(modelEngine.addAdminAccount()).to.have.been.fulfilled;
+
+      expect(mockIdentityManager.nodeAddress).to.have.been.called;
+      expect(mockAccountRepository.get).to.have.been.calledWith(exampleAccount.address);
+      expect(mockAccountAccessDefinitions.defaultAdminAccount).to.have.been.calledWith(exampleAccount.address);
+      expect(mockAccountRepository.store).to.have.been.calledWith(exampleAccount);
+    });
+
+    it(`registers the provided address as an admin if not already registered`, async () => {
+      mockAccountRepository.get.resolves(null);
+      mockAccountAccessDefinitions.defaultAdminAccount.returns(otherAccount);
+
+      await expect(modelEngine.addAdminAccount(otherAccount.address)).to.have.been.fulfilled;
+
+      expect(mockIdentityManager.nodeAddress).to.have.not.been.called;
+      expect(mockAccountRepository.get).to.have.been.calledWith(otherAccount.address);
+      expect(mockAccountAccessDefinitions.defaultAdminAccount).to.have.been.calledWith(otherAccount.address);
+      expect(mockAccountRepository.store).to.have.been.calledWith(otherAccount);
+    });
+
+    it('does nothing if account already registered', async () => {
+      await expect(modelEngine.addAdminAccount()).to.have.been.fulfilled;
+
+      expect(mockIdentityManager.nodeAddress).to.have.been.called;
+      expect(mockAccountRepository.get).to.have.been.calledWith(exampleAccount.address);
+      expect(mockAccountRepository.store).to.not.have.been.called;
+    });
+  });
+
+  describe('Add account', () => {
     let mockIdentityManager;
     let mockAccountRepository;
     let mockAccountAccessDefinitions;
@@ -51,8 +113,7 @@ describe('Data Model Engine', () => {
         count: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        ensureCanRegisterAccount: sinon.stub(),
-        defaultAdminPermissions: sinon.stub(),
+        ensureCanRegisterAccount: sinon.stub(),        
         validateAddAccountRequest: sinon.stub()
       };
       modelEngine = new DataModelEngine(mockIdentityManager, {}, {}, {}, {}, {}, mockAccountRepository, mockAccountAccessDefinitions);
@@ -105,32 +166,6 @@ describe('Data Model Engine', () => {
       const request = addAccountRequest();
       await expect(modelEngine.addAccount(request, createTokenFor(adminAccount.address))).to.be.rejectedWith(PermissionError);
     });
-
-    it('gives needed permissions to admin account', async () => {
-      const permissions = ['a', 'b'];
-      mockAccountAccessDefinitions.defaultAdminPermissions.returns(permissions);
-      mockAccountRepository.count.resolves(0);
-      await modelEngine.createAdminAccount(accountWithSecret);
-      expect(mockAccountRepository.store).to.be.calledOnce;
-      expect(mockAccountRepository.store).to.be.calledWith({...accountWithSecret, permissions});
-    });
-
-    it('not possible to overwrite admin permissions', async () => {
-      const permissions = ['a', 'b'];
-      mockAccountAccessDefinitions.defaultAdminPermissions.returns(permissions);
-      mockAccountRepository.count.resolves(0);
-      await modelEngine.createAdminAccount({...accountWithSecret, permissions: ['1', '2']});
-      expect(mockAccountRepository.store).to.be.calledOnce;
-      expect(mockAccountRepository.store).to.be.calledWith({...accountWithSecret, permissions});
-    });
-
-    it('cannot create admin if not first account', async () => {
-      const permissions = ['a', 'b'];
-      mockAccountAccessDefinitions.defaultAdminPermissions.returns(permissions);
-      mockAccountRepository.count.resolves(1);
-      await expect(modelEngine.createAdminAccount(accountWithSecret)).to.eventually.be.rejected;
-      expect(mockAccountRepository.store).to.be.not.called;
-    });
   });
 
   describe('Get account', () => {
@@ -145,7 +180,6 @@ describe('Data Model Engine', () => {
         get: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        defaultAdminPermissions: sinon.stub(),
         validateAddAccountRequest: sinon.stub()
       };
       modelEngine = new DataModelEngine({}, {}, {}, {}, {}, {}, mockAccountRepository, mockAccountAccessDefinitions);
@@ -192,7 +226,6 @@ describe('Data Model Engine', () => {
       };
       mockAccountAccessDefinitions = {
         ensureCanRegisterAccount: sinon.stub(),
-        defaultAdminPermissions: sinon.stub(),
         validateAddAccountRequest: sinon.stub(),
         validateModifyAccountRequest: sinon.stub()
       };
@@ -485,7 +518,7 @@ describe('Data Model Engine', () => {
       };
 
       scenario = new ScenarioBuilder(identityManager);
-      await scenario.injectAccount(adminAccountWithSecret);
+      await scenario.addAdminAccount(adminAccountWithSecret);
       await scenario.addAsset(0);
       eventSet = [
         await scenario.addEvent(0, 0)
@@ -585,7 +618,7 @@ describe('Data Model Engine', () => {
       clock = sinon.useFakeTimers();
 
       scenario = new ScenarioBuilder(identityManager);
-      await scenario.injectAccount(adminAccountWithSecret);
+      await scenario.addAdminAccount(adminAccountWithSecret);
       unbundledAssets = [
         await scenario.addAsset(0, {timestamp: 0}),
         await scenario.addAsset(0, {timestamp: 1})

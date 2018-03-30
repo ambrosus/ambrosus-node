@@ -80,7 +80,7 @@ describe('Entity Repository', () => {
       let scenario;
       before(async () => {
         scenario = new ScenarioBuilder(identityManager);
-        await scenario.injectAccount(adminAccountWithSecret);
+        await scenario.addAdminAccount(adminAccountWithSecret);
         await scenario.addAsset(0);
         await scenario.addAsset(0);
         const eventsSet = await scenario.generateEvents(
@@ -136,7 +136,7 @@ describe('Entity Repository', () => {
 
       before(async () => {
         scenario = new ScenarioBuilder(identityManager);
-        await scenario.injectAccount(adminAccountWithSecret);
+        await scenario.addAdminAccount(adminAccountWithSecret);
         await scenario.addAccount(0, accountWithSecret, {permissions : ['create_entity']});
         await scenario.addAsset(0);
         await scenario.addAsset(0);
@@ -276,7 +276,7 @@ describe('Entity Repository', () => {
 
     before(async () => {
       scenario = new ScenarioBuilder(new IdentityManager(await createWeb3()));
-      await scenario.injectAccount(adminAccountWithSecret);
+      await scenario.addAdminAccount(adminAccountWithSecret);
 
       alreadyBundledAssets = [
         await scenario.addAsset(0),

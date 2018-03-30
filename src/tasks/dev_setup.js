@@ -1,12 +1,13 @@
-import writeFile from '../utils/write_file';
+import {writeFile} from '../utils/file_tools';
+import path from 'path';
 import build from '../build';
 import BundleRegistry from '../../build/contracts/BundleRegistry.json';
 import {deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
 
 async function createAdminAccount(dataModelEngine) {
   try {
-    console.log('Creating admin account created');
-    const account = await dataModelEngine.createAdminAccount();
+    console.log('Creating admin account');
+    const account = await dataModelEngine.addAdminAccount();
     console.log(`Address: ${account.address}`);
     console.log(`Secret:  ${account.secret}`);
   } catch (exception) {
@@ -34,11 +35,11 @@ async function deployRegistryContract(dataModelEngine) {
     BundleRegistry.bytecode);
 
   const contractAddress = bundleRegistryContract.options.address;
-  const fileName = './config/registryContractAddress.json';
+  const filePath = path.join('config', 'registryContractAddress.json');
   console.log(`Contract deployed at ${contractAddress}`);
   whitelist(bundleRegistryContract, dataModelEngine);
-  await writeFile(fileName, `"${contractAddress}"`);
-  console.log(`Contract address stored in ${fileName}.`);
+  await writeFile(filePath, `"${contractAddress}"`);
+  console.log(`Contract address stored in ${filePath}.`);
 }
 
 async function setupDevelopment(dataModelEngine) {

@@ -8,11 +8,11 @@
   "license": "UNLICENCED",
   "scripts": {
     "build:contracts": "truffle compile",
-    "build:src": "babel ./src -d ./dist",
+    "build:src": "babel ./src -d ./dist --copy-files",
     "build": "yarn build:contracts && yarn build:src",
     "start": "node dist/start.js",
     "test": "export NODE_ENV=test && mocha --require babel-register --timeout 5000 test/**/*.js",
-    "ops:admin:create": "babel-node src/tasks/create_admin_user.js",
+    "ops:generate_private_key": "babel-node src/tasks/generate_private_key.js",
     "ops:bundle:finalisation": "babel-node src/tasks/bundle_finalisation.js",
     "ops:bundle:downloader": "babel-node src/tasks/bundle_downloader.js",
     "ops:bundle:whitelist": "babel-node src/tasks/bundle_whitelist.js",
@@ -22,7 +22,6 @@
     "dev:start": "export NODE_ENV=dev && nodemon --watch src --exec babel-node --inspect src/start.js",
     "dev:db": "mongod --dbpath=./data",
     "dev:lint": "eslint src test config",
-    "dev:admin:create": "export NODE_ENV=dev && babel-node src/tasks/create_admin_user.js",
     "dev:bundle:finalisation": "export NODE_ENV=dev && babel-node src/tasks/bundle_finalisation.js",
     "dev:bundle:downloader": "export NODE_ENV=dev && babel-node src/tasks/bundle_downloader.js"
   },
