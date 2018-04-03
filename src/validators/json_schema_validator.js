@@ -2,8 +2,7 @@ import Validator from './validator';
 import {JsonValidationError} from '../errors/errors';
 import Ajv from 'ajv';
 
-
-export default class JsonValidator extends Validator {
+export default class JsonSchemaValidator extends Validator {
   constructor(schema, ajv = new Ajv()) {
     super();
     this.schema = schema;

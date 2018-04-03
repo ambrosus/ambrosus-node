@@ -3,7 +3,7 @@
   "type": "object",
   "properties": {
     "type": {
-      "description": "Known identifiers for an event",
+      "description": "Event entry type",
       "type": "string",
       "const": "com.ambrosus.scan"
     },

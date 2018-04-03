@@ -2,9 +2,9 @@ import {
   validatePathsNotEmpty, validateFieldsConstrainedToSet,
   validateIntegerParameterAndCast, validateNonNegativeInteger
 } from '../utils/validations';
-import JsonValidator from '../validators/json_validator';
+import JsonSchemaValidator from '../validators/json_schema_validator';
 import EventEntryValidator from '../validators/event_entry_validator.js';
-import eventSchema from '../validators/schemas/event';
+import eventContentSchema from '../validators/schemas/event';
 import deliveredSchema from '../../src/validators/schemas/custom/com.ambrosus.delivered.json';
 import scanSchema from '../../src/validators/schemas/custom/com.ambrosus.scan.json';
 import {put, pick} from '../utils/dict_utils';
@@ -15,9 +15,9 @@ import {InvalidParametersError} from '../errors/errors';
 export default class EntityBuilder {
   constructor(identityManager) {
     this.eventValidators = [
-      new JsonValidator(eventSchema),
-      new EventEntryValidator('com.ambrosus.delivered', new JsonValidator(deliveredSchema)),
-      new EventEntryValidator('com.ambrosus.scan', new JsonValidator(scanSchema))
+      new JsonSchemaValidator(eventContentSchema),
+      new EventEntryValidator('com.ambrosus.delivered', new JsonSchemaValidator(deliveredSchema)),
+      new EventEntryValidator('com.ambrosus.scan', new JsonSchemaValidator(scanSchema))
     ];
     this.identityManager = identityManager;
   }

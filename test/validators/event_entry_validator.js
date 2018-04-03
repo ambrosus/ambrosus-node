@@ -1,6 +1,6 @@
 import {JsonValidationError} from '../../src/errors/errors';
 import EventEntryValidator from '../../src/validators/event_entry_validator.js';
-import JsonValidator from '../../src/validators/json_validator';
+import JsonSchemaValidator from '../../src/validators/json_schema_validator';
 import deliveredSchema from '../../src/validators/schemas/custom/com.ambrosus.delivered.json';
 
 import chai from 'chai';
@@ -18,7 +18,7 @@ describe('EventEntryValidator', () => {
   let validator;
 
   beforeEach(() => {
-    validator = new EventEntryValidator('com.ambrosus.delivered', new JsonValidator(deliveredSchema));
+    validator = new EventEntryValidator('com.ambrosus.delivered', new JsonSchemaValidator(deliveredSchema));
   });
 
   it('should accept if entries are null', () => {
