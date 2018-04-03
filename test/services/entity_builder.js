@@ -101,12 +101,19 @@ describe('Entity Builder', () => {
         });
       }
 
-      it('throws ValidationError if event not passing validation', () => {
+      it('throws ValidationError if event not passing event format validation', () => {
         const brokenEvent = put(exampleEvent, 'content.data.location', {latitude: 91});
         expect(() => entityBuilder.validateEvent(brokenEvent))
           .to.throw(JsonValidationError)
-          .and.have.nested.property('errors[0].dataPath', '.location.latitude');
+          .and.have.nested.property('errors[0].dataPath', '.data.location.latitude');
       });
+
+      it('throws ValidationError if event not passing custom entity validation', () => {
+        const brokenEvent = put(exampleEvent, 'content.data.entries', [{type: 'com.ambrosus.scan'}]);
+        expect(() => entityBuilder.validateEvent(brokenEvent))
+          .to.throw(JsonValidationError)
+          .and.have.nested.property('errors[0].params.missingProperty', 'value');
+      });      
 
       it('throws if accessLevel not positive integer', () => {
         let brokenEvent = put('content.idData.accessLevel', exampleEvent, 1.1);
