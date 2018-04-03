@@ -82,7 +82,7 @@ export default class Apparatus {
 }
 
 const apparatusScenarioProcessor = (apparatus) => ({
-  onInjectAccount: async (account) => await apparatus.modelEngine.createAdminAccount(account),
+  onAddAdminAccount: async (account) => await apparatus.modelEngine.addAdminAccount(account.address),
   onAddAsset: async (asset) => {
     const response = await apparatus.request()
       .post('/assets')

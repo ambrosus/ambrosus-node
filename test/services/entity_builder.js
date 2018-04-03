@@ -215,7 +215,7 @@ describe('Entity Builder', () => {
       entityBuilder = new EntityBuilder(mockIdentityManager);
 
       scenario = new ScenarioBuilder(identityManager);
-      await scenario.injectAccount(adminAccountWithSecret);
+      await scenario.addAdminAccount(adminAccountWithSecret);
 
       inAssets = [
         await scenario.addAsset(0),

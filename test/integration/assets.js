@@ -30,7 +30,7 @@ describe('Assets - Integrations', () => {
   beforeEach(async () => {
     await apparatus.cleanDB();
     scenario.reset();
-    adminAccount = await scenario.injectAccount(adminAccountWithSecret);
+    adminAccount = await scenario.addAdminAccount(adminAccountWithSecret);
     otherAccount = await scenario.addAccount(0, accountWithSecret);
   });
 

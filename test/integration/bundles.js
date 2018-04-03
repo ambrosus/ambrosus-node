@@ -35,7 +35,7 @@ describe('Bundles - Integrations', () => {
     await apparatus.start();
 
     scenario = new ScenarioBuilder(apparatus.identityManager, apparatusScenarioProcessor(apparatus));
-    await scenario.injectAccount(adminAccountWithSecret);
+    await scenario.addAdminAccount(adminAccountWithSecret);
 
     const from = getDefaultAddress(await createWeb3());
     await apparatus.contractManager.bundleRegistry.methods.addToWhitelist(from, url).send({from});

@@ -36,6 +36,9 @@ async function build(_web3, mongoUri, mongoDatabase) {
     proofRepository,
     accountRepository,
     accountAccessDefinitions);
+
+  await dataModelEngine.addAdminAccount();
+
   return {dataModelEngine, client};
 }
 

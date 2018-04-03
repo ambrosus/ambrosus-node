@@ -2,9 +2,6 @@ module.exports = {
   bundle: {
     registryContractAddress: require('./registryContractAddress.json')
   },
-  server: {
-    port: 9876
-  },
   mongo: {
     dbUri: 'mongodb://localhost:27017/ambrosus_gateway_development',
     database: 'ambrosus_gateway_developemnt'

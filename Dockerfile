@@ -6,5 +6,6 @@ COPY . ./
 
 RUN yarn install
 RUN yarn build
+RUN yarn ops:generate_private_key
 
 ENTRYPOINT yarn start

@@ -32,7 +32,7 @@ describe('Events - Integrations', () => {
     let otherAccount;
 
     beforeEach(async () => {
-      adminAccount = await scenario.injectAccount(adminAccountWithSecret);
+      adminAccount = await scenario.addAdminAccount(adminAccountWithSecret);
       otherAccount = await scenario.addAccount(0, accountWithSecret);
       asset = await scenario.addAsset(0);
       event = createFullEvent(apparatus.identityManager, {
@@ -113,7 +113,7 @@ describe('Events - Integrations', () => {
     let event;
 
     before(async () => {
-      await scenario.injectAccount({...adminAccountWithSecret, accessLevel: 6});
+      await scenario.addAdminAccount(adminAccountWithSecret);
       await scenario.addAccount(0, accountWithSecret, {permissions : ['create_entity'], accessLevel: 2});
       asset = await scenario.addAsset();
       event = await scenario.addEvent(0, 0, {accessLevel: 4});
@@ -169,7 +169,7 @@ describe('Events - Integrations', () => {
     const accessLevel = 3;
 
     before(async () => {
-      await scenario.injectAccount({...adminAccountWithSecret, accessLevel: 10});
+      await scenario.addAdminAccount(adminAccountWithSecret);
       await scenario.addAccount(0, accountWithSecret, {permissions : ['create_entity'], accessLevel});
       await scenario.addAsset(0);
       await scenario.addAsset(0);

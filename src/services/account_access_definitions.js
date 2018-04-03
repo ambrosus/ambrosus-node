@@ -40,8 +40,12 @@ export default class AccountAccessDefinitions {
     return account.permissions.indexOf(permissionName) >= 0;
   }
 
-  defaultAdminPermissions() {
-    return ['register_account', 'create_entity'];
+  defaultAdminAccount(address) {
+    return {
+      address,
+      permissions: ['register_account', 'create_entity'],
+      accessLevel: 1000
+    };
   }
 
   validateAddAccountRequest(account) {

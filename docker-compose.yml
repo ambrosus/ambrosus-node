@@ -6,11 +6,11 @@ services:
     container_name: "ambnode"
     environment:
       - NODE_ENV=production
-      - PORT=8081
       - MONGODB_URI=mongodb://db:27017/ambrosus_node
       - MONGODB_DATABASE=ambrosus_node
+      - WEB3_RPC=http://167.99.138.196:8545
     ports:
-      - "8081:8081"
+      - "80:9876"
     depends_on:
       - db
   db:

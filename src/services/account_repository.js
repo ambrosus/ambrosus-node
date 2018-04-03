@@ -17,8 +17,4 @@ export default class AccountRepository {
   async get(address) {
     return this.db.collection('accounts').findOne({address}, {fields: {_id: 0}});
   }
-
-  async count() {
-    return this.db.collection('accounts').count();
-  }  
 }

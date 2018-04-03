@@ -16,7 +16,7 @@ describe('Account Repository', () => {
   });
 
   it('account round database trip', async () => {
-    const additionalFields = {registeredBy : '0x123', permissions : ['perm1', 'perm2']};
+    const additionalFields = {registeredBy: '0x123', permissions: ['perm1', 'perm2']};
     const accountToStore = put(account, additionalFields);
 
     await accountStore.store(accountToStore);
@@ -25,20 +25,24 @@ describe('Account Repository', () => {
   });
 
   it('does not allow to register the same account twice', async () => {
-    const additionalFields = {registeredBy : '0x123', permissions : ['perm1', 'perm2']};
+    const additionalFields = {registeredBy: '0x123', permissions: ['perm1', 'perm2']};
     const accountToStore = put(account, additionalFields);
 
     await accountStore.store(accountToStore);
     await accountStore.store(accountToStore);
-    const count = await accountStore.count();
+
+    const count = await db.collection('accounts')
+      .find({address: accountToStore.address})
+      .count();
+
     expect(count).to.equal(1);
   });
 
   it('account modification in database', async () => {
-    const someParams = {registeredBy : '0x123', permissions : ['perm1', 'perm2']};
+    const someParams = {registeredBy: '0x123', permissions: ['perm1', 'perm2']};
     const accountToStore = put(account, someParams);
 
-    const changedParams = {permissions : ['perm100', 'perm200']};
+    const changedParams = {permissions: ['perm100', 'perm200']};
     const accountToReceive = put(accountToStore, changedParams);
 
     await accountStore.store(accountToStore);

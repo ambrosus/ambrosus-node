@@ -33,7 +33,7 @@ describe('Events', () => {
     res = httpMocks.createResponse();
 
     scenario.reset();
-    await scenario.injectAccount(adminAccountWithSecret);
+    await scenario.addAdminAccount(adminAccountWithSecret);
   });
 
   describe('finding events', () => {

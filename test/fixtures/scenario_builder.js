@@ -3,7 +3,7 @@ import {addAccountRequest} from './account';
 import {put} from '../../src/utils/dict_utils';
 
 const defaultScenarioProcessor = (identityManager) => ({
-  onInjectAccount: async (account) => account,
+  onAddAdminAccount: async (accountWithSecret) => accountWithSecret,
   onAddAsset: async (asset) => asset,
   onAddEvent: async (event) => event,
   onAddAccount: async () => identityManager.createKeyPair()
@@ -22,10 +22,11 @@ class ScenarioBuilder {
     this.assets = [];
   }
 
-  async injectAccount(account) {
-    const processedAccount = await this.processor.onInjectAccount(account);
-    this.accounts.push(processedAccount);
-    return processedAccount;
+  async addAdminAccount(accountWithSecret) {
+    const processedAccount = await this.processor.onAddAdminAccount(accountWithSecret);
+    const processedAccountWithSecret = put(processedAccount, 'secret', accountWithSecret.secret);
+    this.accounts.push(processedAccountWithSecret);
+    return processedAccountWithSecret;
   }
 
   async addAccount(accountInx = 0, addressWithSecret = null, fields = {}) {
