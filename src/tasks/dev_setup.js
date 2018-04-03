@@ -1,4 +1,4 @@
-import {writeFile} from '../utils/file_tools';
+import {writeFile} from '../utils/file';
 import path from 'path';
 import build from '../build';
 import BundleRegistry from '../../build/contracts/BundleRegistry.json';
@@ -38,7 +38,7 @@ async function deployRegistryContract(dataModelEngine) {
   const filePath = path.join('config', 'registryContractAddress.json');
   console.log(`Contract deployed at ${contractAddress}`);
   whitelist(bundleRegistryContract, dataModelEngine);
-  await writeFile(filePath, `"${contractAddress}"`);
+  await writeFile(filePath, JSON.stringify(contractAddress));
   console.log(`Contract address stored in ${filePath}.`);
 }
 

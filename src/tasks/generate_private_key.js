@@ -1,5 +1,5 @@
 import Web3 from 'web3';
-import {writeFile, checkFileExists} from '../utils/file_tools';
+import {writeFile, checkFileExists} from '../utils/file';
 import path from 'path';
 
 async function execute() {
