@@ -38,7 +38,7 @@ describe('Bundle downloader - integration', () => {
     apparatus = new Apparatus();
     await apparatus.start(web3);
     
-    await bundleDownloader.init();
+    await bundleDownloader.beforeStart();
     ({bundleId} = await apparatus.modelEngine.finaliseBundle(1));
     consoleLogStub = sinon.stub(console, 'log');
   });
