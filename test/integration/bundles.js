@@ -44,15 +44,15 @@ describe('Bundles - Integrations', () => {
     entitiesIds = [
       await scenario.addAsset(0, {timestamp: 0}),
       await scenario.addAsset(0, {timestamp: 1}),
-      await scenario.addEvent(0, 0, {timestamp: 1}, {someField: 'a'}),
-      await scenario.addEvent(0, 0, {timestamp: 2}, {someField: 'b'}),
-      await scenario.addEvent(0, 1, {timestamp: 2}, {someField: 'c'})
+      await scenario.addEvent(0, 0, {timestamp: 1}, {entries: [{one: '1'}]}),
+      await scenario.addEvent(0, 0, {timestamp: 2}, {entries: [{two: '2'}]}),
+      await scenario.addEvent(0, 1, {timestamp: 2}, {entries: [{three: 'e'}]})
     ].map(mapEntitiesToIds);
 
     res = await apparatus.modelEngine.finaliseBundle(1);
 
     // this additional event should not go into the bundle 
-    await scenario.addEvent(0, 1, {timestamp: 3}, {someField: 'd'});
+    await scenario.addEvent(0, 1, {timestamp: 3}, {entries: [{four: '4'}]});
   });
 
   after(async () => {

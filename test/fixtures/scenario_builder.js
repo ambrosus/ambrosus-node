@@ -63,6 +63,7 @@ class ScenarioBuilder {
       },
       data,
       account.secret);
+
     const processedEvent = await this.processor.onAddEvent(event);
     this.events.push(processedEvent);
     return processedEvent;

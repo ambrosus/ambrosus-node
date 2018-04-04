@@ -40,6 +40,6 @@ describe('JsonSchemaValidator', () => {
     const event = {data: {}};
     expect(() => validator.validate(event))
       .to.throw(JsonValidationError)
-      .and.have.nested.property('errors[0].params.missingProperty', 'identifiers');
+      .and.have.nested.property('errors[0].params.missingProperty', 'entries');
   });
 });
