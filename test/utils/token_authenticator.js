@@ -24,7 +24,7 @@ describe('TokenAuthenticator', () => {
   before(async () => {
     identityManager = new IdentityManager(await createWeb3());
     authenticator = new TokenAuthenticator(identityManager);
-    clock = sinon.useFakeTimers(now);
+    clock = sinon.useFakeTimers(now * 1000);
   });
 
   describe('Valid data', () => {

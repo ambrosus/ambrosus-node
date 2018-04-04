@@ -1,5 +1,6 @@
 import base64url from 'base64url';
 import {AuthenticationError, InvalidParametersError} from '../errors/errors';
+import {getTimestamp} from './time_utils';
 
 export default class TokenAuthenticator {
   constructor(identityManager) {
@@ -10,7 +11,7 @@ export default class TokenAuthenticator {
     if (!timestamp || !Number.isInteger(timestamp)) {
       throw new InvalidParametersError('Unix timestamp was not provided or has an invalid format');
     }
-    if (timestamp <= Date.now()) {
+    if (timestamp <= getTimestamp()) {
       throw new InvalidParametersError('Timestamp should be in the future');
     }
     const address = this.identityManager.addressFromSecret(secret);
@@ -21,7 +22,7 @@ export default class TokenAuthenticator {
     return this.encode(this.preparePayload(secret, idData));
   }
 
-  decodeToken(token, timeNow = Date.now()) {
+  decodeToken(token, timeNow = getTimestamp()) {
     const decoded = this.decode(token);
     const {signature} = decoded;
     const {idData} = decoded;

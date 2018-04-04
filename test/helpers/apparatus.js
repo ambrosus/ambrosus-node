@@ -15,6 +15,7 @@ import {adminAccountWithSecret} from '../fixtures/account';
 import ProofRepository from '../../src/services/proof_repository';
 import ContractManager from '../../src/services/contract_manager';
 import EntityDownloader from '../../src/services/entity_downloader';
+import {getTimestamp} from '../../src/utils/time_utils';
 
 chai.use(chaiHttp);
 
@@ -64,7 +65,7 @@ export default class Apparatus {
 
 
   defaultValidUntil() {
-    return Date.now() + this.DEFAULT_TOKEN_EXPIRATION;
+    return getTimestamp() + this.DEFAULT_TOKEN_EXPIRATION;
   }
 
   request() {

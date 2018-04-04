@@ -1,8 +1,10 @@
+import {getTimestamp} from '../../src/utils/time_utils';
+
 function createTokenFor(address) {
-  const defaultExpiryPeriod = 10000;
+  const defaultExpiryPeriod = 10;
   return {
     createdBy: address,
-    validBy: Date.now() + defaultExpiryPeriod
+    validBy: getTimestamp() + defaultExpiryPeriod
   };
 }
 

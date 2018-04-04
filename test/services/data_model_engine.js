@@ -686,7 +686,9 @@ describe('Data Model Engine', () => {
     });
 
     it('orders the entity builder to assemble the bundle JSON', () => {
-      expect(mockEntityBuilder.assembleBundle).to.have.been.calledWith(unbundledAssets, unbundledEvents, Date.now(), nodeSecret);
+      const expectedTimestamp = Math.floor(Date.now() / 1000);
+      expect(mockEntityBuilder.assembleBundle).to.have.been.calledWith(unbundledAssets, unbundledEvents,
+        expectedTimestamp, nodeSecret);
     });
 
     it('stores the bundle it in the repository', () => {

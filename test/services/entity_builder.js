@@ -13,6 +13,7 @@ import {adminAccountWithSecret} from '../fixtures/account';
 import {createFullAsset, createFullEvent} from '../fixtures/assets_events';
 
 import ScenarioBuilder from '../fixtures/scenario_builder';
+import {getTimestamp} from '../../src/utils/time_utils';
 
 chai.use(sinonChai);
 const {expect} = chai;
@@ -226,7 +227,7 @@ describe('Entity Builder', () => {
         await scenario.addEvent(0, 1),
         await scenario.addEvent(0, 1)
       ];
-      inTimestamp = Date.now();
+      inTimestamp = getTimestamp();
       const stripFunc = (entry) => put(entry, 'mock.bundleStripped', 1);
       inAssetsStripped = inAssets.map(stripFunc);
       inEventsStripped = inEvents.map(stripFunc);

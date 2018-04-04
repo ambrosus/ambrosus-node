@@ -170,8 +170,8 @@ describe('Entity Repository', () => {
         scenario = new ScenarioBuilder(identityManager);
         await scenario.addAdminAccount(adminAccountWithSecret);
         await scenario.addAccount(0, accountWithSecret, {permissions: ['create_entity']});
-        await scenario.addAsset(0);
-        await scenario.addAsset(0);
+        await scenario.addAsset(0, {timestamp: 0});
+        await scenario.addAsset(0, {timestamp: 1});
 
         eventsSet = [
           await scenario.addEvent(0, 0, {timestamp: 0, accessLevel: 0}, {location: {asset: scenario.assets[0].assetId}}),
@@ -311,8 +311,8 @@ describe('Entity Repository', () => {
       await scenario.addAdminAccount(adminAccountWithSecret);
 
       alreadyBundledAssets = [
-        await scenario.addAsset(0),
-        await scenario.addAsset(0)
+        await scenario.addAsset(0, {timestamp: 0}),
+        await scenario.addAsset(0, {timestamp: 1})
       ].map((asset) => put(asset, 'metadata.bundleId', 1));
 
       alreadyBundledEvents = [

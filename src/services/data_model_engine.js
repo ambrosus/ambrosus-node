@@ -1,4 +1,5 @@
 import {NotFoundError, InvalidParametersError, PermissionError} from '../errors/errors';
+import {getTimestamp} from '../utils/time_utils';
 
 export default class DataModelEngine {
   constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, proofRepository, accountRepository, accountAccessDefinitions) {
@@ -119,7 +120,7 @@ export default class DataModelEngine {
     const notBundled = await this.entityRepository.beginBundle(bundleStubId);
 
     const nodeSecret = await this.identityManager.nodePrivateKey();
-    const newBundle = this.entityBuilder.assembleBundle(notBundled.assets, notBundled.events, Date.now(), nodeSecret);
+    const newBundle = this.entityBuilder.assembleBundle(notBundled.assets, notBundled.events, getTimestamp(), nodeSecret);
 
     await this.entityRepository.storeBundle(newBundle);
 

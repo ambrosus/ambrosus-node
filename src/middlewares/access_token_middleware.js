@@ -1,4 +1,5 @@
 import {InvalidParametersError, AuthenticationError} from '../errors/errors';
+import {getTimestamp} from '../utils/time_utils';
 
 const accessTokenMiddleware = (tokenAuthenticator, required = true) => ((req, res, next) => {
   const authorizationHeader = req.headers.authorization;
@@ -21,7 +22,7 @@ const accessTokenMiddleware = (tokenAuthenticator, required = true) => ((req, re
     }
   }
 
-  const {idData} = tokenAuthenticator.decodeToken(token, Date.now());  
+  const {idData} = tokenAuthenticator.decodeToken(token, getTimestamp());
   req.tokenData = idData;
   next();
 });
