@@ -8,7 +8,7 @@ export default class BundleDownloader extends PeriodicWorker {
     this.proofRepository = dataModelEngine.proofRepository;
   }
 
-  async init() {
+  async beforeStart() {
     this.last = await this.proofRepository.getBundleCount();
   }
 

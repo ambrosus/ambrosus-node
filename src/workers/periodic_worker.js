@@ -9,13 +9,13 @@ export default class PeriodicWorker {
       throw new Error('Already started');
     }
 
-    await this.init();
+    await this.beforeStart();
     this.timerId = setInterval(() => {
       this.work().catch(console.error);
     }, this.interval);
   }
 
-  async init() {
+  async beforeStart() {
     
   }
 

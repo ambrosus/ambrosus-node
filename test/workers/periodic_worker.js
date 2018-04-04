@@ -12,7 +12,7 @@ const {expect} = chai;
 describe('Periodic Worker', () => {
   let clock;
   let worker;
-  let initSpy;
+  let beforeStartSpy;
   let workStub;
   const interval = 10000;
 
@@ -22,14 +22,14 @@ describe('Periodic Worker', () => {
 
   beforeEach(() => {
     worker = new PeriodicWorker(interval);
-    initSpy = sinon.spy(worker, 'init');
+    beforeStartSpy = sinon.spy(worker, 'beforeStart');
     workStub = sinon.stub(worker, 'work');
     workStub.resolves();
   });
 
   afterEach(() => {
     clearInterval(worker.timerId);
-    initSpy.restore();
+    beforeStartSpy.restore();
     workStub.restore();
   });
 
@@ -37,15 +37,17 @@ describe('Periodic Worker', () => {
     clock.restore();
   });
 
-  it('should call init on start', async () => {
+  it('should call beforeStart when the worker is started', async () => {
     await expect(worker.start()).to.have.been.fulfilled;
 
-    expect(initSpy).to.have.been.calledOnce;
+    expect(beforeStartSpy).to.have.been.calledOnce;
   });
 
   it('should not allow start to be called twice', async () => {
     await expect(worker.start()).to.be.fulfilled;
     await expect(worker.start()).to.be.rejected;
+
+    expect(beforeStartSpy).to.have.been.calledOnce;
   });
 
   it('should execute the work method exactly every 10 seconds', async () => {
