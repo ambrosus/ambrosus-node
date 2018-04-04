@@ -35,6 +35,7 @@ describe('Contract Manager', () => {
   });
 
   after(async () => {
+    bundleContractAddressStub.restore();
     loadContractStub.restore();
     deployContractStub.restore();
   });

@@ -1,20 +1,19 @@
 import Config from '../utils/config';
+import PeriodicWorker from './periodic_worker';
 
-export default class BundleDownloader {
-  constructor(dataModelEngine) {    
+export default class BundleDownloader extends PeriodicWorker {
+  constructor(dataModelEngine) {
+    super(Config.bundleDownloadInterval());
     this.dataModelEngine = dataModelEngine;
     this.proofRepository = dataModelEngine.proofRepository;
   }
 
-  async start(interval = Config.bundleDownloadInterval()) {
-    this.init();
-    return setInterval(() => {
-      this.downloadAllNew().catch(console.error);
-    }, interval);
+  async beforeStart() {
+    this.last = await this.proofRepository.getBundleCount();
   }
 
-  async init() {
-    this.last = await this.proofRepository.getBundleCount();
+  async work() {
+    return this.downloadAllNew();
   }
 
   async downloadAllNew() {    

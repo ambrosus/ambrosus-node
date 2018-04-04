@@ -1,11 +1,12 @@
 import chai from 'chai';
-import buildWith from '../helpers/build_with';
-import BundleRegistry from '../../build/contracts/BundleRegistry.json';
+import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import {deployContract, createWeb3} from '../../src/utils/web3_tools';
 import Apparatus from '../helpers/apparatus';
-import BundleDownloader from '../../src/services/bundle_downloader';
-import sinon from 'sinon';
+import buildWith from '../helpers/build_with';
+
+import BundleRegistry from '../../build/contracts/BundleRegistry.json';
+import BundleDownloader from '../../src/workers/bundle_downloader';
 
 chai.use(sinonChai);
 const {expect} = chai;
@@ -37,12 +38,19 @@ describe('Bundle downloader - integration', () => {
     apparatus = new Apparatus();
     await apparatus.start(web3);
     
-    await bundleDownloader.init();
+    await bundleDownloader.beforeStart();
     ({bundleId} = await apparatus.modelEngine.finaliseBundle(1));
     consoleLogStub = sinon.stub(console, 'log');
   });
 
-  it('has no bundles initialy', async () => {
+  afterEach(() => {
+    registryContractAddressStub.restore();
+    consoleLogStub.restore();
+    client.close();
+    apparatus.stop();
+  });
+
+  it('has no bundles initially', async () => {
     const bundle = await dataModelEngine.entityRepository.getBundle(bundleId);
     expect(bundle).to.be.null;
   });
@@ -64,13 +72,5 @@ describe('Bundle downloader - integration', () => {
     expect(bundle.bundleId).to.eq(bundle2.bundleId);
     bundle = await dataModelEngine.entityRepository.getBundle(bundle3.bundleId);
     expect(bundle.bundleId).to.eq(bundle3.bundleId);
-  });
-
-
-  afterEach(() => {
-    registryContractAddressStub.restore();
-    consoleLogStub.restore();
-    client.close();
-    apparatus.stop();
   });
 });

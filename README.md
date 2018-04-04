@@ -3,40 +3,35 @@
 # The Ambrosus Node
 The repository for Ambrosus Node. Detailed RESTful API documentation is available at [ambrosus.docs.apiary.io](https://ambrosus.docs.apiary.io/).
 
-## Install, run & test
+## Install, setup, tests and linter
 To install dependencies:
 ```
 yarn
 ```
 
-Before you can start dev server, you need to have MongoDB up & running.
-To do that you can use the handy command:
+Before you can start the server or run tests, you need to have MongoDB up & running.
+You can start a local instance using this handy command:
 ```
 yarn dev:db
 ```
 
-And to run dev server:
-```
-yarn dev:start
-```
-
-Type following to run test:
+To run test:
 ```
 yarn test
 ```
 
-To run litnter:
+To run linter:
 ```
 yarn dev:lint
 ```
 
 ## Building an clean-up
-If you want to just build, you can use:
+Building consists of compiling the Smart Contracts and transpiling the source code. It is performed by running:
 ```
 yarn build
 ```
 
-To do a clean-up:
+If for some reason you want to perform a clean-up:
 ```
 yarn dev:clean
 ```
@@ -46,22 +41,8 @@ To run node on production use:
 yarn start
 ```
 
-## Running using Docker
-
-There is a docker-compose file prepared. It declares two services for our app and a mongod instance. To start:
-
-```
-docker-compose up -d
-```
-
-You will also have to create yourself an admin account in the app:
-
-```
-docker-compose exec ambnode yarn ops:admin:create
-```
-
-## Setuping dev environment:
-To work with dev environemnt you need to have parity(version 1.10+) node running on development chain:
+## Running in dev environment:
+To work with dev environment you need to have parity(version 1.10+) node running on a development chain:
 ```sh
 parity --chain dev --force-ui
 ```
@@ -72,55 +53,61 @@ as well as mongo database:
 yarn run dev:db
 ```
 
-Before start make sure you compile and deploy required contracts:
+the contracts also need to be compiled:
 ```sh
 yarn build:contracts
 ```
 
-and setup dev environment:
+contracts must be deployed and a private key for the node generated:
 ```sh
 yarn dev:setup
 ```
 
-Note: You might need to confirm transactions in parity due to bug in parity.
-
-## Workers
-Following workers are required for Ambrosus node to work.
-
-### Bundle finalization Workers
-Bundle finalization worker gathers entities, packs them in bundles and stores the proofs on the blockchain. To launch the worker type:
+Note: You might need to confirm transactions in the Parity Wallet UI due to a bug in the Parity software.
 
 ```sh
-yarn ops:bundle:finalisation
+yarn dev:start
 ```
 
-Note that NODE_ENV environment varibale needs to be set.
+## Running in production mode
 
-You can run the worker in dev mode with:
-
+Build the whole suit:
 ```sh
-yarn dev:bundle:finalisation
+yarn build
 ```
 
-
-### Bundle downloader Worker
-To run bundle downloader worker type in your shell in dev mode:
+Generate a private key for the node:
+```sh
+yarn ops:generate_private_key
 ```
-yarn dev:bundle:downloader
+Note: you can also place a previously generated one into the `config/nodePrivateKey.json` file
+
+Place the contract deployment address into `config/registryContractAddress.json`. You should have received this value from the Ambrosus development team.
+
+Configure the mongoDB access data inside of `config/production.js`
+
+Finally, start the server:
+```sh
+yarn start
 ```
 
-and to run in production mode:
+## Running using Docker
+
+There is a docker-compose file prepared. It declares two services, one for the server and second one for a mongoDB instance. 
+
+Start by following the procedure for generating the node private key and contract deployment address. It is described under 'Running in production mode'   
+
+Then start just run:
 
 ```
-yarn ops:bundle:downloader
+docker-compose up -d
 ```
-
 
 ## Bundle smart contract related  tasks
 Entities (assets and events) are packaged together into bundles. Proof (hash) of the bundle is then uploaded to the bundle management smart contract.
 There are a couple of handy tasks to manage bundle contract.
 
-To use those tasks you need set node environment first, i.e. to run in development mode:
+To use those tasks you need select the node environment first, i.e. to run in development mode:
 ```
 export NODE_ENV=dev && ...
 ```
