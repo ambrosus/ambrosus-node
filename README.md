@@ -1,7 +1,14 @@
 [![Build Status](https://travis-ci.com/ambrosus/ambrosus-sdk.svg?token=xjj4U84eSFwEsYLTc5Qe&branch=master)](https://travis-ci.com/ambrosus/ambrosus-sdk)
 
 # The Ambrosus Node
-The repository for Ambrosus Node. Detailed RESTful API documentation is available at [ambrosus.docs.apiary.io](https://ambrosus.docs.apiary.io/).
+The repository for Ambrosus Node. 
+
+The best way to learn Ambrosus is to:
+1. First go to [General introduction](https://github.com/ambrosus/ambrosus-node/blob/master/docs/introduction.md)
+2. Follow up with [step-by-step tutorial](https://github.com/ambrosus/ambrosus-node/blob/master/docs/tutorial.md).
+3. Detailed RESTful API documentation is available at [ambrosus.docs.apiary.io](https://ambrosus.docs.apiary.io/).
+
+Read below to learn about ambrosus node development.
 
 ## Install, setup, tests and linter
 To install dependencies:
