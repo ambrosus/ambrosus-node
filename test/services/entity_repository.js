@@ -75,6 +75,38 @@ describe('Entity Repository', () => {
     });
   });
 
+  describe('getConfigurationForFindEventsQuery', () => {
+    let repository;
+
+    before(() => {
+      repository = new EntityRepository(null);
+    });
+
+    it('returns concatenated mongodb query', async () => {
+      const params = {
+        assetId: 12,
+        createdBy: '0x123',
+        fromTimestamp: 1,
+        toTimestamp: 2,
+        locationAsAsset: '0x123',
+        entry: {score: 10, acceleration: {valueX: 17}}
+      };
+      const result = repository.getConfigurationForFindEventsQuery(params);
+      expect(result.query).to.deep.eq({
+        $and: [
+          {'content.idData.accessLevel': {$lte: 0}},
+          {'content.data.entries': {$elemMatch: {score: 10}}},
+          {'content.data.entries': {$elemMatch: {acceleration: {valueX: 17}}}},
+          {'content.idData.assetId': 12},
+          {'content.idData.createdBy': '0x123'},
+          {'content.idData.timestamp': {$gte: 1}},
+          {'content.idData.timestamp': {$lte: 2}},
+          {'content.data.location.asset': '0x123'}          
+        ]
+      });
+    });
+  });
+
   describe('Find events', () => {
     describe('without params', () => {
       let scenario;
@@ -137,7 +169,7 @@ describe('Entity Repository', () => {
       before(async () => {
         scenario = new ScenarioBuilder(identityManager);
         await scenario.addAdminAccount(adminAccountWithSecret);
-        await scenario.addAccount(0, accountWithSecret, {permissions : ['create_entity']});
+        await scenario.addAccount(0, accountWithSecret, {permissions: ['create_entity']});
         await scenario.addAsset(0);
         await scenario.addAsset(0);
 
@@ -206,14 +238,14 @@ describe('Entity Repository', () => {
       });
 
       it('with perPage returns requested number of events', async () => {
-        const ret = await expect(storage.findEvents({perPage : 3}, 10)).to.be.fulfilled;
+        const ret = await expect(storage.findEvents({perPage: 3}, 10)).to.be.fulfilled;
         expect(ret.results).have.lengthOf(3);
         expect(ret.resultCount).to.equal(10);
         expect(ret.results).to.deep.equal([eventsSet[7], eventsSet[8], eventsSet[9]].reverse());
       });
 
       it('with page and perPage returns limited requested of events from requested page', async () => {
-        const ret = await expect(storage.findEvents({page : 2, perPage : 3}, 10)).to.be.fulfilled;
+        const ret = await expect(storage.findEvents({page: 2, perPage: 3}, 10)).to.be.fulfilled;
         expect(ret.results).have.lengthOf(3);
         expect(ret.resultCount).to.equal(10);
         expect(ret.results).to.deep.equal([eventsSet[1], eventsSet[2], eventsSet[3]].reverse());

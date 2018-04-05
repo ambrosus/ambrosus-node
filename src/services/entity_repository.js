@@ -57,8 +57,20 @@ export default class EntityRepository {
     return this.addToQuery(queryParts, part);
   }
 
-  getConfigurationForFindEventsQuery(params, accessLevel = 0) {
+  getConfigurationForFindEventsByEntry(params, accessLevel) {
     let queryParts = [];
+    if (params.entry) {
+      queryParts = this.addDataAccessLevelLimitationIfNeeded(queryParts, accessLevel);
+    }
+    for (const key in params.entry) {
+      const queryPart = {'content.data.entries': {$elemMatch: {[key]: params.entry[key]}}};
+      queryParts = this.addToQuery(queryParts, queryPart);
+    }
+    return queryParts;
+  }
+
+  getConfigurationForFindEventsQuery(params, accessLevel = 0) {
+    let queryParts = this.getConfigurationForFindEventsByEntry(params, accessLevel);
     if (params.assetId) {
       queryParts = this.addToQuery(queryParts, {'content.idData.assetId': params.assetId});
     }
@@ -90,16 +102,12 @@ export default class EntityRepository {
 
   async findEvents(params, accessLevel = 0) {
     const {query, options} = this.getConfigurationForFindEventsQuery(params, accessLevel);
-
     const cursor = this.db
       .collection('events')
-      .find(
-        query,
-        {
-          ...options,
-          fields: this.blacklistedFields
-        }
-      )
+      .find(query, {
+        ...options,
+        fields: this.blacklistedFields
+      })
       .map((event) => this.hideEventDataIfNecessary(event, accessLevel));
     return {
       results: await cursor.toArray(),
@@ -128,17 +136,12 @@ export default class EntityRepository {
 
     const assets = await this.db
       .collection('assets')
-      .find(
-        thisBundleStubQuery,
-        {fields: this.blacklistedFields})
+      .find(thisBundleStubQuery, {fields: this.blacklistedFields})
       .toArray();
     const events = await this.db
       .collection('events')
-      .find(
-        thisBundleStubQuery,
-        {fields: this.blacklistedFields})
+      .find(thisBundleStubQuery, {fields: this.blacklistedFields})
       .toArray();
-
     return {
       assets,
       events
@@ -146,7 +149,7 @@ export default class EntityRepository {
   }
 
   async endBundle(bundleStubId, bundleId) {
-    const thisBundleStubQuery = {      
+    const thisBundleStubQuery = {
       'repository.bundleStubId': bundleStubId
     };
 

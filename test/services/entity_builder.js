@@ -289,10 +289,10 @@ describe('Entity Builder', () => {
     });
   });
 
-  describe('validating query parameters', () => {
+  describe('Validating query parameters', () => {
     let entityBuilder;
     const exampleAssetId = `0x${'1'.repeat(40)}`;
-    const validParamsAsStrings = {assetId: '0x1234', fromTimestamp: '10', toTimestamp: '20', page: '2', perPage: '4', createdBy : '0x4321', location: `asset(${exampleAssetId})`};
+    const validParamsAsStrings = {assetId: '0x1234', fromTimestamp: '10', toTimestamp: '20', page: '2', perPage: '4', createdBy: '0x4321', location: `asset(${exampleAssetId})`};
 
     before(() => {
       entityBuilder = new EntityBuilder({});
@@ -323,6 +323,35 @@ describe('Entity Builder', () => {
       expect(validatedParams.perPage).to.equal(4);
       expect(validatedParams.createdBy).to.equal('0x4321');
       expect(validatedParams.locationAsAsset).to.equal(exampleAssetId);
+    });
+
+    describe('query with entry', () => {
+      it('handles query by entry validation', () => {
+        const params = {entry: {acceleration: '1'}};
+        const validatedParams = entityBuilder.validateAndCastFindEventsParams(params);
+        expect(validatedParams.entry.acceleration).to.equal('1');
+      });
+
+      it('handles query by entry validation with nested arguments', () => {
+        const params = {entry: {acceleration: {valueX: '1'}}};
+        const validatedParams = entityBuilder.validateAndCastFindEventsParams(params);
+        expect(validatedParams.entry.acceleration.valueX).to.equal('1');
+      });
+
+      it('throws if unsupported by entry syntax (object)', () => {
+        const params = put(validParamsAsStrings, 'entry[acceleration]', '{x: 1, y: 2}');
+        expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+      });
+
+      it('throws if unsupported by entry syntax (array)', () => {
+        const params = put(validParamsAsStrings, 'entry[acceleration]', '[1, 2]');
+        expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+      });
+    });
+
+    it('throws if surplus parameters are passed', () => {
+      const params = put(validParamsAsStrings, 'additionalParam', '123');
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
     });
 
     it('throws if surplus parameters are passed', () => {

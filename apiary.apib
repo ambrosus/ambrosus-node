@@ -703,7 +703,7 @@ Fetches an event by identifier
 
     + Body
     
-### /events{?assetId,fromTimestamp,toTimestamp,perPage,page,createdBy}
+### /events{?assetId,fromTimestamp,toTimestamp,perPage,page,createdBy,entry}
 
 #### Find events [GET]
 
@@ -717,6 +717,7 @@ Finds event satisfying provided cryteria.
     + perPage : 150 (integer, optional) - number of events to return per page
     + page : 20 (integer, optional) - number of page (more search results than specified in perPage parameter concludes more than one page)
     + createdBy : 0xc5cfd04.....30755ed65 (string, optional) - address of account that created targeting events
+    + entry : entry[type]='com.ambrosus.custom' (object, optional) - This syntax allows to query for events by any fields in data.entires array. Query for nested fields are possible, e.g. entry[acceleration.x]='10'. Note: Only string types are currently supported.
 
 + Response 200 (application/json)
 

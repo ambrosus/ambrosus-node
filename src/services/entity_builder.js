@@ -10,8 +10,6 @@ import scanSchema from '../../src/validators/schemas/custom/com.ambrosus.scan.js
 import {put, pick} from '../utils/dict_utils';
 import {InvalidParametersError} from '../errors/errors';
 
-
-
 export default class EntityBuilder {
   constructor(identityManager) {
     this.eventValidators = [
@@ -110,7 +108,7 @@ export default class EntityBuilder {
   }
 
   validateAndCastFindEventsParams(params) {
-    const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage', 'createdBy', 'location'];
+    const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage', 'createdBy', 'location', 'entry'];
     const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
     if (invalidFields.length > 0) {
       throw new InvalidParametersError(`Some parameters (${invalidFields.join(',')}) are not supported`);
