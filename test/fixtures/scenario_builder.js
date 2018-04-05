@@ -38,7 +38,7 @@ class ScenarioBuilder {
     return processedAccountWithSecret;
   }
 
-  async addAsset(accountInx = 0 , fields = {}) {
+  async addAsset(accountInx = 0, fields = {}) {
     const account = this.accounts[accountInx];
     const asset = createFullAsset(
       this.identityManager,

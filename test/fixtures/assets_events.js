@@ -1,12 +1,13 @@
 import {put, get} from '../../src/utils/dict_utils';
 import pkPair from './pk_pair';
 import addSignature from './add_signature';
+import {getTimestamp} from '../../src/utils/time_utils';
 
 export const createAsset = (fields) => ({
   content: {
     idData: {
       createdBy: pkPair.address,
-      timestamp: Date.now(),
+      timestamp: getTimestamp(),
       sequenceNumber: 0,
       ...fields
     }
@@ -18,7 +19,7 @@ export const createEvent = (fields, data) => ({
     idData: {
       assetId: '0x6666',
       createdBy: pkPair.address,
-      timestamp: Date.now(),
+      timestamp: getTimestamp(),
       accessLevel: 0,
       ...fields
     },
@@ -33,7 +34,7 @@ export const createBundle = (fields, entries = []) => ({
   content: {
     idData: {
       createdBy: pkPair.address,
-      timestamp: Date.now(),
+      timestamp: getTimestamp(),
       ...fields
     },
     entries: [
