@@ -1,5 +1,5 @@
 import {get} from './dict_utils';
-import {ValidationError, InvalidParametersError} from '../errors/errors';
+import {InvalidParametersError, ValidationError} from '../errors/errors';
 
 const validatePathsNotEmpty = (dict, paths) => {
   for (const path of paths) {
@@ -33,4 +33,17 @@ const validateNonNegativeInteger = (value, errorMsg = '') => {
   }
 };
 
-export {validatePathsNotEmpty, validateFieldsConstrainedToSet, validateIntegerParameterAndCast, validateNonNegativeInteger};
+const validateIsAddress = (address, errorMsg = `${address} is not a valid ethereum address`) => {
+  const addressRegex = /^0x[0-9a-f]{40}$/gi;
+  if (!addressRegex.exec(address)) {
+    throw new ValidationError(errorMsg);
+  }
+};
+
+export {
+  validatePathsNotEmpty,
+  validateFieldsConstrainedToSet,
+  validateIntegerParameterAndCast,
+  validateNonNegativeInteger,
+  validateIsAddress
+};

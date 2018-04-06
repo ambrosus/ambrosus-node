@@ -155,6 +155,11 @@ describe('Account Access Definitions', () => {
       const brokenData = put(account, 'accessLevel', -10);
       expect(() => accountAccessDefinitions.validateAddAccountRequest(brokenData)).to.throw(ValidationError);
     });
+
+    it('throws if address has wrong format', async () => {
+      const brokenData = put(account, 'address', '0x123');
+      expect(() => accountAccessDefinitions.validateAddAccountRequest(brokenData)).to.throw(ValidationError);
+    });
   });
 
   describe('validating account modification', () => {

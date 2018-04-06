@@ -54,7 +54,7 @@ describe('Contract Manager', () => {
     it('should throw if addresses are not configured and allowMissing = false', () => {
       bundleContractAddressStub.returns(null);
 
-      expect(() => new ContractManager(mockWeb3)).to.throw;
+      expect(() => new ContractManager(mockWeb3)).to.throw();
 
       expect(deployContractStub).to.not.have.been.called;
       expect(loadContractStub).to.not.have.been.called;
