@@ -1,7 +1,7 @@
 import chai from 'chai';
 import {
   validatePathsNotEmpty, validateFieldsConstrainedToSet, validateIntegerParameterAndCast,
-  validateNonNegativeInteger
+  validateNonNegativeInteger, validateIsAddress
 } from '../../src/utils/validations';
 import {ValidationError, InvalidParametersError} from '../../src/errors/errors';
 
@@ -59,15 +59,38 @@ describe('validation', () => {
 
   describe('validateNonNegativeInteger', () => {
     it('throws if not integer provided', async () => {
-      expect(() => validateNonNegativeInteger(1)).to.not.throw;
+      expect(() => validateNonNegativeInteger(1)).to.not.throw();
       expect(() => validateNonNegativeInteger(1.5)).to.throw(ValidationError);
       expect(() => validateNonNegativeInteger('1')).to.throw(ValidationError);
       expect(() => validateNonNegativeInteger([1])).to.throw(ValidationError);
     });
 
     it('throws if negative integer provided', async () => {
-      expect(() => validateNonNegativeInteger(0)).to.not.throw;
+      expect(() => validateNonNegativeInteger(0)).to.not.throw();
       expect(() => validateNonNegativeInteger(-1)).to.throw(ValidationError);
+    });
+  });
+
+  describe('validateIsAddress', () => {
+    const correctAddress = '0x074976a8D5F07dA5DADa1Eb248AD369a764bB373';
+
+    it('does not throw with valid addresses', async () => {
+      expect(() => validateIsAddress(correctAddress)).to.not.throw();
+      expect(() => validateIsAddress(correctAddress.toLowerCase())).to.not.throw();
+      expect(() => validateIsAddress(correctAddress.toUpperCase())).to.not.throw();
+    });
+
+    it('throws if address has wrong length', async () => {
+      expect(() => validateIsAddress(correctAddress.slice(0, -1))).to.throw(ValidationError);
+      expect(() => validateIsAddress(`${correctAddress}a`)).to.throw(ValidationError);
+    });
+
+    it('throws if address has no prefix', async () => {
+      expect(() => validateIsAddress(correctAddress.slice(2))).to.throw(ValidationError);
+    });
+
+    it('throws if not hex value', async () => {
+      expect(() => validateIsAddress('0x074976a8D5F07dA5DADa1Eb248AD369a764bB37g')).to.throw(ValidationError);
     });
   });
 });

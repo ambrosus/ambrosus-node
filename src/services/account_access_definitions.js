@@ -1,4 +1,7 @@
-import {validateFieldsConstrainedToSet, validateNonNegativeInteger, validatePathsNotEmpty} from '../utils/validations';
+import {
+  validateFieldsConstrainedToSet, validateIsAddress, validateNonNegativeInteger,
+  validatePathsNotEmpty
+} from '../utils/validations';
 import {PermissionError, ValidationError} from '../errors/errors';
 
 export default class AccountAccessDefinitions {
@@ -57,6 +60,7 @@ export default class AccountAccessDefinitions {
     validatePathsNotEmpty(account, registrationFields);
     validateFieldsConstrainedToSet(account, registrationFields);
     validateNonNegativeInteger(account.accessLevel, 'AccessLevel should be a non-negative integer');
+    validateIsAddress(account.address);
   }
 
   validateModifyAccountRequest(params) {
