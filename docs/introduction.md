@@ -21,12 +21,12 @@ Example asset could look like this:
 }
 ```
 
-`assetId` is unique asset identifier. `idData` stores all data crucial to the digital identity of the asset. In particular `1503424923` stores information about the time when it was created (as UNIX timestamp) and `createdBy` stores id of a creator of the asset. Field `signature` authenticates the identity of the creator. We dig into what every single field means later in this chapter.
+`assetId` is unique asset identifier. `idData` stores all data crucial to the digital identity of the asset. In particular `timestamp` stores information about the time when it was created (as UNIX timestamp) and `createdBy` stores id of a creator of the asset. Field `signature` authenticates the identity of the creator. We dig deeper into what every single field means later in this chapter.
 
 ### Events
-An event describes something that happened in a supply chain. Typical events are usually connected to producing, verification and delivery of assets. It is possible to define custom events. Events are associated with at least one asset by subject.
+An event describes something that happened in a supply chain. Typical events are connected to producing, verification and delivery of assets, however it is possible to define custom events. Events are associated with one asset by `subject` field.
 
-Events can be used to link assets together (e.g., asset put into another asset, a chocolate bar put into a box)
+Events can be used to link assets together (e.g., asset put into another asset, a chocolate bar put into a box).
 
 Example event could look like this:
 ```json
@@ -48,7 +48,7 @@ Example event could look like this:
 }
 ```
 
-Meaning of the fields is analogous to those in assets. Additionally, we have the data object, which can hold all the descriptive details about an event (e.g., type, context, location and more). `accessLevel` is used to define permissions. `dataHash` is used internally to store 
+Meaning of the fields is analogous to those in assets. Additionally, we have the `data` object, which can hold all the descriptive details about an event (e.g., type, context, location and more). `accessLevel` is used to define permissions. `dataHash` is hash of serialized `data` field.
 
 ### Bundles
 Multiple entities (assets and events) are packed into bundles. The proof of the bundle is stored in a smart contract deployed to the blockchain.
@@ -87,7 +87,7 @@ Persistence is a property we are aiming to achieve in future releases.
 Ids of entities are strings with a hex value. Entities are content-addressable, meaning that their id depends on the content. There is only one valid id per content and if content changes the id changes as well. Technically id is keccak-256 hash of a serialized content object.
 
 ### Signatures
-Content of the proper entitiy is signed by the creator. `createdBy` stores information about who  creator is in form of ethereum compatible address. Signature is ethereum compatible signature with private key.
+Content of the proper entitiy is signed by the creator. `createdBy` stores information about who creator is in form of ethereum compatible address. Signature is ethereum compatible signature with private key.
 
 ## Permissions
 All `idData` of every entity is always publically available. Entity creator can, however, can define `accessLevel`, required to access `data` field. 
