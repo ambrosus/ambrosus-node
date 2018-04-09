@@ -15,6 +15,7 @@
     "ops:generate_private_key": "babel-node src/tasks/generate_private_key.js",
     "ops:bundle:whitelist": "babel-node src/tasks/bundle_whitelist.js",
     "ops:deploy:bundleregistry": "babel-node src/tasks/deploy_bundle_registry.js",
+    "ops:transactions:generate": "babel-node src/tasks/generate_transactions.js",
     "dev:clean": "rimraf ./dist",
     "dev:setup": "export NODE_ENV=dev && babel-node src/tasks/dev_setup.js",
     "dev:start": "export NODE_ENV=dev && nodemon --watch src --exec babel-node --inspect src/start.js",
