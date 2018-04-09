@@ -10,12 +10,12 @@
           "description": "Known identifiers for an event",
           "type": "object",
           "uniqueItems": true,
+          "minProperties": 1,
           "additionalProperties": {
             "type": "array",
             "minItems": 1,
             "uniqueItems": true
-          },
-          "minProperties": 1
+          }
         },
         "entries": {
           "description": "Entries for an event",
@@ -28,20 +28,38 @@
         "location": {
           "description": "A geographical coordinate",
           "type": "object",
-          "properties": {
-            "latitude": {
-              "type": "number",
-              "minimum": -90,
-              "maximum": 90
+          "oneOf": [
+            {
+              "properties": {
+                "latitude": {
+                  "type": "number",
+                  "minimum": -90,
+                  "maximum": 90
+                },
+                "longitude": {
+                  "type": "number",
+                  "minimum": -180,
+                  "maximum": 180
+                }
+              },
+              "required": [
+                "latitude",
+                "longitude"
+              ],
+              "additionalProperties": false
             },
-            "longitude": {
-              "type": "number",
-              "minimum": -180,
-              "maximum": 180
+            {
+              "properties": {
+                "asset": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "asset"
+              ],
+              "additionalProperties": false
             }
-          },
-          "required": ["latitude", "longitude"],
-          "additionalProperties": false
+          ]
         }
       },
       "required": ["entries"],
