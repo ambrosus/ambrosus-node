@@ -15,7 +15,8 @@ Example asset could look like this:
     "signature": "0x30755ed65396facf86c53e6...65c5cfd04be400",
     "idData": {
       "createdBy": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
-      "timestamp": 1503424923
+      "timestamp": 1503424923,
+      "sequenceNumber": 0
     }
   }
 }
@@ -24,9 +25,7 @@ Example asset could look like this:
 `assetId` is unique asset identifier. `idData` stores all data crucial to the digital identity of the asset. In particular `timestamp` stores information about the time when it was created (as UNIX timestamp) and `createdBy` stores id of a creator of the asset. Field `signature` authenticates the identity of the creator. We dig deeper into what every single field means later in this chapter.
 
 ### Events
-An event describes something that happened in a supply chain. Typical events are connected to producing, verification and delivery of assets, however it is possible to define custom events. Events are associated with one asset by `subject` field.
-
-Events can be used to link assets together (e.g., asset put into another asset, a chocolate bar put into a box).
+An event describes something that happened in a supply chain. Typical events are connected to producing, verification and delivery of assets, however it is possible to define custom events. Each event is associated with exactly one asset by the subject field.
 
 Example event could look like this:
 ```json
@@ -53,7 +52,7 @@ Meaning of the fields is analogous to those in assets. Additionally, we have the
 ### Bundles
 Multiple entities (assets and events) are packed into bundles. The proof of the bundle is stored in a smart contract deployed to the blockchain.
 
-Example event look like this:
+Example bundle look like this:
 ```json
 {
   "bundleId": "<hash (content addressable) calcuated from contents field>",
@@ -77,7 +76,7 @@ Bundles are mainly used for backward verification of entities and node syncing.
 ## Basic principles: 
 
 ### Immutability, permanence and persistance
-All entities are immutable and are permanent. You will not find an update or delete calls.
+All entities are immutable and are permanent. You will not find any update or delete calls.
 
 Note that permanence is not the same thing as persistence. Permanence is related to content-addressing, meaning an object's identity (name/id/address) will always be the same. Permanent supply chain data means linking between entities with permanent ids. Ids are always the same, and thus the links won't break.
 
@@ -90,7 +89,7 @@ Ids of entities are strings with a hex value. Entities are content-addressable, 
 Content of the proper entitiy is signed by the creator. `createdBy` stores information about who creator is in form of ethereum compatible address. Signature is ethereum compatible signature with private key.
 
 ## Permissions
-All `idData` of every entity is always publically available. Entity creator can, however, can define `accessLevel`, required to access `data` field. 
+All `idData` of every entity is always publically available. Entity creator can however define `accessLevel`, required to access `data` field. 
  * If access level equals `0` it means entity `data` is publically available.
  * If access level is greater than `0` it means entity `data` is only available to users registered with given node and with adequate `accessLevel` (e.g.m you need to have permission level 3 to access data on `accessLevel` 1, 2, 3).
 

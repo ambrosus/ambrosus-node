@@ -1,6 +1,6 @@
 # Ambrosus tutorial
 
-Welcome to Ambrosus tutorial. Follow the steps below to create your first assets and events on the Ambrosus Network. We will use publically available ambrosus node, available under ``.
+Welcome to Ambrosus tutorial. Follow the steps below to create your first assets and events on the Ambrosus Network. We will use publicly available ambrosus test node, available under `gateway-test.ambrosus.com`.
 
 ## Before you start
 
