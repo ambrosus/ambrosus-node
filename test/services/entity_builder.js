@@ -292,7 +292,7 @@ describe('Entity Builder', () => {
 
   describe('Validating query parameters', () => {
     let entityBuilder;
-    const exampleAssetId = `0x${'1'.repeat(64)}`;
+    const exampleAssetId = `0xbdaacf42a48710b97d115d521fdf01cdb9d8ba5e66d806cc45d1000231292ce7`;
     const validParamsAsStrings = {assetId: '0x1234', fromTimestamp: '10', toTimestamp: '20', page: '2', perPage: '4', createdBy: '0x4321', location: `asset(${exampleAssetId})`};
 
     before(() => {
