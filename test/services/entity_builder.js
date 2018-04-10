@@ -292,7 +292,7 @@ describe('Entity Builder', () => {
 
   describe('Validating query parameters', () => {
     let entityBuilder;
-    const exampleAssetId = `0x${'1'.repeat(40)}`;
+    const exampleAssetId = `0x${'1'.repeat(64)}`;
     const validParamsAsStrings = {assetId: '0x1234', fromTimestamp: '10', toTimestamp: '20', page: '2', perPage: '4', createdBy: '0x4321', location: `asset(${exampleAssetId})`};
 
     before(() => {
@@ -394,9 +394,9 @@ describe('Entity Builder', () => {
       it('throws if assetId has wrong format', async () => {
         expect(() => entityBuilder.parseLocationQuery('asset(0x0000)', 1))
           .to.throw(InvalidParametersError);
-        expect(() => entityBuilder.parseLocationQuery(`asset(0x${'z'.repeat(40)}`, 1))
+        expect(() => entityBuilder.parseLocationQuery(`asset(0x${'z'.repeat(64)}`, 1))
           .to.throw(InvalidParametersError);
-        expect(() => entityBuilder.parseLocationQuery(`asset(${'0'.repeat(40)}`, 1))
+        expect(() => entityBuilder.parseLocationQuery(`asset(${'0'.repeat(64)}`, 1))
           .to.throw(InvalidParametersError);
       });
     });
