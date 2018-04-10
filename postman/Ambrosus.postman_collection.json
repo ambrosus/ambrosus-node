@@ -1,21 +1,20 @@
 {
 	"info": {
+		"_postman_id": "2f4f9e02-55a0-4388-9dd0-d03ad1567a98",
 		"name": "Ambrosus",
-		"_postman_id": "fc88b319-3f05-47aa-8e94-7748286fcf6f",
-		"description": "",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "Get token",
+			"name": "Generate token (adminUser)",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
-						"id": "555e22d2-5a4a-48d1-9018-f24d401a0931",
+						"id": "83c5ee00-376c-4a36-a3e0-0840b622177b",
 						"type": "text/javascript",
 						"exec": [
-							"pm.environment.set(\"token\", JSON.parse(responseBody).token);"
+							"pm.environment.set(\"adminToken\", JSON.parse(responseBody).token);"
 						]
 					}
 				}
@@ -38,7 +37,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"validUntil\": 1600000000000\n}"
+					"raw": "{\n    \"validUntil\": 1600000000\n}"
 				},
 				"url": {
 					"raw": "{{url}}/token",
@@ -48,13 +47,12 @@
 					"path": [
 						"token"
 					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		},
 		{
-			"name": "Create account",
+			"name": "Add account",
 			"event": [
 				{
 					"listen": "test",
@@ -80,12 +78,12 @@
 					},
 					{
 						"key": "Authorization",
-						"value": "AMB_TOKEN {{token}}"
+						"value": "AMB_TOKEN {{adminToken}}"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"address\": \"{{address}}\",\n    \"permissions\" : [\"register_account\",\"change_account_permissions\"],\n    \"accessLevel\" : 0\n}"
+					"raw": "{\n\t\"address\": \"{{userAddress}}\",\n    \"permissions\" : [\"register_account\",\"create_entity\"],\n    \"accessLevel\" : 0\n}"
 				},
 				"url": {
 					"raw": "{{url}}/accounts",
@@ -95,41 +93,7 @@
 					"path": [
 						"accounts"
 					]
-				},
-				"description": ""
-			},
-			"response": []
-		},
-		{
-			"name": "Get account",
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					},
-					{
-						"key": "Accept",
-						"value": "application/json"
-					},
-					{
-						"key": "Authorization",
-						"value": "AMB_TOKEN {{token}}"
-					}
-				],
-				"body": {},
-				"url": {
-					"raw": "{{url}}/accounts/{{address}}",
-					"host": [
-						"{{url}}"
-					],
-					"path": [
-						"accounts",
-						"{{address}}"
-					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		},
@@ -148,24 +112,104 @@
 					},
 					{
 						"key": "Authorization",
-						"value": "AMB_TOKEN {{token}}"
+						"value": "AMB_TOKEN {{adminToken}}"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"permissions\" : [\"change_account_permissions\"],\n    \"accessLevel\" : 4\n}"
+					"raw": "{\n    \"permissions\" : [\"create_entity\"],\n    \"accessLevel\" : 4\n}"
 				},
 				"url": {
-					"raw": "{{url}}/accounts/{{address}}",
+					"raw": "{{url}}/accounts/{{userAddress}}",
 					"host": [
 						"{{url}}"
 					],
 					"path": [
 						"accounts",
-						"{{address}}"
+						"{{userAddress}}"
 					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Generate token (user)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "d0ef5814-8b51-43ba-b0fa-8a2377c1ceb0",
+						"type": "text/javascript",
+						"exec": [
+							"pm.environment.set(\"userToken\", JSON.parse(responseBody).token);"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "AMB {{userSecret}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"validUntil\": 1600000000\n}"
 				},
-				"description": ""
+				"url": {
+					"raw": "{{url}}/token",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get account",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "AMB_TOKEN {{userToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/accounts/{{userAddress}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"accounts",
+						"{{userAddress}}"
+					]
+				}
 			},
 			"response": []
 		},
@@ -196,12 +240,12 @@
 					},
 					{
 						"key": "Authorization",
-						"value": "AMB {{adminSecret}}"
+						"value": "AMB {{userSecret}}"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"content\": {\n        \"idData\": {\n            \"createdBy\": \"{{adminAddress}}\",\n            \"timestamp\": 1503424923,\n            \"sequenceNumber\": 3\n        },\n        \"data\": {}\n    }\n}"
+					"raw": "{\n    \"content\": {\n        \"idData\": {\n            \"createdBy\": \"{{userAddress}}\",\n            \"timestamp\": 1503424923,\n            \"sequenceNumber\": 1\n        }\n    }\n}"
 				},
 				"url": {
 					"raw": "{{url}}/assets",
@@ -211,8 +255,7 @@
 					"path": [
 						"assets"
 					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		},
@@ -221,7 +264,10 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"body": {},
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
 				"url": {
 					"raw": "{{url}}/assets/{{assetId}}",
 					"host": [
@@ -231,8 +277,7 @@
 						"assets",
 						"{{assetId}}"
 					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		},
@@ -263,12 +308,12 @@
 					},
 					{
 						"key": "Authorization",
-						"value": "AMB {{adminSecret}}"
+						"value": "AMB {{userSecret}}"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"content\": {\n        \"idData\": {\n            \"assetId\": \"{{assetId}}\",\n            \"createdBy\": \"{{adminAddress}}\",\n            \"accessLevel\": 4,\n            \"timestamp\": 1503424923,\n            \"dataHash\": \"0x01cd181cd38eb5bbd162a44701727a31f457a538\"\n        },\n        \"data\": {\n\n        }\n    }\n}"
+					"raw": "{\n    \"content\": {\n        \"idData\": {\n            \"assetId\": \"{{assetId}}\",\n            \"createdBy\": \"{{userAddress}}\",\n            \"accessLevel\": 4,\n            \"timestamp\": 1503424923\n        },\n        \"data\": {\n\t\t\t\"entries\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"demo.entrytype\",\n\t\t\t\t\t\"value\": \"some value\" \n\t\t\t\t}\n\t\t\t]\n        }\n    }\n}"
 				},
 				"url": {
 					"raw": "{{url}}/assets/{{assetId}}/events",
@@ -280,8 +325,7 @@
 						"{{assetId}}",
 						"events"
 					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		},
@@ -290,7 +334,10 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"body": {},
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
 				"url": {
 					"raw": "{{url}}/assets/{{assetId}}/events/{{eventId}}",
 					"host": [
@@ -302,8 +349,7 @@
 						"events",
 						"{{eventId}}"
 					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		},
@@ -311,10 +357,18 @@
 			"name": "Finding events",
 			"request": {
 				"method": "GET",
-				"header": [],
-				"body": {},
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "AMB_TOKEN {{userToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
 				"url": {
-					"raw": "{{url}}/events?assetId={{assetId}}&fromTimestamp=0&toTimestamp=9999999999999&perPage=100&page=0&createdBy={{adminAddress}}",
+					"raw": "{{url}}/events?assetId={{assetId}}&fromTimestamp=0&toTimestamp=9999999999999&perPage=100&page=0&createdBy={{userAddress}}",
 					"host": [
 						"{{url}}"
 					],
@@ -325,42 +379,35 @@
 						{
 							"key": "assetId",
 							"value": "{{assetId}}",
-							"equals": true,
 							"description": "ID of the asset the events are targeting"
 						},
 						{
 							"key": "fromTimestamp",
 							"value": "0",
-							"equals": true,
 							"description": "earliest timestamp for the events"
 						},
 						{
 							"key": "toTimestamp",
 							"value": "9999999999999",
-							"equals": true,
 							"description": "latest timestamp for the events"
 						},
 						{
 							"key": "perPage",
 							"value": "100",
-							"equals": true,
 							"description": "number of events to return per page"
 						},
 						{
 							"key": "page",
 							"value": "0",
-							"equals": true,
 							"description": "number of page"
 						},
 						{
 							"key": "createdBy",
-							"value": "{{adminAddress}}",
-							"equals": true,
+							"value": "{{userAddress}}",
 							"description": "address of account that created targeting events"
 						}
 					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		},
@@ -369,7 +416,10 @@
 			"request": {
 				"method": "GET",
 				"header": [],
-				"body": {},
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
 				"url": {
 					"raw": "{{url}}/bundle/{{bundleId}}",
 					"host": [
@@ -379,8 +429,7 @@
 						"bundle",
 						"{{bundleId}}"
 					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		}
@@ -390,7 +439,7 @@
 			"id": "06441822-7877-493b-86f3-6120a28b74df",
 			"key": "url",
 			"value": "http://network.ambrosus.com",
-			"type": "text",
+			"type": "string",
 			"description": ""
 		}
 	]

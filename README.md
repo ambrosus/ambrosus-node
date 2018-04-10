@@ -145,9 +145,10 @@ yarn ops:bundle:whitelist --seturl -a "0x925ea5af075bde17811e4bcdc198dc5d3675e46
 
 Additionally we provide the postman collection to make it easier to test REST queries. To use them you need to run the server, create the admin account and:
 
-1. Import the environment from `postman/AMB.postman_environment.json` and select it.
-2. Import collection from `Ambrosus.postman_collection.json`
-3. In the environment set `adminSecret` and `adminAddress` variables with admin's private and public keys respectively.
-4. If needed, change `url` variable (by default url=localhost:9876)
-5. Create token with calling the `Create Token` request
+1. Import the environment from `postman/AMB-template.postman_environment.json`, rename it if you want, and select it.
+2. If needed, change `url` variable (by default url=localhost:9876) to your gateway instance
+3. In the environment set `adminSecret` and `adminAddress` variables with a existing admins private and public keys respectively. If you don't have access to an admin account, but rather a normal user account, you can set the `userSecret` and `userAddress`. Note: functionality will be limited.
+4. Import collection from `Ambrosus.postman_collection.json`
+5. [admin only] Add or modify accounts with the `Add account` and `Modify account` requests
+6. Create tokens by calling the `Generate Token` request
 
