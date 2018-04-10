@@ -99,7 +99,7 @@ export default class EntityBuilder {
     if (!queryString) {
       return {};
     }
-    const extractValueRegex = /^asset\((0x[\dA-F]{40})\)$/gi;
+    const extractValueRegex = /^asset\((0x[\dA-F]{64})\)$/gi;
     const parseResult = extractValueRegex.exec(queryString);
     if (!parseResult) {
       throw new InvalidParametersError('Location query must be of format `asset(0x...)`');
