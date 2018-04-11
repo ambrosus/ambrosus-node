@@ -3,7 +3,6 @@ import JsonSchemaValidator from '../../src/validators/json_schema_validator';
 import eventsSchema from '../../src/validators/schemas/event';
 import chai from 'chai';
 
-
 const {expect} = chai;
 
 describe('JsonSchemaValidator', () => {
@@ -31,14 +30,9 @@ describe('JsonSchemaValidator', () => {
 
   describe('events', () => {
     let validator;
-
-    before(() => {
-      validator = new JsonSchemaValidator(eventsSchema);
-    });
-
-    it('accepts a valid event', () => {
-      const event = {data: {
-        entries: [{}],
+    const validEvent = {
+      data: {
+        entries: [{type: '1', foo: 'bar'}, {type: '2'}],
         identifiers: {
           foo: ['bar']
         },
@@ -46,8 +40,15 @@ describe('JsonSchemaValidator', () => {
           latitude: 0,
           longitude: 0
         }
-      }};
-      expect(() => validator.validate(event)).to.not.throw();
+      }
+    };
+
+    before(() => {
+      validator = new JsonSchemaValidator(eventsSchema);
+    });
+
+    it('accepts a valid event', () => {
+      expect(() => validator.validate(validEvent)).to.not.throw();
     });
 
     describe('data', () => {
@@ -66,19 +67,19 @@ describe('JsonSchemaValidator', () => {
       it('throws when invalid identifiers', async () => {
         const emptyIdents = {
           data: {
-            entries: [{}],
+            ...validEvent.data,
             identifiers: {}
           }
         };
         const emptyIdentsArray = {
           data: {
-            entries: [{}],
+            ...validEvent.data,
             identifiers: {foo: []}
           }
         };
         const wrongIdentsType = {
           data: {
-            entries: [{}],
+            ...validEvent.data,
             identifiers: {foo: 0}
           }
         };
@@ -91,11 +92,13 @@ describe('JsonSchemaValidator', () => {
       it('throws when invalid entries', async () => {
         const emptyEntries = {
           data: {
+            ...validEvent.data,
             entries: []
           }
         };
         const wrongEntryType = {
           data: {
+            ...validEvent.data,
             entries: [0]
           }
         };
@@ -104,9 +107,41 @@ describe('JsonSchemaValidator', () => {
         expect(() => validator.validate(wrongEntryType)).to.throw(JsonValidationError);
       });
 
+      it('throws if any entry lacks type field', async () => {
+        const noType = {
+          data: {
+            ...validEvent.data,
+            entries: [
+              {type: '1', foo: 'bar'},
+              {aaa: 'bbb'}
+            ]
+          }
+        };
+        const typeNotString = {
+          data: {
+            ...validEvent.data,
+            entries: [
+              {type: 123}
+            ]
+          }
+        };
+        const typeEmptyString = {
+          data: {
+            ...validEvent.data,
+            entries: [
+              {type: ''}
+            ]
+          }
+        };
+
+        expect(() => validator.validate(noType)).to.throw(JsonValidationError);
+        expect(() => validator.validate(typeNotString)).to.throw(JsonValidationError);
+        expect(() => validator.validate(typeEmptyString)).to.throw(JsonValidationError);
+      });
+
       it('accepts asset as location', async () => {
         const event = {data: {
-          entries: [{}],
+          ...validEvent.data,
           location: {
             asset: '0x1'
           }
@@ -117,7 +152,7 @@ describe('JsonSchemaValidator', () => {
       it('throws when mixed lon-lat and asset', async () => {
         const mixedGeoAndAsset = {
           data: {
-            entries: [{}],
+            ...validEvent.data,
             location: {
               latitude: 0,
               longitude: 0,
@@ -132,7 +167,7 @@ describe('JsonSchemaValidator', () => {
       it('throws when bad lon-lat format', async () => {
         const noLat = {
           data: {
-            entries: [{}],
+            ...validEvent.data,
             location: {
               longitude: 0
             }
@@ -140,7 +175,7 @@ describe('JsonSchemaValidator', () => {
         };
         const noLon = {
           data: {
-            entries: [{}],
+            ...validEvent.data,
             location: {
               latitude: 0
             }
@@ -154,7 +189,7 @@ describe('JsonSchemaValidator', () => {
       it('throws if wrong lon-lat values', async () => {
         const event = {
           data: {
-            entries: [{}],
+            ...validEvent.data,
             location: {
               latitude: 0,
               longitude: 1000
