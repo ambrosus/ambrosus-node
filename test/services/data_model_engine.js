@@ -275,7 +275,8 @@ describe('Data Model Engine', () => {
         setBundle: sinon.stub()
       };
       mockEntityRepository = {
-        storeAsset: sinon.stub()
+        storeAsset: sinon.stub(),
+        getAsset: sinon.stub()
       };
       mockAccountAccessDefinitions = {
         ensureCanCreateEntity: sinon.stub()
@@ -290,6 +291,7 @@ describe('Data Model Engine', () => {
       mockEntityBuilder.validateAsset.returns();
       mockEntityBuilder.setBundle.returns(mockAsset);
       mockEntityRepository.storeAsset.resolves();
+      mockEntityRepository.getAsset.resolves(null);
       mockAccountAccessDefinitions.ensureCanCreateEntity.resolves();
     };
 
@@ -306,6 +308,10 @@ describe('Data Model Engine', () => {
       it('checks if creator has required permission', async () => {
         expect(mockAccountAccessDefinitions.ensureCanCreateEntity)
           .to.have.been.calledWith(mockAsset.content.idData.createdBy);
+      });
+
+      it('checks if same asset does not exist', async () => {
+        expect(mockEntityRepository.getAsset).to.have.been.calledWith(mockAsset.assetId);
       });
 
       it('sets the bundle to be null', () => {
@@ -331,6 +337,11 @@ describe('Data Model Engine', () => {
       it('throws if Entity Builder validation fails', async () => {
         mockEntityBuilder.validateAsset.throws(new ValidationError('an error'));
         await expect(modelEngine.createAsset(mockAsset)).to.be.rejectedWith(ValidationError);
+      });
+
+      it('throws if asset with same assetId already exists', async () => {
+        mockEntityRepository.getAsset.resolves({});
+        await expect(modelEngine.createAsset(mockAsset)).to.be.rejectedWith(InvalidParametersError);
       });
     });
   });
@@ -381,7 +392,8 @@ describe('Data Model Engine', () => {
       };
       mockEntityRepository = {
         storeEvent: sinon.stub(),
-        getAsset: sinon.stub()
+        getAsset: sinon.stub(),
+        getEvent: sinon.stub()
       };
       mockAccountAccessDefinitions = {
         ensureCanCreateEntity: sinon.stub()
@@ -397,6 +409,7 @@ describe('Data Model Engine', () => {
       mockEntityBuilder.setBundle.returns(mockEvent);
       mockEntityRepository.storeEvent.resolves();
       mockEntityRepository.getAsset.resolves(mockAsset);
+      mockEntityRepository.getEvent.resolves(null);
       mockAccountAccessDefinitions.ensureCanCreateEntity.resolves();
     };
 
@@ -417,6 +430,10 @@ describe('Data Model Engine', () => {
 
       it('checks if target asset exists', () => {
         expect(mockEntityRepository.getAsset).to.have.been.calledWith(mockEvent.content.idData.assetId);
+      });
+
+      it('checks if same event does not exist', async () => {
+        expect(mockEntityRepository.getEvent).to.have.been.calledWith(mockEvent.eventId);
       });
 
       it('sets the bundle to be null', () => {
@@ -448,6 +465,11 @@ describe('Data Model Engine', () => {
       it('throws if target asset doesn\'t exists in Entity Repository', async () => {
         mockEntityRepository.getAsset.resolves(null);
 
+        await expect(modelEngine.createEvent(mockEvent)).to.be.rejectedWith(InvalidParametersError);
+      });
+
+      it('throws if event with same eventId already exists', async () => {
+        mockEntityRepository.getEvent.resolves({});
         await expect(modelEngine.createEvent(mockEvent)).to.be.rejectedWith(InvalidParametersError);
       });
     });

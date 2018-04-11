@@ -26,8 +26,9 @@ describe('Events Integrations: Find by entries', () => {
   beforeEach(async () => {
     await scenario.addAdminAccount(adminAccountWithSecret);
     await scenario.addAccount(0, accountWithSecret, {permissions: ['create_entity'], accessLevel});
-    await scenario.addAsset(0);
-    await scenario.addAsset(0);
+    await scenario.addAsset(0, {sequenceNumber: 0});
+    await scenario.addAsset(0, {sequenceNumber: 1});
+
     await scenario.addEvent(0, 0, {timestamp: 0, accessLevel: 1}, {entries: [{
       type: 'com.ambrosus.delivered',
       confirmationAddress: '0xD49f20a8339FFe6471D3a32f874fC82CfDd98750',
