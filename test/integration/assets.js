@@ -71,6 +71,18 @@ describe('Assets - Integrations', () => {
         .and.have.property('status', 400);
     });
 
+    it('returns 400 when same asset added twice', async () => {
+      await apparatus.request()
+        .post('/assets')
+        .send(asset);
+      const request = apparatus.request()
+        .post('/assets')
+        .send(asset);
+      await expect(request)
+        .to.eventually.be.rejected
+        .and.have.property('status', 400);
+    });
+
     it('returns 403 for authorisation error (user does not exist)', async () => {
       const failingAsset = createFullAsset(apparatus.identityManager, {createdBy: notRegisteredAccount.address}, notRegisteredAccount.secret);
       

@@ -68,6 +68,18 @@ describe('Events Integrations: Create', () => {
       .and.have.property('status', 400);
   });
 
+  it('returns 400 when same event added twice', async () => {
+    await apparatus.request()
+      .post(`/assets/${asset.assetId}/events`)
+      .send(event);
+    const request = apparatus.request()
+      .post(`/assets/${asset.assetId}/events`)
+      .send(event);
+    await expect(request)
+      .to.eventually.be.rejected
+      .and.have.property('status', 400);
+  });
+
   it('returns 403 for authorisation error (user does not exist)', async () => {
     const failingEvent = createFullEvent(apparatus.identityManager,
       {createdBy: notRegisteredAccount.address, assetId: asset.assetId},

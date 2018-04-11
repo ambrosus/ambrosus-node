@@ -64,6 +64,10 @@ export default class DataModelEngine {
     await this.accountAccessDefinitions.ensureCanCreateEntity(creatorAddress);
 
     const augmentedAsset = this.entityBuilder.setBundle(asset, null);
+
+    if (await this.entityRepository.getAsset(asset.assetId) !== null) {
+      throw new InvalidParametersError(`Asset with assetId=${asset.assetId} already exists`);
+    }
     await this.entityRepository.storeAsset(augmentedAsset);
 
     return augmentedAsset;
@@ -88,6 +92,10 @@ export default class DataModelEngine {
     }
 
     const augmentedEvent = this.entityBuilder.setBundle(event, null);
+
+    if (await this.entityRepository.getEvent(event.eventId) !== null) {
+      throw new InvalidParametersError(`Event with eventId=${event.eventId} already exists`);
+    }
     await this.entityRepository.storeEvent(augmentedEvent);
 
     return augmentedEvent;
