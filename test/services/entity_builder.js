@@ -82,7 +82,7 @@ describe('Entity Builder', () => {
         expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
       });
       it('doesn\'t allow content fields other than idData, and signature', () => {
-        const brokenAsset = put(exampleAsset, 'content.extraField', 'abc');
+        const brokenAsset = put(exampleAsset, 'content.metadata', 'abc');
         expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
       });
     });
@@ -149,7 +149,7 @@ describe('Entity Builder', () => {
       });
 
       it('doesn\'t allow content fields other than data, idData and signature', () => {
-        const brokenEvent = put(exampleEvent, 'content.extraField', 'abc');
+        const brokenEvent = put(exampleEvent, 'content.metadata', 'abc');
         expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
       });
     });
