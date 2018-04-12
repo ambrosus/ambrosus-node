@@ -67,7 +67,7 @@ __Warning__ This call can be used for developement purposes only. Never provide 
 
 An account represents an actor in the supply chain. This can be a person, a company, a location, etc.
 
-It consists of a pair - a public identifer `address` (compatible with ethereum address) and a `secret` (compatible with ethereum private key). Additionally an account has a list of permissions, which specify what actions user can permorm and an access levels, which specifies what data is user able to view.
+It consists of a pair - a public identifer `address` (compatible with ethereum address) and a `secret` (compatible with ethereum private key). Additionally an account has a list of permissions, which specify what actions user can perform and an access levels, which specifies what data is user able to view.
 
 ### /accounts
 
@@ -504,7 +504,7 @@ Places (after intensive validations) the provided event object into the system.
                 + location (object) - location associated with the event.
                     + longitude: 37.7749 (number) - Longitude of the location.
                     + latitude: 122.4194 (number) - Latitude of the location.
-                + entries (array) - Array of custom entries (this field is required, but can be empty)
+                + entries (array) - Array of custom entries (this field is required and have to contain at least one entry)
 
     + Body
 
@@ -666,7 +666,7 @@ Fetches an event by identifier
                 + location (object) - location associated with the event.
                     + longitude: 37.7749 (number) - Longitude of the location.
                     + latitude: 122.4194 (number) - Latitude of the location. 
-                + entries (array) - Array of custom entries as objects (this field is required, but can be empty).
+                + entries (array) - Array of custom entries as objects (this field is required and have to contain at least one entry).
 
     + Body
 
@@ -739,7 +739,7 @@ Finds event satisfying provided cryteria.
                         + location (object) - location associated with the event.
                             + longitude: 37.7749 (number) - Longitude of the location.
                             + latitude: 122.4194 (number) - Latitude of the location.
-                        + entries (array) - Array of custom entries as objects (this field is required, but can be empty). 
+                        + entries (array) - Array of custom entries as objects (this field is required and have to contain at least one entry). 
                         
         + resultCount: 112 (number) - Total number of events matching provided criterias.
 
