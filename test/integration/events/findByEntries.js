@@ -83,16 +83,6 @@ describe('Events Integrations: Find entries', () => {
       .to.eventually.be.rejected.and.have.property('status', 400);
   });
 
-  it('fails if array provided in query', async () => {
-    expect(get(`/events?entry[acceleration]=[1,2]`))
-      .to.eventually.be.rejected.and.have.property('status', 400);
-  });
-
-  it('fails if object provided in query', async () => {
-    expect(get(`/events?entry[acceleration]={x: 1, y: 2}`))
-      .to.eventually.be.rejected.and.have.property('status', 400);
-  });
-
   it('with conjunction', async () => {
     await scenario.addEvent(0, 0, {timestamp: 1, accessLevel: 0}, {entries: [{
       type: 'com.ambrosus.delivered',                           
