@@ -1,6 +1,6 @@
 import chai from 'chai';
 import httpMocks from 'node-mocks-http';
-import sinon, {spy} from 'sinon';
+import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import errorHandling from '../../src/middlewares/error_handling';
 
@@ -17,7 +17,7 @@ describe('Error handling middleware', () => {
   beforeEach(async () => {
     request = httpMocks.createRequest({});
     response = httpMocks.createResponse();
-    next = spy();
+    next = sinon.spy();
   });
 
 
