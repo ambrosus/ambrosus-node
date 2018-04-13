@@ -88,7 +88,6 @@ export function getDefaultPrivateKey(web3) {
 
 export function loadContract(web3, abi, address) {
   const contract = new web3.eth.Contract(abi, address);
-  contract.setProvider(web3.currentProvider);
   return contract;
 }
 
@@ -101,7 +100,6 @@ export async function deployContract(web3, abi, bytecode, args = [], options = {
       gas: DEFAULT_GAS,
       ...options
     });
-  contract.setProvider(web3.currentProvider);
   return contract;
 }
 
