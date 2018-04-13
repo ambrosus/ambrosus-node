@@ -18,11 +18,11 @@ describe('Cache prevention middleware', () => {
     response = httpMocks.createResponse();
   });
 
-  it('adds `no-store` to `Cache-Control` header', () => {
+  it('adds `no-store` to `cache-control` header', () => {
     cachePreventionMiddleware(request, response, next);
 
     /* eslint no-underscore-dangle: ["error", { "allow": ["_headers"] }] */
-    expect(response._headers['Cache-Control']).to.equal('no-store');
+    expect(response._headers['cache-control']).to.equal('no-store');
     expect(next).to.be.calledOnce;
   });
 });
