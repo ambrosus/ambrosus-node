@@ -8,27 +8,33 @@ const castToNumberOrThrow = (input) => {
   return number;
 };
 
-const applyDecorators = (input, decorators) => {
-  const extractDecoratorRegex = /^([^(\s]*)\((.+)\)$/gi;
-
-  for (const key of Object.keys(input)) {
+const deepMapObject = (input, transformFunc) => Object.keys(input).reduce(
+  (accumulated, key) => {
     const value = input[key];
     if ((typeof value) === 'object') {
-      input[key] = applyDecorators(value, decorators);
+      accumulated[key] = deepMapObject(value, transformFunc);
     } else {
-      const results = extractDecoratorRegex.exec(value);
-      if (!results) {
-        continue;
-      }
-      const [, decorator, decoratorParameter] = results;
+      accumulated[key] = transformFunc(value, key);
+    }
+    return accumulated;
+  },
+  {});
+
+const applyDecorators = (input, decorators) => deepMapObject(
+  input,
+  (value) => {
+    const extractDecoratorRegex = /^([^(\s]*)\((.+)\)$/gi;
+    const regexResult = extractDecoratorRegex.exec(value);
+    if (regexResult) {
+      const [, decorator, decoratorParameter] = regexResult;
       const decoratorFunc = decorators[decorator];
       if (decoratorFunc) {
-        input[key] = decoratorFunc(decoratorParameter);
+        return decoratorFunc(decoratorParameter);
       }
     }
+    return value;
   }
-  return input;
-};
+);
 
 const queryParameterProcessorMiddleware = (req, res, next) => {
   req.query = applyDecorators(
