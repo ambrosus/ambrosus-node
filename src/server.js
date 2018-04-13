@@ -1,5 +1,6 @@
 import express from 'express';
 import errorHandling from './middlewares/error_handling';
+import cachePreventionMiddleware from './middlewares/cache_prevention_middleware';
 
 import accountsRouter from './routes/accounts';
 import assetsRouter from './routes/assets';
@@ -22,6 +23,8 @@ export default class Server {
       origin : true,
       credentials: true
     }));
+
+    app.use(cachePreventionMiddleware);
 
     app.use('/accounts', accountsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine));
     app.use('/assets', assetsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine));
