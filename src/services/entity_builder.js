@@ -30,6 +30,7 @@ export default class EntityBuilder {
       'content.idData.sequenceNumber'
     ]);
     validateFieldsConstrainedToSet(asset, ['content', 'assetId']);
+    validateFieldsConstrainedToSet(asset.content, ['idData', 'signature']);
 
     this.identityManager.validateSignature(asset.content.idData.createdBy, asset.content.signature, asset.content.idData);
   }
@@ -48,6 +49,7 @@ export default class EntityBuilder {
     ]);
     this.eventValidators.forEach((validator) => validator.validate(event.content));
     validateFieldsConstrainedToSet(event, ['content', 'eventId']);
+    validateFieldsConstrainedToSet(event.content, ['idData', 'data', 'signature']);
     validateNonNegativeInteger(event.content.idData.accessLevel, `Access level should be a non-negative integer, instead got ${event.content.idData.accessLevel}`);
     this.identityManager.validateSignature(event.content.idData.createdBy, event.content.signature, event.content.idData);
   }

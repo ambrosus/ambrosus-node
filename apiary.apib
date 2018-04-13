@@ -67,7 +67,7 @@ __Warning__ This call can be used for developement purposes only. Never provide 
 
 An account represents an actor in the supply chain. This can be a person, a company, a location, etc.
 
-It consists of a pair - a public identifer `address` (compatible with ethereum address) and a `secret` (compatible with ethereum private key). Additionally an account has a list of permissions which specify the account's access levels.
+It consists of a pair - a public identifer `address` (compatible with ethereum address) and a `secret` (compatible with ethereum private key). Additionally an account has a list of permissions, which specify what actions user can perform and an access levels, which specifies what data is user able to view.
 
 ### /accounts
 
@@ -90,7 +90,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 
             {
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
-                "permissions" : ["register_account","change_account_permissions"],
+                "permissions" : ["register_account","create_entity"],
                 "accessLevel" : 0
             }
 
@@ -98,14 +98,14 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 
 + Response 201 (application/json)
 
-    Created.
+    Added.
 
     + Body
 
             {
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
                 "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
-                "permissions": ["register_account", "change_account_permissions"],
+                "permissions": ["register_account", "create_entity"],
                 "accessLevel": 0
             }
 
@@ -130,7 +130,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
                   "items" : {
                   "type" : "string"
                   }
-                  "example": ["register_account", "change_account_permissions"]
+                  "example": ["register_account", "create_entity"]
                 }
               }
             }
@@ -182,7 +182,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
             {
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
                 "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
-                "permissions": ["register_account", "change_account_permissions"],
+                "permissions": ["register_account", "create_entity"],
                 "accessLevel": 4
             }
 
@@ -204,7 +204,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
                   "items" : {
                   "type" : "string"
                   }
-                  "example": ["register_account", "change_account_permissions"]
+                  "example": ["register_account", "create_entity"]
                 }
               }
             }
@@ -250,7 +250,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
     + Body
 
             {
-                "permissions" : ["register_account","change_account_permissions"],
+                "permissions" : ["register_account","create_entity"],
                 "accessLevel" : 0
             }
 
@@ -263,7 +263,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
             {
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
                 "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
-                "permissions": ["register_account", "change_account_permissions"]
+                "permissions": ["register_account", "create_entity"]
             }
 
     + Schema
@@ -284,7 +284,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
                   "items" : {
                   "type" : "string"
                   }
-                  "example": ["register_account", "change_account_permissions"]
+                  "example": ["register_account", "create_entity"]
                 }
               }
             }
@@ -422,7 +422,7 @@ Places (after intensive validations) the provided asset object into the system.
 
 + Response 403 (application/json)
 
-    The createdBy user is not registered or has no permission for creating account
+    The createdBy user is not registered or has no "create_entity" permission
 
     + Body
 
@@ -500,11 +500,11 @@ Places (after intensive validations) the provided event object into the system.
                 + accessLevel: 4 (number) - The access level of the event. Should be a non-negative integer.
                 + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
             + data (object) - Private information about an event.
-                + identifiers (object) - Known event identifiers as a map of identifier type to array of values. (this field is required, but can be empty)
-                + location (object) - location associated with the event
-                    + longitude: 37.7749 (number) - Longitude of the location
-                    + latitude: 122.4194 (number) - Latitude of the location 
-                + entries (array) - Array of custom entries
+                + identifiers (object) - Known event identifiers as a map of identifier type to array of values.
+                + location (object) - location associated with the event.
+                    + longitude: 37.7749 (number) - Longitude of the location.
+                    + latitude: 122.4194 (number) - Latitude of the location.
+                + entries (array) - Array of custom entries (this field is required and have to contain at least one entry)
 
     + Body
 
@@ -632,7 +632,7 @@ Places (after intensive validations) the provided event object into the system.
 
 + Response 403 (application/json)
 
-    The createdBy user is not registered or has no permission for creating account
+    The createdBy user is not registered or has no "create_entity" permission
 
     + Body
 
@@ -662,11 +662,11 @@ Fetches an event by identifier
                 + accessLevel: 4 (number) - The access level of the event. If the user's access level if lower than event's, the data field will not be returned.
                 + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
             + data (object) - Private information about an event.
-                + identifiers (object) - Known event identifiers as a map of identifier type to array of values. (this field is required, but can be empty)
-                + location (object) - location associated with the event
-                    + longitude: 37.7749 (number) - Longitude of the location
-                    + latitude: 122.4194 (number) - Latitude of the location 
-                + entries (array) - Array of custom entries as objects
+                + identifiers (object) - Known event identifiers as a map of identifier type to array of values.
+                + location (object) - location associated with the event.
+                    + longitude: 37.7749 (number) - Longitude of the location.
+                    + latitude: 122.4194 (number) - Latitude of the location. 
+                + entries (array) - Array of custom entries as objects (this field is required and have to contain at least one entry).
 
     + Body
 
@@ -735,13 +735,13 @@ Finds event satisfying provided cryteria.
                         + accessLevel: 4 (number) - The access level of the event. If the user's access level if lower than event's, the data field will not be returned.
                         + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
                     + data (object) - Private information about an event.
-                        + identifiers (object) - Known event identifiers as a map of identifier type to array of values. (this field is required, but can be empty)                        
-                        + location (object) - location associated with the event
-                            + longitude: 37.7749 (number) - Longitude of the location
-                            + latitude: 122.4194 (number) - Latitude of the location 
-                        + entries (array) - Array of custom entries as objects
+                        + identifiers (object) - Known event identifiers as a map of identifier type to array of values.                       
+                        + location (object) - location associated with the event.
+                            + longitude: 37.7749 (number) - Longitude of the location.
+                            + latitude: 122.4194 (number) - Latitude of the location.
+                        + entries (array) - Array of custom entries as objects (this field is required and have to contain at least one entry). 
                         
-        + resultCount: 112 (number) - Total number of vvents matching provided criterias.
+        + resultCount: 112 (number) - Total number of events matching provided criterias.
 
     + Body
 
@@ -804,7 +804,7 @@ Fetches a bundle by identifier
 
 + Response 200 (application/json)
 
-    The requested event
+    The requested bundle
 
     + Attributes (object)
         + bundleId (string) - Content-addressable identificator of the bundle.
