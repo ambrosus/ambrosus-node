@@ -43,6 +43,14 @@ describe('Token - Integrations', async () => {
     });
   });
 
+  it('does not allow to cache', async () => {
+    const response = await apparatus.request()
+      .post('/token')
+      .set('authorization', `AMB ${pkPair.secret}`)
+      .send(requestData);
+    expect(response.headers['cache-control']).to.equal('no-store');
+  });
+
   it('throws 401 if bad secret', async () => {
     const request = apparatus.request()
       .post('/token')
