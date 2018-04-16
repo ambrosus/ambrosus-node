@@ -1,6 +1,6 @@
 import chai from 'chai';
 import httpMocks from 'node-mocks-http';
-import sinon, {spy} from 'sinon';
+import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import {AuthenticationError, InvalidParametersError} from '../../src/errors/errors';
 import accessTokenMiddleware from '../../src/middlewares/access_token_middleware';
@@ -29,7 +29,7 @@ describe('Access token middleware', () => {
 
   beforeEach(() => {
     token = tokenAuthenticator.generateToken(pkPair.secret, now + 1);
-    next = spy();
+    next = sinon.spy();
     mockTokenAuthenticator = {
       decodeToken: sinon.stub()
     };

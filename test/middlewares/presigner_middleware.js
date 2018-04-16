@@ -1,6 +1,6 @@
 import chai from 'chai';
 import httpMocks from 'node-mocks-http';
-import sinon, {spy} from 'sinon';
+import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import {InvalidParametersError} from '../../src/errors/errors';
 import presignerMiddleware from '../../src/middlewares/presigner_middleware';
@@ -26,7 +26,7 @@ describe('Presigner middleware', () => {
   let next;
 
   beforeEach(async () => {
-    next = spy();
+    next = sinon.spy();
     mockIdentityManager = {
       sign: sinon.stub()
     };

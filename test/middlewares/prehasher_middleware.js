@@ -1,6 +1,6 @@
 import chai from 'chai';
 import httpMocks from 'node-mocks-http';
-import sinon, {spy} from 'sinon';
+import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import {InvalidParametersError} from '../../src/errors/errors';
 import prehasherMiddleware from '../../src/middlewares/prehasher_middleware';
@@ -25,7 +25,7 @@ describe('Prehasher middleware', () => {
   let next;
 
   beforeEach(async () => {
-    next = spy();
+    next = sinon.spy();
     mockIdentityManager = {
       calculateHash: sinon.stub()
     };
