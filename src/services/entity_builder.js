@@ -111,6 +111,10 @@ export default class EntityBuilder {
 
   validateAndCastFindEventsParams(params) {
     const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage', 'createdBy', 'location', 'entry'];
+    if (params.entry !== undefined) {
+      this.ensureEntryParamsValuesNotObjects(params.entry);
+    }
+    
     const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
     if (invalidFields.length > 0) {
       throw new InvalidParametersError(`Some parameters (${invalidFields.join(',')}) are not supported`);
@@ -122,5 +126,13 @@ export default class EntityBuilder {
     params.perPage = validateIntegerParameterAndCast(params.perPage, 'perPage');
 
     return {...params, ...this.parseLocationQuery(params.location)};
+  }
+  ensureEntryParamsValuesNotObjects(entries) {
+    const keys = Object.keys(entries);
+    keys.forEach((key) => {
+      if (typeof entries[key] === 'object') {
+        throw new InvalidParametersError('Entry parameters should not be array or object type');
+      }
+    });
   }
 }

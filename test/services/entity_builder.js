@@ -343,9 +343,9 @@ describe('Entity Builder', () => {
       });
 
       it('handles query by entry validation with nested arguments', () => {
-        const params = {entry: {acceleration: {valueX: '1'}}};
+        const params = {entry: {'acceleration.valueX': '1'}};
         const validatedParams = entityBuilder.validateAndCastFindEventsParams(params);
-        expect(validatedParams.entry.acceleration.valueX).to.equal('1');
+        expect(validatedParams.entry['acceleration.valueX']).to.equal('1');
       });
 
       it('throws if unsupported by entry syntax (object)', () => {
