@@ -23,6 +23,7 @@ const deepMapObject = (input, transformFunc) => Object.keys(input).reduce(
 const applyDecorators = (input, decorators) => deepMapObject(
   input,
   (value) => {
+    // searches for and splits a string of the form `decorator(parameter)`
     const extractDecoratorRegex = /^([^(\s]*)\((.+)\)$/gi;
     const regexResult = extractDecoratorRegex.exec(value);
     if (regexResult) {
