@@ -111,8 +111,8 @@ export default class EntityBuilder {
 
   validateAndCastFindEventsParams(params) {
     const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage', 'createdBy', 'location', 'entry'];
-    if (typeof params.entry !== 'undefined') {
-      this.validateEntryParamsValues(params.entry);
+    if (params.entry !== undefined) {
+      this.ensureEntryParamsValuesNotObjects(params.entry);
     }
     
     const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
@@ -127,7 +127,7 @@ export default class EntityBuilder {
 
     return {...params, ...this.parseLocationQuery(params.location)};
   }
-  validateEntryParamsValues(entries) {
+  ensureEntryParamsValuesNotObjects(entries) {
     const keys = Object.keys(entries);
     keys.forEach((key) => {
       if (typeof entries[key] === 'object') {
