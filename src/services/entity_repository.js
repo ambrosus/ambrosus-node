@@ -59,11 +59,11 @@ export default class EntityRepository {
 
   getConfigurationForFindEventsByEntry(params, accessLevel) {
     let queryParts = [];
-    if (params.entry) {
+    if (params.data) {
       queryParts = this.addDataAccessLevelLimitationIfNeeded(queryParts, accessLevel);
     }
-    for (const key in params.entry) {
-      const queryPart = {'content.data.entries': {$elemMatch: {[key]: params.entry[key]}}};
+    for (const key in params.data) {
+      const queryPart = {'content.data': {$elemMatch: {[key]: params.data[key]}}};
       queryParts = this.addToQuery(queryParts, queryPart);
     }
     return queryParts;
@@ -83,10 +83,10 @@ export default class EntityRepository {
     if (params.toTimestamp) {
       queryParts = this.addToQuery(queryParts, {'content.idData.timestamp': {$lte: params.toTimestamp}});
     }
-    if (params.locationAsAsset) {
-      queryParts = this.addDataAccessLevelLimitationIfNeeded(queryParts, accessLevel);
-      queryParts = this.addToQuery(queryParts, {'content.data.location.asset': params.locationAsAsset}, accessLevel);
-    }
+    // if (params.locationAsAsset) {
+    //   queryParts = this.addDataAccessLevelLimitationIfNeeded(queryParts, accessLevel);
+    //   queryParts = this.addToQuery(queryParts, {'content.data.location.asset': params.locationAsAsset}, accessLevel);
+    // }
 
     const pageSize = params.perPage || 100;
     const pageNumber = params.page || 0;

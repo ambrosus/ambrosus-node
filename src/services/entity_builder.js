@@ -5,8 +5,11 @@ import {
 import JsonSchemaValidator from '../validators/json_schema_validator';
 import EventEntryValidator from '../validators/event_entry_validator.js';
 import eventContentSchema from '../validators/schemas/event';
-import deliveredSchema from '../../src/validators/schemas/custom/com.ambrosus.delivered.json';
-import scanSchema from '../../src/validators/schemas/custom/com.ambrosus.scan.json';
+import deliveredSchema from '../validators/schemas/custom/ambrosus.event.delivered.json';
+import scanSchema from '../validators/schemas/custom/ambrosus.event.scan.json';
+import indentifiersSchema from '../validators/schemas/custom/ambrosus.event.identifiers.json';
+import locationSchema from '../validators/schemas/custom/ambrosus.event.location.json';
+import locationGeoSchema from '../validators/schemas/custom/ambrosus.event.location_geo.json';
 import {put, pick} from '../utils/dict_utils';
 import {InvalidParametersError} from '../errors/errors';
 
@@ -14,8 +17,11 @@ export default class EntityBuilder {
   constructor(identityManager) {
     this.eventValidators = [
       new JsonSchemaValidator(eventContentSchema),
-      new EventEntryValidator('com.ambrosus.delivered', new JsonSchemaValidator(deliveredSchema)),
-      new EventEntryValidator('com.ambrosus.scan', new JsonSchemaValidator(scanSchema))
+      new EventEntryValidator('ambrosus.event.delivered', new JsonSchemaValidator(deliveredSchema)),
+      new EventEntryValidator('ambrosus.event.scan', new JsonSchemaValidator(scanSchema)),
+      new EventEntryValidator('ambrosus.event.identifiers', new JsonSchemaValidator(indentifiersSchema)),
+      new EventEntryValidator('ambrosus.event.location', new JsonSchemaValidator(locationSchema)),
+      new EventEntryValidator('ambrosus.event.location_geo', new JsonSchemaValidator(locationGeoSchema))
     ];
     this.identityManager = identityManager;
   }
@@ -110,9 +116,9 @@ export default class EntityBuilder {
   }
 
   validateAndCastFindEventsParams(params) {
-    const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage', 'createdBy', 'location', 'entry'];
-    if (params.entry !== undefined) {
-      this.ensureEntryParamsValuesNotObjects(params.entry);
+    const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage', 'createdBy', 'data'];
+    if (params.data !== undefined) {
+      this.ensureEntryParamsValuesNotObjects(params.data);
     }
     
     const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
