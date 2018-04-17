@@ -3,7 +3,7 @@ import EventEntryValidator from '../../src/validators/event_entry_validator.js';
 import JsonSchemaValidator from '../../src/validators/json_schema_validator';
 import deliveredSchema from '../../src/validators/schemas/custom/ambrosus.event.delivered.json';
 import identifiersSchema from '../../src/validators/schemas/custom/ambrosus.event.identifiers.json';
-import locationSchema from '../../src/validators/schemas/custom/ambrosus.event.location.json';
+import locationSchema from '../../src/validators/schemas/custom/ambrosus.event.location.asset.json';
 import locationGeoSchema from '../../src/validators/schemas/custom/ambrosus.event.location.geo.json';
 import scanSchema from '../../src/validators/schemas/custom/ambrosus.event.scan.json';
 
@@ -146,36 +146,36 @@ describe('EventEntryValidator', () => {
     });
   });
 
-  describe('ambrosus.event.location', () => {
+  describe('ambrosus.event.location.asset', () => {
     let locationValidator;
 
     before(() => {
-      locationValidator = new EventEntryValidator('ambrosus.event.location', new JsonSchemaValidator(locationSchema));
+      locationValidator = new EventEntryValidator('ambrosus.event.location.asset', new JsonSchemaValidator(locationSchema));
     });
 
     it('should accept if valid entry', async () => {
       const event = createEventWithEntries([
-        {type: 'ambrosus.event.location', asset: '0x63d31688ddb1b82b57d4bc1c58a0761d6f3cde0fe2a936d4b9d1403c6f6ab625'}
+        {type: 'ambrosus.event.location.asset', asset: '0x63d31688ddb1b82b57d4bc1c58a0761d6f3cde0fe2a936d4b9d1403c6f6ab625'}
       ]);
       expect(() => locationValidator.validate(event)).to.not.throw();
     });
 
     it('should throw if no asset provided', async () => {
       const event = createEventWithEntries([
-        {type: 'ambrosus.event.location'}
+        {type: 'ambrosus.event.location.asset'}
       ]);
       expect(() => locationValidator.validate(event)).to.throw(JsonValidationError);
     });
 
     it('should throw if no asset format does not match', async () => {
       const nonHexCharacters = createEventWithEntries([
-        {type: 'ambrosus.event.location', asset: '0x63d31688ddb1b82b57d4bc1c58a0761d6f3cde0fe2a936d4b9d1403c6f6ab6zz'}
+        {type: 'ambrosus.event.location.asset', asset: '0x63d31688ddb1b82b57d4bc1c58a0761d6f3cde0fe2a936d4b9d1403c6f6ab6zz'}
       ]);
       const toShort = createEventWithEntries([
-        {type: 'ambrosus.event.location', asset: '0x63d31688ddb1b82b57d4bc1c58a0761d6f3cde0fe2a936d4b9d1403c6f6ab6'}
+        {type: 'ambrosus.event.location.asset', asset: '0x63d31688ddb1b82b57d4bc1c58a0761d6f3cde0fe2a936d4b9d1403c6f6ab6'}
       ]);
       const toLong = createEventWithEntries([
-        {type: 'ambrosus.event.location', asset: '0x63d31688ddb1b82b57d4bc1c58a0761d6f3cde0fe2a936d4b9d1403c6f6ab6123'}
+        {type: 'ambrosus.event.location.asset', asset: '0x63d31688ddb1b82b57d4bc1c58a0761d6f3cde0fe2a936d4b9d1403c6f6ab6123'}
       ]);
 
       expect(() => locationValidator.validate(nonHexCharacters)).to.throw(JsonValidationError);
