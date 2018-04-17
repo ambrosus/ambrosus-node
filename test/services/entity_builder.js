@@ -111,7 +111,7 @@ describe('Entity Builder', () => {
           'ambrosus.event.delivered',
           'ambrosus.event.scan',
           'ambrosus.event.identifiers',
-          'ambrosus.event.location',
+          'ambrosus.event.location.asset',
           'ambrosus.event.location.geo'];
         expect(entityBuilder.eventValidators
           .map((validator) => validator.type)

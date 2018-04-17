@@ -8,7 +8,7 @@ import eventContentSchema from '../validators/schemas/event';
 import deliveredSchema from '../validators/schemas/custom/ambrosus.event.delivered.json';
 import scanSchema from '../validators/schemas/custom/ambrosus.event.scan.json';
 import indentifiersSchema from '../validators/schemas/custom/ambrosus.event.identifiers.json';
-import locationSchema from '../validators/schemas/custom/ambrosus.event.location.json';
+import locationSchema from '../validators/schemas/custom/ambrosus.event.location.asset.json';
 import locationGeoSchema from '../validators/schemas/custom/ambrosus.event.location.geo.json';
 import {put, pick} from '../utils/dict_utils';
 import {InvalidParametersError} from '../errors/errors';
@@ -20,7 +20,7 @@ export default class EntityBuilder {
       new EventEntryValidator('ambrosus.event.delivered', new JsonSchemaValidator(deliveredSchema)),
       new EventEntryValidator('ambrosus.event.scan', new JsonSchemaValidator(scanSchema)),
       new EventEntryValidator('ambrosus.event.identifiers', new JsonSchemaValidator(indentifiersSchema)),
-      new EventEntryValidator('ambrosus.event.location', new JsonSchemaValidator(locationSchema)),
+      new EventEntryValidator('ambrosus.event.location.asset', new JsonSchemaValidator(locationSchema)),
       new EventEntryValidator('ambrosus.event.location.geo', new JsonSchemaValidator(locationGeoSchema))
     ];
     this.identityManager = identityManager;

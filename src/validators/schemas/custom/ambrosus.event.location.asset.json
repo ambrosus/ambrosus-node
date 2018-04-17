@@ -1,12 +1,12 @@
 {
-  "title": "ambrosus..asset",
+  "title": "ambrosus.event.location.asset",
   "description": "Location inside another asset",
   "type": "object",
   "properties": {
     "type": {
       "description": "Event entry type",
       "type": "string",
-      "const": "ambrosus.event.location"
+      "const": "ambrosus.event.location.asset"
     },
     "asset": {
       "type": "string",
