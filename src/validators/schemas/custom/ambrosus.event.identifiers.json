@@ -1,0 +1,20 @@
+{
+  "title": "ambrosus.event.identifiers",
+  "description": "Known identifiers for an event",
+  "type": "object",
+  "properties": {
+    "type": {
+      "description": "Event entry type",
+      "type": "string",
+      "const": "ambrosus.event.identifiers"
+    }
+  },
+  "required": ["type"],
+  "uniqueItems": true,
+  "minProperties": 2,
+  "additionalProperties": {
+    "type": "array",
+    "minItems": 1,
+    "uniqueItems": true
+  }
+}

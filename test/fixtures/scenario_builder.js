@@ -52,7 +52,7 @@ class ScenarioBuilder {
     return processedAsset;
   }
 
-  async addEvent(accountInx = 0, subjectInx = 0, fields = {}, data = {}) {
+  async addEvent(accountInx = 0, subjectInx = 0, fields = {}, data = [{type: 'ambrosus.event.example'}]) {
     const account = this.accounts[accountInx];
     const event = createFullEvent(
       this.identityManager,
@@ -63,7 +63,6 @@ class ScenarioBuilder {
       },
       data,
       account.secret);
-
     const processedEvent = await this.processor.onAddEvent(event);
     this.events.push(processedEvent);
     return processedEvent;

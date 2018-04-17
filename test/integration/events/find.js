@@ -34,7 +34,7 @@ describe('Events Integrations: Find', () => {
         accountInx: inx % 4 === 0 ? 1 : 0,
         subjectInx: inx % 3 === 0 ? 1 : 0,
         fields: {timestamp: inx, accessLevel: inx % 10},
-        data: {}
+        data: [{type: '1'}]
       })
     );
   });

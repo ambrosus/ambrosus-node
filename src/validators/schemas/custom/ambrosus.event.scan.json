@@ -1,11 +1,11 @@
 {
-  "title": "com.ambrosus.scan",
+  "title": "ambrosus.event.scan",
   "type": "object",
   "properties": {
     "type": {
       "description": "Event entry type",
       "type": "string",
-      "const": "com.ambrosus.scan"
+      "const": "ambrosus.event.scan"
     },
     "value": {
       "description": "Value scanned",
