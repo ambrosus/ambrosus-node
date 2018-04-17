@@ -9,7 +9,7 @@ import deliveredSchema from '../validators/schemas/custom/ambrosus.event.deliver
 import scanSchema from '../validators/schemas/custom/ambrosus.event.scan.json';
 import indentifiersSchema from '../validators/schemas/custom/ambrosus.event.identifiers.json';
 import locationSchema from '../validators/schemas/custom/ambrosus.event.location.json';
-import locationGeoSchema from '../validators/schemas/custom/ambrosus.event.location_geo.json';
+import locationGeoSchema from '../validators/schemas/custom/ambrosus.event.location.geo.json';
 import {put, pick} from '../utils/dict_utils';
 import {InvalidParametersError} from '../errors/errors';
 
@@ -21,7 +21,7 @@ export default class EntityBuilder {
       new EventEntryValidator('ambrosus.event.scan', new JsonSchemaValidator(scanSchema)),
       new EventEntryValidator('ambrosus.event.identifiers', new JsonSchemaValidator(indentifiersSchema)),
       new EventEntryValidator('ambrosus.event.location', new JsonSchemaValidator(locationSchema)),
-      new EventEntryValidator('ambrosus.event.location_geo', new JsonSchemaValidator(locationGeoSchema))
+      new EventEntryValidator('ambrosus.event.location.geo', new JsonSchemaValidator(locationGeoSchema))
     ];
     this.identityManager = identityManager;
   }
@@ -103,18 +103,6 @@ export default class EntityBuilder {
     };
   }
 
-  parseLocationQuery(queryString) {
-    if (!queryString) {
-      return {};
-    }
-    const extractValueRegex = /^asset\((0x[\dA-F]{64})\)$/gi;
-    const parseResult = extractValueRegex.exec(queryString);
-    if (!parseResult) {
-      throw new InvalidParametersError('Location query must be of format `asset(0x...)`');
-    }
-    return {locationAsAsset: parseResult[1]};
-  }
-
   validateAndCastFindEventsParams(params) {
     const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage', 'createdBy', 'data'];
     if (params.data !== undefined) {
@@ -131,7 +119,7 @@ export default class EntityBuilder {
     params.page = validateIntegerParameterAndCast(params.page, 'page');
     params.perPage = validateIntegerParameterAndCast(params.perPage, 'perPage');
 
-    return {...params, ...this.parseLocationQuery(params.location)};
+    return {...params};
   }
   ensureEntryParamsValuesNotObjects(entries) {
     const keys = Object.keys(entries);

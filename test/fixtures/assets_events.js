@@ -53,16 +53,16 @@ export const addEventId = (identityManager, event) => addHash(identityManager, e
 export const addEntriesHashToBundle = (identityManager, bundle) => addHash(identityManager, bundle, 'content.entries', 'content.idData.entriesHash');
 export const addBundleId = (identityManager, bundle) => addHash(identityManager, bundle, 'content', 'bundleId');
 
-export const createFullAsset = (identityManager, fields = {}, secret = pkPair.secret) =>
+export const createFullAsset = (identityManager, idDataFields = {}, secret = pkPair.secret) =>
   addAssetId(
     identityManager,
     addSignature(
       identityManager,
-      createAsset(fields),
+      createAsset(idDataFields),
       secret)
   );
 
-export const createFullEvent = (identityManager, fields = {}, data, secret = pkPair.secret) =>
+export const createFullEvent = (identityManager, idDataFields = {}, data = [{type: 'ambrosus.event.example'}], secret = pkPair.secret) =>
   addEventId(
     identityManager,
     addSignature(
@@ -70,13 +70,13 @@ export const createFullEvent = (identityManager, fields = {}, data, secret = pkP
       addDataHashToEvent(
         identityManager,
         createEvent(
-          fields,
+          idDataFields,
           data
         )
       ),
       secret));
 
-export const createFullBundle = (identityManager, fields = {}, entries = [], secret = pkPair.secret) =>
+export const createFullBundle = (identityManager, idDataFields = {}, entries = [], secret = pkPair.secret) =>
   addBundleId(
     identityManager,
     addSignature(
@@ -84,7 +84,7 @@ export const createFullBundle = (identityManager, fields = {}, entries = [], sec
       addEntriesHashToBundle(
         identityManager,
         createBundle(
-          fields,
+          idDataFields,
           entries
         )
       ),

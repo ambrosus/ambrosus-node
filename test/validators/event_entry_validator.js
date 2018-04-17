@@ -4,7 +4,7 @@ import JsonSchemaValidator from '../../src/validators/json_schema_validator';
 import deliveredSchema from '../../src/validators/schemas/custom/ambrosus.event.delivered.json';
 import identifiersSchema from '../../src/validators/schemas/custom/ambrosus.event.identifiers.json';
 import locationSchema from '../../src/validators/schemas/custom/ambrosus.event.location.json';
-import locationGeoSchema from '../../src/validators/schemas/custom/ambrosus.event.location_geo.json';
+import locationGeoSchema from '../../src/validators/schemas/custom/ambrosus.event.location.geo.json';
 import scanSchema from '../../src/validators/schemas/custom/ambrosus.event.scan.json';
 
 import chai from 'chai';
@@ -184,27 +184,27 @@ describe('EventEntryValidator', () => {
     });
   });
 
-  describe('ambrosus.event.location_geo', () => {
+  describe('ambrosus.event.location.geo', () => {
     let locationGeoValidator;
 
     before(() => {
-      locationGeoValidator = new EventEntryValidator('ambrosus.event.location_geo',
+      locationGeoValidator = new EventEntryValidator('ambrosus.event.location.geo',
         new JsonSchemaValidator(locationGeoSchema));
     });
 
     it('should accept if valid entry', async () => {
       const event = createEventWithEntries([
-        {type: 'ambrosus.event.location_geo', longitude: -100, latitude: 80}
+        {type: 'ambrosus.event.location.geo', longitude: -100, latitude: 80}
       ]);
       expect(() => locationGeoValidator.validate(event)).to.not.throw();
     });
 
     it('should throw if no long/lat', async () => {
       const noLong = createEventWithEntries([
-        {type: 'ambrosus.event.location_geo', latitude: 80}
+        {type: 'ambrosus.event.location.geo', latitude: 80}
       ]);
       const noLat = createEventWithEntries([
-        {type: 'ambrosus.event.location_geo', longitude: -100}
+        {type: 'ambrosus.event.location.geo', longitude: -100}
       ]);
 
       expect(() => locationGeoValidator.validate(noLong)).to.throw(JsonValidationError);
@@ -213,16 +213,16 @@ describe('EventEntryValidator', () => {
 
     it('should throw if lon/lat overflow', async () => {
       const lonToBig = createEventWithEntries([
-        {type: 'ambrosus.event.location_geo', longitude: 181, latitude: 0}
+        {type: 'ambrosus.event.location.geo', longitude: 181, latitude: 0}
       ]);
       const lonToSmall = createEventWithEntries([
-        {type: 'ambrosus.event.location_geo', longitude: -181, latitude: 0}
+        {type: 'ambrosus.event.location.geo', longitude: -181, latitude: 0}
       ]);
       const latToBig = createEventWithEntries([
-        {type: 'ambrosus.event.location_geo', longitude: 0, latitude: 91}
+        {type: 'ambrosus.event.location.geo', longitude: 0, latitude: 91}
       ]);
       const latToSmall = createEventWithEntries([
-        {type: 'ambrosus.event.location_geo', longitude: 0, latitude: -91}
+        {type: 'ambrosus.event.location.geo', longitude: 0, latitude: -91}
       ]);
 
       expect(() => locationGeoValidator.validate(lonToBig)).to.throw(JsonValidationError);

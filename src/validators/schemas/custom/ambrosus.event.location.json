@@ -1,5 +1,5 @@
 {
-  "title": "ambrosus.event.location",
+  "title": "ambrosus..asset",
   "description": "Location inside another asset",
   "type": "object",
   "properties": {
