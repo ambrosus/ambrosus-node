@@ -83,10 +83,6 @@ export default class EntityRepository {
     if (params.toTimestamp) {
       queryParts = this.addToQuery(queryParts, {'content.idData.timestamp': {$lte: params.toTimestamp}});
     }
-    // if (params.locationAsAsset) {
-    //   queryParts = this.addDataAccessLevelLimitationIfNeeded(queryParts, accessLevel);
-    //   queryParts = this.addToQuery(queryParts, {'content.data.location.asset': params.locationAsAsset}, accessLevel);
-    // }
 
     const pageSize = params.perPage || 100;
     const pageNumber = params.page || 0;

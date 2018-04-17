@@ -260,16 +260,6 @@ describe('Entity Repository', () => {
         expect(ret.results[1]).to.deep.equal(eventsSet[3]);
         ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(1, 4));
       });
-
-      xdescribe('search in data field', () => {
-        it('search by location(asset)', async () => {
-          const targetAssetId = scenario.assets[0].assetId;
-          const ret = await expect(storage.findEvents({locationAsAsset: targetAssetId}, 1)).to.be.fulfilled;
-          expect(ret.results).have.lengthOf(3);
-          expect(ret.resultCount).to.equal(3);
-          expect(ret.results).to.deep.equal([eventsSet[6], eventsSet[4], eventsSet[0]]);
-        });
-      });
     });
   });
 

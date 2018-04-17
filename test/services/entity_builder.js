@@ -112,7 +112,7 @@ describe('Entity Builder', () => {
           'ambrosus.event.scan',
           'ambrosus.event.identifiers',
           'ambrosus.event.location',
-          'ambrosus.event.location_geo'];
+          'ambrosus.event.location.geo'];
         expect(entityBuilder.eventValidators
           .map((validator) => validator.type)
           .filter((type) => type !== undefined)
@@ -122,7 +122,7 @@ describe('Entity Builder', () => {
 
       it('throws ValidationError if event not passing event format validation', () => {
         const brokenEvent = put(exampleEvent, 'content.data',
-          [...exampleEvent.content.data, {type: 'ambrosus.event.location_geo', latitude: 91}]);
+          [...exampleEvent.content.data, {type: 'ambrosus.event.location.geo', latitude: 91}]);
         expect(() => entityBuilder.validateEvent(brokenEvent))
           .to.throw(JsonValidationError)
           .and.have.nested.property('errors[0].dataPath', '.latitude');
@@ -316,7 +316,6 @@ describe('Entity Builder', () => {
 
   describe('Validating query parameters', () => {
     let entityBuilder;
-    const exampleAssetId = `0xbdaacf42a48710b97d115d521fdf01cdb9d8ba5e66d806cc45d1000231292ce7`;
     const validParamsAsStrings = {assetId: '0x1234', fromTimestamp: '10', toTimestamp: '20', page: '2', perPage: '4', createdBy: '0x4321'};
 
     before(() => {
@@ -399,27 +398,6 @@ describe('Entity Builder', () => {
     it('throws if perPage value not in valid type', () => {
       const params = put(validParamsAsStrings, 'perPage', 'NaN');
       expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
-    });
-
-    xdescribe('parsing location query', () => {
-      it('extracts assetId from query', async () => {
-        expect(entityBuilder.parseLocationQuery(validParamsAsStrings.location))
-          .to.deep.equal({locationAsAsset: exampleAssetId});
-      });
-
-      it('throws if invalid location search query', async () => {
-        expect(() => entityBuilder.parseLocationQuery('wrongparam(0x0)', 1))
-          .to.throw(InvalidParametersError);
-      });
-
-      it('throws if assetId has wrong format', async () => {
-        expect(() => entityBuilder.parseLocationQuery('asset(0x0000)', 1))
-          .to.throw(InvalidParametersError);
-        expect(() => entityBuilder.parseLocationQuery(`asset(0x${'z'.repeat(64)}`, 1))
-          .to.throw(InvalidParametersError);
-        expect(() => entityBuilder.parseLocationQuery(`asset(${'0'.repeat(64)}`, 1))
-          .to.throw(InvalidParametersError);
-      });
     });
   });
 });
