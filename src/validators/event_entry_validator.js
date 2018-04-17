@@ -8,10 +8,10 @@ export default class EventEntryValidator extends Validator {
   }
 
   validate(event) {
-    if (!event.data.entries) {
+    if (!event.data) {
       return true;
     }
-    event.data.entries
+    event.data
       .filter((entry) => entry.type === this.type)
       .forEach((entry) => this.validator.validate(entry));
   }

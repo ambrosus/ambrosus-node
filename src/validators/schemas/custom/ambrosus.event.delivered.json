@@ -1,11 +1,11 @@
 {
-  "title": "com.ambrosus.delivered",
+  "title": "ambrosus.event.delivered",
   "type": "object",
   "properties": {
     "type": {
       "description": "Event entry type",
       "type": "string",
-      "const": "com.ambrosus.delivered"
+      "const": "ambrosus.event.delivered"
     },
     "confirmationAddress": {
       "description": "Address of a person or device confirming delivery",

@@ -36,7 +36,7 @@ describe('Events Integrations: Create', () => {
     event = createFullEvent(apparatus.identityManager, {
       createdBy: adminAccount.address,
       assetId: asset.assetId
-    }, {}, adminAccount.secret);
+    }, undefined, adminAccount.secret);
   });
 
   it('works with valid input (client signed)', async () => {
@@ -83,7 +83,7 @@ describe('Events Integrations: Create', () => {
   it('returns 403 for authorisation error (user does not exist)', async () => {
     const failingEvent = createFullEvent(apparatus.identityManager,
       {createdBy: notRegisteredAccount.address, assetId: asset.assetId},
-      {},
+      undefined,
       notRegisteredAccount.secret);
 
     const request = apparatus.request()
@@ -100,7 +100,7 @@ describe('Events Integrations: Create', () => {
       {
         createdBy: otherAccount.address,
         assetId: asset.assetId
-      }, {}, otherAccount.secret);
+      }, undefined, otherAccount.secret);
 
     const request = apparatus.request()
       .post(`/assets/${asset.assetId}/events`)

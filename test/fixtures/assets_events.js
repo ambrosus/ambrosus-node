@@ -23,10 +23,7 @@ export const createEvent = (fields, data) => ({
       accessLevel: 0,
       ...fields
     },
-    data: {
-      entries: [{type: '1'}],
-      ...data
-    }
+    data: data || [{type: '1'}]
   }
 });
 
@@ -65,7 +62,7 @@ export const createFullAsset = (identityManager, fields = {}, secret = pkPair.se
       secret)
   );
 
-export const createFullEvent = (identityManager, fields = {}, data = {}, secret = pkPair.secret) =>
+export const createFullEvent = (identityManager, fields = {}, data, secret = pkPair.secret) =>
   addEventId(
     identityManager,
     addSignature(

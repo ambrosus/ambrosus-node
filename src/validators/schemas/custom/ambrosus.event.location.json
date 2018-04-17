@@ -1,0 +1,17 @@
+{
+  "title": "ambrosus.event.location",
+  "description": "Location inside another asset",
+  "type": "object",
+  "properties": {
+    "type": {
+      "description": "Event entry type",
+      "type": "string",
+      "const": "ambrosus.event.location"
+    },
+    "asset": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{64}$"
+    }
+  },
+  "required": ["type", "asset"]
+}
