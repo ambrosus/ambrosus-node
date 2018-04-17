@@ -479,6 +479,20 @@ Finds asset with provided assetId in the system.
 
 Places (after intensive validations) the provided event object into the system.
 
+##### Events Data field
+
+Every event has a `data` array, located at `content` with information what actually happened.
+Each item if the array is an object with a required `type` field of `string` type.
+Following event types are predefined:
+* `ambrosus.location.delivered` - invoked when the asset is delivered, has following required fields:
+    * `confirmationAddress` - Address of a person or device confirming delivery
+    * `confirmationSignature` - Signature by a person or device confirming delivery
+* `ambrosus.event.scan` - invoked when any measurement on the event has occured, has following required fields:
+    * `value`: Value scanned
+* `ambrosus.event.identifiers` - Known identifiers for an event, must have at least 1 property of type `array`
+* `ambrosus.event.location.asset` - Location inside another asset, required are:
+    * `asset`: id of the other asset where event's subject is located
+
 + Parameters
 
     + assetId: "0xc5cfd04.....30755ed65" (string, required) - ID of an asset
@@ -499,12 +513,7 @@ Places (after intensive validations) the provided event object into the system.
                 + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the event creator.
                 + accessLevel: 4 (number) - The access level of the event. Should be a non-negative integer.
                 + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
-            + data (object) - Private information about an event.
-                + identifiers (object) - Known event identifiers as a map of identifier type to array of values.
-                + location (object) - location associated with the event.
-                    + longitude: 37.7749 (number) - Longitude of the location.
-                    + latitude: 122.4194 (number) - Latitude of the location.
-                + entries (array) - Array of custom entries (this field is required and have to contain at least one entry)
+            + data (array) - Private information about an event.
 
     + Body
 
@@ -519,19 +528,13 @@ Places (after intensive validations) the provided event object into the system.
                         "timestamp": 1503424923,
                         "dataHash": "0x01cd181cd38eb5bbd162a44701727a31f457a538"
                     },
-                    "data": {
-                        "identifiers": {"someEventIdentifier": ["21938012983"]},
-                         "location": {
-                            "longitude": -122.4194,
-                            "latitude": 37.7749
-                          },
-                          "entries": [
-                            {
-                              "type": "ambrosus.event.customevent",
-                              "customField": "customValue"
-                            }
-                          ]
-                    }
+                    "data": [
+                        {
+                          "type": "ambrosus.event.customevent",
+                          "customField": "customValue"
+                        }
+                    ]
+
                 }
             }
 
@@ -583,7 +586,7 @@ Places (after intensive validations) the provided event object into the system.
                       }
                     },
                     "data": {
-                      "type": "object"
+                      "type": "array"
                     }
                   }
                 }
@@ -607,19 +610,12 @@ Places (after intensive validations) the provided event object into the system.
                         "timestamp": 1503424923,
                         "dataHash": "0x01cd181cd38eb5bbd162a44701727a31f457a538"
                     },
-                    "data": {
-                        "identifiers": {"someEventIdentifier": ["21938012983"]},
-                         "location": {
-                            "longitude": -122.4194,
-                            "latitude": 37.7749
-                          },
-                          "entries": [
-                            {
-                              "type": "ambrosus.event.customevent",
-                              "customField": "customValue"
-                            }
-                          ]
-                    }
+                    "data": [
+                      {
+                        "type": "ambrosus.event.customevent",
+                        "customField": "customValue"
+                      }
+                    ]
                 }
             }
 
@@ -645,7 +641,7 @@ Fetches an event by identifier
 + Parameters
 
     + assetId (string, required) - ID of an asset
-    
+
     + eventId (string, required) - ID of an event
 
 + Response 200 (application/json)
@@ -661,12 +657,7 @@ Fetches an event by identifier
                 + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the event creator.
                 + accessLevel: 4 (number) - The access level of the event. If the user's access level if lower than event's, the data field will not be returned.
                 + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
-            + data (object) - Private information about an event.
-                + identifiers (object) - Known event identifiers as a map of identifier type to array of values.
-                + location (object) - location associated with the event.
-                    + longitude: 37.7749 (number) - Longitude of the location.
-                    + latitude: 122.4194 (number) - Latitude of the location. 
-                + entries (array) - Array of custom entries as objects (this field is required and have to contain at least one entry).
+            + data (array) - Array of custom entries as objects (this field is required and have to contain at least one entry).
 
     + Body
 
@@ -681,19 +672,12 @@ Fetches an event by identifier
                         "timestamp": 1503424923,
                         "dataHash": "0x01cd181cd38eb5bbd162a44701727a31f457a538"
                     },
-                    "data": {
-                        "identifiers": {"someEventIdentifier": ["21938012983"]},
-                         "location": {
-                            "longitude": -122.4194,
-                            "latitude": 37.7749
-                          },
-                          "entries": [
-                            {
-                              "type": "ambrosus.event.customevent",
-                              "customField": "customValue"
-                            }
-                          ]
-                    }
+                    "data": [
+                      {
+                        "type": "ambrosus.event.customevent",
+                        "customField": "customValue"
+                      }
+                    ]
                 }
             }
 
@@ -702,8 +686,8 @@ Fetches an event by identifier
     Event not found
 
     + Body
-    
-### /events{?assetId,fromTimestamp,toTimestamp,perPage,page,createdBy,entry}
+
+### /events{?assetId,fromTimestamp,toTimestamp,perPage,page,createdBy,data}
 
 #### Find events [GET]
 
@@ -717,8 +701,7 @@ Finds event satisfying provided cryteria.
     + perPage : 150 (integer, optional) - number of events to return per page
     + page : 20 (integer, optional) - number of page (more search results than specified in perPage parameter concludes more than one page)
     + createdBy : 0xc5cfd04.....30755ed65 (string, optional) - address of account that created targeting events
-    + entry : entry[type]='ambrosus.event.custom' (object, optional) - This syntax allows to query for events by any fields in data.entires array. Query for nested fields are possible, e.g. entry[acceleration.x]='10'. Note: Only string types are currently supported.
-
+    + data : data[type]=ambrosus.event.custom (object, optional) - This syntax allows to query for events by any fields in data.entires array. Query for nested fields are possible, e.g. data[acceleration.x]=10. By default the type of the value is string. To provide a number, use data[acceleration.x]=number(10)
 + Response 200 (application/json)
 
     The requested event
@@ -734,13 +717,8 @@ Finds event satisfying provided cryteria.
                         + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the event creator.
                         + accessLevel: 4 (number) - The access level of the event. If the user's access level if lower than event's, the data field will not be returned.
                         + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
-                    + data (object) - Private information about an event.
-                        + identifiers (object) - Known event identifiers as a map of identifier type to array of values.                       
-                        + location (object) - location associated with the event.
-                            + longitude: 37.7749 (number) - Longitude of the location.
-                            + latitude: 122.4194 (number) - Latitude of the location.
-                        + entries (array) - Array of custom entries as objects (this field is required and have to contain at least one entry). 
-                        
+                    + data (array) - Array of custom entries as objects (this field is required and have to contain at least one entry).
+
         + resultCount: 112 (number) - Total number of events matching provided criterias.
 
     + Body
@@ -757,19 +735,13 @@ Finds event satisfying provided cryteria.
                                 "timestamp": 1503424923,
                                 "dataHash": "0x01cd181cd38eb5bbd162a44701727a31f457a538"
                             },
-                            "data": {
-                                "identifiers": {"someEventIdentifier": ["21938012983"]},
-                                 "location": {
-                                    "longitude": -122.4194,
-                                    "latitude": 37.7749
-                                  },
-                                  "entries": [
-                                    {
-                                      "type": "ambrosus.event.customevent",
-                                      "customField": "customValue"
-                                    }
-                                  ]
-                            }
+                            "data": [
+                              {
+                                "type": "ambrosus.event.customevent",
+                                "customField": "customValue"
+                              }
+                            ]
+
                         }
                     }
                 ],

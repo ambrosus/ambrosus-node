@@ -313,7 +313,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"content\": {\n        \"idData\": {\n            \"assetId\": \"{{assetId}}\",\n            \"createdBy\": \"{{userAddress}}\",\n            \"accessLevel\": 4,\n            \"timestamp\": 1503424923\n        },\n        \"data\": {\n\t\t\t\"entries\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"demo.entrytype\",\n\t\t\t\t\t\"value\": \"some value\" \n\t\t\t\t}\n\t\t\t]\n        }\n    }\n}"
+					"raw": "{\n    \"content\": {\n        \"idData\": {\n            \"assetId\": \"{{assetId}}\",\n            \"createdBy\": \"{{userAddress}}\",\n            \"accessLevel\": 4,\n            \"timestamp\": 1503424923\n        },\n        \"data\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"demo.entrytype\",\n\t\t\t\t\t\"value\": \"some value\" \n\t\t\t\t}\n\t\t\t]\n    }\n}"
 				},
 				"url": {
 					"raw": "{{url}}/assets/{{assetId}}/events",
