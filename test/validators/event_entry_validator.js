@@ -61,7 +61,7 @@ describe('EventEntryValidator', () => {
       expect(() => locationValidator.validate(event)).to.throw(JsonValidationError);
     });
 
-    it('should throw if no asset format does not match', async () => {
+    it('should throw if assetId has improper format', async () => {
       const nonHexCharacters = createEventWithEntries([
         {type: 'ambrosus.event.location.asset', asset: '0x63d31688ddb1b82b57d4bc1c58a0761d6f3cde0fe2a936d4b9d1403c6f6ab6zz'}
       ]);
