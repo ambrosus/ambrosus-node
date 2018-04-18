@@ -1,6 +1,6 @@
 {
   "title": "ambrosus.event.location.asset",
-  "description": "Location inside another asset",
+  "description": "Location expressed with an assetId",
   "type": "object",
   "properties": {
     "type": {

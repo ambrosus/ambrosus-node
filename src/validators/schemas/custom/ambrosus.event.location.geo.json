@@ -1,6 +1,6 @@
 {
   "title": "ambrosus.event.location.geo",
-  "description": "A geographical coordinate",
+  "description": "Location expressed with geographical coordinates",
   "type": "object",
   "properties": {
     "type": {
