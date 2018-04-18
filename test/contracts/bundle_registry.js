@@ -1,7 +1,7 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3} from '../../src/utils/web3_tools';
+import {createWeb3, DEFAULT_GAS} from '../../src/utils/web3_tools';
 import deployContracts from '../helpers/contracts';
 import {adminAccount} from '../fixtures/account';
 import web3jsChai from '../helpers/events';
@@ -24,15 +24,15 @@ describe('Bundle Registry Contract', () => {
 
   const asciiToHex = (arg) => web3.utils.asciiToHex(arg);
   const hexToUtf8 = (arg) => web3.utils.hexToUtf8(arg);
-  const addVendor = (who, url, from = ownerAddress) => bundleRegistry.methods.addToWhitelist(who, url).send({from});
-  const removeVendor = (who, from = ownerAddress) => bundleRegistry.methods.removeFromWhitelist(who).send({from});
+  const addVendor = (who, url, from = ownerAddress) => bundleRegistry.methods.addToWhitelist(who, url).send({from, gas: DEFAULT_GAS});
+  const removeVendor = (who, from = ownerAddress) => bundleRegistry.methods.removeFromWhitelist(who).send({from, gas: DEFAULT_GAS});
   const isWhitelisted = (who) => bundleRegistry.methods.isWhitelisted(who).call();  
-  const addBundle = (bundleId, vendor, from = ownerAddress) => bundleRegistry.methods.addBundle(asciiToHex(bundleId), vendor).send({from});
+  const addBundle = (bundleId, vendor, from = ownerAddress) => bundleRegistry.methods.addBundle(asciiToHex(bundleId), vendor).send({from, gas: DEFAULT_GAS});
   const getBundleVendor = (bundleId) => bundleRegistry.methods.bundles(asciiToHex(bundleId)).call();
   const getBundleVendorByIndex = (index) => bundleRegistry.methods.bundleIds(index).call();
   const getUrlForVendor = (vendor) => bundleRegistry.methods.getUrlForVendor(vendor).call();
   const getBundleCount = () => bundleRegistry.methods.getBundleCount().call();
-  const changeVendorUrl = (vendor, url, from = ownerAddress) => bundleRegistry.methods.changeVendorUrl(vendor, url).send({from});
+  const changeVendorUrl = (vendor, url, from = ownerAddress) => bundleRegistry.methods.changeVendorUrl(vendor, url).send({from, gas: DEFAULT_GAS});
 
 
   beforeEach(async () => {

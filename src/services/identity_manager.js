@@ -30,8 +30,7 @@ export default class IdentityManager {
     if (!matchHexOfLength(signature, 130)) {
       throw new InvalidParametersError(`Invalid signature format`);
     }
-    const hash = this.calculateHash(data);
-    const signer = this.web3.eth.accounts.recover(hash, signature);
+    const signer = this.web3.eth.accounts.recover(this.serializeForHashing(data), signature);
     if (address.toLowerCase() !== signer.toLowerCase()) {
       throw new AuthenticationError(`Signature doesn't match`);
     }
