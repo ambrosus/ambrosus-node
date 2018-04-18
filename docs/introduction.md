@@ -30,7 +30,7 @@ An event describes something that happened in a supply chain. Typical events are
 Example event could look like this:
 ```json
 {
-    "eventId": "0xc5cfd04.....30755ed65"
+    "eventId": "0xc5cfd04.....30755ed65",
     "content": {
         "signature": "0x30755ed65396facf86c53e6...65c5cfd04be400",
         "idData": {
@@ -41,7 +41,7 @@ Example event could look like this:
             "dataHash": "0x01cd181cd38eb5bbd162a44701727a31f457a538"
         },
         "data": {
-          ...
+          "..."
         }
     }
 }
