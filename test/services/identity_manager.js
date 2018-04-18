@@ -38,7 +38,7 @@ describe('Identity manager', () => {
     it('should compute signature', async () => {
       const signature = identityManager.sign(testAccount.privateKey, exampleData);
       const expected =
-        '0x60b04901cd87535336eb810de3a4c7504f0f0718780a25a2beb01bbc00b66ade77ac9c013c27ff037538d5502d34cfb5de667175c1391ba8b69a82771efb286f1b';
+        '0xf51c1c732752a2e136f34e5b53dc9615018e605cbb1f9bd0ed949fdbb49a31b2479b0aafdee6f0c23b5f5500c30b09379f930464dba35085627308c48b9ef7801c';
       expect(signature).to.eq(expected);
     });
 
@@ -57,7 +57,7 @@ describe('Identity manager', () => {
     let signature;
 
     beforeEach(() => {
-      ({signature} = web3.eth.accounts.sign(identityManager.serializeForHashing(exampleData), account.privateKey));
+      ({signature} = web3.eth.accounts.sign(identityManager.calculateHash(exampleData), account.privateKey));
     });
 
     it('should validate if signature is correct', () => {
