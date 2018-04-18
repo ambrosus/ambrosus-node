@@ -5,7 +5,7 @@ The repository for Ambrosus Node.
 
 The best way to learn Ambrosus is to:
 1. First go to [General introduction](https://github.com/ambrosus/ambrosus-node/blob/master/docs/introduction.md)
-2. Follow up with [step-by-step tutorial](https://github.com/ambrosus/ambrosus-node/blob/master/docs/tutorial.md).
+2. Follow up with either [javascript tutorial](https://github.com/ambrosus/ambrosus-node/blob/master/docs/jstutorial.md) or [cURL tutorial](https://github.com/ambrosus/ambrosus-node/blob/master/docs/tutorial.md).
 3. Detailed RESTful API documentation is available at [ambrosus.docs.apiary.io](https://ambrosus.docs.apiary.io/).
 
 Read below to learn about ambrosus node development.
