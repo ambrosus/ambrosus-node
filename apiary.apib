@@ -485,7 +485,7 @@ Every event has a `data` array, located at `content` with information what actua
 Each item of the array is an object with a required `type` field of `string` type.  
 Following event types are predefined:
 * `ambrosus.event.identifiers` - Known identifiers for an event, must have at least 1 property of type `array`
-* `ambrosus.event.location.asset` - Location inside another asset, required are:
+* `ambrosus.event.location.asset` - Location expressed with an assetId, required are:
     * `asset`: id of the other asset where event's subject is located
 
 + Parameters
