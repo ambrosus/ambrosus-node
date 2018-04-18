@@ -5,8 +5,9 @@ import {
 import JsonSchemaValidator from '../validators/json_schema_validator';
 import EventEntryValidator from '../validators/event_entry_validator.js';
 import eventContentSchema from '../validators/schemas/event';
-import deliveredSchema from '../../src/validators/schemas/custom/com.ambrosus.delivered.json';
-import scanSchema from '../../src/validators/schemas/custom/com.ambrosus.scan.json';
+import indentifiersSchema from '../validators/schemas/custom/ambrosus.event.identifiers.json';
+import locationSchema from '../validators/schemas/custom/ambrosus.event.location.asset.json';
+import locationGeoSchema from '../validators/schemas/custom/ambrosus.event.location.geo.json';
 import {put, pick} from '../utils/dict_utils';
 import {InvalidParametersError} from '../errors/errors';
 
@@ -14,8 +15,9 @@ export default class EntityBuilder {
   constructor(identityManager) {
     this.eventValidators = [
       new JsonSchemaValidator(eventContentSchema),
-      new EventEntryValidator('com.ambrosus.delivered', new JsonSchemaValidator(deliveredSchema)),
-      new EventEntryValidator('com.ambrosus.scan', new JsonSchemaValidator(scanSchema))
+      new EventEntryValidator('ambrosus.event.identifiers', new JsonSchemaValidator(indentifiersSchema)),
+      new EventEntryValidator('ambrosus.event.location.asset', new JsonSchemaValidator(locationSchema)),
+      new EventEntryValidator('ambrosus.event.location.geo', new JsonSchemaValidator(locationGeoSchema))
     ];
     this.identityManager = identityManager;
   }
@@ -97,22 +99,10 @@ export default class EntityBuilder {
     };
   }
 
-  parseLocationQuery(queryString) {
-    if (!queryString) {
-      return {};
-    }
-    const extractValueRegex = /^asset\((0x[\dA-F]{64})\)$/gi;
-    const parseResult = extractValueRegex.exec(queryString);
-    if (!parseResult) {
-      throw new InvalidParametersError('Location query must be of format `asset(0x...)`');
-    }
-    return {locationAsAsset: parseResult[1]};
-  }
-
   validateAndCastFindEventsParams(params) {
-    const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage', 'createdBy', 'location', 'entry'];
-    if (params.entry !== undefined) {
-      this.ensureEntryParamsValuesNotObjects(params.entry);
+    const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage', 'createdBy', 'data'];
+    if (params.data !== undefined) {
+      this.ensureEntryParamsValuesNotObjects(params.data);
     }
     
     const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
@@ -125,7 +115,7 @@ export default class EntityBuilder {
     params.page = validateIntegerParameterAndCast(params.page, 'page');
     params.perPage = validateIntegerParameterAndCast(params.perPage, 'perPage');
 
-    return {...params, ...this.parseLocationQuery(params.location)};
+    return {...params};
   }
   ensureEntryParamsValuesNotObjects(entries) {
     const keys = Object.keys(entries);

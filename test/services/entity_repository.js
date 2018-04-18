@@ -88,20 +88,19 @@ describe('Entity Repository', () => {
         createdBy: '0x123',
         fromTimestamp: 1,
         toTimestamp: 2,
-        locationAsAsset: '0x123',
-        entry: {score: 10, acceleration: {valueX: 17}}
+        data: {score: 10, acceleration: {valueX: 17}, location: {asset: '0x123'}}
       };
       const result = repository.getConfigurationForFindEventsQuery(params);
       expect(result.query).to.deep.eq({
         $and: [
           {'content.idData.accessLevel': {$lte: 0}},
-          {'content.data.entries': {$elemMatch: {score: 10}}},
-          {'content.data.entries': {$elemMatch: {acceleration: {valueX: 17}}}},
+          {'content.data': {$elemMatch: {score: 10}}},
+          {'content.data': {$elemMatch: {acceleration: {valueX: 17}}}},
+          {'content.data': {$elemMatch: {location: {asset: '0x123'}}}},
           {'content.idData.assetId': 12},
           {'content.idData.createdBy': '0x123'},
           {'content.idData.timestamp': {$gte: 1}},
-          {'content.idData.timestamp': {$lte: 2}},
-          {'content.data.location.asset': '0x123'}          
+          {'content.idData.timestamp': {$lte: 2}}
         ]
       });
     });
@@ -166,6 +165,11 @@ describe('Entity Repository', () => {
       let scenario;
       let eventsSet;
 
+      const makeLocationAssetEntry = (assetIndex) => ({
+        type: 'ambrosus.event.location.asset',
+        asset: scenario.assets[assetIndex].assetId
+      });
+
       before(async () => {
         scenario = new ScenarioBuilder(identityManager);
         await scenario.addAdminAccount(adminAccountWithSecret);
@@ -174,16 +178,16 @@ describe('Entity Repository', () => {
         await scenario.addAsset(0, {timestamp: 1});
 
         eventsSet = [
-          await scenario.addEvent(0, 0, {timestamp: 0, accessLevel: 0}, {location: {asset: scenario.assets[0].assetId}}),
-          await scenario.addEvent(0, 0, {timestamp: 1, accessLevel: 1}, {location: {asset: scenario.assets[1].assetId}}),
-          await scenario.addEvent(0, 0, {timestamp: 2, accessLevel: 2}, {location: {asset: scenario.assets[0].assetId}}),
-          await scenario.addEvent(1, 0, {timestamp: 3, accessLevel: 0}, {location: {asset: scenario.assets[1].assetId}}),
-          await scenario.addEvent(1, 0, {timestamp: 4, accessLevel: 1}, {location: {asset: scenario.assets[0].assetId}}),
-          await scenario.addEvent(0, 1, {timestamp: 5, accessLevel: 2}, {location: {asset: scenario.assets[1].assetId}}),
-          await scenario.addEvent(0, 1, {timestamp: 6, accessLevel: 0}, {location: {asset: scenario.assets[0].assetId}}),
-          await scenario.addEvent(0, 1, {timestamp: 7, accessLevel: 1}, {location: {asset: scenario.assets[1].assetId}}),
-          await scenario.addEvent(1, 1, {timestamp: 8, accessLevel: 2}, {location: {asset: scenario.assets[0].assetId}}),
-          await scenario.addEvent(1, 1, {timestamp: 9, accessLevel: 0}, {location: {asset: scenario.assets[1].assetId}})
+          await scenario.addEvent(0, 0, {timestamp: 0, accessLevel: 0}, [makeLocationAssetEntry(0)]),
+          await scenario.addEvent(0, 0, {timestamp: 1, accessLevel: 1}, [makeLocationAssetEntry(1)]),
+          await scenario.addEvent(0, 0, {timestamp: 2, accessLevel: 2}, [makeLocationAssetEntry(0)]),
+          await scenario.addEvent(1, 0, {timestamp: 3, accessLevel: 0}, [makeLocationAssetEntry(1)]),
+          await scenario.addEvent(1, 0, {timestamp: 4, accessLevel: 1}, [makeLocationAssetEntry(0)]),
+          await scenario.addEvent(0, 1, {timestamp: 5, accessLevel: 2}, [makeLocationAssetEntry(1)]),
+          await scenario.addEvent(0, 1, {timestamp: 6, accessLevel: 0}, [makeLocationAssetEntry(0)]),
+          await scenario.addEvent(0, 1, {timestamp: 7, accessLevel: 1}, [makeLocationAssetEntry(1)]),
+          await scenario.addEvent(1, 1, {timestamp: 8, accessLevel: 2}, [makeLocationAssetEntry(0)]),
+          await scenario.addEvent(1, 1, {timestamp: 9, accessLevel: 0}, [makeLocationAssetEntry(1)])
         ];
 
         for (const event of eventsSet) {
@@ -262,14 +266,12 @@ describe('Entity Repository', () => {
         ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(1, 4));
       });
 
-      describe('search in data field', () => {
-        it('search by location(asset)', async () => {
-          const targetAssetId = scenario.assets[0].assetId;
-          const ret = await expect(storage.findEvents({locationAsAsset: targetAssetId}, 1)).to.be.fulfilled;
-          expect(ret.results).have.lengthOf(3);
-          expect(ret.resultCount).to.equal(3);
-          expect(ret.results).to.deep.equal([eventsSet[6], eventsSet[4], eventsSet[0]]);
-        });
+      it('search by location.asset', async () => {
+        const targetAssetId = scenario.assets[0].assetId;
+        const ret = await expect(storage.findEvents({data: {asset: targetAssetId}}, 1)).to.be.fulfilled;
+        expect(ret.results).have.lengthOf(3);
+        expect(ret.resultCount).to.equal(3);
+        expect(ret.results).to.deep.equal([eventsSet[6], eventsSet[4], eventsSet[0]]);
       });
     });
   });

@@ -1,0 +1,27 @@
+{
+  "title": "ambrosus.event.location.geo",
+  "description": "Location expressed with geographical coordinates",
+  "type": "object",
+  "properties": {
+    "type": {
+      "description": "Event entry type",
+      "type": "string",
+      "const": "ambrosus.event.location.geo"
+    },
+    "latitude": {
+      "type": "number",
+      "minimum": -90,
+      "maximum": 90
+    },
+    "longitude": {
+      "type": "number",
+      "minimum": -180,
+      "maximum": 180
+    }
+  },
+  "required": [
+    "type",
+    "latitude",
+    "longitude"
+  ]
+}

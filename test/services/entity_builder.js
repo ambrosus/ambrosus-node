@@ -4,7 +4,7 @@ import sinonChai from 'sinon-chai';
 
 import {pick, put} from '../../src/utils/dict_utils';
 import {createWeb3} from '../../src/utils/web3_tools';
-import {InvalidParametersError, ValidationError, JsonValidationError} from '../../src/errors/errors';
+import {InvalidParametersError, JsonValidationError, ValidationError} from '../../src/errors/errors';
 
 import IdentityManager from '../../src/services/identity_manager';
 import EntityBuilder from '../../src/services/entity_builder';
@@ -106,18 +106,31 @@ describe('Entity Builder', () => {
         });
       }
 
+      it('validates all predefined data types', async () => {
+        const dataTypes = [
+          'ambrosus.event.identifiers',
+          'ambrosus.event.location.asset',
+          'ambrosus.event.location.geo'];
+        expect(entityBuilder.eventValidators
+          .map((validator) => validator.type)
+          .filter((type) => type !== undefined)
+          .sort())
+          .to.deep.equal(dataTypes.sort());
+      });
+
       it('throws ValidationError if event not passing event format validation', () => {
-        const brokenEvent = put(exampleEvent, 'content.data.location', {latitude: 91});
+        const brokenEvent = put(exampleEvent, 'content.data',
+          [...exampleEvent.content.data, {type: 'ambrosus.event.location.geo', latitude: 91}]);
         expect(() => entityBuilder.validateEvent(brokenEvent))
           .to.throw(JsonValidationError)
-          .and.have.nested.property('errors[0].dataPath', '.data.location.latitude');
+          .and.have.nested.property('errors[0].dataPath', '.latitude');
       });
 
       it('throws ValidationError if event not passing custom entity validation', () => {
-        const brokenEvent = put(exampleEvent, 'content.data.entries', [{type: 'com.ambrosus.scan'}]);
+        const brokenEvent = put(exampleEvent, 'content.data', [{type: 'ambrosus.event.location.geo'}]);
         expect(() => entityBuilder.validateEvent(brokenEvent))
           .to.throw(JsonValidationError)
-          .and.have.nested.property('errors[0].params.missingProperty', 'value');
+          .and.have.nested.property('errors[0].params.missingProperty', 'latitude');
       });      
 
       it('throws if accessLevel not positive integer', () => {
@@ -301,8 +314,7 @@ describe('Entity Builder', () => {
 
   describe('Validating query parameters', () => {
     let entityBuilder;
-    const exampleAssetId = `0xbdaacf42a48710b97d115d521fdf01cdb9d8ba5e66d806cc45d1000231292ce7`;
-    const validParamsAsStrings = {assetId: '0x1234', fromTimestamp: '10', toTimestamp: '20', page: '2', perPage: '4', createdBy: '0x4321', location: `asset(${exampleAssetId})`};
+    const validParamsAsStrings = {assetId: '0x1234', fromTimestamp: '10', toTimestamp: '20', page: '2', perPage: '4', createdBy: '0x4321'};
 
     before(() => {
       entityBuilder = new EntityBuilder({});
@@ -310,8 +322,7 @@ describe('Entity Builder', () => {
 
     it('passes for proper parameters', () => {
       const params = {
-        assetId: '0x1234', fromTimestamp: 10, toTimestamp: 20, page: 2, perPage: 4, createdBy: '0x4321',
-        location: validParamsAsStrings.location
+        assetId: '0x1234', fromTimestamp: 10, toTimestamp: 20, page: 2, perPage: 4, createdBy: '0x4321'
       };
       const validatedParams = entityBuilder.validateAndCastFindEventsParams(params);
       expect(validatedParams.assetId).to.equal('0x1234');
@@ -320,7 +331,6 @@ describe('Entity Builder', () => {
       expect(validatedParams.page).to.equal(2);
       expect(validatedParams.perPage).to.equal(4);
       expect(validatedParams.createdBy).to.equal('0x4321');
-      expect(validatedParams.locationAsAsset).to.equal(exampleAssetId);
     });
 
     it('casts strings on integers if needed', () => {
@@ -332,29 +342,28 @@ describe('Entity Builder', () => {
       expect(validatedParams.page).to.equal(2);
       expect(validatedParams.perPage).to.equal(4);
       expect(validatedParams.createdBy).to.equal('0x4321');
-      expect(validatedParams.locationAsAsset).to.equal(exampleAssetId);
     });
 
     describe('query with entry', () => {
       it('handles query by entry validation', () => {
-        const params = {entry: {acceleration: '1'}};
+        const params = {data: {acceleration: '1'}};
         const validatedParams = entityBuilder.validateAndCastFindEventsParams(params);
-        expect(validatedParams.entry.acceleration).to.equal('1');
+        expect(validatedParams.data.acceleration).to.equal('1');
       });
 
       it('handles query by entry validation with nested arguments', () => {
-        const params = {entry: {'acceleration.valueX': '1'}};
+        const params = {data: {'acceleration.valueX': '1'}};
         const validatedParams = entityBuilder.validateAndCastFindEventsParams(params);
-        expect(validatedParams.entry['acceleration.valueX']).to.equal('1');
+        expect(validatedParams.data['acceleration.valueX']).to.equal('1');
       });
 
       it('throws if unsupported by entry syntax (object)', () => {
-        const params = put(validParamsAsStrings, 'entry[acceleration]', '{x: 1, y: 2}');
+        const params = put(validParamsAsStrings, 'data[acceleration]', '{x: 1, y: 2}');
         expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
       });
 
       it('throws if unsupported by entry syntax (array)', () => {
-        const params = put(validParamsAsStrings, 'entry[acceleration]', '[1, 2]');
+        const params = put(validParamsAsStrings, 'data[acceleration]', '[1, 2]');
         expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
       });
     });
@@ -387,27 +396,6 @@ describe('Entity Builder', () => {
     it('throws if perPage value not in valid type', () => {
       const params = put(validParamsAsStrings, 'perPage', 'NaN');
       expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
-    });
-
-    describe('parsing location query', () => {
-      it('extracts assetId from query', async () => {
-        expect(entityBuilder.parseLocationQuery(validParamsAsStrings.location))
-          .to.deep.equal({locationAsAsset: exampleAssetId});
-      });
-
-      it('throws if invalid location search query', async () => {
-        expect(() => entityBuilder.parseLocationQuery('wrongparam(0x0)', 1))
-          .to.throw(InvalidParametersError);
-      });
-
-      it('throws if assetId has wrong format', async () => {
-        expect(() => entityBuilder.parseLocationQuery('asset(0x0000)', 1))
-          .to.throw(InvalidParametersError);
-        expect(() => entityBuilder.parseLocationQuery(`asset(0x${'z'.repeat(64)}`, 1))
-          .to.throw(InvalidParametersError);
-        expect(() => entityBuilder.parseLocationQuery(`asset(${'0'.repeat(64)}`, 1))
-          .to.throw(InvalidParametersError);
-      });
     });
   });
 });
