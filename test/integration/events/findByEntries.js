@@ -30,12 +30,12 @@ describe('Events Integrations: Find by data entries', () => {
     await scenario.addAsset(0, {sequenceNumber: 1});
 
     await scenario.addEvent(0, 0, {timestamp: 0, accessLevel: 1}, [{
-      type: 'ambrosus.event.delivered',
+      type: 'ambrosus.event.illustration',
       confirmationAddress: '0xD49f20a8339FFe6471D3a32f874fC82CfDd98750',
       confirmationSignature: '0x39FFe6D49f20a83471D3a32f8CfDd987504fC822f8CfDd987504fC82'
     }]);
     await scenario.addEvent(0, 0, {timestamp: 1, accessLevel: 0}, [{
-      type: 'ambrosus.event.scan',
+      type: 'ambrosus.event.example',
       value: 'acceleration',
       acceleration: {
         valueX: '1',
@@ -50,18 +50,18 @@ describe('Events Integrations: Find by data entries', () => {
       .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`);
 
   it('works with string', async () => {
-    const response = await get(`/events?data[type]=ambrosus.event.delivered`);
+    const response = await get(`/events?data[type]=ambrosus.event.illustration`);
     expect(response.body.resultCount).to.eq(1);
-    expect(response.body.results[0].content.data[0].type).to.equal('ambrosus.event.delivered');
+    expect(response.body.results[0].content.data[0].type).to.equal('ambrosus.event.illustration');
   });
 
   it('works with string and accessLevel=1', async () => {
     await scenario.addEvent(0, 0, {timestamp: 0, accessLevel: 0}, [{
-      type: 'ambrosus.event.delivered',
+      type: 'ambrosus.event.illustration',
       confirmationAddress: '0x33333333333333333333333333333333333333',
       confirmationSignature: '0x39FFe6D49f20a83471D3a32f8CfDd987504fC822f8CfDd987504fC82'
     }]);
-    const response = await apparatus.request().get(`/events?data[type]=ambrosus.event.delivered`);
+    const response = await apparatus.request().get(`/events?data[type]=ambrosus.event.illustration`);
     expect(response.body.resultCount).to.eq(1);
     expect(response.body.results[0].content.data[0].confirmationAddress).to.equal('0x33333333333333333333333333333333333333');
   });
@@ -69,13 +69,13 @@ describe('Events Integrations: Find by data entries', () => {
   it('works with strings on nested object', async () => {
     const response = await get(`/events?data[acceleration.valueX]=1`);
     expect(response.body.resultCount).to.eq(1);
-    expect(response.body.results[0].content.data[0].type).to.equal('ambrosus.event.scan');
+    expect(response.body.results[0].content.data[0].type).to.equal('ambrosus.event.example');
   });
 
   it('works with number decorator on nested object', async () => {
     const response = await get(`/events?data[acceleration.valueY]=number(2)`);
     expect(response.body.resultCount).to.eq(1);
-    expect(response.body.results[0].content.data[0].type).to.equal('ambrosus.event.scan');
+    expect(response.body.results[0].content.data[0].type).to.equal('ambrosus.event.example');
   });
 
   it('fails when array index provided in query', async () => {
@@ -85,11 +85,11 @@ describe('Events Integrations: Find by data entries', () => {
 
   it('with conjunction', async () => {
     await scenario.addEvent(0, 0, {timestamp: 1, accessLevel: 0}, [{
-      type: 'ambrosus.event.delivered',
+      type: 'ambrosus.event.illustration',
       confirmationAddress: '0x2222222222222222222222222222222222222222',
       confirmationSignature: '0x39FFe6D49f20a83471D3a32f8CfDd987504fC822f8CfDd987504fC82'      
     }]);
-    const response = await get('/events?data[type]=ambrosus.event.delivered&fromTimestamp=1');
+    const response = await get('/events?data[type]=ambrosus.event.illustration&fromTimestamp=1');
     expect(response.body.resultCount).to.eq(1);
     expect(response.body.results[0].content.data[0].confirmationAddress).to.equal('0x2222222222222222222222222222222222222222');
   });

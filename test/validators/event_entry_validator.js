@@ -1,12 +1,9 @@
 import {JsonValidationError} from '../../src/errors/errors';
 import EventEntryValidator from '../../src/validators/event_entry_validator.js';
 import JsonSchemaValidator from '../../src/validators/json_schema_validator';
-import deliveredSchema from '../../src/validators/schemas/custom/ambrosus.event.delivered.json';
 import identifiersSchema from '../../src/validators/schemas/custom/ambrosus.event.identifiers.json';
 import locationSchema from '../../src/validators/schemas/custom/ambrosus.event.location.asset.json';
 import locationGeoSchema from '../../src/validators/schemas/custom/ambrosus.event.location.geo.json';
-import scanSchema from '../../src/validators/schemas/custom/ambrosus.event.scan.json';
-
 import chai from 'chai';
 
 const {expect} = chai;
@@ -16,109 +13,6 @@ const createEventWithEntries = (entries) => ({
 });
 
 describe('EventEntryValidator', () => {
-  let validator;
-
-  beforeEach(() => {
-    validator = new EventEntryValidator('ambrosus.event.delivered', new JsonSchemaValidator(deliveredSchema));
-  });
-
-  it('should accept if entries are null', () => {
-    const event = createEventWithEntries(null);
-    expect(() => validator.validate(event)).to.not.throw();
-  });
-
-  it('should accept if entries empty', () => {
-    const event = createEventWithEntries([]);
-    expect(() => validator.validate(event)).to.not.throw();
-  });
-
-  it('should accept if given types not present', () => {
-    const event = createEventWithEntries([
-      {
-        type: 'ambrosus.event.scan'
-      }]);
-    expect(() => validator.validate(event)).to.not.throw();
-  });
-
-  describe('ambrosus.event.delivered', () => {
-    let deliverValidator;
-
-    before(() => {
-      deliverValidator = new EventEntryValidator('ambrosus.event.delivered', new JsonSchemaValidator(deliveredSchema));
-    });
-
-    it('should accept if valid entry', () => {
-      const event = createEventWithEntries([
-        {
-          type: 'ambrosus.event.delivered',
-          confirmationAddress: '0xD49f20a8339FFe6471D3a32f874fC82CfDd98750',
-          confirmationSignature: '0x39FFe6D49f20a83471D3a32f8CfDd987504fC822f8CfDd987504fC82'
-        }]);
-      expect(() => deliverValidator.validate(event)).to.not.throw();
-    });
-
-    it('should accept if valid entry (multiple entries)', () => {
-      const event = createEventWithEntries([
-        {
-          type: 'ambrosus.event.delivered',
-          confirmationAddress: '0xD49f20a8339FFe6471D3a32f874fC82CfDd98750',
-          confirmationSignature: '0x39FFe6D49f20a83471D3a32f8CfDd987504fC822f8CfDd987504fC82'
-        }, {
-          type: 'ambrosus.event.scan',
-          value: 'jhasghjadsghjads'
-        }]);
-      expect(() => deliverValidator.validate(event)).to.not.throw();
-    });
-
-    it('should throw JsonValidationError if invalid entry', () => {
-      const event = createEventWithEntries([
-        {
-          type: 'ambrosus.event.delivered'
-        }]);
-      expect(() => deliverValidator.validate(event))
-        .to.throw(JsonValidationError)
-        .and.have.nested.property('errors[0].params.missingProperty', 'confirmationAddress');
-    });
-
-    it('should throw JsonValidationError if invalid entry (multiple entries)', () => {
-      const event = createEventWithEntries([
-        {
-          type: 'ambrosus.event.scan',
-          value: 'jhasghjadsghjads'
-        }, {
-          type: 'ambrosus.event.delivered'
-        }]);
-      expect(() => deliverValidator.validate(event))
-        .to.throw(JsonValidationError)
-        .and.have.nested.property('errors[0].params.missingProperty', 'confirmationAddress');
-    });
-  });
-
-  describe('ambrosus.event.scan', () => {
-    let scanValidator;
-
-    before(() => {
-      scanValidator = new EventEntryValidator('ambrosus.event.scan', new JsonSchemaValidator(scanSchema));
-    });
-
-    it('should accept if valid entry', () => {
-      const event = createEventWithEntries([{type: 'ambrosus.event.scan', value: '1'}]);
-      expect(() => scanValidator.validate(event)).to.not.throw();
-    });
-
-    it('should throw if no value', () => {
-      const event = createEventWithEntries([{type: 'ambrosus.event.scan'}]);
-      expect(() => scanValidator.validate(event))
-        .to.throw(JsonValidationError);
-    });
-
-    it('should throw if no value not string', () => {
-      const event = createEventWithEntries([{type: 'ambrosus.event.scan', value: 12}]);
-      expect(() => scanValidator.validate(event))
-        .to.throw(JsonValidationError);
-    });
-  });
-
   describe('ambrosus.event.identifiers', () => {
     let identValidator;
 

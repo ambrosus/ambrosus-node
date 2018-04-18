@@ -484,11 +484,6 @@ Places (after intensive validations) the provided event object into the system.
 Every event has a `data` array, located at `content` with information what actually happened.
 Each item of the array is an object with a required `type` field of `string` type.  
 Following event types are predefined:
-* `ambrosus.location.delivered` - invoked when the asset is delivered, has following required fields:
-    * `confirmationAddress` - Address of a person or device confirming delivery
-    * `confirmationSignature` - Signature by a person or device confirming delivery
-* `ambrosus.event.scan` - invoked when any measurement on the event has occured, has following required fields:
-    * `value`: Value scanned
 * `ambrosus.event.identifiers` - Known identifiers for an event, must have at least 1 property of type `array`
 * `ambrosus.event.location.asset` - Location inside another asset, required are:
     * `asset`: id of the other asset where event's subject is located
@@ -513,7 +508,7 @@ Following event types are predefined:
                 + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the event creator.
                 + accessLevel: 4 (number) - The access level of the event. Should be a non-negative integer.
                 + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
-            + data (array) - Private information about an event.
+            + data (array) - data (array) - Array of custom entries as objects (this field is required and have to contain at least one entry).
 
     + Body
 
@@ -701,7 +696,7 @@ Finds event satisfying provided cryteria.
     + perPage : 150 (integer, optional) - number of events to return per page
     + page : 20 (integer, optional) - number of page (more search results than specified in perPage parameter concludes more than one page)
     + createdBy : 0xc5cfd04.....30755ed65 (string, optional) - address of account that created targeting events
-    + data : data[type]=ambrosus.event.custom (object, optional) - This syntax allows to query for events by any fields in data.entires array. Query for nested fields are possible, e.g. data[acceleration.x]=10. By default the type of the value is string. To provide a number, use data[acceleration.x]=number(10)
+    + data : data[type]=ambrosus.event.custom (object, optional) - This syntax allows to query for events by any fields in data array. Query for nested fields is possible, e.g. data[acceleration.x]=10. By default the type of the value is string. To provide a number, use data[acceleration.x]=number(10)
 + Response 200 (application/json)
 
     The requested event
@@ -719,7 +714,7 @@ Finds event satisfying provided cryteria.
                         + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
                     + data (array) - Array of custom entries as objects (this field is required and have to contain at least one entry).
 
-        + resultCount: 112 (number) - Total number of events matching provided criterias.
+        + resultCount: 112 (number) - Total number of events matching provided criteria.
 
     + Body
 

@@ -108,8 +108,6 @@ describe('Entity Builder', () => {
 
       it('validates all predefined data types', async () => {
         const dataTypes = [
-          'ambrosus.event.delivered',
-          'ambrosus.event.scan',
           'ambrosus.event.identifiers',
           'ambrosus.event.location.asset',
           'ambrosus.event.location.geo'];
@@ -129,10 +127,10 @@ describe('Entity Builder', () => {
       });
 
       it('throws ValidationError if event not passing custom entity validation', () => {
-        const brokenEvent = put(exampleEvent, 'content.data', [{type: 'ambrosus.event.scan'}]);
+        const brokenEvent = put(exampleEvent, 'content.data', [{type: 'ambrosus.event.location.geo'}]);
         expect(() => entityBuilder.validateEvent(brokenEvent))
           .to.throw(JsonValidationError)
-          .and.have.nested.property('errors[0].params.missingProperty', 'value');
+          .and.have.nested.property('errors[0].params.missingProperty', 'latitude');
       });      
 
       it('throws if accessLevel not positive integer', () => {

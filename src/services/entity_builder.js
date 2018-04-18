@@ -5,8 +5,6 @@ import {
 import JsonSchemaValidator from '../validators/json_schema_validator';
 import EventEntryValidator from '../validators/event_entry_validator.js';
 import eventContentSchema from '../validators/schemas/event';
-import deliveredSchema from '../validators/schemas/custom/ambrosus.event.delivered.json';
-import scanSchema from '../validators/schemas/custom/ambrosus.event.scan.json';
 import indentifiersSchema from '../validators/schemas/custom/ambrosus.event.identifiers.json';
 import locationSchema from '../validators/schemas/custom/ambrosus.event.location.asset.json';
 import locationGeoSchema from '../validators/schemas/custom/ambrosus.event.location.geo.json';
@@ -17,8 +15,6 @@ export default class EntityBuilder {
   constructor(identityManager) {
     this.eventValidators = [
       new JsonSchemaValidator(eventContentSchema),
-      new EventEntryValidator('ambrosus.event.delivered', new JsonSchemaValidator(deliveredSchema)),
-      new EventEntryValidator('ambrosus.event.scan', new JsonSchemaValidator(scanSchema)),
       new EventEntryValidator('ambrosus.event.identifiers', new JsonSchemaValidator(indentifiersSchema)),
       new EventEntryValidator('ambrosus.event.location.asset', new JsonSchemaValidator(locationSchema)),
       new EventEntryValidator('ambrosus.event.location.geo', new JsonSchemaValidator(locationGeoSchema))
