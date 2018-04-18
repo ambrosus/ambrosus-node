@@ -34,9 +34,12 @@ describe('EventEntryValidator', () => {
       const emptyIdentsArray = createEventWithEntries([{type: 'ambrosus.event.identifiers', foo: []}]);
       const wrongIdentsType = createEventWithEntries([{type: 'ambrosus.event.identifiers', foo: 0}]);
 
-      expect(() => identValidator.validate(emptyIdents)).to.throw(JsonValidationError);
-      expect(() => identValidator.validate(emptyIdentsArray)).to.throw(JsonValidationError);
-      expect(() => identValidator.validate(wrongIdentsType)).to.throw(JsonValidationError);
+      expect(() => identValidator.validate(emptyIdents)).to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should NOT have less than 2 properties');
+      expect(() => identValidator.validate(emptyIdentsArray)).to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should NOT have less than 1 items');
+      expect(() => identValidator.validate(wrongIdentsType)).to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should be array');
     });
   });
 
@@ -58,7 +61,8 @@ describe('EventEntryValidator', () => {
       const event = createEventWithEntries([
         {type: 'ambrosus.event.location.asset'}
       ]);
-      expect(() => locationValidator.validate(event)).to.throw(JsonValidationError);
+      expect(() => locationValidator.validate(event)).to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].params.missingProperty', 'asset');
     });
 
     it('should throw if assetId has improper format', async () => {
@@ -72,9 +76,12 @@ describe('EventEntryValidator', () => {
         {type: 'ambrosus.event.location.asset', asset: '0x63d31688ddb1b82b57d4bc1c58a0761d6f3cde0fe2a936d4b9d1403c6f6ab6123'}
       ]);
 
-      expect(() => locationValidator.validate(nonHexCharacters)).to.throw(JsonValidationError);
-      expect(() => locationValidator.validate(toShort)).to.throw(JsonValidationError);
-      expect(() => locationValidator.validate(toLong)).to.throw(JsonValidationError);
+      expect(() => locationValidator.validate(nonHexCharacters)).to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should match pattern "^0x[a-fA-F0-9]{64}$"');
+      expect(() => locationValidator.validate(toShort)).to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should match pattern "^0x[a-fA-F0-9]{64}$"');
+      expect(() => locationValidator.validate(toLong)).to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should match pattern "^0x[a-fA-F0-9]{64}$"');
     });
   });
 
@@ -101,8 +108,10 @@ describe('EventEntryValidator', () => {
         {type: 'ambrosus.event.location.geo', longitude: -100}
       ]);
 
-      expect(() => locationGeoValidator.validate(noLong)).to.throw(JsonValidationError);
-      expect(() => locationGeoValidator.validate(noLat)).to.throw(JsonValidationError);
+      expect(() => locationGeoValidator.validate(noLong)).to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].params.missingProperty', 'longitude');
+      expect(() => locationGeoValidator.validate(noLat)).to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].params.missingProperty', 'latitude');
     });
 
     it('should throw if lon/lat overflow', async () => {
@@ -119,10 +128,14 @@ describe('EventEntryValidator', () => {
         {type: 'ambrosus.event.location.geo', longitude: 0, latitude: -91}
       ]);
 
-      expect(() => locationGeoValidator.validate(lonToBig)).to.throw(JsonValidationError);
-      expect(() => locationGeoValidator.validate(lonToSmall)).to.throw(JsonValidationError);
-      expect(() => locationGeoValidator.validate(latToBig)).to.throw(JsonValidationError);
-      expect(() => locationGeoValidator.validate(latToSmall)).to.throw(JsonValidationError);
+      expect(() => locationGeoValidator.validate(lonToBig)).to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should be <= 180');
+      expect(() => locationGeoValidator.validate(lonToSmall)).to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should be >= -180');
+      expect(() => locationGeoValidator.validate(latToBig)).to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should be <= 90');
+      expect(() => locationGeoValidator.validate(latToSmall)).to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should be >= -90');
     });
   });
 });

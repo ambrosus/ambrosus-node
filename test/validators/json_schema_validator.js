@@ -57,12 +57,14 @@ describe('JsonSchemaValidator', () => {
 
       it('throws JsonValidationError when some entry in data is not object', async () => {
         const event = {data: [...validEvent.data, '']};
-        expect(() => validator.validate(event)).to.throw(JsonValidationError);
+        expect(() => validator.validate(event)).to.throw(JsonValidationError)
+          .with.nested.property('errors[0].message', 'should be object');
       });
 
       it('throws JsonValidationError when some entry in data has no type', async () => {
         const event = {data: [...validEvent.data, {ab: 1}]};
-        expect(() => validator.validate(event)).to.throw(JsonValidationError);
+        expect(() => validator.validate(event)).to.throw(JsonValidationError)
+          .and.have.nested.property('errors[0].params.missingProperty', 'type');
       });
     });
   });
