@@ -19,7 +19,7 @@ export default class IdentityManager {
     if (!matchHexOfLength(privateKey, 64)) {
       throw new InvalidParametersError(`Invalid private key format`);
     }
-    const {signature} = this.web3.eth.accounts.sign(this.serializeForHashing(data), privateKey);
+    const {signature} = this.web3.eth.accounts.sign(this.calculateHash(data), privateKey);
     return signature;
   }
 
