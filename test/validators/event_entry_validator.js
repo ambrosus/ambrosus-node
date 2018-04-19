@@ -139,7 +139,6 @@ describe('EventEntryValidator', () => {
       const event = createEventWithEntries([
         {type: 'ambrosus.event.location.geo', longitude: 181, latitude: 0}
       ]);
-
       expect(() => locationGeoValidator.validate(event))
         .to.throw(JsonValidationError)
         .and.have.nested.property('errors[0].message', 'should be <= 180');
