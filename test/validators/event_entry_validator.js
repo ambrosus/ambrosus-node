@@ -31,22 +31,22 @@ describe('EventEntryValidator', () => {
 
     it('throws when no identifiers', () => {
       const event = createEventWithEntries([{type: 'ambrosus.event.identifiers'}]);
-
-      expect(() => identifiersValidator.validate(event)).to.throw(JsonValidationError)
+      expect(() => identifiersValidator.validate(event))
+        .to.throw(JsonValidationError)
         .and.have.nested.property('errors[0].message', 'should NOT have less than 2 properties');
     });
 
     it('throws when invalid identifier is an empty array', () => {
       const event = createEventWithEntries([{type: 'ambrosus.event.identifiers', foo: []}]);
-
-      expect(() => identifiersValidator.validate(event)).to.throw(JsonValidationError)
+      expect(() => identifiersValidator.validate(event))
+        .to.throw(JsonValidationError)
         .and.have.nested.property('errors[0].message', 'should NOT have less than 1 items');
     });
 
     it('throws when invalid identifier is not an object', () => {
       const event = createEventWithEntries([{type: 'ambrosus.event.identifiers', foo: 0}]);
-
-      expect(() => identifiersValidator.validate(event)).to.throw(JsonValidationError)
+      expect(() => identifiersValidator.validate(event))
+        .to.throw(JsonValidationError)
         .and.have.nested.property('errors[0].message', 'should be array');
     });
   });
@@ -87,7 +87,8 @@ describe('EventEntryValidator', () => {
       const assetId = createEventWithEntries([
         {type: 'ambrosus.event.location.asset', asset: '0x63d31688ddb1b82b57d4bc1c58a0761d6f3cde0fe2a936d4b9d1403c6f6ab6'}
       ]);
-      expect(() => locationValidator.validate(assetId)).to.throw(JsonValidationError)
+      expect(() => locationValidator.validate(assetId))
+        .to.throw(JsonValidationError)
         .and.have.nested.property('errors[0].message', 'should match pattern "^0x[a-fA-F0-9]{64}$"');
     });
 
@@ -120,7 +121,8 @@ describe('EventEntryValidator', () => {
       const event = createEventWithEntries([
         {type: 'ambrosus.event.location.geo', longitude: -100}
       ]);
-      expect(() => locationGeoValidator.validate(event)).to.throw(JsonValidationError)
+      expect(() => locationGeoValidator.validate(event))
+        .to.throw(JsonValidationError)
         .and.have.nested.property('errors[0].params.missingProperty', 'latitude');
     });
 
@@ -128,7 +130,8 @@ describe('EventEntryValidator', () => {
       const event = createEventWithEntries([
         {type: 'ambrosus.event.location.geo', latitude: 80}
       ]);
-      expect(() => locationGeoValidator.validate(event)).to.throw(JsonValidationError)
+      expect(() => locationGeoValidator.validate(event))
+        .to.throw(JsonValidationError)
         .and.have.nested.property('errors[0].params.missingProperty', 'longitude');
     });
 
@@ -137,7 +140,8 @@ describe('EventEntryValidator', () => {
         {type: 'ambrosus.event.location.geo', longitude: 181, latitude: 0}
       ]);
 
-      expect(() => locationGeoValidator.validate(event)).to.throw(JsonValidationError)
+      expect(() => locationGeoValidator.validate(event))
+        .to.throw(JsonValidationError)
         .and.have.nested.property('errors[0].message', 'should be <= 180');
     });
 
@@ -145,7 +149,8 @@ describe('EventEntryValidator', () => {
       const event = createEventWithEntries([
         {type: 'ambrosus.event.location.geo', longitude: -181, latitude: 0}
       ]);
-      expect(() => locationGeoValidator.validate(event)).to.throw(JsonValidationError)
+      expect(() => locationGeoValidator.validate(event))
+        .to.throw(JsonValidationError)
         .and.have.nested.property('errors[0].message', 'should be >= -180');
     });
 
@@ -153,7 +158,8 @@ describe('EventEntryValidator', () => {
       const event = createEventWithEntries([
         {type: 'ambrosus.event.location.geo', longitude: 0, latitude: 91}
       ]);
-      expect(() => locationGeoValidator.validate(event)).to.throw(JsonValidationError)
+      expect(() => locationGeoValidator.validate(event))
+        .to.throw(JsonValidationError)
         .and.have.nested.property('errors[0].message', 'should be <= 90');
     });
 
@@ -161,7 +167,8 @@ describe('EventEntryValidator', () => {
       const event = createEventWithEntries([
         {type: 'ambrosus.event.location.geo', longitude: 0, latitude: -91}
       ]);
-      expect(() => locationGeoValidator.validate(event)).to.throw(JsonValidationError)
+      expect(() => locationGeoValidator.validate(event))
+        .to.throw(JsonValidationError)
         .and.have.nested.property('errors[0].message', 'should be >= -90');
     });
   });
