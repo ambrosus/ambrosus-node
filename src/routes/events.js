@@ -13,6 +13,13 @@ export const findEventsHandler = (modelEngine) => async (req, res) => {
     }));
 };
 
+export const fetchEventHandler = (modelEngine) => async (req, res) => {
+  const event = await modelEngine.getEvent(req.params.eventId, req.tokenData);
+  res.status(200)
+    .type('json')
+    .send(JSON.stringify(event));
+};
+
 const eventsRouter = (tokenAuthenticator, identityManager, modelEngine) => {
   const router = new express.Router();
 
@@ -20,6 +27,11 @@ const eventsRouter = (tokenAuthenticator, identityManager, modelEngine) => {
     accessTokenMiddleware(tokenAuthenticator, false),
     queryParameterProcessorMiddleware,
     asyncMiddleware(findEventsHandler(modelEngine))
+  );
+
+  router.get('/:eventId',
+    accessTokenMiddleware(tokenAuthenticator, false),
+    asyncMiddleware(fetchEventHandler(modelEngine))
   );
 
   return router;

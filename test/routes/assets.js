@@ -4,7 +4,7 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import {createAssetHandler, fetchAssetHandler, createEventHandler, fetchEventHandler} from '../../src/routes/assets';
+import {createAssetHandler, fetchAssetHandler, createEventHandler} from '../../src/routes/assets';
 import {put} from '../../src/utils/dict_utils';
 import {createAsset, createEvent} from '../fixtures/assets_events';
 
@@ -99,29 +99,6 @@ describe('Assets', () => {
     it('fails if the path assetId differs from the one in content.idData.assetId', async () => {
       req.params.assetId = '0x3333';
       await expect(injectedHandler(req, res)).to.eventually.be.rejectedWith(ValidationError);
-    });
-  });
-
-  describe('fetching event', () => {
-    const eventId = 'eventid';
-    let mockEvent;
-    let injectedHandler;
-
-    beforeEach(() => {
-      mockEvent = createEvent();
-      mockModelEngine.getEvent.resolves(put(mockEvent, 'eventId', eventId));
-      injectedHandler = fetchEventHandler(mockModelEngine);
-    });
-
-    it('asks the model engine for the event', async () => {
-      req.params.assetId = mockEvent.content.idData.assetId;
-      req.params.eventId = eventId;
-      await injectedHandler(req, res);
-
-      expect(mockModelEngine.getEvent).to.have.been.calledWith(eventId);
-
-      expect(res._getStatusCode()).to.eq(200);
-      expect(res._isJSON()).to.be.true;
     });
   });
 });

@@ -4,12 +4,14 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import {findEventsHandler} from '../../src/routes/events';
+import {findEventsHandler, fetchEventHandler} from '../../src/routes/events';
 
 import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {adminAccountWithSecret} from '../fixtures/account';
+import {put} from '../../src/utils/dict_utils';
+import {createEvent} from '../fixtures/assets_events';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -27,7 +29,8 @@ describe('Events', () => {
 
   beforeEach(async () => {
     mockModelEngine = {
-      findEvents: sinon.stub()
+      findEvents: sinon.stub(),
+      getEvent: sinon.stub()
     };
     req = httpMocks.createRequest({});
     res = httpMocks.createResponse();
@@ -69,6 +72,29 @@ describe('Events', () => {
       expect(res._isJSON()).to.be.true;
       expect(returnedData.results.length).to.equal(4);
       expect(returnedData.resultCount).to.equal(165);
+    });
+  });
+
+  describe('fetching event', () => {
+    const eventId = 'eventid';
+    let mockEvent;
+    let injectedHandler;
+
+    beforeEach(() => {
+      mockEvent = createEvent();
+      mockModelEngine.getEvent.resolves(put(mockEvent, 'eventId', eventId));
+      injectedHandler = fetchEventHandler(mockModelEngine);
+    });
+
+    it('asks the model engine for the event', async () => {
+      req.params.assetId = mockEvent.content.idData.assetId;
+      req.params.eventId = eventId;
+      await injectedHandler(req, res);
+
+      expect(mockModelEngine.getEvent).to.have.been.calledWith(eventId);
+
+      expect(res._getStatusCode()).to.eq(200);
+      expect(res._isJSON()).to.be.true;
     });
   });
 });
