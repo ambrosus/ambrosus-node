@@ -147,7 +147,6 @@ describe('Entity Builder', () => {
 
       it('uses the IdentityManager for checking signature (incorrect)', () => {
         mockIdentityManager.validateSignature.throws(new ValidationError('Signature is invalid'));
-
         expect(() => entityBuilder.validateEvent(exampleEvent)).to.throw(ValidationError);
         expect(mockIdentityManager.validateSignature).to.have.been.calledOnce;
       });
@@ -204,9 +203,7 @@ describe('Entity Builder', () => {
 
   it('Generating stubs of events', () => {
     const entityBuilder = new EntityBuilder({});
-
     const ret = entityBuilder.stubForEvent(exampleEvent);
-
     expect(ret.content.data).to.be.undefined;
   });
 
