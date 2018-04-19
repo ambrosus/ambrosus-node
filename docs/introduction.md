@@ -95,6 +95,6 @@ All `idData` of every entity is always publically available. Entity creator can 
 
 ## What is next?
 
-Go to step-by-step [javascript tutorial](https://github.com/ambrosus/ambrosus-node/blob/master/docs/jstutorial.md) or [cURL tutorial](https://github.com/ambrosus/ambrosus-node/blob/master/docs/tutorial.md).
+Go to step-by-step [tutorial](https://github.com/ambrosus/ambrosus-node/blob/master/docs/tutorial.md).
 
 Alternativelly, visit [ambrosus.docs.apiary.io](https://ambrosus.docs.apiary.io/) for full API documentation.
