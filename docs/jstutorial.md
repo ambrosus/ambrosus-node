@@ -38,10 +38,10 @@ The returned result is an asset, and it looks something like this:
 ```
 
 ### 2. Get event
-In a similar way to get an event you need to do a GET query on `/assets/:assetId/events/:eventId`, where `assetId` is an id of the subject (an asset that is linked to the event) and `:eventId` is the id of the event itself. See example below.
+In a similar way to get an event you need to do a GET query on `/events/:eventId`, where `eventId` is id of an event. See example below.
 
 ```js
-const url = 'https://gateway-test.ambrosus.com/assets/0x0633b3298b774302983527160fd2b4a869976c98b22c96503995bc3ee8a4b6cc/events/0x404ca30c026400cf0a24941a883343340bf15c2b3f38c3316b9c460c507d1849'
+const url = 'https://gateway-test.ambrosus.com/events/0x404ca30c026400cf0a24941a883343340bf15c2b3f38c3316b9c460c507d1849'
 const response = await fetch(url)
 const event = await response.json();
 ```

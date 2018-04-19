@@ -36,13 +36,6 @@ export const createEventHandler = (modelEngine) => async (req, res) => {
   res.status(201).send();
 };
 
-export const fetchEventHandler = (modelEngine) => async (req, res) => {
-  const event = await modelEngine.getEvent(req.params.eventId, req.tokenData);
-  res.status(200)
-    .type('json')
-    .send(JSON.stringify(event));
-};
-
 export const findEventsPerAssetHandler = (modelEngine) => async (req, res) => {
   const queryParams = {...req.query, assetId: req.params.assetId};
   const {results, resultCount} = await modelEngine.findEvents(queryParams, req.tokenData);
@@ -76,11 +69,6 @@ const assetRouter = (tokenAuthenticator, identityManager, modelEngine) => {
     presignerMiddleware(identityManager),
     prehasherMiddleware(identityManager, 'content', 'eventId'),
     asyncMiddleware(createEventHandler(modelEngine))
-  );
-
-  router.get('/:assetId/events/:eventId',
-    accessTokenMiddleware(tokenAuthenticator, false),
-    asyncMiddleware(fetchEventHandler(modelEngine))
   );
 
   router.get('/:assetId/events/',

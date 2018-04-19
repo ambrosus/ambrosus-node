@@ -38,6 +38,15 @@ describe('Events Integrations: Find', () => {
       })
     );
   });
+  describe('Fetch', () => {
+    it('fetches an event when valid event id provided', async () => {
+      const exampleEventId = scenario.events[0].eventId;
+      const response = await apparatus.request().get(`/events/${exampleEventId}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`);
+      const {body} = response;
+      expect(body).to.deep.equal(scenario.events[0]);
+    });
+  });
 
   it('with perPage returns only requested number of newest (by timestamp) events', async () => {
     const perPage = 4;
