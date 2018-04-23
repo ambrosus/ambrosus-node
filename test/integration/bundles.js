@@ -6,7 +6,7 @@ import chaiHttp from 'chai-http';
 import {adminAccountWithSecret} from '../fixtures/account';
 import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
 import ScenarioBuilder from '../fixtures/scenario_builder';
-import {getDefaultAddress, createWeb3, DEFAULT_GAS} from '../../src/utils/web3_tools';
+import {getDefaultAddress, createWeb3} from '../../src/utils/web3_tools';
 
 chai.use(chaiHttp);
 chai.use(sinonChai);
@@ -38,7 +38,7 @@ describe('Bundles - Integrations', () => {
     await scenario.addAdminAccount(adminAccountWithSecret);
 
     const from = getDefaultAddress(await createWeb3());
-    await apparatus.contractManager.bundleRegistry.methods.addToWhitelist(from, url).send({from, gas: DEFAULT_GAS});
+    await apparatus.contractManager.bundleRegistry.methods.addToWhitelist(from, url).send({from});
 
     // this 2 assets and 3 events will go into the bundle
     entitiesIds = [

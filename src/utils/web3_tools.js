@@ -1,7 +1,7 @@
 import Web3 from 'web3';
 import Config from './config';
 
-export const DEFAULT_GAS = 4700000;
+const DEFAULT_GAS = 4700000;
 
 function isValidRPCAddress(rpc) {
   return /^((?:http)|(?:ws)):\/\//g.test(rpc);
@@ -84,13 +84,18 @@ export function getDefaultPrivateKey(web3) {
 }
 
 export function loadContract(web3, abi, address) {
-  return new web3.eth.Contract(abi, address);
+  return new web3.eth.Contract(abi, address, {
+    gas: DEFAULT_GAS,
+    gasPrice: web3.utils.toWei('5', 'gwei')
+  });
 }
 
 export async function deployContract(web3, abi, bytecode, args = [], options = {}) {
   const defaultAddress = getDefaultAddress(web3);
-  return new web3.eth.Contract(abi)
-    .deploy({data: bytecode, arguments: args})
+  return new web3.eth.Contract(abi, undefined, {
+    gas: DEFAULT_GAS,
+    gasPrice: web3.utils.toWei('5', 'gwei')
+  }).deploy({data: bytecode, arguments: args})
     .send({
       from: defaultAddress,
       gas: DEFAULT_GAS,
