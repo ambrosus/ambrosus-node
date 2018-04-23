@@ -40,6 +40,7 @@ function importPrivateKey(web3) {
   try {
     const privateKey = Config.nodePrivateKey();
     const account = web3.eth.accounts.privateKeyToAccount(privateKey);
+    web3.eth.accounts.wallet.add(account);
     web3.eth.defaultAccount = account.address;
     return account;
   } catch (err) {
@@ -53,7 +54,6 @@ export async function createWeb3() {
   const rpc = Config.web3Rpc();
 
   const account = importPrivateKey(web3);
-  web3.eth.defaultAccount = account.address;
 
   if (isValidRPCAddress(rpc)) {
     web3.setProvider(rpc);
@@ -63,7 +63,6 @@ export async function createWeb3() {
   } else {
     throw new Error('A configuration value for web3 rpc server is missing');
   }
-  web3.eth.accounts.wallet.add(account);
 
   return web3;
 }

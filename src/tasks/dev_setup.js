@@ -9,7 +9,9 @@ async function createAdminAccount(dataModelEngine) {
     console.log('Creating admin account');
     const account = await dataModelEngine.addAdminAccount();
     console.log(`Address: ${account.address}`);
-    console.log(`Secret:  ${account.secret}`);
+    if (account.secret) {
+      console.log(`Secret:  ${account.secret}`);
+    }
   } catch (exception) {
     console.log(exception.message);
   }
@@ -49,7 +51,11 @@ async function setupDevelopment(dataModelEngine) {
 
 build()
   .then(async ({client, dataModelEngine}) => {
-    await setupDevelopment(dataModelEngine);
+    try {
+      await setupDevelopment(dataModelEngine);
+    } catch (err) {
+      console.error(`Verify if config files have correctly set 'web3.rpc' and 'web3.nodePrivateKey'\n${err.message}`);
+    }
     await client.close();
   })
   .catch((exception) => {
