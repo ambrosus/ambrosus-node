@@ -52,18 +52,18 @@ export async function createWeb3() {
 
   const rpc = Config.web3Rpc();
 
-  // TODO rewrite after ganache is fixed https://github.com/trufflesuite/ganache-core/pull/74
   const account = importPrivateKey(web3);
   web3.eth.defaultAccount = account.address;
+
   if (isValidRPCAddress(rpc)) {
     web3.setProvider(rpc);
-    web3.eth.accounts.wallet.add(account);
   } else if (isUsingGanache(rpc)) {
     web3.setProvider(createGanacheProvider(account.privateKey));
     await ganacheTopUpDefaultAccount(web3);
   } else {
     throw new Error('A configuration value for web3 rpc server is missing');
   }
+  web3.eth.accounts.wallet.add(account);
 
   return web3;
 }
@@ -80,33 +80,25 @@ export function getDefaultAddress(web3) {
 export function getDefaultPrivateKey(web3) {
   const defaultAddress = getDefaultAddress(web3);
   const account = web3.eth.accounts.wallet[defaultAddress];
-  if (account === undefined) {
-    return Config.nodePrivateKey();
-  }
   return account.privateKey;
 }
 
 export function loadContract(web3, abi, address) {
-  const contract = new web3.eth.Contract(abi, address);
-  return contract;
+  return new web3.eth.Contract(abi, address, {
+    gas: DEFAULT_GAS,
+    gasPrice: web3.utils.toWei('5', 'gwei')
+  });
 }
 
 export async function deployContract(web3, abi, bytecode, args = [], options = {}) {
   const defaultAddress = getDefaultAddress(web3);
-  const contract = await new web3.eth.Contract(abi)
-    .deploy({data: bytecode, arguments: args})
+  return new web3.eth.Contract(abi, undefined, {
+    gas: DEFAULT_GAS,
+    gasPrice: web3.utils.toWei('5', 'gwei')
+  }).deploy({data: bytecode, arguments: args})
     .send({
       from: defaultAddress,
       gas: DEFAULT_GAS,
       ...options
     });
-  return contract;
-}
-
-export async function ensureTransactionSucceeded(pendingTransaction) {
-  const receipt = await pendingTransaction;
-  if (receipt.status === '0x0') {
-    throw new Error(`Ethereum error, tx: ${receipt.transactionHash}`);
-  }
-  return receipt;
 }
