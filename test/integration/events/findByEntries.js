@@ -42,6 +42,13 @@ describe('Events Integrations: Find by data entries', () => {
         valueY: 2
       }      
     }]);
+    await scenario.addEvent(0, 0, {timestamp: 1, accessLevel: 0}, [{
+      type: 'ambrosus.asset.location.geo',
+      geoJson: {
+        type: 'Point',
+        coordinates: [0, 0]
+      }
+    }]);
   });
 
   const get = (url) =>
@@ -76,6 +83,12 @@ describe('Events Integrations: Find by data entries', () => {
     const response = await get(`/events?data[acceleration.valueY]=number(2)`);
     expect(response.body.resultCount).to.eq(1);
     expect(response.body.results[0].content.data[0].type).to.equal('ambrosus.event.example');
+  });
+
+  it('works with geo search', async () => {
+    const response = await get(`/events?data[geoJson]=geo(0, 0.0001, 1000)`);
+    expect(response.body.resultCount).to.eq(1);
+    expect(response.body.results[0].content.data[0].type).to.equal('ambrosus.asset.location.geo');
   });
 
   it('fails when array index provided in query', async () => {

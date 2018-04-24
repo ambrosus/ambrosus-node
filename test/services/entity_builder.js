@@ -110,7 +110,8 @@ describe('Entity Builder', () => {
         const dataTypes = [
           'ambrosus.event.identifiers',
           'ambrosus.event.location.asset',
-          'ambrosus.event.location.geo'];
+          'ambrosus.event.location.geo',
+          'ambrosus.asset.location.geo'];
         expect(entityBuilder.eventValidators
           .map((validator) => validator.type)
           .filter((type) => type !== undefined)
@@ -120,17 +121,18 @@ describe('Entity Builder', () => {
 
       it('throws ValidationError if event not passing event format validation', () => {
         const brokenEvent = put(exampleEvent, 'content.data',
-          [...exampleEvent.content.data, {type: 'ambrosus.event.location.geo', latitude: 91}]);
+          [...exampleEvent.content.data, {}]);
         expect(() => entityBuilder.validateEvent(brokenEvent))
           .to.throw(JsonValidationError)
-          .and.have.nested.property('errors[0].dataPath', '.latitude');
+          .and.have.nested.property('errors[0].message', `should have required property 'type'`);
       });
 
       it('throws ValidationError if event not passing custom entity validation', () => {
-        const brokenEvent = put(exampleEvent, 'content.data', [{type: 'ambrosus.event.location.geo'}]);
+        const brokenEvent = put(exampleEvent, 'content.data',
+          [...exampleEvent.content.data, {type: 'ambrosus.event.location.geo', geoJson : {type : 'Point', coordinates : [50]}}]);
         expect(() => entityBuilder.validateEvent(brokenEvent))
           .to.throw(JsonValidationError)
-          .and.have.nested.property('errors[0].params.missingProperty', 'latitude');
+          .and.have.nested.property('errors[0].dataPath', '.geoJson.coordinates');
       });      
 
       it('throws if accessLevel not positive integer', () => {
@@ -362,6 +364,16 @@ describe('Entity Builder', () => {
       it('throws if unsupported by entry syntax (array)', () => {
         const params = put(validParamsAsStrings, 'data[acceleration]', '[1, 2]');
         expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+      });
+
+      it('throws if geo data stored in field other than geoJson', () => {
+        const params = {data: {someField: {locationLongitude : 2, locationLatitude : 10, locationMaxDistance : 15}}};
+        expect(() => entityBuilder.ensureGeoLocationParamsCorrectlyPlaced(params)).to.throw(InvalidParametersError);
+      });
+
+      it('throws if geoJson field contains non geographical data', () => {
+        const params = {data: {geoJson: '1'}};
+        expect(() => entityBuilder.ensureGeoLocationParamsCorrectlyPlaced(params)).to.throw(InvalidParametersError);
       });
     });
 

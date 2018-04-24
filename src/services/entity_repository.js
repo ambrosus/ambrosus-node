@@ -9,6 +9,10 @@ export default class EntityRepository {
     };
   }
 
+  async initializeIndexes() {
+    await this.db.collection('events').ensureIndex({'content.data.geoJson' : '2dsphere'});
+  }
+
   async storeAsset(asset) {
     await this.db.collection('assets').insertOne({...asset});
   }
@@ -49,6 +53,20 @@ export default class EntityRepository {
     };
   }
 
+  assembleGeoQueryPart(value) {
+    return {'content.data.geoJson': {$near: {
+      $geometry: {
+        type: 'Point',
+        coordinates: [value.locationLongitude , value.locationLatitude]
+      },
+      $maxDistance: value.locationMaxDistance
+    }}};
+  }
+
+  assembleDefaultQueryPart(key, value) {
+    return {'content.data': {$elemMatch: {[key]: value}}};
+  }
+
   addDataAccessLevelLimitationIfNeeded(queryParts, accessLevel) {
     const part = {'content.idData.accessLevel': {$lte: accessLevel}};
     if (queryParts.some((queryPart) => queryPart['content.idData.accessLevel'])) {
@@ -59,11 +77,20 @@ export default class EntityRepository {
 
   getConfigurationForFindEventsByEntry(params, accessLevel) {
     let queryParts = [];
+    let queryPart;
     if (params.data) {
       queryParts = this.addDataAccessLevelLimitationIfNeeded(queryParts, accessLevel);
     }
     for (const key in params.data) {
-      const queryPart = {'content.data': {$elemMatch: {[key]: params.data[key]}}};
+      switch (key) {
+        case 'geoJson':
+          queryPart = this.assembleGeoQueryPart(params.data[key]);
+          break;
+        default:
+          queryPart = this.assembleDefaultQueryPart(key, params.data[key]);
+          break;
+      }
+
       queryParts = this.addToQuery(queryParts, queryPart);
     }
     return queryParts;
