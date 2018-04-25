@@ -1,10 +1,11 @@
 import Server from './server';
-import build from './build';
 import BundleDownloader from './workers/bundle_downloader';
 import BundleFinaliser from './workers/bundle_finaliser';
+import Builder from './builder';
 
 async function start() {
-  const {dataModelEngine} = await build();
+  const builder = new Builder();
+  const {dataModelEngine} = await builder.build();
   
   const server = new Server(dataModelEngine);
   server.start();
