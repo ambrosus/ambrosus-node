@@ -28,8 +28,8 @@ describe('Bundle downloader - integration', () => {
 
   beforeEach(async () => {
     ({dataModelEngine, client, registryContractAddressStub} = await buildWith({web3,
-      dbUri: 'mongodb://localhost:27017/ambrosus_gateway_test2',
-      db: 'ambrosus_gateway_test2',
+      mongoUri: 'mongodb://localhost:27017/ambrosus_gateway_test2',
+      mongoDatabase: 'ambrosus_gateway_test2',
       bundleRegistryContract: await deployContract(web3, BundleRegistry.abi, BundleRegistry.bytecode),
       otherVendorUri: 'http://127.0.0.1:9876'
     }));

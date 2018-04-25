@@ -1,6 +1,6 @@
 import {writeFile} from '../utils/file';
 import path from 'path';
-import build from '../build';
+import Builder from '../builder';
 import BundleRegistry from '../../build/contracts/BundleRegistry.json';
 import {deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
 
@@ -49,7 +49,9 @@ async function setupDevelopment(dataModelEngine) {
   await deployRegistryContract(dataModelEngine);
 }
 
-build()
+const builder = new Builder();
+
+builder.build()
   .then(async ({client, dataModelEngine}) => {
     try {
       await setupDevelopment(dataModelEngine);
