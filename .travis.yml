@@ -19,5 +19,5 @@ script:
   - yarn dev:lint
 env:
   global:
-    - MONGODB_URI="mongodb://localhost"
+    - MONGODB_URI="mongodb://localhost/ambrosus_gateway_test"
     - PORT=9876

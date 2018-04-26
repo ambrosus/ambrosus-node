@@ -171,6 +171,6 @@ describe('Accounts - Integrations', async () => {
   });
 
   after(async () => {
-    apparatus.stop();
+    await apparatus.stop();
   });
 });

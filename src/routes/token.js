@@ -7,11 +7,11 @@ export const createTokenHandler = (tokenAuthenticator) => (req, res) => {
   res.status(201).send({token});
 };
 
-const tokenRouter = (tokenAuthenticator) => {
+const tokenRouter = (tokenAuthenticator, config) => {
   const router = new express.Router();
   router.post('/',
     bodyParser.json(),
-    ambAuthorizationHeaderMiddleware,
+    ambAuthorizationHeaderMiddleware(config),
     createTokenHandler(tokenAuthenticator)
   );
   return router;

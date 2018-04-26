@@ -38,7 +38,7 @@ describe('Bundles - Integrations', () => {
     await scenario.addAdminAccount(adminAccountWithSecret);
 
     const from = getDefaultAddress(await createWeb3());
-    await apparatus.contractManager.bundleRegistry.methods.addToWhitelist(from, url).send({from});
+    await apparatus.bundleProofRegistryContract.methods.addToWhitelist(from, url).send({from});
 
     // this 2 assets and 3 events will go into the bundle
     entitiesIds = [
@@ -49,7 +49,7 @@ describe('Bundles - Integrations', () => {
       await scenario.addEvent(0, 1, {timestamp: 2}, [{type: 'e'}])
     ].map(mapEntitiesToIds);
 
-    res = await apparatus.modelEngine.finaliseBundle(1);
+    res = await apparatus.dataModelEngine.finaliseBundle(1);
 
     // this additional event should not go into the bundle 
     await scenario.addEvent(0, 1, {timestamp: 3}, [{type: '4'}]);
@@ -57,7 +57,7 @@ describe('Bundles - Integrations', () => {
 
   after(async () => {
     await apparatus.cleanDB();
-    apparatus.stop();
+    await apparatus.stop();
   });
 
   describe('finalising bundles', () => {
@@ -69,8 +69,7 @@ describe('Bundles - Integrations', () => {
 
     it('should upload the proof to ethereum, and emit a event', async () => {
       const emittedEvents = await apparatus
-        .contractManager
-        .bundleProofRegistryContract()
+        .bundleProofRegistryContract
         .getPastEvents('BundleAdded');
       const expectedEvent = emittedEvents.filter((value) => value.returnValues.bundleId === res.bundleId);
       expect(expectedEvent).to.have.length(1);

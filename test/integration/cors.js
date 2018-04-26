@@ -1,7 +1,6 @@
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import chaiAsPromised from 'chai-as-promised';
-import {stub} from 'sinon';
 import Apparatus from '../helpers/apparatus';
 import pkPair from '../fixtures/pk_pair';
 import Config from '../../src/utils/config';
@@ -17,23 +16,10 @@ describe('CORS - Integrations', async () => {
   };
 
   let apparatus;
-  let ambAuthEnabledStub;
 
   before(async () => {
     apparatus = new Apparatus();
-    ambAuthEnabledStub = stub(Config, 'isAuthorizationWithSecretKeyEnabled');
-
-    await apparatus.start();
-  });
-
-  beforeEach(async () => {
-    ambAuthEnabledStub.returns(true);
-    await apparatus.cleanDB();
-  });
-
-  after(async () => {
-    ambAuthEnabledStub.restore();
-    apparatus.stop();
+    await apparatus.start(null, Config.default({isAuthorizationWithSecretKeyEnabled: true}));
   });
 
   it('Adds the Access-Control-Allow-Origin response header matching the Origin', async () => {
@@ -52,5 +38,13 @@ describe('CORS - Integrations', async () => {
       .set('authorization', `AMB ${pkPair.secret}`) 
       .send(requestData);
     expect(response.header).to.not.have.property('access-control-allow-origin');
+  });
+
+  afterEach(async () => {
+    await apparatus.cleanDB();
+  });
+
+  after(async () => {
+    await apparatus.stop();
   });
 });

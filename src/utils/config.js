@@ -1,46 +1,57 @@
 import config from 'config';
 
 export default class Config {
-  static get(path, pathValue) {
-    return pathValue === undefined ? config.get(path) : pathValue;
+  constructor(attributes = {}) {
+    this.attributes = attributes;
   }
 
-  static bundleFinalisationInterval() {
+  withAttributes(attributes = {}) {
+    this.attributes = {...this.attributes, ...attributes};
+    return this;
+  }
+
+  bundleFinalisationInterval() {
     return config.get('bundle.finalisationInterval');
   }
 
-  static bundleDownloadInterval() {
+  bundleDownloadInterval() {
     return config.get('bundle.downloadInterval');
   }
 
-  static bundleRegistryContractAddress() {
+  bundleRegistryContractAddress() {
+    if (this.attributes.bundleRegistryContractAddress) {
+      return this.attributes.bundleRegistryContractAddress;
+    }
     if (!config.has('bundle.registryContractAddress')) {
       return null;
     }
     return config.get('bundle.registryContractAddress');
   }
 
-  static serverPort() {
-    return Config.get('server.port', process.env.PORT);
+  serverPort() {
+    return process.env.PORT || config.get('server.port');
   }
 
-  static mongoDbUri() {
-    return Config.get('mongo.dbUri', process.env.MONGODB_URI);
+  mongoUri() {
+    return this.attributes.mongoUri || process.env.MONGODB_URI || config.get('mongoUri');
   }
 
-  static mongoDbDatabase() {
-    return Config.get('mongo.database', process.env.MONGODB_DATABASE);
+  nodePrivateKey() {
+    return process.env.WEB3_NODEPRIVATEKEY || config.get('web3.nodePrivateKey');
   }
 
-  static nodePrivateKey() {
-    return Config.get('web3.nodePrivateKey', process.env.WEB3_NODEPRIVATEKEY);
+  web3Rpc() {
+    return process.env.WEB3_RPC || config.get('web3.rpc');
   }
 
-  static web3Rpc() {
-    return Config.get('web3.rpc', process.env.WEB3_RPC);
+  isAuthorizationWithSecretKeyEnabled() {
+    if (this.attributes.isAuthorizationWithSecretKeyEnabled === false) {
+      return false;
+    }
+    return config.get('authorizationWithSecretEnabled');
   }
 
-  static isAuthorizationWithSecretKeyEnabled() {
-    return Config.get('authorizationWithSecretEnabled');
+  static default(attributes) {
+    return new Config(attributes);
   }
 }

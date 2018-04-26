@@ -1,20 +1,11 @@
-import Server from './server';
-import BundleDownloader from './workers/bundle_downloader';
-import BundleFinaliser from './workers/bundle_finaliser';
-import Builder from './builder';
+import Application from './application';
 
 async function start() {
-  const builder = new Builder();
-  const {dataModelEngine} = await builder.build();
-  
-  const server = new Server(dataModelEngine);
-  server.start();
-  
-  const bundleDownloader = new BundleDownloader(dataModelEngine);
-  bundleDownloader.start();
-
-  const bundleFinaliser = new BundleFinaliser(dataModelEngine);
-  bundleFinaliser.start();
+  const application = new Application();
+  await application.build();
+  await application.ensureAdminAccountExist();
+  await application.startServer();
+  await application.startBackground();
 }
 
 start()

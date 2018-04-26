@@ -1,10 +1,7 @@
 module.exports = {
+  mongoUri: 'mongodb://localhost:27017/ambrosus_gateway_development',
   bundle: {
     registryContractAddress: require('./registryContractAddress.json')
-  },
-  mongo: {
-    dbUri: 'mongodb://localhost:27017/ambrosus_gateway_development',
-    database: 'ambrosus_gateway_developemnt'
   },
   web3: {
     rpc: 'http://127.0.0.1:8545',

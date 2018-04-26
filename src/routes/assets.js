@@ -47,12 +47,12 @@ export const findEventsPerAssetHandler = (modelEngine) => async (req, res) => {
     }));
 };
 
-const assetRouter = (tokenAuthenticator, identityManager, modelEngine) => {
+const assetRouter = (tokenAuthenticator, identityManager, modelEngine, config) => {
   const router = new express.Router();
 
   router.post('/',
     bodyParser.json(),
-    ambAuthorizationHeaderMiddleware,
+    ambAuthorizationHeaderMiddleware(config),
     presignerMiddleware(identityManager),
     prehasherMiddleware(identityManager, 'content', 'assetId'),
     asyncMiddleware(createAssetHandler(modelEngine))
@@ -64,7 +64,7 @@ const assetRouter = (tokenAuthenticator, identityManager, modelEngine) => {
 
   router.post('/:assetId/events',
     bodyParser.json(),
-    ambAuthorizationHeaderMiddleware,
+    ambAuthorizationHeaderMiddleware(config),
     prehasherMiddleware(identityManager, 'content.data', 'content.idData.dataHash'),
     presignerMiddleware(identityManager),
     prehasherMiddleware(identityManager, 'content', 'eventId'),

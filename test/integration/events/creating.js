@@ -117,6 +117,6 @@ describe('Events Integrations: Create', () => {
   });
 
   after(async () => {
-    apparatus.stop();
+    await apparatus.stop();
   });
 });
