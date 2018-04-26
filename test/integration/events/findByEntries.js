@@ -42,13 +42,6 @@ describe('Events Integrations: Find by data entries', () => {
         valueY: 2
       }      
     }]);
-    await scenario.addEvent(0, 0, {timestamp: 1, accessLevel: 0}, [{
-      type: 'ambrosus.asset.location.geo',
-      geoJson: {
-        type: 'Point',
-        coordinates: [0, 0]
-      }
-    }]);
   });
 
   const get = (url) =>
@@ -85,12 +78,6 @@ describe('Events Integrations: Find by data entries', () => {
     expect(response.body.results[0].content.data[0].type).to.equal('ambrosus.event.example');
   });
 
-  it('works with geo search', async () => {
-    const response = await get(`/events?data[geoJson]=geo(0, 0.0001, 1000)`);
-    expect(response.body.resultCount).to.eq(1);
-    expect(response.body.results[0].content.data[0].type).to.equal('ambrosus.asset.location.geo');
-  });
-
   it('fails when array index provided in query', async () => {
     expect(get(`/events?data[acceleration][0]=1`))
       .to.eventually.be.rejected.and.have.property('status', 400);
@@ -105,6 +92,92 @@ describe('Events Integrations: Find by data entries', () => {
     const response = await get('/events?data[type]=ambrosus.event.illustration&fromTimestamp=1');
     expect(response.body.resultCount).to.eq(1);
     expect(response.body.results[0].content.data[0].confirmationAddress).to.equal('0x2222222222222222222222222222222222222222');
+  });
+
+
+  describe('geo base search', () => {
+    beforeEach(async () => {
+      await scenario.addEvent(0, 0, {timestamp: 1, accessLevel: 0}, [{
+        type: 'ambrosus.asset.location.geo',
+        geoJson: {
+          type: 'Point',
+          coordinates: [0, 0]
+        }
+      }]);
+      await scenario.addEvent(0, 0, {timestamp: 2, accessLevel: 0}, [{
+        type: 'ambrosus.asset.location.geo',
+        geoJson: {
+          type: 'Point',
+          coordinates: [0, 0.009]
+        }
+      }]);
+      await scenario.addEvent(0, 0, {timestamp: 3, accessLevel: 0}, [{
+        type: 'ambrosus.asset.location.geo',
+        geoJson: {
+          type: 'Point',
+          coordinates: [1, 0]
+        }
+      }, {
+        type: 'ambrosus.event.location.geo',
+        geoJson: {
+          type: 'Point',
+          coordinates: [1, 0.009]
+        }
+      }]);
+      await scenario.addEvent(0, 0, {timestamp: 4, accessLevel: 0}, [{
+        type: 'ambrosus.asset.location.geo',
+        geoJson: {
+          type: 'Point',
+          coordinates: [1, 0]
+        }
+      }]);
+      await scenario.addEvent(0, 0, {timestamp: 5, accessLevel: 0}, [{
+        type: 'ambrosus.event.location.geo',
+        geoJson: {
+          type: 'Point',
+          coordinates: [1, 0.009]
+        }
+      }]);
+    });
+
+    it('works for an exact point', async () => {
+      const response = await get(`/events?data[geoJson]=geo(0, 0, 0)`);
+      expect(response.body.resultCount).to.eq(1);
+      expect(response.body.results[0].content.data[0].type).to.equal('ambrosus.asset.location.geo');
+      expect(response.body.results[0].content.idData.timestamp).to.equal(1);
+    });
+    it('works with an area containing one result', async () => {
+      const response = await get(`/events?data[geoJson]=geo(0, 0.017, 1000)`);
+      expect(response.body.resultCount).to.eq(1);
+      expect(response.body.results[0].content.data[0].type).to.equal('ambrosus.asset.location.geo');
+      expect(response.body.results[0].content.idData.timestamp).to.equal(2);
+    });
+    it('works with an area containing multiple results', async () => {
+      const response = await get(`/events?data[geoJson]=geo(0, 0.0045, 600)`);
+      expect(response.body.resultCount).to.eq(2);
+      expect(response.body.results[0].content.data[0].type).to.equal('ambrosus.asset.location.geo');
+      expect(response.body.results[0].content.idData.timestamp).to.equal(2);
+      expect(response.body.results[1].content.data[0].type).to.equal('ambrosus.asset.location.geo');
+      expect(response.body.results[1].content.idData.timestamp).to.equal(1);
+    });
+    it('works with events containing multiple geoJson objects', async () => {
+      const response = await get(`/events?data[geoJson]=geo(1, 0.009, 0)`);
+      expect(response.body.resultCount).to.eq(2);
+      expect(response.body.results[0].content.data[0].type).to.equal('ambrosus.event.location.geo');
+      expect(response.body.results[0].content.idData.timestamp).to.equal(5);
+      expect(response.body.results[1].content.data[0].type).to.equal('ambrosus.asset.location.geo');
+      expect(response.body.results[1].content.idData.timestamp).to.equal(3);
+    });
+    it('works with events multiple geoJsons contained in queried area', async () => {
+      const response = await get(`/events?data[geoJson]=geo(1, 0.0045, 600)`);
+      expect(response.body.results[0].content.data[0].type).to.equal('ambrosus.event.location.geo');
+      expect(response.body.results[0].content.idData.timestamp).to.equal(5);
+      expect(response.body.results[1].content.data[0].type).to.equal('ambrosus.asset.location.geo');
+      expect(response.body.results[1].content.idData.timestamp).to.equal(4);
+      expect(response.body.results[2].content.data[0].type).to.equal('ambrosus.asset.location.geo');
+      expect(response.body.results[2].content.data[1].type).to.equal('ambrosus.event.location.geo');
+      expect(response.body.results[2].content.idData.timestamp).to.equal(3);
+    });
   });
 
   afterEach(async () => {    

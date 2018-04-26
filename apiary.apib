@@ -698,7 +698,7 @@ Finds event satisfying provided criteria.
     + perPage : 150 (integer, optional) - number of events to return per page
     + page : 20 (integer, optional) - number of page (more search results than specified in perPage parameter concludes more than one page)
     + createdBy : 0xc5cfd04.....30755ed65 (string, optional) - address of account that created targeting events
-    + data : data[type]=ambrosus.event.custom (object, optional) - This syntax allows to query for events by any fields in data array. Query for nested fields is possible, e.g. data[acceleration.x]=10. By default the type of the value is string. To provide a number, use data[acceleration.x]=number(10). To provide geo coordinates use data[geoJson]=geo(lon, lat, rad).
+    + data : data[type]=ambrosus.event.custom (object, optional) - This syntax allows to query for events by any fields in data array. Query for nested fields is possible, e.g. data[acceleration.x]=10. By default the type of the value is string. To provide a number, use data[acceleration.x]=number(10). To provide geo coordinates use data[geoJson]=geo(longitude, latitude, radius).
 + Response 200 (application/json)
 
     The requested event
