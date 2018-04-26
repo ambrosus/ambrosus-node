@@ -7,7 +7,8 @@ import EventEntryValidator from '../validators/event_entry_validator.js';
 import eventContentSchema from '../validators/schemas/event';
 import indentifiersSchema from '../validators/schemas/custom/ambrosus.event.identifiers.json';
 import locationSchema from '../validators/schemas/custom/ambrosus.event.location.asset.json';
-import locationGeoSchema from '../validators/schemas/custom/ambrosus.event.location.geo.json';
+import locationEventGeoSchema from '../validators/schemas/custom/ambrosus.event.location.geo.json';
+import locationAssetGeoSchema from '../validators/schemas/custom/ambrosus.asset.location.geo.json';
 import {put, pick} from '../utils/dict_utils';
 import {InvalidParametersError} from '../errors/errors';
 
@@ -17,7 +18,8 @@ export default class EntityBuilder {
       new JsonSchemaValidator(eventContentSchema),
       new EventEntryValidator('ambrosus.event.identifiers', new JsonSchemaValidator(indentifiersSchema)),
       new EventEntryValidator('ambrosus.event.location.asset', new JsonSchemaValidator(locationSchema)),
-      new EventEntryValidator('ambrosus.event.location.geo', new JsonSchemaValidator(locationGeoSchema))
+      new EventEntryValidator('ambrosus.event.location.geo', new JsonSchemaValidator(locationEventGeoSchema)),
+      new EventEntryValidator('ambrosus.asset.location.geo', new JsonSchemaValidator(locationAssetGeoSchema))
     ];
     this.identityManager = identityManager;
   }
@@ -101,14 +103,13 @@ export default class EntityBuilder {
 
   validateAndCastFindEventsParams(params) {
     const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage', 'createdBy', 'data'];
-    if (params.data !== undefined) {
-      this.ensureEntryParamsValuesNotObjects(params.data);
-    }
     
     const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
     if (invalidFields.length > 0) {
       throw new InvalidParametersError(`Some parameters (${invalidFields.join(',')}) are not supported`);
     }
+
+    this.ensureGeoLocationParamsCorrectlyPlaced(params);
 
     params.fromTimestamp = validateIntegerParameterAndCast(params.fromTimestamp, 'fromTimestamp');
     params.toTimestamp = validateIntegerParameterAndCast(params.toTimestamp, 'toTimestamp');
@@ -117,12 +118,21 @@ export default class EntityBuilder {
 
     return {...params};
   }
-  ensureEntryParamsValuesNotObjects(entries) {
-    const keys = Object.keys(entries);
-    keys.forEach((key) => {
-      if (typeof entries[key] === 'object') {
-        throw new InvalidParametersError('Entry parameters should not be array or object type');
+
+  ensureGeoLocationParamsCorrectlyPlaced(params) {
+    for (const key in params.data) {
+      if (key === 'geoJson' &&
+        (params.data[key].locationLongitude === undefined
+        || params.data[key].locationLatitude === undefined
+        || params.data[key].locationMaxDistance === undefined)) {
+        throw new InvalidParametersError(`geoJson field stores only geographical coordinates`);
       }
-    });
+      if (key !== 'geoJson' &&
+        (params.data[key].locationLongitude !== undefined
+        || params.data[key].locationLatitude !== undefined
+        || params.data[key].locationMaxDistance !== undefined)) {
+        throw new InvalidParametersError(`Location can only be stored on geoJson field`);
+      }
+    }
   }
 }

@@ -29,6 +29,7 @@ class Builder {
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
     this.entityBuilder = new EntityBuilder(this.identityManager);
     this.entityRepository = new EntityStorage(db);
+    await this.entityRepository.initializeIndexes();
     this.proofRepository = new ProofRepository(this.web3,
       this.identityManager.nodeAddress(),
       this.contractManager.bundleProofRegistryContract());

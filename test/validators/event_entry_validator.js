@@ -3,7 +3,8 @@ import EventEntryValidator from '../../src/validators/event_entry_validator.js';
 import JsonSchemaValidator from '../../src/validators/json_schema_validator';
 import identifiersSchema from '../../src/validators/schemas/custom/ambrosus.event.identifiers.json';
 import locationSchema from '../../src/validators/schemas/custom/ambrosus.event.location.asset.json';
-import locationGeoSchema from '../../src/validators/schemas/custom/ambrosus.event.location.geo.json';
+import locationEventGeoSchema from '../../src/validators/schemas/custom/ambrosus.event.location.geo.json';
+import locationAssetGeoSchema from '../../src/validators/schemas/custom/ambrosus.asset.location.geo.json';
 import chai from 'chai';
 
 const {expect} = chai;
@@ -107,37 +108,37 @@ describe('EventEntryValidator', () => {
 
     before(() => {
       locationGeoValidator = new EventEntryValidator('ambrosus.event.location.geo',
-        new JsonSchemaValidator(locationGeoSchema));
+        new JsonSchemaValidator(locationEventGeoSchema));
     });
 
     it('should accept if valid entry', async () => {
       const event = createEventWithEntries([
-        {type: 'ambrosus.event.location.geo', longitude: -100, latitude: 80}
+        {type: 'ambrosus.event.location.geo', geoJson : {type : 'Point', coordinates : [50, 50]}}
       ]);
       expect(() => locationGeoValidator.validate(event)).to.not.throw();
     });
 
-    it('should throw if no longitude', async () => {
+    it('should throw if missing coordinate', async () => {
       const event = createEventWithEntries([
-        {type: 'ambrosus.event.location.geo', longitude: -100}
+        {type: 'ambrosus.event.location.geo', geoJson : {type : 'Point', coordinates : [50]}}
       ]);
       expect(() => locationGeoValidator.validate(event))
         .to.throw(JsonValidationError)
-        .and.have.nested.property('errors[0].params.missingProperty', 'latitude');
+        .and.have.nested.property('errors[0].message', 'should NOT have less than 2 items');
     });
 
-    it('should throw if no latitude', async () => {
+    it('should throw if surplus coordinate', async () => {
       const event = createEventWithEntries([
-        {type: 'ambrosus.event.location.geo', latitude: 80}
+        {type: 'ambrosus.event.location.geo', geoJson : {type : 'Point', coordinates : [50, 50, 50]}}
       ]);
       expect(() => locationGeoValidator.validate(event))
         .to.throw(JsonValidationError)
-        .and.have.nested.property('errors[0].params.missingProperty', 'longitude');
+        .and.have.nested.property('errors[0].message', 'should NOT have more than 2 items');
     });
 
     it('should throw if longitude too big', async () => {
       const event = createEventWithEntries([
-        {type: 'ambrosus.event.location.geo', longitude: 181, latitude: 0}
+        {type: 'ambrosus.event.location.geo', geoJson : {type : 'Point', coordinates : [500, 50]}}
       ]);
       expect(() => locationGeoValidator.validate(event))
         .to.throw(JsonValidationError)
@@ -146,7 +147,7 @@ describe('EventEntryValidator', () => {
 
     it('should throw if longitude too small', async () => {
       const event = createEventWithEntries([
-        {type: 'ambrosus.event.location.geo', longitude: -181, latitude: 0}
+        {type: 'ambrosus.event.location.geo', geoJson : {type : 'Point', coordinates : [-500, 50]}}
       ]);
       expect(() => locationGeoValidator.validate(event))
         .to.throw(JsonValidationError)
@@ -155,7 +156,7 @@ describe('EventEntryValidator', () => {
 
     it('should throw if latitude too big', async () => {
       const event = createEventWithEntries([
-        {type: 'ambrosus.event.location.geo', longitude: 0, latitude: 91}
+        {type: 'ambrosus.event.location.geo', geoJson : {type : 'Point', coordinates : [50, 100]}}
       ]);
       expect(() => locationGeoValidator.validate(event))
         .to.throw(JsonValidationError)
@@ -164,7 +165,77 @@ describe('EventEntryValidator', () => {
 
     it('should throw if latitude too small', async () => {
       const event = createEventWithEntries([
-        {type: 'ambrosus.event.location.geo', longitude: 0, latitude: -91}
+        {type: 'ambrosus.event.location.geo', geoJson : {type : 'Point', coordinates : [50, -100]}}
+      ]);
+      expect(() => locationGeoValidator.validate(event))
+        .to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should be >= -90');
+    });
+  });
+
+  describe('ambrosus.asset.location.geo', () => {
+    let locationGeoValidator;
+
+    before(() => {
+      locationGeoValidator = new EventEntryValidator('ambrosus.asset.location.geo',
+        new JsonSchemaValidator(locationAssetGeoSchema));
+    });
+
+    it('should accept if valid entry', async () => {
+      const event = createEventWithEntries([
+        {type: 'ambrosus.asset.location.geo', geoJson : {type : 'Point', coordinates : [50, 50]}}
+      ]);
+      expect(() => locationGeoValidator.validate(event)).to.not.throw();
+    });
+
+    it('should throw if missing coordinate', async () => {
+      const event = createEventWithEntries([
+        {type: 'ambrosus.asset.location.geo', geoJson : {type : 'Point', coordinates : [50]}}
+      ]);
+      expect(() => locationGeoValidator.validate(event))
+        .to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should NOT have less than 2 items');
+    });
+
+    it('should throw if surplus coordinate', async () => {
+      const event = createEventWithEntries([
+        {type: 'ambrosus.asset.location.geo', geoJson : {type : 'Point', coordinates : [50, 50, 50]}}
+      ]);
+      expect(() => locationGeoValidator.validate(event))
+        .to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should NOT have more than 2 items');
+    });
+
+    it('should throw if longitude too big', async () => {
+      const event = createEventWithEntries([
+        {type: 'ambrosus.asset.location.geo', geoJson : {type : 'Point', coordinates : [500, 50]}}
+      ]);
+      expect(() => locationGeoValidator.validate(event))
+        .to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should be <= 180');
+    });
+
+    it('should throw if longitude too small', async () => {
+      const event = createEventWithEntries([
+        {type: 'ambrosus.asset.location.geo', geoJson : {type : 'Point', coordinates : [-500, 50]}}
+      ]);
+      expect(() => locationGeoValidator.validate(event))
+        .to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should be >= -180');
+    });
+
+    it('should throw if latitude too big', async () => {
+      const event = createEventWithEntries([
+        {type: 'ambrosus.asset.location.geo', geoJson : {type : 'Point', coordinates : [50, 100]}}
+      ]);
+      expect(() => locationGeoValidator.validate(event))
+        .to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should be <= 90');
+    });
+
+    it('should throw if latitude too small', async () => {
+      const event = createEventWithEntries([
+        {type: 'ambrosus.asset.location.geo', geoJson : {type : 'Point', coordinates : [50, -100]}}
       ]);
       expect(() => locationGeoValidator.validate(event))
         .to.throw(JsonValidationError)

@@ -36,6 +36,7 @@ export default class Apparatus {
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
     this.entityBuilder = new EntityBuilder(this.identityManager);
     this.entityRepository = new EntityRepository(db);
+    await this.entityRepository.initializeIndexes();
     this.httpsClient = new HttpsClient();
     this.entityDownloader = new EntityDownloader(this.httpsClient);
     this.proofRepository = new ProofRepository(this.web3, 

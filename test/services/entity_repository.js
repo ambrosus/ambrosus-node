@@ -88,7 +88,7 @@ describe('Entity Repository', () => {
         createdBy: '0x123',
         fromTimestamp: 1,
         toTimestamp: 2,
-        data: {score: 10, acceleration: {valueX: 17}, location: {asset: '0x123'}}
+        data: {score: 10, acceleration: {valueX: 17}, location: {asset: '0x123'}, geoJson: {locationLongitude: 10, locationLatitude: 20, locationMaxDistance: 30}}
       };
       const result = repository.getConfigurationForFindEventsQuery(params);
       expect(result.query).to.deep.eq({
@@ -97,6 +97,13 @@ describe('Entity Repository', () => {
           {'content.data': {$elemMatch: {score: 10}}},
           {'content.data': {$elemMatch: {acceleration: {valueX: 17}}}},
           {'content.data': {$elemMatch: {location: {asset: '0x123'}}}},
+          {'content.data.geoJson': {$near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: [10 , 20]
+            },
+            $maxDistance: 30
+          }}},
           {'content.idData.assetId': 12},
           {'content.idData.createdBy': '0x123'},
           {'content.idData.timestamp': {$gte: 1}},
@@ -170,6 +177,14 @@ describe('Entity Repository', () => {
         asset: scenario.assets[assetIndex].assetId
       });
 
+      const makeLocationGeoEntry = (lon, lat) => ({
+        type: 'ambrosus.event.location.geo',
+        geoJson: {
+          type: 'Point',
+          coordinates: [lon, lat]
+        }
+      });
+
       before(async () => {
         scenario = new ScenarioBuilder(identityManager);
         await scenario.addAdminAccount(adminAccountWithSecret);
@@ -185,9 +200,9 @@ describe('Entity Repository', () => {
           await scenario.addEvent(1, 0, {timestamp: 4, accessLevel: 1}, [makeLocationAssetEntry(0)]),
           await scenario.addEvent(0, 1, {timestamp: 5, accessLevel: 2}, [makeLocationAssetEntry(1)]),
           await scenario.addEvent(0, 1, {timestamp: 6, accessLevel: 0}, [makeLocationAssetEntry(0)]),
-          await scenario.addEvent(0, 1, {timestamp: 7, accessLevel: 1}, [makeLocationAssetEntry(1)]),
-          await scenario.addEvent(1, 1, {timestamp: 8, accessLevel: 2}, [makeLocationAssetEntry(0)]),
-          await scenario.addEvent(1, 1, {timestamp: 9, accessLevel: 0}, [makeLocationAssetEntry(1)])
+          await scenario.addEvent(0, 1, {timestamp: 7, accessLevel: 1}, [makeLocationGeoEntry(0, 0)]),
+          await scenario.addEvent(1, 1, {timestamp: 8, accessLevel: 2}, [makeLocationGeoEntry(0, 1)]),
+          await scenario.addEvent(1, 1, {timestamp: 9, accessLevel: 0}, [makeLocationGeoEntry(0, 0.00005)])
         ];
 
         for (const event of eventsSet) {
@@ -266,12 +281,19 @@ describe('Entity Repository', () => {
         ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(1, 4));
       });
 
-      it('search by location.asset', async () => {
+      it('search by data entry', async () => {
         const targetAssetId = scenario.assets[0].assetId;
         const ret = await expect(storage.findEvents({data: {asset: targetAssetId}}, 1)).to.be.fulfilled;
         expect(ret.results).have.lengthOf(3);
         expect(ret.resultCount).to.equal(3);
         expect(ret.results).to.deep.equal([eventsSet[6], eventsSet[4], eventsSet[0]]);
+      });
+
+      it('search by geo location', async () => {
+        const ret = await expect(storage.findEvents({data: {geoJson: {locationLongitude : 0, locationLatitude: 0, locationMaxDistance: 1000}}}, 3)).to.be.fulfilled;
+        expect(ret.results).have.lengthOf(2);
+        expect(ret.resultCount).to.equal(2);
+        expect(ret.results).to.deep.equal([eventsSet[9], eventsSet[7]]);
       });
     });
   });
