@@ -1,11 +1,11 @@
-import Config from '../utils/config';
 import PeriodicWorker from './periodic_worker';
 
 export default class BundleDownloader extends PeriodicWorker {
-  constructor(dataModelEngine) {
-    super(Config.bundleDownloadInterval());
+  constructor(dataModelEngine, interval, output = console) {
+    super(interval);
     this.dataModelEngine = dataModelEngine;
     this.proofRepository = dataModelEngine.proofRepository;
+    this.output = output;
   }
 
   async beforeStart() {
@@ -18,7 +18,7 @@ export default class BundleDownloader extends PeriodicWorker {
 
   async downloadAllNew() {    
     const count = await this.proofRepository.getBundleCount();
-    console.log(`Found ${count - this.last} new bundles.`);
+    this.output.log(`Found ${count - this.last} new bundles.`);
     for (let index = this.last; index < count; index++) {
       await this.downloadOne(index);
     }    
@@ -29,8 +29,8 @@ export default class BundleDownloader extends PeriodicWorker {
     const bundleId = await this.proofRepository.getBundleByIndex(index);
     const vendorId = (await this.proofRepository.getNodeForBundle(bundleId)).toLowerCase();
     const vendorUrl = await this.proofRepository.getVendorUrl(vendorId);
-    console.log(`Downloading bundle ${bundleId} (index: ${index}) for vendor: ${vendorId} from ${vendorUrl}...`);    
+    this.output.log(`Downloading bundle ${bundleId} (index: ${index}) for vendor: ${vendorId} from ${vendorUrl}...`);    
     await this.dataModelEngine.downloadBundle(bundleId, vendorId);
-    console.log(`Bundle downloaded.`);
+    this.output.log(`Bundle downloaded.`);
   }
 }

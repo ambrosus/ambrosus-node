@@ -223,6 +223,6 @@ describe('Events Integrations: Find', () => {
   after(async () => {
     await apparatus.cleanDB();
     scenario.reset();
-    apparatus.stop();
+    await apparatus.stop();
   });
 });

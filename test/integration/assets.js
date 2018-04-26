@@ -131,6 +131,6 @@ describe('Assets - Integrations', () => {
   });
 
   after(async () => {
-    apparatus.stop();
+    await apparatus.stop();
   });
 });

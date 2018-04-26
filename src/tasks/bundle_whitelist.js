@@ -1,4 +1,5 @@
 import {createWeb3} from '../utils/web3_tools';
+import Config from '../utils/config';
 import commandLineArgs from 'command-line-args';
 import ContractManager from '../services/contract_manager';
 
@@ -24,7 +25,8 @@ console.log('Connecting to AMB chain...');
 createWeb3()
   .then(async (web3) => {
     console.log('Connected.');
-    const bundleRegistry = new ContractManager(web3).bundleProofRegistryContract();
+    const config = Config.default();
+    const bundleRegistry = ContractManager.loadBundleRegistryContract(web3, config.bundleRegistryContractAddress());
     const options = commandLineArgs(optionDefinitions);
     if ([options.add, options.remove, options.check, options.geturl, options.seturl].filter((opt) => opt).length !== 1) {
       console.error('One of the arguments --add, --remove or --check should be given, e.g.');

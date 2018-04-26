@@ -186,6 +186,6 @@ describe('Events Integrations: Find by data entries', () => {
   });
 
   after(async () => {
-    apparatus.stop();
+    await apparatus.stop();
   });
 });

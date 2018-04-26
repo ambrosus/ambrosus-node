@@ -36,9 +36,9 @@ async function ganacheTopUpDefaultAccount(web3) {
   });
 }
 
-function importPrivateKey(web3) {
+function importPrivateKey(web3, config) {
   try {
-    const privateKey = Config.nodePrivateKey();
+    const privateKey = config.nodePrivateKey();
     const account = web3.eth.accounts.privateKeyToAccount(privateKey);
     web3.eth.accounts.wallet.add(account);
     web3.eth.defaultAccount = account.address;
@@ -48,12 +48,12 @@ function importPrivateKey(web3) {
   }
 }
 
-export async function createWeb3() {
+export async function createWeb3(config = Config.default()) {
   const web3 = new Web3();
 
-  const rpc = Config.web3Rpc();
+  const rpc = config.web3Rpc();
 
-  const account = importPrivateKey(web3);
+  const account = importPrivateKey(web3, config);
 
   if (isValidRPCAddress(rpc)) {
     web3.setProvider(rpc);

@@ -1,14 +1,13 @@
 import {InvalidParametersError, PermissionError} from '../errors/errors';
-import Config from '../utils/config';
 
-const ambAuthorizationHeaderMiddleware = (req, res, next) => {
+const ambAuthorizationHeaderMiddleware = (config) => (req, res, next) => {
   const authorizationHeader = req.headers.authorization;
   if (!authorizationHeader) {
     next();
     return;
   }
 
-  if (!Config.isAuthorizationWithSecretKeyEnabled()) {
+  if (!config.isAuthorizationWithSecretKeyEnabled()) {
     throw new PermissionError('Authorization by secret key is not possible');
   }
   const [type, secret] = authorizationHeader.split(' ');

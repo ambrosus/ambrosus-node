@@ -1,42 +1,44 @@
-import {connectToMongo} from './utils/db_utils';
-import {createWeb3} from './utils/web3_tools';
-import HttpsClient from './utils/https_client';
-import IdentityManager from './services/identity_manager';
-import TokenAuthenticator from './utils/token_authenticator';
-import EntityBuilder from './services/entity_builder';
-import EntityStorage from './services/entity_repository';
-import AccountRepository from './services/account_repository';
-import DataModelEngine from './services/data_model_engine';
 import AccountAccessDefinitions from './services/account_access_definitions';
-import ProofRepository from './services/proof_repository';
+import AccountRepository from './services/account_repository';
 import ContractManager from './services/contract_manager';
+import DataModelEngine from './services/data_model_engine';
+import EntityBuilder from './services/entity_builder';
 import EntityDownloader from './services/entity_downloader';
+import EntityRepository from './services/entity_repository';
+import IdentityManager from './services/identity_manager';
+import ProofRepository from './services/proof_repository';
+import Config from './utils/config';
+import {connectToMongo} from './utils/db_utils';
+import HttpsClient from './utils/https_client';
+import TokenAuthenticator from './utils/token_authenticator';
+import {createWeb3} from './utils/web3_tools';
 
 class Builder {
-  constructor(options) {
-    const {mongoUri, mongoDatabase, web3} = options;
-    this.mongoUri = mongoUri;
-    this.mongoDatabase = mongoDatabase;
-    this.web3 = web3;
+  async ensureAdminAccountExist() {
+    await this.dataModelEngine.addAdminAccount();
   }
 
-  async build() {
-    const {db, client} = await connectToMongo(this.mongoUri, this.mongoDatabase);
+  async build(dependencies = {}, config = Config.default()) {
+    this.config = config;
+    const {web3} = dependencies;
+    const {db, client} = await connectToMongo(this.config);
+    this.db = db;
     this.client = client;
-    this.web3 = this.web3 || await createWeb3();
-    this.contractManager = new ContractManager(this.web3);
+    this.web3 = web3 || await createWeb3(this.config);
+    const bundleRegistryContractAddress = this.config.bundleRegistryContractAddress();
+    this.bundleProofRegistryContract = ContractManager.loadBundleRegistryContract(this.web3, bundleRegistryContractAddress);
     this.identityManager = new IdentityManager(this.web3);
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
     this.entityBuilder = new EntityBuilder(this.identityManager);
-    this.entityRepository = new EntityStorage(db);
+    this.entityRepository = new EntityRepository(this.db);
     await this.entityRepository.initializeIndexes();
-    this.proofRepository = new ProofRepository(this.web3,
-      this.identityManager.nodeAddress(),
-      this.contractManager.bundleProofRegistryContract());
-    this.accountRepository = new AccountRepository(db);
-    this.accountAccessDefinitions = new AccountAccessDefinitions(this.identityManager, this.accountRepository);
     this.httpsClient = new HttpsClient();
     this.entityDownloader = new EntityDownloader(this.httpsClient);
+    this.proofRepository = new ProofRepository(this.web3,
+      this.identityManager.nodeAddress(),
+      this.bundleProofRegistryContract);
+    this.accountRepository = new AccountRepository(this.db);
+    this.accountAccessDefinitions = new AccountAccessDefinitions(this.identityManager, this.accountRepository);
     this.dataModelEngine = new DataModelEngine(
       this.identityManager,
       this.tokenAuthenticator,
@@ -46,12 +48,8 @@ class Builder {
       this.proofRepository,
       this.accountRepository,
       this.accountAccessDefinitions);
-
-    await this.dataModelEngine.addAdminAccount();
-
     return {dataModelEngine: this.dataModelEngine, client: this.client};
   }
 }
 
 export default Builder;
-

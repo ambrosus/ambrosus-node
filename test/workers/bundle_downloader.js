@@ -1,12 +1,12 @@
 import chai from 'chai';
-import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import {deployContract, createWeb3} from '../../src/utils/web3_tools';
+import {createWeb3, getDefaultAddress} from '../../src/utils/web3_tools';
 import Apparatus from '../helpers/apparatus';
-import buildWith from '../helpers/build_with';
-
-import BundleRegistry from '../../build/contracts/BundleRegistry.json';
+import nullConsole from '../helpers/null_console';
 import BundleDownloader from '../../src/workers/bundle_downloader';
+import ContractManager from '../../src/services/contract_manager';
+import Builder from '../../src/builder';
+import Config from '../../src/utils/config';
 
 chai.use(sinonChai);
 const {expect} = chai;
@@ -18,36 +18,32 @@ describe('Bundle downloader - integration', () => {
   let apparatus;
   let dataModelEngine;
   let bundleDownloader;  
-  
-  let registryContractAddressStub;
-  let consoleLogStub;
 
   before(async () => {
     web3 = await createWeb3();
   });
 
-  beforeEach(async () => {
-    ({dataModelEngine, client, registryContractAddressStub} = await buildWith({web3,
-      mongoUri: 'mongodb://localhost:27017/ambrosus_gateway_test2',
-      mongoDatabase: 'ambrosus_gateway_test2',
-      bundleRegistryContract: await deployContract(web3, BundleRegistry.abi, BundleRegistry.bytecode),
-      otherVendorUri: 'http://127.0.0.1:9876'
-    }));
+  const mongoUri = 'mongodb://localhost:27017/ambrosus_gateway_test2';
 
-    bundleDownloader = new BundleDownloader(dataModelEngine);
+  beforeEach(async () => {    
+    const bundleRegistryContractAddress = await ContractManager.deploy(web3);
+
     apparatus = new Apparatus();
-    await apparatus.start(web3);
+    await apparatus.start(web3, Config.default({bundleRegistryContractAddress}));
     
+    const builder = new Builder();
+    ({dataModelEngine, client} = await builder.build({web3}, Config.default({bundleRegistryContractAddress, mongoUri})));
+    
+    await dataModelEngine.proofRepository.addVendor(getDefaultAddress(web3), apparatus.url());
+    
+    bundleDownloader = new BundleDownloader(dataModelEngine, 5000, nullConsole);        
     await bundleDownloader.beforeStart();
-    ({bundleId} = await apparatus.modelEngine.finaliseBundle(1));
-    consoleLogStub = sinon.stub(console, 'log');
+    ({bundleId} = await apparatus.dataModelEngine.finaliseBundle(1));
   });
 
-  afterEach(() => {
-    registryContractAddressStub.restore();
-    consoleLogStub.restore();
+  afterEach(async () => {
     client.close();
-    apparatus.stop();
+    await apparatus.stop();
   });
 
   it('has no bundles initially', async () => {
@@ -62,8 +58,8 @@ describe('Bundle downloader - integration', () => {
   });
 
   it('download all new bundles', async () => {
-    const bundle2 = await apparatus.modelEngine.finaliseBundle(2);
-    const bundle3 = await apparatus.modelEngine.finaliseBundle(3);
+    const bundle2 = await apparatus.dataModelEngine.finaliseBundle(2);
+    const bundle3 = await apparatus.dataModelEngine.finaliseBundle(3);
   
     await bundleDownloader.downloadAllNew();  
     let bundle = await dataModelEngine.entityRepository.getBundle(bundleId);
