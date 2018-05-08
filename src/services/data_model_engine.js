@@ -32,7 +32,7 @@ export default class DataModelEngine {
       address: accountRequest.address,
       permissions: accountRequest.permissions,
       registeredBy: tokenData.createdBy,
-      registeredOn: Math.round(new Date().getTime() / 1000),
+      registeredOn: getTimestamp(),
       accessLevel: accountRequest.accessLevel
     };
     await this.accountRepository.store(accountToStore);
