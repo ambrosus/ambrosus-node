@@ -31,7 +31,8 @@ export default class DataModelEngine {
     const accountToStore = {
       address: accountRequest.address,
       permissions: accountRequest.permissions,
-      registeredBy : tokenData.createdBy,
+      registeredBy: tokenData.createdBy,
+      registeredOn: Math.round(new Date().getTime() / 1000),
       accessLevel: accountRequest.accessLevel
     };
     await this.accountRepository.store(accountToStore);

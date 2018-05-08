@@ -102,8 +102,11 @@ describe('Data Model Engine', () => {
     let mockAccountRepository;
     let mockAccountAccessDefinitions;
     let modelEngine;
+    let clock;
 
     before(() => {
+      clock = sinon.useFakeTimers(22000);
+
       mockIdentityManager = {
         createKeyPair: sinon.stub()
       };
@@ -133,6 +136,7 @@ describe('Data Model Engine', () => {
         address: account.address,
         permissions: ['permission1', 'permission2'],
         registeredBy: adminAccount.address,
+        registeredOn: 22,
         accessLevel: 7
       };
       expect(await modelEngine.addAccount(request, createTokenFor(adminAccount.address)))
@@ -165,6 +169,10 @@ describe('Data Model Engine', () => {
 
       const request = addAccountRequest();
       await expect(modelEngine.addAccount(request, createTokenFor(adminAccount.address))).to.be.rejectedWith(PermissionError);
+    });
+
+    after(() => {
+      clock.restore();
     });
   });
 
