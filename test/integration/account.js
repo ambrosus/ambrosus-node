@@ -41,6 +41,7 @@ describe('Accounts - Integrations', async () => {
       expect(result.body.permissions).to.be.deep.equal(['permission1', 'permission2']);
       expect(result.body.accessLevel).to.be.equal(7);
       expect(result.body.registeredBy).to.be.equal(adminAccountWithSecret.address);
+      expect(result.body).to.have.property('registeredOn');
       expect(result.status).to.eq(201);
     });
 
@@ -80,6 +81,7 @@ describe('Accounts - Integrations', async () => {
       expect(registeredAccount.body.permissions).to.be.deep.equal(['permission1', 'permission2']);
       expect(response.body.accessLevel).to.be.equal(7);
       expect(registeredAccount.body.registeredBy).to.be.equal(adminAccountWithSecret.address);
+      expect(response.body).to.have.property('registeredOn');
     });
 
     it('should return 404 code if non-existing account', async () => {
