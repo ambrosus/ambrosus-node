@@ -661,7 +661,7 @@ describe('Data Model Engine', () => {
 
       assembledBundle = {
         bundleId: 'a mock bundle',
-        contents: {
+        content: {
           entries: [
             ...unbundledAssets,
             ...unbundledEvents
@@ -740,7 +740,45 @@ describe('Data Model Engine', () => {
     it('stores block number in metadata', async () => {
       expect(mockEntityRepository.storeBundleProofBlock).to.have.been.calledWith(assembledBundle.bundleId, blockNumber);
     });
+
+    describe('Empty bundle', async () => {
+      before(async () => {
+        const emptyBundle = {
+          bundleId: 'a mock bundle',
+          content: {
+            entries: []
+          }
+        };
+
+        mockProofRepository = {
+          uploadProof: sinon.stub()
+        };
+
+        mockEntityRepository = {
+          storeBundle: sinon.stub(),
+          beginBundle: sinon.stub()
+        };
+
+        mockEntityBuilder.assembleBundle.returns(emptyBundle);
+        mockEntityRepository.beginBundle.resolves({});
+
+        ret = await expect(modelEngine.finaliseBundle(bundleStubId)).to.be.fulfilled;
+      });
+
+      it('returns null', () => {
+        expect(ret).to.be.deep.eq(null);
+      });
+
+      it('does not store empty bundle', () => {
+        expect(mockProofRepository.uploadProof).to.have.not.been.called;
+      });
+
+      it('does not upload empty bundle', () => {
+        expect(mockEntityRepository.storeBundle).to.have.not.been.called;
+      });
+    });
   });
+  
   describe('Downloading a bundle', async () => {
     const bundleId = '0x123';
     const vendorId = '0x987';

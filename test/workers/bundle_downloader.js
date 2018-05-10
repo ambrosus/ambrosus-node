@@ -1,12 +1,15 @@
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
 import {createWeb3, getDefaultAddress} from '../../src/utils/web3_tools';
-import Apparatus from '../helpers/apparatus';
+import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
+import ScenarioBuilder from '../fixtures/scenario_builder';
 import nullConsole from '../helpers/null_console';
 import BundleDownloader from '../../src/workers/bundle_downloader';
 import ContractManager from '../../src/services/contract_manager';
 import Builder from '../../src/builder';
 import Config from '../../src/utils/config';
+import {createFullAsset} from '../fixtures/assets_events';
+import {adminAccountWithSecret} from '../fixtures/account';
 
 chai.use(sinonChai);
 const {expect} = chai;
@@ -17,7 +20,8 @@ describe('Bundle downloader - integration', () => {
   let bundleId;
   let apparatus;
   let dataModelEngine;
-  let bundleDownloader;  
+  let bundleDownloader;
+  let asset;
 
   before(async () => {
     web3 = await createWeb3();
@@ -38,6 +42,15 @@ describe('Bundle downloader - integration', () => {
     
     bundleDownloader = new BundleDownloader(dataModelEngine, 5000, nullConsole);        
     await bundleDownloader.beforeStart();
+
+
+    const scenario = new ScenarioBuilder(apparatus.identityManager, apparatusScenarioProcessor(apparatus));
+    await scenario.addAdminAccount(adminAccountWithSecret);
+
+    asset = createFullAsset(apparatus.identityManager, {createdBy: adminAccountWithSecret.address, timestamp: 1}, adminAccountWithSecret.secret);
+    await apparatus.request()
+      .post('/assets')
+      .send(asset);
     ({bundleId} = await apparatus.dataModelEngine.finaliseBundle(1));
   });
 
@@ -58,7 +71,15 @@ describe('Bundle downloader - integration', () => {
   });
 
   it('download all new bundles', async () => {
+    asset = createFullAsset(apparatus.identityManager, {createdBy: adminAccountWithSecret.address, timestamp: 2}, adminAccountWithSecret.secret);
+    await apparatus.request()
+      .post('/assets')
+      .send(asset);
     const bundle2 = await apparatus.dataModelEngine.finaliseBundle(2);
+    asset = createFullAsset(apparatus.identityManager, {createdBy: adminAccountWithSecret.address, timestamp: 3}, adminAccountWithSecret.secret);
+    await apparatus.request()
+      .post('/assets')
+      .send(asset);
     const bundle3 = await apparatus.dataModelEngine.finaliseBundle(3);
   
     await bundleDownloader.downloadAllNew();  
