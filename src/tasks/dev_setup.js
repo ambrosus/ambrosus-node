@@ -11,7 +11,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {writeFile} from '../utils/file';
 import path from 'path';
 import Builder from '../builder';
-import BundleRegistry from '../../build/contracts/BundleRegistry.json';
+import BundleRegistry from '../../contracts/BundleRegistry.json';
 import {deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
 
 async function createAdminAccount(dataModelEngine) {
