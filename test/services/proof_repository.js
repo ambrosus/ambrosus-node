@@ -13,7 +13,7 @@ import sinonChai from 'sinon-chai';
 
 import ProofRepository from '../../src/services/proof_repository';
 import {createWeb3, deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
-import BundleRegistry from '../../build/contracts/BundleRegistry.json';
+import BundleRegistry from '../../contracts/BundleRegistry.json';
 
 
 chai.use(sinonChai);

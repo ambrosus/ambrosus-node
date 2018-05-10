@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {createWeb3, deployContract, getDefaultAddress} from '../utils/web3_tools';
-import BundleRegistry from '../../build/contracts/BundleRegistry.json';
+import BundleRegistry from '../../contracts/BundleRegistry.json';
 
 async function deployBundleRegistry() {
   const web3 = await createWeb3();

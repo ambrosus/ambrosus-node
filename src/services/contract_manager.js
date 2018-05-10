@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {loadContract, deployContract} from '../utils/web3_tools';
-import BundleRegistry from '../../build/contracts/BundleRegistry.json';
+import BundleRegistry from '../../contracts/BundleRegistry.json';
 
 export default class ContractManager {
   static loadBundleRegistryContract(web3, bundleRegistryContractAddress) {

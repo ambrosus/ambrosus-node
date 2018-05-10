@@ -7,9 +7,7 @@
   "private": true,
   "license": "UNLICENCED",
   "scripts": {
-    "build:contracts": "truffle compile",
-    "build:src": "babel ./src -d ./dist --copy-files",
-    "build": "yarn build:contracts && yarn build:src",
+    "build": "babel ./src -d ./dist --copy-files",
     "start": "node dist/start.js",
     "test": "export NODE_ENV=test && mocha --require babel-register --timeout 5000 --recursive",
     "ops:generate_private_key": "babel-node src/tasks/generate_private_key.js",
@@ -34,8 +32,7 @@
     "cors": "^2.8.4",
     "express": "^4.16.2",
     "mongodb": "^3.0.2",
-    "web3": "^1.0.0-beta.34",
-    "zeppelin-solidity": "^1.7.0"
+    "web3": "^1.0.0-beta.34"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -59,7 +56,6 @@
     "npm-run-all": "^4.1.2",
     "rimraf": "^2.6.2",
     "sinon": "^4.2.2",
-    "sinon-chai": "^2.14.0",
-    "truffle": "^4.1.0"
+    "sinon-chai": "^2.14.0"
   }
 }

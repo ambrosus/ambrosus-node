@@ -39,7 +39,7 @@ describe('Bundle downloader - integration', () => {
 
   const mongoUri = 'mongodb://localhost:27017/ambrosus_gateway_test2';
 
-  beforeEach(async () => {    
+  beforeEach(async () => {
     const bundleRegistryContractAddress = await ContractManager.deploy(web3);
 
     apparatus = new Apparatus();
@@ -47,10 +47,10 @@ describe('Bundle downloader - integration', () => {
     
     const builder = new Builder();
     ({dataModelEngine, client} = await builder.build({web3}, Config.default({bundleRegistryContractAddress, mongoUri})));
-    
+
     await dataModelEngine.proofRepository.addVendor(getDefaultAddress(web3), apparatus.url());
-    
-    bundleDownloader = new BundleDownloader(dataModelEngine, 5000, nullConsole);        
+
+    bundleDownloader = new BundleDownloader(dataModelEngine, 5000, nullConsole);
     await bundleDownloader.beforeStart();
 
 
