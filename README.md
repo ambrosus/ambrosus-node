@@ -8,6 +8,8 @@ The best way to learn Ambrosus is to:
 2. Follow up with [tutorial](https://github.com/ambrosus/ambrosus-node/blob/master/docs/tutorial.md).
 3. Detailed RESTful API documentation is available at [ambrosus.docs.apiary.io](https://ambrosus.docs.apiary.io/).
 
+Scroll to the bottom to get [instructions on how to use postman collection for the API](#postman-collections).
+
 Read below to learn about ambrosus node development.
 
 ## Install, setup, tests and linter
