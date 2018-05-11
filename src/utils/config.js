@@ -28,6 +28,10 @@ export default class Config {
     return config.get('bundle.registryContractAddress');
   }
 
+  defaultGasPrice() {
+    return config.get('bundle.defaultGasPrice');
+  }
+
   serverPort() {
     return process.env.PORT || config.get('server.port');
   }
