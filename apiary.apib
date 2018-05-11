@@ -760,6 +760,10 @@ Finds event satisfying provided criteria.
 
 ## Group Bundles
 
+Bundles are packages of data that are being published by ambrosus node users. Single bundle contains assets, public events and stubs of private events, that user created since last bundle publication.
+
+Bundles are used to exchange data between the users of ambrosus network. Every bundle's Id is stored on the blockchain.
+
 ## /bundle/{bundleId}
 
 #### Fetch bundle [GET]
@@ -783,7 +787,7 @@ Fetches a bundle by identifier
                 + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the event creator.
                 + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
                 + entriesHash (string) - Hash calculated from the entries field.
-            + entries (array) - Stubs of assets and events included in the bundle.
+            + entries (array) - An array consisting of assets, events with public data and stubs of events with private data.
         + metadata (object) - Bundle service data.
 
 

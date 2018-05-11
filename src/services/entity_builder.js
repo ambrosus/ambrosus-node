@@ -59,6 +59,9 @@ export default class EntityBuilder {
   }
 
   stubForEvent(event) {
+    if (event.content.idData.accessLevel === 0) {
+      return event;
+    }
     return pick(event, 'content.data');
   }
 

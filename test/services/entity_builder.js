@@ -203,12 +203,6 @@ describe('Entity Builder', () => {
     });
   });
 
-  it('Generating stubs of events', () => {
-    const entityBuilder = new EntityBuilder({});
-    const ret = entityBuilder.stubForEvent(exampleEvent);
-    expect(ret.content.data).to.be.undefined;
-  });
-
   describe('Assembling a bundle', () => {
     let mockIdentityManager;
     let entityBuilder;
@@ -244,9 +238,9 @@ describe('Entity Builder', () => {
         await scenario.addAsset(0)
       ];
       inEvents = [
-        await scenario.addEvent(0, 0),
-        await scenario.addEvent(0, 1),
-        await scenario.addEvent(0, 1)
+        await scenario.addEvent(0, 0, {accessLevel: 0}),
+        await scenario.addEvent(0, 1, {accessLevel: 0}),
+        await scenario.addEvent(0, 1, {accessLevel: 1})
       ];
       inTimestamp = getTimestamp();
       const stripFunc = (entry) => put(entry, 'mock.bundleStripped', 1);
@@ -308,6 +302,26 @@ describe('Entity Builder', () => {
     it('orders the identity manager to calculate the bundleId', () => {
       expect(mockIdentityManager.calculateHash).to.have.been.calledWith(ret.content);
       expect(ret.bundleId).to.be.equal(mockHash2);
+    });
+
+    describe('creating stubs for events', () => {
+      before(() => {
+        entityBuilder.stubForEvent.restore();
+      });
+      
+      it('removes data if access level is greater than 0', () => {
+        const ret = entityBuilder.stubForEvent(scenario.events[2]);
+        expect(ret.content.data).to.be.undefined;
+      });
+
+      it('keeps data if access level equals 0', () => {
+        const ret = entityBuilder.stubForEvent(scenario.events[1]);
+        expect(ret.content).to.have.property('data');
+      });
+
+      after(() => {
+        sinon.stub(entityBuilder, 'stubForEvent');
+      });
     });
   });
 
