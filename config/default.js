@@ -5,7 +5,7 @@ module.exports = {
   bundle: {
     finalisationInterval: 15000,
     downloadInterval: 5000,
-    defaultGasPrice: '5' // in ambits
+    defaultGasPrice: 5 // in ambits
   },
   authorizationWithSecretEnabled: false
 };

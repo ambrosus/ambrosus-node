@@ -85,7 +85,9 @@ export function getDefaultPrivateKey(web3) {
 export function loadContract(web3, abi, address) {
   return new web3.eth.Contract(abi, address, {
     gas: DEFAULT_GAS,
-    gasPrice: web3.utils.toWei(Config.default().defaultGasPrice(), 'gwei')
+    gasPrice: web3.utils.toWei(Config.default()
+      .defaultGasPrice()
+      .toString(), 'gwei')
   });
 }
 
@@ -93,7 +95,9 @@ export async function deployContract(web3, abi, bytecode, args = [], options = {
   const defaultAddress = getDefaultAddress(web3);
   return new web3.eth.Contract(abi, undefined, {
     gas: DEFAULT_GAS,
-    gasPrice: web3.utils.toWei(Config.default().defaultGasPrice(), 'gwei')
+    gasPrice: web3.utils.toWei(Config.default()
+      .defaultGasPrice()
+      .toString(), 'gwei')
   }).deploy({data: bytecode, arguments: args})
     .send({
       from: defaultAddress,
