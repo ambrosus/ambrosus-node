@@ -203,12 +203,6 @@ describe('Entity Builder', () => {
     });
   });
 
-  it('Generating stubs of events', () => {
-    const entityBuilder = new EntityBuilder({});
-    const ret = entityBuilder.stubForEvent(exampleEvent);
-    expect(ret.content.data).to.be.undefined;
-  });
-
   describe('Assembling a bundle', () => {
     let mockIdentityManager;
     let entityBuilder;
@@ -244,32 +238,32 @@ describe('Entity Builder', () => {
         await scenario.addAsset(0)
       ];
       inEvents = [
-        await scenario.addEvent(0, 0),
-        await scenario.addEvent(0, 1),
-        await scenario.addEvent(0, 1)
+        await scenario.addEvent(0, 0, {accessLevel: 0}),
+        await scenario.addEvent(0, 1, {accessLevel: 0}),
+        await scenario.addEvent(0, 1, {accessLevel: 1})
       ];
       inTimestamp = getTimestamp();
       const stripFunc = (entry) => put(entry, 'mock.bundleStripped', 1);
       inAssetsStripped = inAssets.map(stripFunc);
       inEventsStripped = inEvents.map(stripFunc);
-      const stubFunc = (entry) => put(entry, 'mock.stub', 1);
-      inEventsStubbed = inEventsStripped.map(stubFunc);
+      const prepFunc = (entry) => put(entry, 'mock.stub', 1);
+      inEventsStubbed = inEventsStripped.map(prepFunc);
 
       mockIdentityManager.addressFromSecret.returns(mockAddress);
       mockIdentityManager.calculateHash.onFirstCall().returns(mockHash1);
       mockIdentityManager.calculateHash.onSecondCall().returns(mockHash2);
       mockIdentityManager.sign.returns(mockSignature);
       sinon.stub(entityBuilder, 'removeBundle');
-      sinon.stub(entityBuilder, 'stubForEvent');
+      sinon.stub(entityBuilder, 'prepareEventForBundlePublication');
       entityBuilder.removeBundle.callsFake(stripFunc);
-      entityBuilder.stubForEvent.callsFake(stubFunc);
+      entityBuilder.prepareEventForBundlePublication.callsFake(prepFunc);
 
       ret = entityBuilder.assembleBundle(inAssets, inEvents, inTimestamp, inSecret);
     });
 
     after(() => {
       entityBuilder.removeBundle.restore();
-      entityBuilder.stubForEvent.restore();
+      entityBuilder.prepareEventForBundlePublication.restore();
     });
 
     it('strips the bundleId metadata link using the removeBundle method', () => {
@@ -277,7 +271,7 @@ describe('Entity Builder', () => {
     });
 
     it('calculates event stubs', () => {
-      expect(entityBuilder.stubForEvent).to.have.callCount(inEvents.length);
+      expect(entityBuilder.prepareEventForBundlePublication).to.have.callCount(inEvents.length);
     });
 
     it('places event stubs and untouched assets into the entries field', () => {
@@ -308,6 +302,26 @@ describe('Entity Builder', () => {
     it('orders the identity manager to calculate the bundleId', () => {
       expect(mockIdentityManager.calculateHash).to.have.been.calledWith(ret.content);
       expect(ret.bundleId).to.be.equal(mockHash2);
+    });
+
+    describe('preparing events for bundle publication', () => {
+      before(() => {
+        entityBuilder.prepareEventForBundlePublication.restore();
+      });
+      
+      it('removes data if access level is greater than 0', () => {
+        const ret = entityBuilder.prepareEventForBundlePublication(scenario.events[2]);
+        expect(ret.content.data).to.be.undefined;
+      });
+
+      it('keeps data if access level equals 0', () => {
+        const ret = entityBuilder.prepareEventForBundlePublication(scenario.events[1]);
+        expect(ret.content).to.have.property('data');
+      });
+
+      after(() => {
+        sinon.stub(entityBuilder, 'prepareEventForBundlePublication');
+      });
     });
   });
 

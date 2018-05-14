@@ -58,7 +58,10 @@ export default class EntityBuilder {
     this.identityManager.validateSignature(event.content.idData.createdBy, event.content.signature, event.content.idData);
   }
 
-  stubForEvent(event) {
+  prepareEventForBundlePublication(event) {
+    if (event.content.idData.accessLevel === 0) {
+      return event;
+    }
     return pick(event, 'content.data');
   }
 
@@ -76,10 +79,10 @@ export default class EntityBuilder {
 
   assembleBundle(assets, events, timestamp, secret) {
     const createdBy = this.identityManager.addressFromSecret(secret);
-    const eventStubs = events.map((event) => this.stubForEvent(event));
+    const preparedEvents = events.map((event) => this.prepareEventForBundlePublication(event));
     const entries = [
       ...assets,
-      ...eventStubs
+      ...preparedEvents
     ].map((entry) => this.removeBundle(entry));
     const entriesHash = this.identityManager.calculateHash(entries);
     const idData = {
