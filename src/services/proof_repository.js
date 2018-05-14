@@ -7,7 +7,7 @@ export default class ProofRepository {
     this.registryContract = registryContract;
     this.defaultGas = defaultGas;
   }
-
+  
   async getVendorUrl(vendorAddress) {
     const from = getDefaultAddress(this.web3);
     return this.registryContract
