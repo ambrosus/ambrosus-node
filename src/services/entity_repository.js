@@ -211,6 +211,27 @@ export default class EntityRepository {
     });
   }
 
+  async storeBundleProofTxHash(bundleId, txHash) {
+    await this.db.collection('bundles').update({bundleId}, {
+      $set: {
+        'metadata.bundleTransactionHash': txHash
+      }
+    });
+
+    const thisBundleStubQuery = {
+      'metadata.bundleId': bundleId
+    };
+
+    const update = {
+      $set: {
+        'metadata.bundleTransactionHash': txHash
+      }
+    };
+
+    await this.db.collection('assets').update(thisBundleStubQuery, update, {multi: true});
+    await this.db.collection('events').update(thisBundleStubQuery, update, {multi: true});
+  }
+
   async getBundle(bundleId) {
     return await this.db.collection('bundles').findOne({bundleId}, {fields: this.blacklistedFields});
   }
