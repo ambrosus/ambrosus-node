@@ -15,6 +15,8 @@ export default class BundleFinaliser extends PeriodicWorker {
   async finalise() {
     const bundleStubId = getTimestamp().toString();
     const bundle = await this.dataModelEngine.finaliseBundle(bundleStubId);
-    this.output.log(`Bundle ${bundle.bundleId} with ${bundle.content.entries.length} entries created`);
+    if (bundle) {
+      this.output.log(`Bundle ${bundle.bundleId} with ${bundle.content.entries.length} entries created`);
+    }
   }
 }
