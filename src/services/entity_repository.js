@@ -218,7 +218,7 @@ export default class EntityRepository {
       }
     });
 
-    const thisBundleStubQuery = {
+    const thisBundleQuery = {
       'metadata.bundleId': bundleId
     };
 
@@ -228,8 +228,8 @@ export default class EntityRepository {
       }
     };
 
-    await this.db.collection('assets').update(thisBundleStubQuery, update, {multi: true});
-    await this.db.collection('events').update(thisBundleStubQuery, update, {multi: true});
+    await this.db.collection('assets').update(thisBundleQuery, update, {multi: true});
+    await this.db.collection('events').update(thisBundleQuery, update, {multi: true});
   }
 
   async getBundle(bundleId) {
