@@ -246,24 +246,24 @@ describe('Entity Builder', () => {
       const stripFunc = (entry) => put(entry, 'mock.bundleStripped', 1);
       inAssetsStripped = inAssets.map(stripFunc);
       inEventsStripped = inEvents.map(stripFunc);
-      const stubFunc = (entry) => put(entry, 'mock.stub', 1);
-      inEventsStubbed = inEventsStripped.map(stubFunc);
+      const prepFunc = (entry) => put(entry, 'mock.stub', 1);
+      inEventsStubbed = inEventsStripped.map(prepFunc);
 
       mockIdentityManager.addressFromSecret.returns(mockAddress);
       mockIdentityManager.calculateHash.onFirstCall().returns(mockHash1);
       mockIdentityManager.calculateHash.onSecondCall().returns(mockHash2);
       mockIdentityManager.sign.returns(mockSignature);
       sinon.stub(entityBuilder, 'removeBundle');
-      sinon.stub(entityBuilder, 'stubForEvent');
+      sinon.stub(entityBuilder, 'prepareEventForBundlePublication');
       entityBuilder.removeBundle.callsFake(stripFunc);
-      entityBuilder.stubForEvent.callsFake(stubFunc);
+      entityBuilder.prepareEventForBundlePublication.callsFake(prepFunc);
 
       ret = entityBuilder.assembleBundle(inAssets, inEvents, inTimestamp, inSecret);
     });
 
     after(() => {
       entityBuilder.removeBundle.restore();
-      entityBuilder.stubForEvent.restore();
+      entityBuilder.prepareEventForBundlePublication.restore();
     });
 
     it('strips the bundleId metadata link using the removeBundle method', () => {
@@ -271,7 +271,7 @@ describe('Entity Builder', () => {
     });
 
     it('calculates event stubs', () => {
-      expect(entityBuilder.stubForEvent).to.have.callCount(inEvents.length);
+      expect(entityBuilder.prepareEventForBundlePublication).to.have.callCount(inEvents.length);
     });
 
     it('places event stubs and untouched assets into the entries field', () => {
@@ -304,23 +304,23 @@ describe('Entity Builder', () => {
       expect(ret.bundleId).to.be.equal(mockHash2);
     });
 
-    describe('creating stubs for events', () => {
+    describe('preparing events for bundle publication', () => {
       before(() => {
-        entityBuilder.stubForEvent.restore();
+        entityBuilder.prepareEventForBundlePublication.restore();
       });
       
       it('removes data if access level is greater than 0', () => {
-        const ret = entityBuilder.stubForEvent(scenario.events[2]);
+        const ret = entityBuilder.prepareEventForBundlePublication(scenario.events[2]);
         expect(ret.content.data).to.be.undefined;
       });
 
       it('keeps data if access level equals 0', () => {
-        const ret = entityBuilder.stubForEvent(scenario.events[1]);
+        const ret = entityBuilder.prepareEventForBundlePublication(scenario.events[1]);
         expect(ret.content).to.have.property('data');
       });
 
       after(() => {
-        sinon.stub(entityBuilder, 'stubForEvent');
+        sinon.stub(entityBuilder, 'prepareEventForBundlePublication');
       });
     });
   });
