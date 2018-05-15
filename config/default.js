@@ -1,3 +1,4 @@
+/* eslint-disable header/header */
 module.exports = {
   server: {
     port: 9876

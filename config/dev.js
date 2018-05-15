@@ -1,3 +1,4 @@
+/* eslint-disable header/header */
 module.exports = {
   mongoUri: 'mongodb://localhost:27017/ambrosus_gateway_development',
   bundle: {
