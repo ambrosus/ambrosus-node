@@ -157,4 +157,8 @@ Additionally we provide the postman collection to make it easier to test REST qu
 
 ## Contribution
 We will accept contributions of good code that we can use from anyone.  
-See [CONTRIBUTION.md](CONTRIBUTION.md)
+Please see [CONTRIBUTION.md](CONTRIBUTION.md)
+
+Before you issue pull request, make sure:
+* Make sure all tests pass.
+* Make sure you have test coverage for any new features.
