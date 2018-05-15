@@ -17,6 +17,7 @@ import assetsRouter from './routes/assets';
 import bundlesRouter from './routes/bundles';
 import eventsRouter from './routes/events';
 import tokenRouter from './routes/token';
+import nodeInfoRouter from './routes/nodeinfo';
 
 export default class Server {
   constructor(modelEngine, config) {
@@ -34,6 +35,7 @@ export default class Server {
 
     app.use(cachePreventionMiddleware);
 
+    app.use('/nodeinfo', nodeInfoRouter(this.modelEngine.identityManager));
     app.use('/accounts', accountsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine));
     app.use('/assets', assetsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine, this.config));
     app.use('/events', eventsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine));
