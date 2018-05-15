@@ -448,6 +448,10 @@ Finds asset with provided assetId in the system.
                 + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the asset creator.
                 + timestamp: 1503424923 (number) - UNIX timestamp of asset creation.
                 + sequenceNumber: 3 (number) - Used to assure that all assets are unique
+        + metadata (object) - Asset service data.
+            + bundleId (string) - If the asset has already been added to a bundle, Id of the bundle holding the event
+            + bundleTransactionHash (string) - If the asset has already been added to a bundle, identifier of the transaction on which the proof of bundle has been uploaded.
+              More info on the transaction can be found under `http://explorer-test.ambrosus.com/#/tx/{bundleTransactionHash}`
 
 
 
@@ -655,6 +659,11 @@ Fetches an event by identifier
                 + accessLevel: 4 (number) - The access level of the event. If the user's access level if lower than event's, the data field will not be returned.
                 + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
             + data (array) - Array of custom entries as objects (this field is required and have to contain at least one entry).
+        + metadata (object) - Event service data.
+            + bundleId (string) - If the event has already been added to a bundle, Id of the bundle holding the event
+            + bundleTransactionHash (string) - If the event has already been added to a bundle, identifier of the transaction on which the proof of bundle has been uploaded.
+              More info on the transaction can be found under `http://explorer-test.ambrosus.com/#/tx/{bundleTransactionHash}`
+
 
     + Body
 
@@ -789,6 +798,9 @@ Fetches a bundle by identifier
                 + entriesHash (string) - Hash calculated from the entries field.
             + entries (array) - An array consisting of assets, events with public data and stubs of events with private data.
         + metadata (object) - Bundle service data.
+            + bundleTransactionHash (string) - Identifier of the transaction on which the proof of bundle has been uploaded.
+              More info on the transaction can be found under `http://explorer-test.ambrosus.com/#/tx/{bundleTransactionHash}`
+            + proofBlock (number) - Block number in which the transaction was included
 
 
     + Body
@@ -807,6 +819,8 @@ Fetches a bundle by identifier
                     ]
                 },
                 "metadata" : {
+                  "bundleTransactionHash": "0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009",
+                  "proofBlock": 142
                 }
             }
 

@@ -648,6 +648,7 @@ describe('Data Model Engine', () => {
     const bundleStubId = 'abc';
     const nodeSecret = 'nodeSecret';
     const blockNumber = 10;
+    const txHash = '0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009';
     let unbundledAssets;
     let unbundledEvents;
     let assembledBundle;
@@ -687,7 +688,7 @@ describe('Data Model Engine', () => {
         beginBundle: sinon.stub(),
         endBundle: sinon.stub(),
         storeBundle: sinon.stub(),
-        storeBundleProofBlock: sinon.stub()
+        storeBundleProofMetadata: sinon.stub()
       };
 
       mockIdentityManager = {
@@ -706,7 +707,7 @@ describe('Data Model Engine', () => {
       });
       mockEntityRepository.endBundle.resolves();
       mockEntityRepository.storeBundle.resolves();
-      mockProofRepository.uploadProof.resolves({blockNumber});
+      mockProofRepository.uploadProof.resolves({blockNumber, transactionHash: txHash});
 
       modelEngine = new DataModelEngine(mockIdentityManager, {}, mockEntityBuilder, mockEntityRepository, {}, mockProofRepository, {}, {});
 
@@ -748,7 +749,7 @@ describe('Data Model Engine', () => {
     });
 
     it('stores block number in metadata', async () => {
-      expect(mockEntityRepository.storeBundleProofBlock).to.have.been.calledWith(assembledBundle.bundleId, blockNumber);
+      expect(mockEntityRepository.storeBundleProofMetadata).to.have.been.calledWith(assembledBundle.bundleId, blockNumber, txHash);
     });
 
     describe('Empty bundle', async () => {

@@ -308,6 +308,8 @@ describe('Entity Repository', () => {
   });
 
   describe('Bundles', () => {
+    const txHash = '0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009';
+
     after(async () => {
       await cleanDatabase(db);
     });
@@ -315,9 +317,12 @@ describe('Entity Repository', () => {
     it('db round trip works', async () => {
       const exampleBundleId = '0xabcdef';
       const exampleBundle = put(createBundle(), 'bundleId', exampleBundleId);
-      const exampleBundleWithMetadata = put(exampleBundle, 'metadata.proofBlock', 10);
+      const exampleBundleWithMetadata = put(exampleBundle, {
+        'metadata.proofBlock': 10,
+        'metadata.bundleTransactionHash': txHash
+      });
       await storage.storeBundle(exampleBundle);
-      await storage.storeBundleProofBlock(exampleBundleId, 10);
+      await storage.storeBundleProofMetadata(exampleBundleId, 10, txHash);
       await expect(storage.getBundle(exampleBundleId)).to.eventually.be.deep.equal(exampleBundleWithMetadata);
     });
 
@@ -332,6 +337,7 @@ describe('Entity Repository', () => {
 
     const bundleStubId = '123';
     const bundleId = 'xyz';
+    const bundleTxHash = '0x123';
     let alreadyBundledAssets;
     let alreadyBundledEvents;
     let nonBundledAssets;
@@ -346,12 +352,12 @@ describe('Entity Repository', () => {
       alreadyBundledAssets = [
         await scenario.addAsset(0, {timestamp: 0}),
         await scenario.addAsset(0, {timestamp: 1})
-      ].map((asset) => put(asset, 'metadata.bundleId', 1));
+      ].map((asset) => put(asset, {'metadata.bundleId': 1, 'metadata.bundleTransactionHash': '0x1'}));
 
       alreadyBundledEvents = [
         await scenario.addEvent(0, 0),
         await scenario.addEvent(0, 1)
-      ].map((event) => put(event, 'metadata.bundleId', 1));
+      ].map((event) => put(event, {'metadata.bundleId': 1, 'metadata.bundleTransactionHash': '0x1'}));
 
       nonBundledAssets = [
         await scenario.addAsset(0),
@@ -368,6 +374,7 @@ describe('Entity Repository', () => {
 
       ret = await expect(storage.beginBundle(bundleStubId)).to.be.fulfilled;
       await expect(storage.endBundle(bundleStubId, bundleId)).to.be.fulfilled;
+      await expect(storage.storeBundleProofMetadata(bundleId, 10, bundleTxHash)).to.be.fulfilled;
     });
 
     after(async () => {
@@ -390,6 +397,18 @@ describe('Entity Repository', () => {
       for (const event of nonBundledEvents) {
         const storedEvent = await storage.getEvent(event.eventId);
         expect(storedEvent.metadata.bundleId).to.equal(bundleId);
+      }
+    });
+
+    it('the assets and events included in the bundle should have the metadata.bundleTransactionHash set after the call to storeBundleProofBlock', async () => {
+      for (const asset of nonBundledAssets) {
+        const storedAsset = await storage.getAsset(asset.assetId);
+        expect(storedAsset.metadata.bundleTransactionHash).to.equal(bundleTxHash);
+      }
+
+      for (const event of nonBundledEvents) {
+        const storedEvent = await storage.getEvent(event.eventId);
+        expect(storedEvent.metadata.bundleTransactionHash).to.equal(bundleTxHash);
       }
     });
 

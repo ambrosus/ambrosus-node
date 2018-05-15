@@ -31,4 +31,15 @@ const properSecret = (_chai, utils) => {
   });
 };
 
-export {properAddress, properSecret};
+const properTxHash = (_chai, utils) => {
+  utils.addProperty(Assertion.prototype, 'properTxHash', function () {
+    this.assert(
+      this._obj.match(/^0x[0-9-a-fA-F]{64}$/)
+      , 'expected #{this} to be a proper tx hash'
+      , 'expected #{this} to not be a proper tx hash'
+    );
+  });
+};
+
+
+export {properAddress, properSecret, properTxHash};
