@@ -8,6 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {pick} from '../utils/dict_utils';
+import {EventQuery} from './query';
 
 export default class EntityRepository {
   constructor(db) {
@@ -46,78 +47,37 @@ export default class EntityRepository {
     return event.content.idData.accessLevel <= accessLevel ? event : pick(event, 'content.data');
   }
 
-  addToQuery(queryParts, part) {
-    return [...queryParts, part];
-  }
-
-  composeQuery(queryParts) {
-    if (queryParts.length === 0) {
-      return {};
-    }
-    if (queryParts.length === 1) {
-      return queryParts[0];
-    }
-    return {
-      $and: queryParts
-    };
-  }
-
-  assembleGeoQueryPart(value) {
-    return {'content.data.geoJson': {$near: {
-      $geometry: {
-        type: 'Point',
-        coordinates: [value.locationLongitude , value.locationLatitude]
-      },
-      $maxDistance: value.locationMaxDistance
-    }}};
-  }
-
-  assembleDefaultQueryPart(key, value) {
-    return {'content.data': {$elemMatch: {[key]: value}}};
-  }
-
-  addDataAccessLevelLimitationIfNeeded(queryParts, accessLevel) {
-    const part = {'content.idData.accessLevel': {$lte: accessLevel}};
-    if (queryParts.some((queryPart) => queryPart['content.idData.accessLevel'])) {
-      return queryParts;
-    }
-    return this.addToQuery(queryParts, part);
-  }
-
   getConfigurationForFindEventsByEntry(params, accessLevel) {
-    let queryParts = [];
-    let queryPart;
+    const query = new EventQuery();
     if (params.data) {
-      queryParts = this.addDataAccessLevelLimitationIfNeeded(queryParts, accessLevel);
+      query.addDataAccessLevelLimitationIfNeeded(accessLevel);
     }
     for (const key in params.data) {
       switch (key) {
         case 'geoJson':
-          queryPart = this.assembleGeoQueryPart(params.data[key]);
+          query.addGeoPart(params.data[key]);
           break;
         default:
-          queryPart = this.assembleDefaultQueryPart(key, params.data[key]);
+          query.addDefaultPart(key, params.data[key]);
           break;
       }
-
-      queryParts = this.addToQuery(queryParts, queryPart);
     }
-    return queryParts;
+    return query;
   }
 
   getConfigurationForFindEventsQuery(params, accessLevel = 0) {
-    let queryParts = this.getConfigurationForFindEventsByEntry(params, accessLevel);
+    const query = this.getConfigurationForFindEventsByEntry(params, accessLevel);
     if (params.assetId) {
-      queryParts = this.addToQuery(queryParts, {'content.idData.assetId': params.assetId});
+      query.add({'content.idData.assetId': params.assetId});
     }
     if (params.createdBy) {
-      queryParts = this.addToQuery(queryParts, {'content.idData.createdBy': params.createdBy});
+      query.add({'content.idData.createdBy': params.createdBy});
     }
     if (params.fromTimestamp) {
-      queryParts = this.addToQuery(queryParts, {'content.idData.timestamp': {$gte: params.fromTimestamp}});
+      query.add({'content.idData.timestamp': {$gte: params.fromTimestamp}});
     }
     if (params.toTimestamp) {
-      queryParts = this.addToQuery(queryParts, {'content.idData.timestamp': {$lte: params.toTimestamp}});
+      query.add({'content.idData.timestamp': {$lte: params.toTimestamp}});
     }
 
     const pageSize = params.perPage || 100;
@@ -129,7 +89,7 @@ export default class EntityRepository {
       limit: pageSize,
       sort: [['content.idData.timestamp', 'descending']]
     };
-    return {query: this.composeQuery(queryParts), options};
+    return {query: query.compose(), options};
   }
 
   async findEvents(params, accessLevel = 0) {

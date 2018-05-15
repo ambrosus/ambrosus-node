@@ -28,6 +28,7 @@ describe('Accounts', () => {
   beforeEach(async () => {
     mockModelEngine = {
       addAccount: sinon.stub(),
+      findAccounts: sinon.stub(),
       getAccount: sinon.stub(),
       modifyAccount: sinon.stub()
     };
@@ -79,6 +80,27 @@ describe('Accounts', () => {
 
       expect(mockModelEngine.getAccount).to.have.been.calledWith(mockAccount.address, tokenData);
     
+      expect(res._getStatusCode()).to.eq(200);
+      expect(res._isJSON()).to.be.true;
+    });
+  });
+
+  it('finding accounts', async () => {
+    let injectedHandler;
+    let mockAccount;
+    const accountPermissions = ['perm1', 'perm2'];
+
+    beforeEach(async () => {
+      mockAccount = put(account, {permissions : accountPermissions, registeredBy : adminAccountWithSecret.address});
+      mockModelEngine.findAccounts.resolves(mockAccount);
+      injectedHandler = getAccountHandler(mockModelEngine);
+    });
+
+    it('passes requested id to Data Model Engine and proxies result', async () => {
+      await injectedHandler(req, res);
+
+      expect(mockModelEngine.getAccount).to.have.been.calledWith();
+
       expect(res._getStatusCode()).to.eq(200);
       expect(res._isJSON()).to.be.true;
     });

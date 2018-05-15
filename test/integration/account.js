@@ -181,6 +181,16 @@ describe('Accounts - Integrations', async () => {
     });
   });
 
+  describe('Find accounts', () => {
+    it('find works', async () => {
+      const response = await apparatus.request()
+        .get('/accounts')
+        .send({});
+      expect(response.body.resultCount).to.equal(1);
+      expect(response.body.results[0].address).to.equal(adminAccountWithSecret.address);
+    });
+  });
+
   after(async () => {
     await apparatus.stop();
   });

@@ -169,13 +169,6 @@ describe('Entity Repository', () => {
       });
     });
 
-    it('addDataAccessLevelLimitationIfNeeded adds its part just once', async () => {
-      const queryWithLimitation = storage.addDataAccessLevelLimitationIfNeeded([], 2);
-      expect(queryWithLimitation).to.deep.equal([{'content.idData.accessLevel': {$lte: 2}}]);
-      expect(storage.addDataAccessLevelLimitationIfNeeded(queryWithLimitation, 2))
-        .to.deep.equal(queryWithLimitation);
-    });
-
     describe('additional criteria', () => {
       let scenario;
       let eventsSet;

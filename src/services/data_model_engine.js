@@ -60,6 +60,10 @@ export default class DataModelEngine {
     return result;
   }
 
+  async findAccounts() {
+    return await this.accountRepository.find();
+  }
+
   async modifyAccount(accountToChange, accountRequest, tokenData) {
     await this.accountAccessDefinitions.ensureCanRegisterAccount(tokenData.createdBy);
     this.accountAccessDefinitions.validateModifyAccountRequest(accountRequest);

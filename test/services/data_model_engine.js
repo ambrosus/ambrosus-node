@@ -226,6 +226,32 @@ describe('Data Model Engine', () => {
     });
   });
 
+  describe('Finding accounts', () => {
+    let mockAccountRepository;
+    let modelEngine;
+    let account;
+    let accountWithoutSecret;
+
+    before(() => {
+      mockAccountRepository = {
+        find: sinon.stub()
+      };
+      modelEngine = new DataModelEngine({}, {}, {}, {}, {}, {}, mockAccountRepository, {});
+      account = put(accountWithSecret, {registeredBy: adminAccount.address, permissions : ['perm1', 'perm2']});
+      accountWithoutSecret = pick(account, 'secret');
+    });
+
+    beforeEach(() => {
+      resetHistory(mockAccountRepository);
+      mockAccountRepository.find.returns({result: [accountWithoutSecret], resultCount: 1});
+    });
+
+    it('delegates to accountRepository', async () => {
+      expect(await modelEngine.findAccounts()).to.deep.equal({result: [accountWithoutSecret], resultCount: 1});
+      expect(mockAccountRepository.find).to.have.been.called;
+    });
+  });
+
   describe('Modify account', () => {
     let mockAccountRepository;
     let modelEngine;
