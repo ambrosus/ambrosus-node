@@ -154,3 +154,11 @@ Additionally we provide the postman collection to make it easier to test REST qu
 5. [admin only] Add or modify accounts with the `Add account` and `Modify account` requests
 6. Create tokens by calling the `Generate Token` request
 
+
+## Contribution
+We will accept contributions of good code that we can use from anyone.  
+Please see [CONTRIBUTION.md](CONTRIBUTION.md)
+
+Before you issue pull request:
+* Make sure all tests pass.
+* Make sure you have test coverage for any new features.
