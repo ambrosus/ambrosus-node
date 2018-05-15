@@ -477,6 +477,16 @@ Finds asset with provided assetId in the system.
 
 ## Group Events
 
+Events represent all actions executed on tracked goods, registered in the system as Assets.
+
+As far as Assets do not contain any data, Events are responsible for gathering all of the information.
+
+Event can both aggregate Asset's attributes and describe real life occurrences affecting particular Asset. Any form of activity affecting an Asset should be expressed as an Event.
+
+`assetId` field specifies which Asset does an particular Event apply to.
+
+Events themselves are identified by an `eventId` field which is a sha3 hash calculated from the `content` field.
+
 ### /assets/{assetId}/events
 
 #### Create an event [POST]
