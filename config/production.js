@@ -1,3 +1,4 @@
+/* eslint-disable header/header */
 module.exports = {
   bundle: {
     registryContractAddress: require('./registryContractAddress.json')
