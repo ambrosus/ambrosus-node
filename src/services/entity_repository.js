@@ -203,18 +203,11 @@ export default class EntityRepository {
     await this.db.collection('bundles').insertOne({...bundle});
   }
 
-  async storeBundleProofBlock(bundleId, proofBlock) {
+  async storeBundleProofMetadata(bundleId, proofBlock, txHash) {
     await this.db.collection('bundles').update({bundleId}, {
       $set: {
+        'metadata.bundleTransactionHash': txHash,
         'metadata.proofBlock': proofBlock
-      }
-    });
-  }
-
-  async storeBundleProofTxHash(bundleId, txHash) {
-    await this.db.collection('bundles').update({bundleId}, {
-      $set: {
-        'metadata.bundleTransactionHash': txHash
       }
     });
 

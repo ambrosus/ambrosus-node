@@ -151,8 +151,7 @@ export default class DataModelEngine {
 
     const {blockNumber, transactionHash} = await this.proofRepository.uploadProof(newBundle.bundleId);
 
-    await this.entityRepository.storeBundleProofBlock(newBundle.bundleId, blockNumber);
-    await this.entityRepository.storeBundleProofTxHash(newBundle.bundleId, transactionHash);
+    await this.entityRepository.storeBundleProofMetadata(newBundle.bundleId, blockNumber, transactionHash);
 
     return newBundle;
   }

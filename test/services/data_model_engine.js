@@ -688,8 +688,7 @@ describe('Data Model Engine', () => {
         beginBundle: sinon.stub(),
         endBundle: sinon.stub(),
         storeBundle: sinon.stub(),
-        storeBundleProofBlock: sinon.stub(),
-        storeBundleProofTxHash: sinon.stub()
+        storeBundleProofMetadata: sinon.stub()
       };
 
       mockIdentityManager = {
@@ -750,8 +749,7 @@ describe('Data Model Engine', () => {
     });
 
     it('stores block number in metadata', async () => {
-      expect(mockEntityRepository.storeBundleProofBlock).to.have.been.calledWith(assembledBundle.bundleId, blockNumber);
-      expect(mockEntityRepository.storeBundleProofTxHash).to.have.been.calledWith(assembledBundle.bundleId, txHash);
+      expect(mockEntityRepository.storeBundleProofMetadata).to.have.been.calledWith(assembledBundle.bundleId, blockNumber, txHash);
     });
 
     describe('Empty bundle', async () => {

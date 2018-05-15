@@ -322,8 +322,7 @@ describe('Entity Repository', () => {
         'metadata.bundleTransactionHash': txHash
       });
       await storage.storeBundle(exampleBundle);
-      await storage.storeBundleProofBlock(exampleBundleId, 10);
-      await storage.storeBundleProofTxHash(exampleBundleId, txHash);
+      await storage.storeBundleProofMetadata(exampleBundleId, 10, txHash);
       await expect(storage.getBundle(exampleBundleId)).to.eventually.be.deep.equal(exampleBundleWithMetadata);
     });
 
@@ -375,7 +374,7 @@ describe('Entity Repository', () => {
 
       ret = await expect(storage.beginBundle(bundleStubId)).to.be.fulfilled;
       await expect(storage.endBundle(bundleStubId, bundleId)).to.be.fulfilled;
-      await expect(storage.storeBundleProofTxHash(bundleId, bundleTxHash)).to.be.fulfilled;
+      await expect(storage.storeBundleProofMetadata(bundleId, 10, bundleTxHash)).to.be.fulfilled;
     });
 
     after(async () => {
@@ -401,7 +400,7 @@ describe('Entity Repository', () => {
       }
     });
 
-    it('the assets and events included in the bundle should have the metadata.bundleTransactionHash set after the call to storeBundleProofTxHash', async () => {
+    it('the assets and events included in the bundle should have the metadata.bundleTransactionHash set after the call to storeBundleProofBlock', async () => {
       for (const asset of nonBundledAssets) {
         const storedAsset = await storage.getAsset(asset.assetId);
         expect(storedAsset.metadata.bundleTransactionHash).to.equal(bundleTxHash);
