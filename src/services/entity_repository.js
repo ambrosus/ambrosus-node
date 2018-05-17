@@ -8,7 +8,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {pick} from '../utils/dict_utils';
-import {EventQuery} from './query';
 
 export default class EntityRepository {
   constructor(db) {
@@ -33,78 +32,6 @@ export default class EntityRepository {
 
   async storeEvent(event) {
     await this.db.collection('events').insertOne({...event});
-  }
-
-  async getEvent(eventId, accessLevel = 0) {
-    const event = await this.db.collection('events').findOne({eventId}, {fields: this.blacklistedFields});
-    return this.hideEventDataIfNecessary(event, accessLevel);
-  }
-
-  hideEventDataIfNecessary(event, accessLevel) {
-    if (!event) {
-      return null;
-    }
-    return event.content.idData.accessLevel <= accessLevel ? event : pick(event, 'content.data');
-  }
-
-  getConfigurationForFindEventsByEntry(params, accessLevel) {
-    const query = new EventQuery();
-    if (params.data) {
-      query.addDataAccessLevelLimitationIfNeeded(accessLevel);
-    }
-    for (const key in params.data) {
-      switch (key) {
-        case 'geoJson':
-          query.addGeoPart(params.data[key]);
-          break;
-        default:
-          query.addDefaultPart(key, params.data[key]);
-          break;
-      }
-    }
-    return query;
-  }
-
-  getConfigurationForFindEventsQuery(params, accessLevel = 0) {
-    const query = this.getConfigurationForFindEventsByEntry(params, accessLevel);
-    if (params.assetId) {
-      query.add({'content.idData.assetId': params.assetId});
-    }
-    if (params.createdBy) {
-      query.add({'content.idData.createdBy': params.createdBy});
-    }
-    if (params.fromTimestamp) {
-      query.add({'content.idData.timestamp': {$gte: params.fromTimestamp}});
-    }
-    if (params.toTimestamp) {
-      query.add({'content.idData.timestamp': {$lte: params.toTimestamp}});
-    }
-
-    const pageSize = params.perPage || 100;
-    const pageNumber = params.page || 0;
-    const resultsToSkip = pageNumber * pageSize;
-
-    const options = {
-      skip: resultsToSkip,
-      limit: pageSize,
-      sort: [['content.idData.timestamp', 'descending']]
-    };
-    return {query: query.compose(), options};
-  }
-
-  async findEvents(params, accessLevel = 0) {
-    const {query, options} = this.getConfigurationForFindEventsQuery(params, accessLevel);
-    const cursor = this.db
-      .collection('events')
-      .find(query, {
-        ...options,
-        fields: this.blacklistedFields
-      })
-      .map((event) => this.hideEventDataIfNecessary(event, accessLevel));
-    return {
-      results: await cursor.toArray(),
-      resultCount: await cursor.count(false)
-    };
   }
 
   async beginBundle(bundleStubId) {
@@ -228,5 +155,17 @@ export default class EntityRepository {
 
   async getBundle(bundleId) {
     return await this.db.collection('bundles').findOne({bundleId}, {fields: this.blacklistedFields});
+  }
+
+  hideEventDataIfNecessary(event, accessLevel) {
+    if (!event) {
+      return null;
+    }
+    return event.content.idData.accessLevel <= accessLevel ? event : pick(event, 'content.data');
+  }
+
+  async getEvent(eventId, accessLevel = 0) {
+    const event = await this.db.collection('events').findOne({eventId}, {fields: this.blacklistedFields});
+    return this.hideEventDataIfNecessary(event, accessLevel);
   }
 }

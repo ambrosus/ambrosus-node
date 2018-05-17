@@ -14,6 +14,8 @@ import DataModelEngine from './services/data_model_engine';
 import EntityBuilder from './services/entity_builder';
 import EntityDownloader from './services/entity_downloader';
 import EntityRepository from './services/entity_repository';
+import FindEventQueryObject from './services/find_event_query_object';
+import FindAccountQueryObject from './services/find_account_query_object';
 import IdentityManager from './services/identity_manager';
 import ProofRepository from './services/proof_repository';
 import Config from './utils/config';
@@ -41,6 +43,8 @@ class Builder {
     this.entityBuilder = new EntityBuilder(this.identityManager);
     this.entityRepository = new EntityRepository(this.db);
     await this.entityRepository.initializeIndexes();
+    this.findEventQueryObject = new FindEventQueryObject(this.db);
+    this.findAccountQueryObject = new FindAccountQueryObject(this.db);
     this.httpsClient = new HttpsClient();
     this.entityDownloader = new EntityDownloader(this.httpsClient);
     this.proofRepository = new ProofRepository(this.web3,
@@ -56,6 +60,8 @@ class Builder {
       this.entityDownloader,
       this.proofRepository,
       this.accountRepository,
+      this.findEventQueryObject,
+      this.findAccountQueryObject,
       this.accountAccessDefinitions);
     return {dataModelEngine: this.dataModelEngine, client: this.client};
   }

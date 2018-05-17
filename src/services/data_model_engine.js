@@ -11,7 +11,7 @@ import {NotFoundError, InvalidParametersError, PermissionError} from '../errors/
 import {getTimestamp} from '../utils/time_utils';
 
 export default class DataModelEngine {
-  constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, proofRepository, accountRepository, accountAccessDefinitions) {
+  constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, proofRepository, accountRepository, findEventQueryObject, findAccountQueryObject, accountAccessDefinitions) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
@@ -19,6 +19,8 @@ export default class DataModelEngine {
     this.entityDownloader = entityDownloader;
     this.proofRepository = proofRepository;
     this.accountRepository = accountRepository;
+    this.findEventQueryObject = findEventQueryObject;
+    this.findAccountQueryObject = findAccountQueryObject;
     this.accountAccessDefinitions = accountAccessDefinitions;
   }
 
@@ -61,7 +63,7 @@ export default class DataModelEngine {
   }
 
   async findAccounts() {
-    return await this.accountRepository.find();
+    return await this.findAccountQueryObject.find();
   }
 
   async modifyAccount(accountToChange, accountRequest, tokenData) {
@@ -127,7 +129,7 @@ export default class DataModelEngine {
   async findEvents(params, tokenData) {
     const validatedParams = this.entityBuilder.validateAndCastFindEventsParams(params);
     const accessLevel = await this.accountAccessDefinitions.getTokenCreatorAccessLevel(tokenData);
-    return this.entityRepository.findEvents(validatedParams, accessLevel);
+    return this.findEventQueryObject.find(validatedParams, accessLevel);
   }
 
   async getBundle(bundleId) {

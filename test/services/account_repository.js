@@ -11,7 +11,7 @@ import chai from 'chai';
 import AccountStore from '../../src/services/account_repository';
 import {connectToMongo, cleanDatabase} from '../../src/utils/db_utils';
 import {put} from '../../src/utils/dict_utils';
-import {account, adminAccountWithSecret, notRegisteredAccount} from '../fixtures/account';
+import {account} from '../fixtures/account';
 const {expect} = chai;
 
 describe('Account Repository', () => {
@@ -57,23 +57,6 @@ describe('Account Repository', () => {
     await accountStore.store(accountToStore);
     const result = await accountStore.update(accountToStore.address, changedParams);
     expect(result).to.deep.equal(accountToReceive);
-  });
-
-  describe('Finding accounts', () => {
-    let accounts;
-    beforeEach(async () => {
-      accounts = [
-        put(account, {registeredBy: '0x123', registeredOn: 1, permissions: ['perm1', 'perm2']}),
-        put(notRegisteredAccount, {registeredBy: '0x123', registeredOn: 4, permissions: ['perm1', 'perm2']}),
-        put(adminAccountWithSecret, {registeredBy: '0x123', permissions: ['perm1']})];
-      await Promise.all(accounts.map((accountToStore) => accountStore.store(accountToStore)));
-    });
-
-    it('returns accounts sorted by registration time', async () => {
-      const found = await accountStore.find();
-      expect(found.results).to.deep.equal([accounts[1],accounts[0],accounts[2]]);
-      expect(found.resultCount).to.equal(3);
-    });
   });
 
   afterEach(async () => {
