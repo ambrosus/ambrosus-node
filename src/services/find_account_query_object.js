@@ -9,40 +9,30 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import QueryBuilder from './query_builder';
+import FindQueryObject from './find_query_object';
 
-export default class FindEventQueryObject {
+export class FindAccountQueryObject extends FindQueryObject {
   constructor(db) {
-    this.db = db;
-    this.blacklistedFields = {
-      _id: 0,
-      repository: 0
-    };
+    super(db, 'accounts');
+    this.blacklistedFields = this.getBlacklistedFields();
   }
-  
-  assembleConfigurationForFindAccountsQuery() {
+
+  getSortingKey() {
+    return [['registeredOn', 'descending']];
+  }
+
+  assembleQuery() {
     const queryBuilder = new QueryBuilder();
     return queryBuilder.compose();
   }
+}
 
-  assembleOptionsForFindAccountsQuery() {
-    const RESULT_LIMIT = 100;
-    const options = {
-      limit: RESULT_LIMIT,
-      sort: [['registeredOn', 'descending']],
-      fields: this.blacklistedFields
-    };
-    return options;
+export default class FindAccountQueryObjectFactory {
+  constructor(db) {
+    this.db = db;
   }
 
-  async find() {
-    const query = this.assembleConfigurationForFindAccountsQuery();
-    const options = this.assembleOptionsForFindAccountsQuery();
-    const cursor = this.db
-      .collection('accounts')
-      .find(query, options);
-    return {
-      results: await cursor.toArray(),
-      resultCount: await cursor.count(false)
-    };
-  }
+  create() {
+    return new FindAccountQueryObject(this.db);
+  } 
 }

@@ -227,28 +227,34 @@ describe('Data Model Engine', () => {
   });
 
   describe('Finding accounts', () => {
+    let mockFindAccountQueryObjectFactory;
     let mockFindAccountQueryObject;
     let modelEngine;
     let account;
     let accountWithoutSecret;
 
     before(() => {
-      mockFindAccountQueryObject = {
-        find: sinon.stub()
+      mockFindAccountQueryObjectFactory = {
+        create: sinon.stub()
       };
-      modelEngine = new DataModelEngine({}, {}, {}, {}, {}, {}, {}, {}, mockFindAccountQueryObject, {});
+      mockFindAccountQueryObject = {
+        execute: sinon.stub()
+      };
+      modelEngine = new DataModelEngine({}, {}, {}, {}, {}, {}, {}, {}, mockFindAccountQueryObjectFactory, {});
       account = put(accountWithSecret, {registeredBy: adminAccount.address, permissions : ['perm1', 'perm2']});
       accountWithoutSecret = pick(account, 'secret');
     });
 
     beforeEach(() => {
-      resetHistory(mockFindAccountQueryObject);
-      mockFindAccountQueryObject.find.returns({result: [accountWithoutSecret], resultCount: 1});
+      resetHistory(mockFindAccountQueryObjectFactory);
+      mockFindAccountQueryObjectFactory.create.returns(mockFindAccountQueryObject);
+      mockFindAccountQueryObject.execute.returns({result: [accountWithoutSecret], resultCount: 1});
     });
 
-    it('delegates to accountRepository', async () => {
+    it('uses findAccountQueryObjectFactory and delegates to findAccountQueryObject', async () => {
       expect(await modelEngine.findAccounts()).to.deep.equal({result: [accountWithoutSecret], resultCount: 1});
-      expect(mockFindAccountQueryObject.find).to.have.been.called;
+      expect(mockFindAccountQueryObjectFactory.create).to.have.been.called;
+      expect(mockFindAccountQueryObject.execute).to.have.been.called;
     });
   });
 
@@ -556,6 +562,7 @@ describe('Data Model Engine', () => {
   });
 
   describe('Finding events', () => {
+    let mockFindEventQueryObjectFactory;
     let mockFindEventQueryObject;
     let mockAccountAccessDefinitions;
     let mockEntityBuilder;
@@ -570,8 +577,8 @@ describe('Data Model Engine', () => {
     let ret;
 
     before(async () => {
-      mockFindEventQueryObject = {
-        find: sinon.stub()
+      mockFindEventQueryObjectFactory = {
+        create: sinon.stub()
       };
 
       mockEntityBuilder = {
@@ -581,6 +588,9 @@ describe('Data Model Engine', () => {
       mockAccountAccessDefinitions = {
         getTokenCreatorAccessLevel: sinon.stub()
       };
+      mockFindEventQueryObject = {
+        execute: sinon.stub()
+      };
 
       scenario = new ScenarioBuilder(identityManager);
       await scenario.addAdminAccount(adminAccountWithSecret);
@@ -588,12 +598,13 @@ describe('Data Model Engine', () => {
       eventSet = [
         await scenario.addEvent(0, 0)
       ];
-      mockFindEventQueryObject.find.resolves({results: eventSet, resultCount: 165});
+      mockFindEventQueryObjectFactory.create.returns(mockFindEventQueryObject);
+      mockFindEventQueryObject.execute.returns({results: eventSet, resultCount: 165});
       mockEntityBuilder.validateAndCastFindEventsParams.returns(mockParams2);
       mockAccountAccessDefinitions.getTokenCreatorAccessLevel.resolves(accessLevel);
 
       modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, {},
-        {}, {}, {}, mockFindEventQueryObject, {}, mockAccountAccessDefinitions);
+        {}, {}, {}, mockFindEventQueryObjectFactory, {}, mockAccountAccessDefinitions);
 
       ret = await expect(modelEngine.findEvents(mockParams)).to.fulfilled;
     });
@@ -602,8 +613,12 @@ describe('Data Model Engine', () => {
       expect(mockEntityBuilder.validateAndCastFindEventsParams).to.have.been.calledWith(mockParams);
     });
 
+    it('creates event query object', async () => {
+      expect(mockFindEventQueryObjectFactory.create).to.have.been.calledWith(mockParams2, accessLevel);
+    });
+
     it('asks the event query object for the events', async () => {
-      expect(mockFindEventQueryObject.find).to.have.been.calledWith(mockParams2, accessLevel);
+      expect(mockFindEventQueryObject.execute).to.have.been.called;
     });
 
     it('properly assembles the result', () => {

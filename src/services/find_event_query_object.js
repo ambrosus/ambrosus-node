@@ -9,15 +9,22 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import QueryBuilder from './query_builder';
+import FindQueryObject from './find_query_object';
 import {pick} from '../utils/dict_utils';
 
-export default class EventQueryObject {
-  constructor(db) {
-    this.db = db;
-    this.blacklistedFields = {
-      _id: 0,
-      repository: 0
-    };
+export class FindEventQueryObject extends FindQueryObject {
+  constructor(db, params, accessLevel) {
+    super(db, 'events', params);
+    this.accessLevel = accessLevel;
+    this.blacklistedFields = this.getBlacklistedFields();
+  }
+
+  getSortingKey() {
+    return [['content.idData.timestamp', 'descending']];
+  }
+
+  getItemTransformer() {
+    return (event) => this.hideEventDataIfNecessary(event, this.accessLevel);
   }
 
   addDefaultPart(key, value) {
@@ -55,64 +62,45 @@ export default class EventQueryObject {
     return event.content.idData.accessLevel <= accessLevel ? event : pick(event, 'content.data');
   }
 
-  assembleConfigurationForFindEventsQuery(params, accessLevel = 0) {
+  assembleQuery() {
     this.queryBuilder = new QueryBuilder();
 
-    if (params.data) {
-      this.addDataAccessLevelLimitationIfNeeded(accessLevel);
+    if (this.params.data) {
+      this.addDataAccessLevelLimitationIfNeeded(this.accessLevel);
     }
-    for (const key in params.data) {
+    for (const key in this.params.data) {
       switch (key) {
         case 'geoJson':
-          this.addGeoPart(params.data[key]);
+          this.addGeoPart(this.params.data[key]);
           break;
         default:
-          this.addDefaultPart(key, params.data[key]);
+          this.addDefaultPart(key, this.params.data[key]);
           break;
       }
     }
-    if (params.assetId) {
-      this.queryBuilder.add({'content.idData.assetId': params.assetId});
+    if (this.params.assetId) {
+      this.queryBuilder.add({'content.idData.assetId': this.params.assetId});
     }
-    if (params.createdBy) {
-      this.queryBuilder.add({'content.idData.createdBy': params.createdBy});
+    if (this.params.createdBy) {
+      this.queryBuilder.add({'content.idData.createdBy': this.params.createdBy});
     }
-    if (params.fromTimestamp) {
-      this.queryBuilder.add({'content.idData.timestamp': {$gte: params.fromTimestamp}});
+    if (this.params.fromTimestamp) {
+      this.queryBuilder.add({'content.idData.timestamp': {$gte: this.params.fromTimestamp}});
     }
-    if (params.toTimestamp) {
-      this.queryBuilder.add({'content.idData.timestamp': {$lte: params.toTimestamp}});
+    if (this.params.toTimestamp) {
+      this.queryBuilder.add({'content.idData.timestamp': {$lte: this.params.toTimestamp}});
     }
 
     return this.queryBuilder.compose();
   }
+}
 
-  assembleOptionsForEventsQuery(params) {
-    const pageSize = params.perPage || 100;
-    const pageNumber = params.page || 0;
-    const resultsToSkip = pageNumber * pageSize;
-
-    const options = {
-      skip: resultsToSkip,
-      limit: pageSize,
-      sort: [['content.idData.timestamp', 'descending']],
-      fields: this.blacklistedFields
-    };
-    return options;
+export default class FindEventQueryObjectFactory {
+  constructor(db) {
+    this.db = db;
   }
 
-  async find(params, accessLevel = 0) {
-    const query = this.assembleConfigurationForFindEventsQuery(params, accessLevel);
-    const options = this.assembleOptionsForEventsQuery(params);
-
-    const cursor = this.db
-      .collection('events')
-      .find(query, options)
-      .map((event) => this.hideEventDataIfNecessary(event, accessLevel));
-      
-    return {
-      results: await cursor.toArray(),
-      resultCount: await cursor.count(false)
-    };
-  }
+  create(params, accessLevel) {
+    return new FindEventQueryObject(this.db, params, accessLevel);
+  } 
 }
