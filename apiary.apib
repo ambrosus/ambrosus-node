@@ -477,16 +477,16 @@ Finds asset with provided assetId in the system.
 
 ## Group Events
 
-Events describe all registered incidents that occurred with the asset. E.g. measured temperature, noted big acceleration or changing pallets. An event consists of the 3 major parts:
+Events describe all registered changes of state that occurred with the asset. E.g. measured temperature, noted big acceleration or changing pallets. An event consists of the 3 major parts:
 
 * idData – Public information about an event. Contains the ID of the asset, address of the user who has registered the event, minimal access level required to view private data of the event and the timestamp of the event.
-* Data – Protected information about an event. To get access to the private data, a user needs to have an access level not smaller than requested.
+* Data – Protected information about an event. To get access to the private data, a user needs to have an access level not smaller than the returned event.
 * Metadata – Information generated and used by AMB-NET, for example id of a bundle handling an event.
 
 ##### Events Data field
 
 Every event has a `data` array, located at `content` with information what actually happened.
-Each item of the array is an object with a required `type` field of `string` type.
+Each item in this array is an object with a required `type` field of `string` type.
 Following event types are predefined:
 * `ambrosus.event.identifiers` - Known identifiers for an event, must have at least 1 property of type `array`
 * `ambrosus.event.location.asset` - Location expressed with an assetId, required are:
