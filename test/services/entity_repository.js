@@ -351,8 +351,8 @@ describe('Entity Repository', () => {
       await scenario.addAdminAccount(adminAccountWithSecret);
 
       alreadyBundledAssets = [
-        await scenario.addAsset(0, {timestamp: 0}),
-        await scenario.addAsset(0, {timestamp: 1})
+        await scenario.addAsset(0),
+        await scenario.addAsset(0)
       ].map((asset) => put(asset, {'metadata.bundleId': 1, 'metadata.bundleTransactionHash': '0x1'}));
 
       alreadyBundledEvents = [
@@ -361,8 +361,8 @@ describe('Entity Repository', () => {
       ].map((event) => put(event, {'metadata.bundleId': 1, 'metadata.bundleTransactionHash': '0x1'}));
 
       nonBundledAssets = [
-        await scenario.addAsset(0),
-        await scenario.addAsset(0)
+        await scenario.addAsset(0, {timestamp: 0}),
+        await scenario.addAsset(0, {timestamp: 1})
       ].map((asset) => put(asset, 'metadata.bundleId', null));
 
       nonBundledEvents = [
@@ -435,13 +435,13 @@ describe('Entity Repository', () => {
       }
     });
 
-    it('second call to beginBundle should add last left event', async () => {
+    it('second call to beginBundle should include latest events and the leftovers from the previous bundling', async () => {
       const ret2 = await expect(storage.beginBundle('otherId')).to.be.fulfilled;
       expect(ret2.assets).to.be.empty;
       expect(ret2.events).to.deep.equal([nonBundledEvents[0]]);
     });
 
-    it('orderedEntities sorts correctly (assets first, then by timestamp)', async () => {
+    it('orderedEntityIds sorts correctly (by timestamp, then by type)', () => {
       const assetStubs = [
         {assetId: 'asset1', content: {idData: {timestamp: 4}}},
         {assetId: 'asset2', content: {idData: {timestamp: 1}}}];
@@ -449,9 +449,9 @@ describe('Entity Repository', () => {
         {eventId: 'event1', content: {idData: {timestamp: 4}}},
         {eventId: 'event2', content: {idData: {timestamp: 1}}},
         {eventId: 'event3', content: {idData: {timestamp: 10}}}];
-      const entities = storage.orderedEntities(assetStubs, eventStubs);
-      expect(entities.map((ent) => ent.data.assetId || ent.data.eventId))
-        .to.deep.equal(['asset2', 'asset1', 'event2', 'event1', 'event3']);
+      const entities = storage.orderedEntityIds(assetStubs, eventStubs);
+      expect(entities.map((ent) => ent.id))
+        .to.deep.equal(['asset2', 'event2', 'asset1', 'event1', 'event3']);
     });
   });
 });

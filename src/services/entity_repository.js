@@ -181,20 +181,19 @@ export default class EntityRepository {
     };
   }
 
-  orderedEntities(assets, events) {
+  orderedEntityIds(assets, events) {
     return [
-      ...assets
-        .sort((first, second) => first.content.idData.timestamp - second.content.idData.timestamp)
-        .map((asset) => ({type: 'asset', data: asset})),
-      ...events
-        .sort((first, second) => first.content.idData.timestamp - second.content.idData.timestamp)
-        .map((event) => ({type: 'event', data: event}))
-    ];
+      ...assets.map((asset) => ({type: 'asset', id: asset.assetId, timestamp: asset.content.idData.timestamp})),
+      ...events.map((event) => ({type: 'event', id: event.eventId, timestamp: event.content.idData.timestamp}))
+    ].sort((first, second) =>
+      first.timestamp - second.timestamp ||
+      first.type.localeCompare(second.type) || // asset < event
+      first.id.localeCompare(second.id));
   }
 
   async updateEntities(entities, updateQuery) {
-    const assetIds = entities.filter((ent) => ent.type === 'asset').map((asset) => asset.data.assetId);
-    const eventIds = entities.filter((ent) => ent.type === 'event').map((event) => event.data.eventId);
+    const assetIds = entities.filter((ent) => ent.type === 'asset').map((asset) => asset.id);
+    const eventIds = entities.filter((ent) => ent.type === 'event').map((event) => event.id);
     await this.db.collection('assets').update({
       assetId: {
         $in: assetIds
@@ -237,7 +236,7 @@ export default class EntityRepository {
       .toArray();
     const events = await this.db.collection('events').find(thisBundleStubQuery)
       .toArray();
-    const entities = this.orderedEntities(assets, events);
+    const entities = this.orderedEntityIds(assets, events);
     await this.setEntitiesBundles(entities.slice(0, bundleSizeLimit), bundleId);
     await this.unsetEntitiesBundlesStubs(entities.slice(bundleSizeLimit), bundleId);
   }
