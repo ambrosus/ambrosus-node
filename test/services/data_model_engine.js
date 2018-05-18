@@ -573,6 +573,7 @@ describe('Data Model Engine', () => {
     let eventSet;
     const mockParams = {'a param': 'a value'};
     const mockParams2 = {'a param2': 'a value2'};
+    const mockTokenData = {createdBy: 'tester', validUntil: 'all bugs gone'};
 
     let ret;
 
@@ -606,11 +607,15 @@ describe('Data Model Engine', () => {
       modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, {},
         {}, {}, {}, mockFindEventQueryObjectFactory, {}, mockAccountAccessDefinitions);
 
-      ret = await expect(modelEngine.findEvents(mockParams)).to.fulfilled;
+      ret = await expect(modelEngine.findEvents(mockParams, mockTokenData)).to.fulfilled;
     });
 
     it('asks the entity builder for parameters validation', () => {
       expect(mockEntityBuilder.validateAndCastFindEventsParams).to.have.been.calledWith(mockParams);
+    });
+
+    it('gets access level', async () => {
+      expect(mockAccountAccessDefinitions.getTokenCreatorAccessLevel).to.have.been.calledWith(mockTokenData);
     });
 
     it('creates event query object', async () => {

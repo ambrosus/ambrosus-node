@@ -44,7 +44,7 @@ export default class FindQueryObject {
       skip: resultsToSkip,
       limit: pageSize,
       sort: this.getSortingKey(),
-      fields: this.blacklistedFields
+      fields: this.getBlacklistedFields()
     };
     return options;
   }
