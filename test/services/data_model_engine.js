@@ -648,6 +648,7 @@ describe('Data Model Engine', () => {
     const bundleStubId = 'abc';
     const nodeSecret = 'nodeSecret';
     const blockNumber = 10;
+    const bundleSizeLimit = 15;
     const txHash = '0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009';
     let unbundledAssets;
     let unbundledEvents;
@@ -711,7 +712,7 @@ describe('Data Model Engine', () => {
 
       modelEngine = new DataModelEngine(mockIdentityManager, {}, mockEntityBuilder, mockEntityRepository, {}, mockProofRepository, {}, {});
 
-      ret = await expect(modelEngine.finaliseBundle(bundleStubId)).to.be.fulfilled;
+      ret = await expect(modelEngine.finaliseBundle(bundleStubId, bundleSizeLimit)).to.be.fulfilled;
     });
 
     after(() => {
@@ -737,7 +738,7 @@ describe('Data Model Engine', () => {
     });
 
     it('ends the bundling procedure in the repository', () => {
-      expect(mockEntityRepository.endBundle).to.have.been.calledWith(bundleStubId, assembledBundle.bundleId);
+      expect(mockEntityRepository.endBundle).to.have.been.calledWith(bundleStubId, assembledBundle.bundleId, bundleSizeLimit);
     });
 
     it('uploads the proof to the registry contract', () => {
