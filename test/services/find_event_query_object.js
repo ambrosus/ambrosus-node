@@ -46,15 +46,15 @@ describe('Find Event Query Object', () => {
     client.close();
   });
 
-  it('is created by FindEventQueryObjectFactory', async () => {
+  it('is created by FindEventQueryObjectFactory', () => {
     expect(findEventQueryObject instanceof FindEventQueryObject).to.be.true;
   });
 
-  it('has default sorting key', async () => {
+  it('has default sorting key', () => {
     expect(findEventQueryObject.getSortingKey()).to.be.deep.equal([['content.idData.timestamp', 'descending']]);
   });
   
-  it('properly assembles mongodb query', async () => {
+  it('properly assembles mongodb query', () => {
     const params = {
       assetId: 12,
       createdBy: '0x123',

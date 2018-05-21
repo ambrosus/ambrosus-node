@@ -46,11 +46,11 @@ describe('Find Account Query Object', () => {
     client.close();
   });
 
-  it('is created by FindAccountQueryObjectFactory', async () => {
+  it('is created by FindAccountQueryObjectFactory', () => {
     expect(findAccountQueryObject instanceof FindAccountQueryObject).to.be.true;
   });
 
-  it('has default sorting key', async () => {
+  it('has default sorting key', () => {
     expect(findAccountQueryObject.getSortingKey()).to.be.deep.equal([['registeredOn', 'descending']]);
   });
 

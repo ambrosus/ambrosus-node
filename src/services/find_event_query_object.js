@@ -13,8 +13,8 @@ import FindQueryObject from './find_query_object';
 import {pick} from '../utils/dict_utils';
 
 export class FindEventQueryObject extends FindQueryObject {
-  constructor(db, params, accessLevel) {
-    super(db, 'events', params);
+  constructor(db, criteria, accessLevel) {
+    super(db, 'events', criteria);
     this.accessLevel = accessLevel;
     this.blacklistedFields = this.getBlacklistedFields();
   }
@@ -65,30 +65,28 @@ export class FindEventQueryObject extends FindQueryObject {
   assembleQuery() {
     this.queryBuilder = new QueryBuilder();
 
-    if (this.params.data) {
+    if (this.criteria.data) {
       this.addDataAccessLevelLimitationIfNeeded(this.accessLevel);
     }
-    for (const key in this.params.data) {
+    for (const key in this.criteria.data) {
       switch (key) {
         case 'geoJson':
-          this.addGeoPart(this.params.data[key]);
+          this.addGeoPart(this.criteria.data[key]);
           break;
         default:
-          this.addDefaultPart(key, this.params.data[key]);
+          this.addDefaultPart(key, this.criteria.data[key]);
           break;
       }
     }
-    if (this.params.assetId) {
-      this.queryBuilder.add({'content.idData.assetId': this.params.assetId});
-    }
-    if (this.params.createdBy) {
-      this.queryBuilder.add({'content.idData.createdBy': this.params.createdBy});
-    }
-    if (this.params.fromTimestamp) {
-      this.queryBuilder.add({'content.idData.timestamp': {$gte: this.params.fromTimestamp}});
-    }
-    if (this.params.toTimestamp) {
-      this.queryBuilder.add({'content.idData.timestamp': {$lte: this.params.toTimestamp}});
+    const queryParts = {assetId : {'content.idData.assetId': this.criteria.assetId},
+      createdBy : {'content.idData.createdBy': this.criteria.createdBy},
+      fromTimestamp : {'content.idData.timestamp': {$gte: this.criteria.fromTimestamp}},
+      toTimestamp : {'content.idData.timestamp': {$lte: this.criteria.toTimestamp}}};
+
+    for (const part in queryParts) {
+      if (this.criteria[part]) {
+        this.queryBuilder.add(queryParts[part]);
+      }
     }
 
     return this.queryBuilder.compose();
@@ -100,7 +98,7 @@ export default class FindEventQueryObjectFactory {
     this.db = db;
   }
 
-  create(params, accessLevel) {
-    return new FindEventQueryObject(this.db, params, accessLevel);
+  create(criteria, accessLevel) {
+    return new FindEventQueryObject(this.db, criteria, accessLevel);
   } 
 }

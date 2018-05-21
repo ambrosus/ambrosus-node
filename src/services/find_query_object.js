@@ -9,10 +9,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 export default class FindQueryObject {
-  constructor (db, collection, params = {}) {
+  constructor (db, collection, criteria = {}) {
     this.db = db;
     this.collection = collection;
-    this.params = params;
+    this.criteria = criteria;
   }
 
   getBlacklistedFields() {
@@ -36,8 +36,8 @@ export default class FindQueryObject {
 
 
   assembleOptionsForQuery() {
-    const pageSize = this.params.perPage || 100;
-    const pageNumber = this.params.page || 0;
+    const pageSize = this.criteria.perPage || 100;
+    const pageNumber = this.criteria.page || 0;
     const resultsToSkip = pageNumber * pageSize;
 
     const options = {

@@ -14,7 +14,7 @@ export default class QueryBuilder {
   }
 
   add(part) {
-    this.queryParts = [...this.queryParts, part];
+    this.queryParts.push(part);
   }
 
   compose() {
