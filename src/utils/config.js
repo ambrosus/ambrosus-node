@@ -65,6 +65,10 @@ export default class Config {
     return config.get('authorizationWithSecretEnabled');
   }
 
+  bundleSizeLimit() {
+    return config.get('bundle.bundleSizeLimit');
+  }
+
   static default(attributes) {
     return new Config(attributes);
   }

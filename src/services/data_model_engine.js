@@ -135,7 +135,7 @@ export default class DataModelEngine {
     return bundle;
   }
 
-  async finaliseBundle(bundleStubId) {
+  async finaliseBundle(bundleStubId, bundleSizeLimit) {
     const notBundled = await this.entityRepository.beginBundle(bundleStubId);
 
     const nodeSecret = await this.identityManager.nodePrivateKey();
@@ -147,7 +147,7 @@ export default class DataModelEngine {
 
     await this.entityRepository.storeBundle(newBundle);
 
-    await this.entityRepository.endBundle(bundleStubId, newBundle.bundleId);
+    await this.entityRepository.endBundle(bundleStubId, newBundle.bundleId, bundleSizeLimit);
 
     const {blockNumber, transactionHash} = await this.proofRepository.uploadProof(newBundle.bundleId);
 

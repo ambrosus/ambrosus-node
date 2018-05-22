@@ -27,7 +27,8 @@ class Application extends Builder {
   async startBackground() {
     this.bundleDownloader = new BundleDownloader(this.dataModelEngine, this.config.bundleDownloadInterval(), this.output);
     this.bundleDownloader.start();
-    this.bundleFinaliser = new BundleFinaliser(this.dataModelEngine, this.config.bundleFinalisationInterval(), this.output);
+    this.bundleFinaliser = new BundleFinaliser(this.dataModelEngine, this.config.bundleFinalisationInterval(),
+      this.config.bundleSizeLimit(), this.output);
     this.bundleFinaliser.start();
   }  
 }
