@@ -34,119 +34,6 @@ export default class EntityRepository {
     await this.db.collection('events').insertOne({...event});
   }
 
-  async getEvent(eventId, accessLevel = 0) {
-    const event = await this.db.collection('events').findOne({eventId}, {fields: this.blacklistedFields});
-    return this.hideEventDataIfNecessary(event, accessLevel);
-  }
-
-  hideEventDataIfNecessary(event, accessLevel) {
-    if (!event) {
-      return null;
-    }
-    return event.content.idData.accessLevel <= accessLevel ? event : pick(event, 'content.data');
-  }
-
-  addToQuery(queryParts, part) {
-    return [...queryParts, part];
-  }
-
-  composeQuery(queryParts) {
-    if (queryParts.length === 0) {
-      return {};
-    }
-    if (queryParts.length === 1) {
-      return queryParts[0];
-    }
-    return {
-      $and: queryParts
-    };
-  }
-
-  assembleGeoQueryPart(value) {
-    return {'content.data.geoJson': {$near: {
-      $geometry: {
-        type: 'Point',
-        coordinates: [value.locationLongitude , value.locationLatitude]
-      },
-      $maxDistance: value.locationMaxDistance
-    }}};
-  }
-
-  assembleDefaultQueryPart(key, value) {
-    return {'content.data': {$elemMatch: {[key]: value}}};
-  }
-
-  addDataAccessLevelLimitationIfNeeded(queryParts, accessLevel) {
-    const part = {'content.idData.accessLevel': {$lte: accessLevel}};
-    if (queryParts.some((queryPart) => queryPart['content.idData.accessLevel'])) {
-      return queryParts;
-    }
-    return this.addToQuery(queryParts, part);
-  }
-
-  getConfigurationForFindEventsByEntry(params, accessLevel) {
-    let queryParts = [];
-    let queryPart;
-    if (params.data) {
-      queryParts = this.addDataAccessLevelLimitationIfNeeded(queryParts, accessLevel);
-    }
-    for (const key in params.data) {
-      switch (key) {
-        case 'geoJson':
-          queryPart = this.assembleGeoQueryPart(params.data[key]);
-          break;
-        default:
-          queryPart = this.assembleDefaultQueryPart(key, params.data[key]);
-          break;
-      }
-
-      queryParts = this.addToQuery(queryParts, queryPart);
-    }
-    return queryParts;
-  }
-
-  getConfigurationForFindEventsQuery(params, accessLevel = 0) {
-    let queryParts = this.getConfigurationForFindEventsByEntry(params, accessLevel);
-    if (params.assetId) {
-      queryParts = this.addToQuery(queryParts, {'content.idData.assetId': params.assetId});
-    }
-    if (params.createdBy) {
-      queryParts = this.addToQuery(queryParts, {'content.idData.createdBy': params.createdBy});
-    }
-    if (params.fromTimestamp) {
-      queryParts = this.addToQuery(queryParts, {'content.idData.timestamp': {$gte: params.fromTimestamp}});
-    }
-    if (params.toTimestamp) {
-      queryParts = this.addToQuery(queryParts, {'content.idData.timestamp': {$lte: params.toTimestamp}});
-    }
-
-    const pageSize = params.perPage || 100;
-    const pageNumber = params.page || 0;
-    const resultsToSkip = pageNumber * pageSize;
-
-    const options = {
-      skip: resultsToSkip,
-      limit: pageSize,
-      sort: [['content.idData.timestamp', 'descending']]
-    };
-    return {query: this.composeQuery(queryParts), options};
-  }
-
-  async findEvents(params, accessLevel = 0) {
-    const {query, options} = this.getConfigurationForFindEventsQuery(params, accessLevel);
-    const cursor = this.db
-      .collection('events')
-      .find(query, {
-        ...options,
-        fields: this.blacklistedFields
-      })
-      .map((event) => this.hideEventDataIfNecessary(event, accessLevel));
-    return {
-      results: await cursor.toArray(),
-      resultCount: await cursor.count(false)
-    };
-  }
-
   async beginBundle(bundleStubId) {
     const notBundledQuery = {
       'metadata.bundleId': null,
@@ -268,5 +155,17 @@ export default class EntityRepository {
 
   async getBundle(bundleId) {
     return await this.db.collection('bundles').findOne({bundleId}, {fields: this.blacklistedFields});
+  }
+
+  hideEventDataIfNecessary(event, accessLevel) {
+    if (!event) {
+      return null;
+    }
+    return event.content.idData.accessLevel <= accessLevel ? event : pick(event, 'content.data');
+  }
+
+  async getEvent(eventId, accessLevel = 0) {
+    const event = await this.db.collection('events').findOne({eventId}, {fields: this.blacklistedFields});
+    return this.hideEventDataIfNecessary(event, accessLevel);
   }
 }

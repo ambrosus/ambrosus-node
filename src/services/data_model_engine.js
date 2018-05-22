@@ -11,7 +11,7 @@ import {NotFoundError, InvalidParametersError, PermissionError} from '../errors/
 import {getTimestamp} from '../utils/time_utils';
 
 export default class DataModelEngine {
-  constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, proofRepository, accountRepository, accountAccessDefinitions) {
+  constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, proofRepository, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, accountAccessDefinitions) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
@@ -19,6 +19,8 @@ export default class DataModelEngine {
     this.entityDownloader = entityDownloader;
     this.proofRepository = proofRepository;
     this.accountRepository = accountRepository;
+    this.findEventQueryObjectFactory = findEventQueryObjectFactory;
+    this.findAccountQueryObjectFactory = findAccountQueryObjectFactory;
     this.accountAccessDefinitions = accountAccessDefinitions;
   }
 
@@ -58,6 +60,12 @@ export default class DataModelEngine {
       throw new NotFoundError(`Account ${address} not found.`);
     }
     return result;
+  }
+
+  async findAccounts(tokenData) {
+    await this.accountAccessDefinitions.ensureCanRegisterAccount(tokenData.createdBy);
+    const findAccountQueryObject = this.findAccountQueryObjectFactory.create();
+    return await findAccountQueryObject.execute();
   }
 
   async modifyAccount(accountToChange, accountRequest, tokenData) {
@@ -123,7 +131,8 @@ export default class DataModelEngine {
   async findEvents(params, tokenData) {
     const validatedParams = this.entityBuilder.validateAndCastFindEventsParams(params);
     const accessLevel = await this.accountAccessDefinitions.getTokenCreatorAccessLevel(tokenData);
-    return this.entityRepository.findEvents(validatedParams, accessLevel);
+    const findEventQueryObject = this.findEventQueryObjectFactory.create(validatedParams, accessLevel);
+    return await findEventQueryObject.execute();
   }
 
   async getBundle(bundleId) {

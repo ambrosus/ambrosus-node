@@ -104,7 +104,7 @@ describe('Events Integrations: Find by data entries', () => {
   });
 
 
-  describe('geo base search', () => {
+  describe('geo based search', () => {
     beforeEach(async () => {
       await scenario.addEvent(0, 0, {timestamp: 1, accessLevel: 0}, [{
         type: 'ambrosus.asset.location.geo',

@@ -12,7 +12,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import {addAccountHandler, getAccountHandler, modifyAccountHandler} from '../../src/routes/accounts';
+import {addAccountHandler, getAccountHandler, modifyAccountHandler, findAccountsHandler} from '../../src/routes/accounts';
 import {accountWithSecret, adminAccountWithSecret, account} from '../fixtures/account';
 import {put} from '../../src/utils/dict_utils';
 
@@ -28,6 +28,7 @@ describe('Accounts', () => {
   beforeEach(async () => {
     mockModelEngine = {
       addAccount: sinon.stub(),
+      findAccounts: sinon.stub(),
       getAccount: sinon.stub(),
       modifyAccount: sinon.stub()
     };
@@ -40,12 +41,12 @@ describe('Accounts', () => {
     let mockAccount;
     const requestedPermissions = ['perm1', 'perm2'];
     const tokenData = {createdBy : adminAccountWithSecret.address, validUntil: 423543253453};
-    const accountregistrationRequest = {registeredBy: tokenData.createdBy, permissions : requestedPermissions};
+    const accountRegistrationRequest = {registeredBy: tokenData.createdBy, permissions : requestedPermissions};
 
     beforeEach(async () => {
       mockAccount = put(accountWithSecret, {permissions : requestedPermissions, registeredBy : adminAccountWithSecret.address});
       mockModelEngine.addAccount.resolves(mockAccount);
-      req.body = accountregistrationRequest;
+      req.body = accountRegistrationRequest;
       req.tokenData = tokenData;
       injectedHandler = addAccountHandler(mockModelEngine);
     });
@@ -53,7 +54,7 @@ describe('Accounts', () => {
     it('pushes json body into Data Model Engine and proxies result', async () => {
       await injectedHandler(req, res);
 
-      expect(mockModelEngine.addAccount).to.have.been.calledWith(accountregistrationRequest, tokenData);
+      expect(mockModelEngine.addAccount).to.have.been.calledWith(accountRegistrationRequest, tokenData);
     
       expect(res._getStatusCode()).to.eq(201);
       expect(res._isJSON()).to.be.true;
@@ -81,6 +82,30 @@ describe('Accounts', () => {
     
       expect(res._getStatusCode()).to.eq(200);
       expect(res._isJSON()).to.be.true;
+    });
+  });
+
+  describe('finding accounts', async () => {
+    let injectedHandler;
+    const exampleResult = {results: [], resultCount: 0};
+    const tokenData = {createdBy : adminAccountWithSecret.address, validUntil: 423543253453};
+
+    beforeEach(async () => {
+      mockModelEngine.findAccounts.resolves(exampleResult);
+      injectedHandler = findAccountsHandler(mockModelEngine);
+      req.tokenData = tokenData;
+    });
+
+    it('passes requested id to Data Model Engine and proxies result', async () => {
+      await injectedHandler(req, res);
+
+      expect(mockModelEngine.findAccounts).to.have.been.calledWith(tokenData);
+
+      const returnedData = JSON.parse(res._getData());
+
+      expect(res._getStatusCode()).to.eq(200);
+      expect(res._isJSON()).to.be.true;
+      expect(returnedData).to.deep.equal(exampleResult);
     });
   });
 

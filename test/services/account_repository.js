@@ -10,8 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import AccountStore from '../../src/services/account_repository';
 import {connectToMongo, cleanDatabase} from '../../src/utils/db_utils';
-import {account} from '../fixtures/account.js';
 import {put} from '../../src/utils/dict_utils';
+import {account} from '../fixtures/account';
 const {expect} = chai;
 
 describe('Account Repository', () => {
