@@ -78,10 +78,12 @@ export class FindEventQueryObject extends FindQueryObject {
           break;
       }
     }
-    const queryParts = {assetId : {'content.idData.assetId': this.criteria.assetId},
+    const queryParts = {
+      assetId : {'content.idData.assetId': this.criteria.assetId},
       createdBy : {'content.idData.createdBy': this.criteria.createdBy},
       fromTimestamp : {'content.idData.timestamp': {$gte: this.criteria.fromTimestamp}},
-      toTimestamp : {'content.idData.timestamp': {$lte: this.criteria.toTimestamp}}};
+      toTimestamp : {'content.idData.timestamp': {$lte: this.criteria.toTimestamp}}
+    };
 
     for (const part in queryParts) {
       if (this.criteria[part]) {
