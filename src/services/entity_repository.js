@@ -181,11 +181,32 @@ export default class EntityRepository {
     };
   }
 
-  async endBundle(bundleStubId, bundleId) {
-    const thisBundleStubQuery = {
-      'repository.bundleStubId': bundleStubId
-    };
+  orderedEntityIds(assets, events) {
+    return [
+      ...assets.map((asset) => ({type: 'asset', id: asset.assetId, timestamp: asset.content.idData.timestamp})),
+      ...events.map((event) => ({type: 'event', id: event.eventId, timestamp: event.content.idData.timestamp}))
+    ].sort((first, second) =>
+      first.timestamp - second.timestamp ||
+      first.type.localeCompare(second.type) || // asset < event
+      first.id.localeCompare(second.id));
+  }
 
+  async updateEntities(entities, updateQuery) {
+    const assetIds = entities.filter((ent) => ent.type === 'asset').map((asset) => asset.id);
+    const eventIds = entities.filter((ent) => ent.type === 'event').map((event) => event.id);
+    await this.db.collection('assets').update({
+      assetId: {
+        $in: assetIds
+      }
+    }, updateQuery, {multi: true});
+    await this.db.collection('events').update({
+      eventId: {
+        $in: eventIds
+      }
+    }, updateQuery, {multi: true});
+  }
+
+  async setEntitiesBundles(entities, bundleId) {
     const update = {
       $set: {
         'metadata.bundleId': bundleId
@@ -194,9 +215,30 @@ export default class EntityRepository {
         'repository.bundleStubId': ''
       }
     };
+    await this.updateEntities(entities, update);
+  }
 
-    await this.db.collection('assets').update(thisBundleStubQuery, update, {multi: true});
-    await this.db.collection('events').update(thisBundleStubQuery, update, {multi: true});
+  async unsetEntitiesBundlesStubs(entities) {
+    const update = {
+      $unset: {
+        'repository.bundleStubId': ''
+      }
+    };
+    await this.updateEntities(entities, update);
+  }
+
+  async endBundle(bundleStubId, bundleId, bundleSizeLimit) {
+    const thisBundleStubQuery = {
+      'repository.bundleStubId': bundleStubId
+    };
+
+    const assets = await this.db.collection('assets').find(thisBundleStubQuery)
+      .toArray();
+    const events = await this.db.collection('events').find(thisBundleStubQuery)
+      .toArray();
+    const entities = this.orderedEntityIds(assets, events);
+    await this.setEntitiesBundles(entities.slice(0, bundleSizeLimit), bundleId);
+    await this.unsetEntitiesBundlesStubs(entities.slice(bundleSizeLimit), bundleId);
   }
 
   async storeBundle(bundle) {
