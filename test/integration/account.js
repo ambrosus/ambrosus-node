@@ -160,7 +160,7 @@ describe('Accounts - Integrations', async () => {
         .and.have.property('status', 404);
     });
 
-    it('should fail to modify if not supported parameters passed', async () => {
+    it('should fail to modify if unsupported parameters passed', async () => {
       const pendingRequest = apparatus.request()
         .put(`/accounts/${storedAccount.body.address}`)
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
@@ -185,9 +185,30 @@ describe('Accounts - Integrations', async () => {
     it('find works', async () => {
       const response = await apparatus.request()
         .get('/accounts')
-        .send({});
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+        .send();
       expect(response.body.resultCount).to.equal(1);
       expect(response.body.results[0].address).to.equal(adminAccountWithSecret.address);
+    });
+
+    it('should fail if no token', async () => {
+      const pendingRequest = apparatus.request()
+        .get(`/accounts`)
+        .send();
+      await expect(pendingRequest)
+        .to.eventually.be.rejected
+        .and.have.property('status', 401);
+    });
+
+    it('should fail if non-existing requester user', async () => {
+      const nonExistingUser = accountWithSecret;
+      const pendingRequest = apparatus.request()
+        .get(`/accounts`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(nonExistingUser.secret)}`)
+        .send();
+      await expect(pendingRequest)
+        .to.eventually.be.rejected
+        .and.have.property('status', 403);
     });
   });
 

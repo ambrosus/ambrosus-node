@@ -62,7 +62,8 @@ export default class DataModelEngine {
     return result;
   }
 
-  async findAccounts() {
+  async findAccounts(tokenData) {
+    await this.accountAccessDefinitions.ensureCanRegisterAccount(tokenData.createdBy);
     const findAccountQueryObject = this.findAccountQueryObjectFactory.create();
     return await findAccountQueryObject.execute();
   }

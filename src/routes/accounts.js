@@ -27,7 +27,7 @@ export const getAccountHandler = (dataModelEngine) => async (req, res) => {
 };
 
 export const findAccountsHandler = (dataModelEngine) => async (req, res) => {
-  const content = await dataModelEngine.findAccounts();
+  const content = await dataModelEngine.findAccounts(req.tokenData);
   res.status(200)
     .type('json')
     .send(JSON.stringify(content));
@@ -53,6 +53,7 @@ export default (tokenAuthenticator, dataModelEngine) => {
     asyncMiddleware(getAccountHandler(dataModelEngine)));
 
   router.get('/',
+    accessTokenMiddleware(tokenAuthenticator),
     asyncMiddleware(findAccountsHandler(dataModelEngine)));
 
   router.put('/:id',
