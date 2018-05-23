@@ -63,7 +63,7 @@ describe('Data Model Engine', () => {
       mockAccountAccessDefinitions = {
         defaultAdminAccount: sinon.stub()
       };
-      modelEngine = new DataModelEngine(mockIdentityManager, {}, {}, {}, {}, {}, mockAccountRepository, {}, {}, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine(mockIdentityManager, {}, {}, {}, {}, {}, mockAccountRepository, {}, {}, {}, mockAccountAccessDefinitions);
     });
 
     beforeEach(() => {
@@ -128,7 +128,7 @@ describe('Data Model Engine', () => {
         ensureCanRegisterAccount: sinon.stub(),        
         validateAddAccountRequest: sinon.stub()
       };
-      modelEngine = new DataModelEngine(mockIdentityManager, {}, {}, {}, {}, {}, mockAccountRepository, {}, {}, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine(mockIdentityManager, {}, {}, {}, {}, {}, mockAccountRepository, {}, {}, {}, mockAccountAccessDefinitions);
     });
 
     beforeEach(() => {
@@ -199,7 +199,7 @@ describe('Data Model Engine', () => {
       mockAccountAccessDefinitions = {
         validateAddAccountRequest: sinon.stub()
       };
-      modelEngine = new DataModelEngine({}, {}, {}, {}, {}, {}, mockAccountRepository, {}, {}, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({}, {}, {}, {}, {}, {}, mockAccountRepository, {}, {}, {}, mockAccountAccessDefinitions);
       account = put(accountWithSecret, {registeredBy : adminAccount.address, permissions : ['perm1', 'perm2']});
       accountWithoutSecret = pick(account, 'secret');
     });
@@ -244,7 +244,7 @@ describe('Data Model Engine', () => {
       mockAccountAccessDefinitions = {
         ensureCanRegisterAccount: sinon.stub()
       };
-      modelEngine = new DataModelEngine({}, {}, {}, {}, {}, {}, {}, {}, mockFindAccountQueryObjectFactory, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({}, {}, {}, {}, {}, {}, {}, {}, mockFindAccountQueryObjectFactory, {}, mockAccountAccessDefinitions);
       account = put(accountWithSecret, {registeredBy: adminAccount.address, permissions : ['perm1', 'perm2']});
       accountWithoutSecret = pick(account, 'secret');
     });
@@ -288,7 +288,7 @@ describe('Data Model Engine', () => {
         ensureCanRegisterAccount: sinon.stub(),
         validateModifyAccountRequest: sinon.stub()
       };
-      modelEngine = new DataModelEngine({}, {}, {}, {}, {}, {}, mockAccountRepository, {}, {}, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({}, {}, {}, {}, {}, {}, mockAccountRepository, {}, {}, {}, mockAccountAccessDefinitions);
     });
 
     beforeEach(() => {
@@ -337,7 +337,7 @@ describe('Data Model Engine', () => {
         ensureCanCreateEntity: sinon.stub()
       };
 
-      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository, {}, {}, {}, {}, {}, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository, {}, {}, {}, {}, {}, {}, mockAccountAccessDefinitions);
     });
 
     const restoreDefaultBehaviour = () => {
@@ -411,7 +411,7 @@ describe('Data Model Engine', () => {
         getAsset: sinon.stub()
       };
 
-      modelEngine = new DataModelEngine({}, {}, {}, mockEntityRepository, {}, {}, {}, {}, {}, {});
+      modelEngine = new DataModelEngine({}, {}, {}, mockEntityRepository, {}, {}, {}, {}, {}, {}, {});
     });
 
     beforeEach(() => {
@@ -431,6 +431,53 @@ describe('Data Model Engine', () => {
       mockEntityRepository.getAsset.resolves(null);
 
       await expect(modelEngine.getAsset(exampleAssetId)).to.be.rejectedWith(NotFoundError);
+    });
+  });
+
+  describe('Finding assets', () => {
+    let mockFindAssetQueryObjectFactory;
+    let mockFindAssetQueryObject;
+    let modelEngine;
+
+    let scenario;
+    let assetSet;
+    let asset;
+
+    let ret;
+
+    before(async () => {
+      mockFindAssetQueryObjectFactory = {
+        create: sinon.stub()
+      };
+
+      mockFindAssetQueryObject = {
+        execute: sinon.stub()
+      };
+
+      scenario = new ScenarioBuilder(identityManager);
+      await scenario.addAdminAccount(adminAccountWithSecret);
+      asset = await scenario.addAsset(0);
+      assetSet = [asset];
+      mockFindAssetQueryObjectFactory.create.returns(mockFindAssetQueryObject);
+      mockFindAssetQueryObject.execute.returns({results: assetSet, resultCount: 165});
+
+      modelEngine = new DataModelEngine({}, {}, {}, {},
+        {}, {}, {}, {}, {}, mockFindAssetQueryObjectFactory, {});
+
+      ret = await expect(modelEngine.findAssets()).to.fulfilled;
+    });
+
+    it('creates asset query object', async () => {
+      expect(mockFindAssetQueryObjectFactory.create).to.have.been.called;
+    });
+
+    it('asks the asset query object for the assets', async () => {
+      expect(mockFindAssetQueryObject.execute).to.have.been.called;
+    });
+
+    it('properly assembles the result', () => {
+      expect(ret.results).to.equal(assetSet);
+      expect(ret.resultCount).to.equal(165);
     });
   });
 
@@ -454,7 +501,7 @@ describe('Data Model Engine', () => {
         ensureCanCreateEntity: sinon.stub()
       };
 
-      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository,{}, {}, {}, {}, {}, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository,{}, {}, {}, {}, {}, {}, mockAccountAccessDefinitions);
     });
 
     const restoreDefaultBehaviour = () => {
@@ -544,7 +591,7 @@ describe('Data Model Engine', () => {
       mockAccountAccessDefinitions = {
         getTokenCreatorAccessLevel: sinon.stub()
       };
-      modelEngine = new DataModelEngine({}, {}, {}, mockEntityRepository, {}, {}, {}, {}, {}, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({}, {}, {}, mockEntityRepository, {}, {}, {}, {}, {}, {}, mockAccountAccessDefinitions);
     });
 
     beforeEach(() => {
@@ -611,7 +658,7 @@ describe('Data Model Engine', () => {
       mockAccountAccessDefinitions.getTokenCreatorAccessLevel.resolves(accessLevel);
 
       modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, {},
-        {}, {}, {}, mockFindEventQueryObjectFactory, {}, mockAccountAccessDefinitions);
+        {}, {}, {}, mockFindEventQueryObjectFactory, {}, {}, mockAccountAccessDefinitions);
 
       ret = await expect(modelEngine.findEvents(mockParams, mockTokenData)).to.fulfilled;
     });
@@ -667,7 +714,7 @@ describe('Data Model Engine', () => {
 
       mockEntityRepository.getBundle.resolves(exampleBundle);
 
-      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository, {}, {}, {}, {}, {}, {});
+      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository, {}, {}, {}, {}, {}, {}, {});
 
       ret = await expect(modelEngine.getBundle(exampleBundleId)).to.fulfilled;
     });
@@ -761,7 +808,7 @@ describe('Data Model Engine', () => {
       mockEntityRepository.storeBundle.resolves();
       mockProofRepository.uploadProof.resolves({blockNumber, transactionHash: txHash});
 
-      modelEngine = new DataModelEngine(mockIdentityManager, {}, mockEntityBuilder, mockEntityRepository, {}, mockProofRepository, {}, {}, {}, {});
+      modelEngine = new DataModelEngine(mockIdentityManager, {}, mockEntityBuilder, mockEntityRepository, {}, mockProofRepository, {}, {}, {}, {}, {});
 
       ret = await expect(modelEngine.finaliseBundle(bundleStubId, bundleSizeLimit)).to.be.fulfilled;
     });
@@ -867,7 +914,7 @@ describe('Data Model Engine', () => {
         downloadBundle: sinon.stub()
       };
 
-      modelEngine = new DataModelEngine({}, {}, {}, mockEntityRepository, mockEntityDownloader, mockProofRepository, {}, {}, {}, {}, {});
+      modelEngine = new DataModelEngine({}, {}, {}, mockEntityRepository, mockEntityDownloader, mockProofRepository, {}, {}, {}, {}, {}, {});
     });
     describe('new bundle', async () => {
       before(async () => {

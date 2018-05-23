@@ -139,6 +139,32 @@ describe('Assets - Integrations', () => {
     });
   });
 
+  describe('finding assets', () => {
+    let assetSet;
+    beforeEach(async () => {
+      assetSet = [
+        await scenario.addAsset(0, {timestamp : 1}),
+        await scenario.addAsset(0, {timestamp : 2}),
+        await scenario.addAsset(0, {timestamp : 3}),
+        await scenario.addAsset(0, {timestamp : 4}),
+        await scenario.addAsset(0, {timestamp : 5}),
+        await scenario.addAsset(0, {timestamp : 6})
+      ];
+    });
+    it('find works', async () => {
+      const response = await apparatus.request()
+        .get('/assets')
+        .send();
+      expect(response.body.resultCount).to.equal(6);
+      expect(response.body.results[0]).to.deep.equal(assetSet[5]);
+      expect(response.body.results[1]).to.deep.equal(assetSet[4]);
+      expect(response.body.results[2]).to.deep.equal(assetSet[3]);
+      expect(response.body.results[3]).to.deep.equal(assetSet[2]);
+      expect(response.body.results[4]).to.deep.equal(assetSet[1]);
+      expect(response.body.results[5]).to.deep.equal(assetSet[0]);
+    });
+  });
+
   after(async () => {
     await apparatus.stop();
   });

@@ -16,6 +16,7 @@ import EntityDownloader from './services/entity_downloader';
 import EntityRepository from './services/entity_repository';
 import FindEventQueryObjectFactory from './services/find_event_query_object';
 import FindAccountQueryObjectFactory from './services/find_account_query_object';
+import FindAssetQueryObjectFactory from './services/find_asset_query_object';
 import IdentityManager from './services/identity_manager';
 import ProofRepository from './services/proof_repository';
 import Config from './utils/config';
@@ -44,6 +45,7 @@ class Builder {
     this.entityRepository = new EntityRepository(this.db);
     await this.entityRepository.initializeIndexes();
     this.findEventQueryObjectFactory = new FindEventQueryObjectFactory(this.db);
+    this.findAssetQueryObjectFactory = new FindAssetQueryObjectFactory(this.db);
     this.httpsClient = new HttpsClient();
     this.entityDownloader = new EntityDownloader(this.httpsClient);
     this.proofRepository = new ProofRepository(this.web3,
@@ -62,6 +64,7 @@ class Builder {
       this.accountRepository,
       this.findEventQueryObjectFactory,
       this.findAccountQueryObjectFactory,
+      this.findAssetQueryObjectFactory,
       this.accountAccessDefinitions);
     return {dataModelEngine: this.dataModelEngine, client: this.client};
   }
