@@ -12,19 +12,20 @@ Scroll to the bottom to get [instructions on how to use postman collection for t
 
 Read below to learn about ambrosus node development.
 
-## Install, setup, tests and linter
-To install dependencies:
+## Running tests and linting
+
+Start the MongoDB and Parity containers
+
 ```
-yarn
+docker-compose up -d db parity
 ```
 
-Before you can start the server or run tests, you need to have MongoDB up & running.
-You can start a local instance using this handy command:
+Install the dependencies
 ```
-yarn dev:db
+yarn install
 ```
 
-To run test:
+Run the tests
 ```
 yarn test
 ```
@@ -50,34 +51,6 @@ To run node on production use:
 yarn start
 ```
 
-## Running in dev environment:
-To work with dev environment you need to have parity(version 1.10+) node running on a development chain:
-```sh
-parity --chain dev --force-ui
-```
-
-as well as mongo database:
-
-```sh
-yarn run dev:db
-```
-
-the contracts also need to be compiled:
-```sh
-yarn build:contracts
-```
-
-contracts must be deployed and a private key for the node generated:
-```sh
-yarn dev:setup
-```
-
-Note: You might need to confirm transactions in the Parity Wallet UI due to a bug in the Parity software.
-
-```sh
-yarn dev:start
-```
-
 ## Running in production mode
 
 Build the whole suit:
@@ -98,18 +71,6 @@ Configure the mongoDB access data inside of `config/production.js`
 Finally, start the server:
 ```sh
 yarn start
-```
-
-## Running using Docker
-
-There is a docker-compose file prepared. It declares two services, one for the server and second one for a mongoDB instance. 
-
-Start by following the procedure for generating the node private key and contract deployment address. It is described under 'Running in production mode'   
-
-Then start just run:
-
-```
-docker-compose up -d
 ```
 
 ## Bundle smart contract related  tasks

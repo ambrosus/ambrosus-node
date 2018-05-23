@@ -11,4 +11,4 @@ COPY . ./
 RUN yarn build
 RUN yarn ops:generate_private_key
 
-ENTRYPOINT yarn start
+CMD yarn start

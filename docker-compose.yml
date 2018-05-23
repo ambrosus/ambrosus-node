@@ -1,20 +1,15 @@
+# Dockerfile for setting up a local development environment. Note that this
+# should not be used for production.
 version: "3"
 services:
-  ambnode:
-    build:
-      context: .
-    container_name: "ambnode"
-    environment:
-      - NODE_ENV=production
-      - MONGODB_URI=mongodb://db:27017/ambrosus_node
-      - MONGODB_DATABASE=ambrosus_node
-      - WEB3_RPC=http://167.99.138.196:8545
-    ports:
-      - "80:9876"
-    depends_on:
-      - db
   db:
     image: mongo:latest
-    expose: 
-      - 27017
+    ports:
+      - '27017:27017'
     container_name: "db"
+
+  parity:
+    image: parity/parity:nightly
+    # Parity by default only exposes it's API on localhost. For it to be
+    # accessible from the other containers we need --unsafe-expose
+    command: ['--chain', 'dev', '--unsafe-expose']
