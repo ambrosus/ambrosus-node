@@ -13,9 +13,13 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import {createAssetHandler, fetchAssetHandler, createEventHandler} from '../../src/routes/assets';
+import {createAssetHandler, fetchAssetHandler, createEventHandler, findAssetsHandler} from '../../src/routes/assets';
 import {put} from '../../src/utils/dict_utils';
 import {createAsset, createEvent} from '../fixtures/assets_events';
+import {createWeb3} from '../../src/utils/web3_tools';
+import IdentityManager from '../../src/services/identity_manager';
+import ScenarioBuilder from '../fixtures/scenario_builder';
+import {adminAccountWithSecret} from '../fixtures/account';
 
 import {ValidationError} from '../../src/errors/errors';
 
@@ -27,16 +31,25 @@ describe('Assets', () => {
   let mockModelEngine = null;
   let req = null;
   let res = null;
+  let scenario;
 
-  beforeEach(() => {
+  before(async () => {
+    scenario = new ScenarioBuilder(new IdentityManager(await createWeb3()));
+  });
+
+  beforeEach(async () => {
     mockModelEngine = {
       createAsset: sinon.stub(),
       getAsset: sinon.stub(),
+      findAssets: sinon.stub(),
       createEvent: sinon.stub(),
       getEvent: sinon.stub()
     };
     req = httpMocks.createRequest({});
     res = httpMocks.createResponse();
+
+    scenario.reset();
+    await scenario.addAdminAccount(adminAccountWithSecret);
   });
 
   describe('creating an asset', () => {
@@ -80,6 +93,31 @@ describe('Assets', () => {
 
       expect(res._getStatusCode()).to.eq(200);
       expect(res._isJSON()).to.be.true;
+    });
+  });
+
+  describe('finding assets', () => {
+    let injectedHandler;
+
+    beforeEach(async () => {
+      injectedHandler = findAssetsHandler(mockModelEngine);
+      const assetSet = [
+        await scenario.addAsset(0, {timestamp : 1}),
+        await scenario.addAsset(0, {timestamp : 2})
+      ];
+      mockModelEngine.findAssets.resolves({results: assetSet, resultCount: 165});
+    });
+
+    it('calls Data Model Engine, proxies result, appends metadata/resultCount', async () => {
+      await injectedHandler(req, res);
+
+      const returnedData = JSON.parse(res._getData());
+
+      expect(mockModelEngine.findAssets).to.have.been.called;
+      expect(res._getStatusCode()).to.eq(200);
+      expect(res._isJSON()).to.be.true;
+      expect(returnedData.results.length).to.equal(2);
+      expect(returnedData.resultCount).to.equal(165);
     });
   });
 

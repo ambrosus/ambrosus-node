@@ -56,6 +56,13 @@ export const findEventsPerAssetHandler = (modelEngine) => async (req, res) => {
     }));
 };
 
+export const findAssetsHandler = (dataModelEngine) => async (req, res) => {
+  const content = await dataModelEngine.findAssets();
+  res.status(200)
+    .type('json')
+    .send(JSON.stringify(content));
+};
+
 const assetRouter = (tokenAuthenticator, identityManager, modelEngine, config) => {
   const router = new express.Router();
 
@@ -84,6 +91,9 @@ const assetRouter = (tokenAuthenticator, identityManager, modelEngine, config) =
     accessTokenMiddleware(tokenAuthenticator, false),
     asyncMiddleware(findEventsPerAssetHandler(modelEngine))
   );
+
+  router.get('/',
+    asyncMiddleware(findAssetsHandler(modelEngine)));
 
   return router;
 };

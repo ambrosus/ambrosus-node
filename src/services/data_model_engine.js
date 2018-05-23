@@ -11,7 +11,7 @@ import {NotFoundError, InvalidParametersError, PermissionError} from '../errors/
 import {getTimestamp} from '../utils/time_utils';
 
 export default class DataModelEngine {
-  constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, proofRepository, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, accountAccessDefinitions) {
+  constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, proofRepository, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
@@ -21,6 +21,7 @@ export default class DataModelEngine {
     this.accountRepository = accountRepository;
     this.findEventQueryObjectFactory = findEventQueryObjectFactory;
     this.findAccountQueryObjectFactory = findAccountQueryObjectFactory;
+    this.findAssetQueryObjectFactory = findAssetQueryObjectFactory;
     this.accountAccessDefinitions = accountAccessDefinitions;
   }
 
@@ -97,6 +98,11 @@ export default class DataModelEngine {
       throw new NotFoundError(`No asset with id = ${assetId} found`);
     }
     return asset;
+  }
+
+  async findAssets() {
+    const findAssetQueryObject = this.findAssetQueryObjectFactory.create();
+    return await findAssetQueryObject.execute();
   }
 
   async createEvent(event) {
