@@ -105,6 +105,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
             {
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
                 "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
+                "registeredOn": 32141243,
                 "permissions": ["register_account", "create_entity"],
                 "accessLevel": 0
             }
@@ -121,6 +122,9 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
                 "registeredBy": {
                   "type": "string",
                   "example": "0x345b44701723a31f457a534801cd181cd38eb5bcd"
+                },
+                "registeredOn": {
+                  "type": "integer"
                 },
                 "accessLevel": {
                   "type": "integer"
@@ -140,6 +144,83 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
     Validation error
 
     + Body
+
++ Response 401 (application/json)
+
+    Authentication error
+
+    + Body
+
++ Response 403 (application/json)
+
+    Invalid signature or missing register_account permission
+
+    + Body
+
+#### Find accounts [GET]
+
+Finds newest accounts.
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            Authorization: AMB_TOKEN ...
+
+
++ Response 200 (application/json)
+
+    Up to 100 newest accounts
+        
+    + Attributes (object)
+        + results (array) - An array of accounts.
+            + (object) - Account.
+                + registeredBy (string) - The address which has registered the account.
+                + permissions (array) - A list of permissions granted to this account
+                + "register_account" (string) - Permission name
+                + accessLevel (number) - Access level of the account. Should be a non-negative integer.
+
+        + resultCount: 112 (number) - Total number of accounts.
+
+    + Body
+
+            {
+                "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
+                "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
+                "registeredOn": 32141243,
+                "permissions": ["register_account", "create_entity"],
+                "accessLevel": 4
+            }
+
+    + Schema
+
+            {
+              "type": "object",
+              "properties": {
+                "address": {
+                  "type": "string",
+                  "example": "0x162a44701727a31f457a53801cd181cd38eb5bbd"
+                },
+                "registeredBy": {
+                  "type": "string",
+                  "example": "0x345b44701723a31f457a534801cd181cd38eb5bcd"
+                },
+                "registeredOn": {
+                  "type": "integer"
+                },
+                "accessLevel": {
+                  "type": "integer"
+                },
+                "permissions": {
+                  "type": "array",
+                  "items" : {
+                  "type" : "string"
+                  }
+                  "example": ["register_account", "create_entity"]
+                }
+              }
+            }
 
 + Response 401 (application/json)
 
@@ -182,6 +263,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
             {
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
                 "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
+                "registeredOn": 32141243,
                 "permissions": ["register_account", "create_entity"],
                 "accessLevel": 4
             }
@@ -198,6 +280,12 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
                 "registeredBy": {
                   "type": "string",
                   "example": "0x345b44701723a31f457a534801cd181cd38eb5bcd"
+                },
+                "registeredOn": {
+                  "type": "integer"
+                },
+                "accessLevel": {
+                  "type": "integer"
                 },
                 "permissions": {
                   "type": "array",
@@ -263,7 +351,9 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
             {
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
                 "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
-                "permissions": ["register_account", "create_entity"]
+                "registeredOn": 32141243,
+                "permissions": ["register_account", "create_entity"],
+                "accessLevel": 4
             }
 
     + Schema
@@ -278,6 +368,12 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
                 "registeredBy": {
                   "type": "string",
                   "example": "0x345b44701723a31f457a534801cd181cd38eb5bcd"
+                },
+                "registeredOn": {
+                  "type": "integer"
+                },
+                "accessLevel": {
+                  "type": "integer"
                 },
                 "permissions": {
                   "type": "array",
@@ -426,11 +522,60 @@ Places (after intensive validations) the provided asset object into the system.
 
     + Body
 
+#### Find assets [GET]
+
+Finds newest assets.
+
++ Response 200 (application/json)
+
+    Up to 100 newest assets
+
+    + Attributes (object)
+        + results (array) - An array of assets.
+            + (object) - Asset.
+                + assetId (string) - Content-addressable identificator of the asset.
+                + content (object) - All meaningfull content of the asset, base of assetId.
+                    + signature: "0x30755ed65396facf86c53e6...65c5cfd04be400" (string) - Eliptic-curve signature of the idData field signed with the creator's private address.
+                    + idData (object) - General information about an asset.
+                        + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the asset creator.
+                        + timestamp: 1503424923 (number) - UNIX timestamp of asset creation.
+                        + sequenceNumber: 3 (number) - Used to assure that all assets are unique
+                + metadata (object) - Asset service data.
+                    + bundleId (string) - If the asset has already been added to a bundle, Id of the bundle holding the event
+                    + bundleTransactionHash (string) - If the asset has already been added to a bundle, identifier of the transaction on which the proof of bundle has been uploaded.
+                      More info on the transaction can be found under `http://explorer-test.ambrosus.com/#/tx/{bundleTransactionHash}`
+
+        + resultCount: 112 (number) - Total number of assets.
+
+
+    + Body
+
+            {
+                "results": [
+                    {
+                        "assetId": "0xc5cfd04.....30755ed65",
+                        "content": {
+                            "signature": "0x30755ed65396facf86c53e6...65c5cfd04be400",
+                            "idData": {
+                                "createdBy": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
+                                "timestamp": 1503424923,
+                                "sequenceNumber": 3
+                            }
+                        },
+                        "metadata": {
+                            "bundleId": "0x85a427a3.....cd1d38ebbd",
+                            "bundleTransactionHash": "0x21ab....1cdf8e55b37" 
+                        }
+                    }
+                ],
+                "resultCount": 112
+            }
+
 ### /assets/{assetId}
 
-#### Find an asset by Id [GET]
+#### Fetch an asset by Id [GET]
 
-Finds asset with provided assetId in the system.
+Fetches asset with provided assetId in the system.
 
 + Parameters
 
@@ -466,6 +611,10 @@ Finds asset with provided assetId in the system.
                         "timestamp": 1503424923,
                         "sequenceNumber": 3
                     }
+                },
+                "metadata": {
+                    "bundleId": "0x85a427a3.....cd1d38ebbd",
+                    "bundleTransactionHash": "0x21ab....1cdf8e55b37" 
                 }
             }
 
@@ -474,6 +623,7 @@ Finds asset with provided assetId in the system.
     No asset with such assetId found
 
     + Body
+
 
 ## Group Events
 
