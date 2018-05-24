@@ -177,8 +177,9 @@ Finds newest accounts.
         + results (array) - An array of accounts.
             + (object) - Account.
                 + registeredBy (string) - The address which has registered the account.
+                + registeredOn (number) -  - UNIX timestamp of account registration.
                 + permissions (array) - A list of permissions granted to this account
-                + "register_account" (string) - Permission name
+                    + "register_account" (string) - Permission name
                 + accessLevel (number) - Access level of the account. Should be a non-negative integer.
 
         + resultCount: 112 (number) - Total number of accounts.
@@ -254,6 +255,7 @@ Finds newest accounts.
 
     + Attributes (object)
         + registeredBy (string) - The address which has registered the account.
+        + registeredOn (number) -  - UNIX timestamp of account registration.
         + permissions (array) - A list of permissions granted to this account
             + "register_account" (string) - Permission name
         + accessLevel (number) - Access level of the account. Should be a non-negative integer.
