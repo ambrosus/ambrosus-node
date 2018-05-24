@@ -10,7 +10,7 @@ Before you can start interacting with API you need to create an account. An acco
 
 Each state-modifying call needs to have the `content.idData.createdBy` field with creator address and one of two:
 * A body field `content.signature`. It is generated with ethereum sign function from the serialized `content.data` object. Serialisation algorithm will be described in separate section.
-* A http authoristaion header `AMB ...`: You can supply your secret to API and gateway will calculate the signature for you. __Warning__: This is only allowed in development and testing environment. We strongly recommend against using it in a production environment.
+* A http authorization header `AMB ...`: You can supply your secret to API and gateway will calculate the signature for you. __Warning__: This is only allowed in development and testing environment. We strongly recommend against using it in a production environment.
 
 ### Immutability
 
@@ -27,13 +27,13 @@ The majority of errors along to the error code provide additional information in
 
 ## Group Token
 
-Some requests require an access token for authorisation.
+Some requests require an access token for authorization.
 
 ### /token
 
 #### Create token [POST]
 
-__Warning__ This call can be used for developement purposes only. Never provide your secret address to anyone.
+__Warning__ This call can be used for development purposes only. Never provide your secret address to anyone.
 
 + Request
     + Headers
@@ -42,7 +42,7 @@ __Warning__ This call can be used for developement purposes only. Never provide 
             Authorization: AMB ...
 
     + Attributes (object)
-        + validUntil: 1546300800 (number) - Unix timestamp in the future specifying the token expiration time.
+        + validUntil (number) - Unix timestamp in the future specifying the token expiration time.
 
     + Body
 
@@ -83,7 +83,6 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
     + Attributes (object)
         + address (string) - An address of the new account
         + permissions (array) - A list of permissions granted to this account
-            + "register_account" (string) - Permission name
         + accessLevel (number) - Access level of the account. Should be a non-negative integer.
 
     + Body
@@ -178,11 +177,10 @@ Finds newest accounts.
             + (object) - Account.
                 + registeredBy (string) - The address which has registered the account.
                 + registeredOn (number) -  - UNIX timestamp of account registration.
-                + permissions (array) - A list of permissions granted to this account
-                    + "register_account" (string) - Permission name
+                + permissions (array) - A list of permissions granted to this account.
                 + accessLevel (number) - Access level of the account. Should be a non-negative integer.
 
-        + resultCount: 112 (number) - Total number of accounts.
+        + resultCount (number) - Total number of accounts.
 
     + Body
 
@@ -240,7 +238,7 @@ Finds newest accounts.
 #### Get account [GET]
 
 + Parameters
-    + accountAddress: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - An address of the account
+    + accountAddress (string) - An address of the account
 
 
 + Request (application/json)
@@ -257,7 +255,6 @@ Finds newest accounts.
         + registeredBy (string) - The address which has registered the account.
         + registeredOn (number) -  - UNIX timestamp of account registration.
         + permissions (array) - A list of permissions granted to this account
-            + "register_account" (string) - Permission name
         + accessLevel (number) - Access level of the account. Should be a non-negative integer.
 
     + Body
@@ -334,7 +331,6 @@ Finds newest accounts.
 
     + Attributes (object)
         + permissions (array) - A list of permissions granted to this account
-            + "register_account" (string) - Permission name
         + accessLevel (number) - Access level of the account. Should be a non-negative integer.
 
     + Body
@@ -428,13 +424,13 @@ Places (after intensive validations) the provided asset object into the system.
             Authorization: AMB ...
 
     + Attributes (object)
-        + assetId (string) - Content-addressable identificator of the asset.
-        + content (object) - All meaningfull content of the asset, base of assetId.
-            + signature: "0x30755ed65396facf86c53e6...65c5cfd04be400" (string) - Eliptic-curve signature of the idData field. Should be signed with the creator's private address.
+        + assetId (string) - Content-addressable identifier of the asset.
+        + content (object) - All meaningful content of the asset, base of assetId.
+            + signature (string) - elliptic-curve signature of the idData field. Should be signed with the creator's private address.
             + idData (object) - General information about an asset.
-                + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the asset creator.
-                + timestamp: 1503424923 (number) - UNIX timestamp of asset creation.
-                + sequenceNumber: 3 (number) - Used to assure that all assets are unique
+                + createdBy  (string) - Public address of the asset creator.
+                + timestamp (number) - UNIX timestamp of asset creation.
+                + sequenceNumber (number) - Used to assure that all assets are unique
 
 
     + Body
@@ -535,19 +531,19 @@ Finds newest assets.
     + Attributes (object)
         + results (array) - An array of assets.
             + (object) - Asset.
-                + assetId (string) - Content-addressable identificator of the asset.
-                + content (object) - All meaningfull content of the asset, base of assetId.
-                    + signature: "0x30755ed65396facf86c53e6...65c5cfd04be400" (string) - Eliptic-curve signature of the idData field signed with the creator's private address.
+                + assetId (string) - Content-addressable identifier of the asset.
+                + content (object) - All meaningful content of the asset, base of assetId.
+                    + signature (string) - elliptic-curve signature of the idData field signed with the creator's private address.
                     + idData (object) - General information about an asset.
-                        + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the asset creator.
-                        + timestamp: 1503424923 (number) - UNIX timestamp of asset creation.
-                        + sequenceNumber: 3 (number) - Used to assure that all assets are unique
+                        + createdBy (string) - Public address of the asset creator.
+                        + timestamp (number) - UNIX timestamp of asset creation.
+                        + sequenceNumber (number) - Used to assure that all assets are unique
                 + metadata (object) - Asset service data.
                     + bundleId (string) - If the asset has already been added to a bundle, Id of the bundle holding the event
                     + bundleTransactionHash (string) - If the asset has already been added to a bundle, identifier of the transaction on which the proof of bundle has been uploaded.
                       More info on the transaction can be found under `http://explorer-test.ambrosus.com/#/tx/{bundleTransactionHash}`
 
-        + resultCount: 112 (number) - Total number of assets.
+        + resultCount (number) - Total number of assets.
 
 
     + Body
@@ -588,13 +584,13 @@ Fetches asset with provided assetId in the system.
     Asset with provided assetId
 
     + Attributes (object)
-        + assetId (string) - Content-addressable identificator of the asset.
-        + content (object) - All meaningfull content of the asset, base of assetId.
-            + signature: "0x30755ed65396facf86c53e6...65c5cfd04be400" (string) - Eliptic-curve signature of the idData field signed with the creator's private address.
+        + assetId (string) - Content-addressable identifier of the asset.
+        + content (object) - All meaningful content of the asset, base of assetId.
+            + signature (string) - elliptic-curve signature of the idData field signed with the creator's private address.
             + idData (object) - General information about an asset.
-                + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the asset creator.
-                + timestamp: 1503424923 (number) - UNIX timestamp of asset creation.
-                + sequenceNumber: 3 (number) - Used to assure that all assets are unique
+                + createdBy (string) - Public address of the asset creator.
+                + timestamp (number) - UNIX timestamp of asset creation.
+                + sequenceNumber (number) - Used to assure that all assets are unique
         + metadata (object) - Asset service data.
             + bundleId (string) - If the asset has already been added to a bundle, Id of the bundle holding the event
             + bundleTransactionHash (string) - If the asset has already been added to a bundle, identifier of the transaction on which the proof of bundle has been uploaded.
@@ -666,14 +662,14 @@ Places (after intensive validations) the provided event object into the system.
             Authorization: AMB ...
 
     + Attributes (object)
-        + eventId (string) - Content-addressable identificator of the event.
-        + content (object) - All meaningfull content of the event, base of eventId.
-            + signature: "0x30755ed65396facf86c53e6...65c5cfd04be400" (string) - Eliptic-curve signature of the idData field signed with the creator's private address.
+        + eventId (string) - Content-addressable identifier of the event.
+        + content (object) - All meaningful content of the event, base of eventId.
+            + signature (string) - elliptic-curve signature of the idData field signed with the creator's private address.
             + idData (object) - Public information about an event.
-                + assetId: "0xc5cfd04.....30755ed65" (string) - Id of an asset with which the event is connected.
-                + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the event creator.
-                + accessLevel: 4 (number) - The access level of the event. Should be a non-negative integer.
-                + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
+                + assetId (string) - Id of an asset with which the event is connected.
+                + createdBy (string) - Public address of the event creator.
+                + accessLevel (number) - The access level of the event. Should be a non-negative integer.
+                + timestamp (number) - UNIX timestamp of the event creation.
             + data (array) - data (array) - Array of custom entries as objects (this field is required and have to contain at least one entry).
 
     + Body
@@ -808,14 +804,14 @@ Fetches an event by identifier
     The requested event
 
     + Attributes (object)
-        + eventId (string) - Content-addressable identificator of the event.
-        + content (object) - All meaningfull content of the event, base of eventId.
-            + signature: "0x30755ed65396facf86c53e6...65c5cfd04be400" (string) - Eliptic-curve signature of the idData field signed with the creator's private address.
+        + eventId (string) - Content-addressable identifier of the event.
+        + content (object) - All meaningful content of the event, base of eventId.
+            + signature (string) - elliptic-curve signature of the idData field signed with the creator's private address.
             + idData (object) - Public information about an event.
-                + assetId: "0xc5cfd04.....30755ed65" (string) - Id of an asset with which the event is connected.
-                + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the event creator.
-                + accessLevel: 4 (number) - The access level of the event. If the user's access level if lower than event's, the data field will not be returned.
-                + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
+                + assetId  (string) - Id of an asset with which the event is connected.
+                + createdBy (string) - Public address of the event creator.
+                + accessLevel (number) - The access level of the event. If the user's access level if lower than event's, the data field will not be returned.
+                + timestamp (number) - UNIX timestamp of the event creation.
             + data (array) - Array of custom entries as objects (this field is required and have to contain at least one entry).
         + metadata (object) - Event service data.
             + bundleId (string) - If the event has already been added to a bundle, Id of the bundle holding the event
@@ -859,31 +855,31 @@ Finds event satisfying provided criteria.
 
 + Parameters
 
-    + assetId : 0xc5cfd04.....30755ed65 (string, optional) - ID of the asset the events are targeting
-    + fromTimestamp : 1503424922 (integer, optional) - earliest timestamp for the events 
-    + toTimestamp : 1503424924 (integer, optional) - latest timestamp for the events
-    + perPage : 150 (integer, optional) - number of events to return per page
-    + page : 20 (integer, optional) - number of page (more search results than specified in perPage parameter concludes more than one page)
-    + createdBy : 0xc5cfd04.....30755ed65 (string, optional) - address of account that created targeting events
+    + assetId (string, optional) - ID of the asset the events are targeting
+    + fromTimestamp (integer, optional) - earliest timestamp for the events 
+    + toTimestamp (integer, optional) - latest timestamp for the events
+    + perPage (integer, optional) - number of events to return per page
+    + page (integer, optional) - number of page (more search results than specified in perPage parameter concludes more than one page)
+    + createdBy (string, optional) - address of account that created targeting events
     + data : data[type]=ambrosus.event.custom (object, optional) - This syntax allows to query for events by any fields in data array. Query for nested fields is possible, e.g. data[acceleration.x]=10. By default the type of the value is string. To provide a number, use data[acceleration.x]=number(10). To provide geo coordinates use data[geoJson]=geo(longitude, latitude, radius).
 + Response 200 (application/json)
 
     The requested event
 
     + Attributes (object)
-        + results (array) - Events matching provided criterias on the page
+        + results (array) - Events matching provided criteria on the page
             + (object) - Event.
-                + eventId: "0xc5cfd04.....30755ed65" (string) - Content-addressable identificator of the event.
-                + content (object) - All meaningfull content of the event, base of eventId.
-                    + signature: "0x30755ed65396facf86c53e6...65c5cfd04be400" (string) - Eliptic-curve signature of the idData field signed with the creator's private address.
+                + eventId (string) - Content-addressable identifier of the event.
+                + content (object) - All meaningful content of the event, base of eventId.
+                    + signature (string) - elliptic-curve signature of the idData field signed with the creator's private address.
                     + idData (object) - Public information about an event.
-                        + assetId: "0xc5cfd04.....30755ed65" (string) - Id of an asset with which the event is connected.
-                        + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the event creator.
-                        + accessLevel: 4 (number) - The access level of the event. If the user's access level if lower than event's, the data field will not be returned.
-                        + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
+                        + assetId (string) - Id of an asset with which the event is connected.
+                        + createdBy (string) - Public address of the event creator.
+                        + accessLevel (number) - The access level of the event. If the user's access level if lower than event's, the data field will not be returned.
+                        + timestamp (number) - UNIX timestamp of the event creation.
                     + data (array) - Array of custom entries as objects (this field is required and have to contain at least one entry).
 
-        + resultCount: 112 (number) - Total number of events matching provided criteria.
+        + resultCount (number) - Total number of events matching provided criteria.
 
     + Body
 
@@ -947,12 +943,12 @@ Fetches a bundle by identifier
     The requested bundle
 
     + Attributes (object)
-        + bundleId (string) - Content-addressable identificator of the bundle.
-        + content (object) - All meaningfull content of the bundle, base of bundleId.
-            + signature: "0x30755ed65396facf86c53e6...65c5cfd04be400" (string) - Eliptic-curve signature of the idData field signed with the creator's private address.
+        + bundleId (string) - Content-addressable identifier of the bundle.
+        + content (object) - All meaningful content of the bundle, base of bundleId.
+            + signature (string) - elliptic-curve signature of the idData field signed with the creator's private address.
             + idData (object) - Information about an event.
-                + createdBy: "0x162a44701727a31f457a53801cd181cd38eb5bbd" (string) - Public address of the event creator.
-                + timestamp: 1503424923 (number) - UNIX timestamp of the event creation.
+                + createdBy (string) - Public address of the event creator.
+                + timestamp (number) - UNIX timestamp of the event creation.
                 + entriesHash (string) - Hash calculated from the entries field.
             + entries (array) - An array consisting of assets, events with public data and stubs of events with private data.
         + metadata (object) - Bundle service data.
@@ -964,16 +960,16 @@ Fetches a bundle by identifier
     + Body
 
             {
-                "bundleId" : "<hash (content addressable) calcuated from contents field>",
+                "bundleId" : "0xa9bfd34.....30795ed11",
                 "content" : {
-                    "signature": "<eliptic curve signature of the idData field>",
+                    "signature": "0x69ab59115396facf86c53e6...65cbcfd04be420",
                     "idData" : {
-                        "createdBy" : "<address (public key derived) of vendor holding data>",
-                        "timestamp" : "<unix epoch timestamp>",
-                        "entriesHash" : "<hash calculated from the entries field>"
+                        "createdBy" : "0x162a44701727a31f457a53801cd181cd38eb5bbd",
+                        "timestamp" : 1503424923,
+                        "entriesHash" : "0x1022181cd38eb5ca2162a44701727a31f457a559"
                         },
                     "entries" : [
-                        "<asset and events stubs>"
+                        "<assets and events stubs>"
                     ]
                 },
                 "metadata" : {
