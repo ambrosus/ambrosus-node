@@ -428,11 +428,6 @@ describe('Entity Builder', () => {
       expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
     });
 
-    it('throws if surplus parameters are passed', () => {
-      const params = put(validParamsAsStrings, 'additionalParam', '123');
-      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
-    });
-
     it('throws if fromTimestamp value not in valid type', () => {
       const params = put(validParamsAsStrings, 'fromTimestamp', 'NaN');
       expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);

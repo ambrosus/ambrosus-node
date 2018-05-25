@@ -182,13 +182,21 @@ describe('Accounts - Integrations', async () => {
   });
 
   describe('Find accounts', () => {
+    beforeEach(async () => {
+      await scenario.addAccount(0, null,
+        {permissions: ['perm1', 'perm2'], accessLevel: 1});
+      await scenario.addAccount(0, null,
+        {permissions: ['perm1', 'perm2'], accessLevel: 2});
+      await scenario.addAccount(0, null, {permissions: ['perm1'], accessLevel: 3});
+    });
+
     it('find works', async () => {
       const response = await apparatus.request()
         .get('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send();
-      expect(response.body.resultCount).to.equal(1);
-      expect(response.body.results[0].address).to.equal(adminAccountWithSecret.address);
+      expect(response.body.resultCount).to.equal(4);
+      expect(response.body.results[3].address).to.equal(adminAccountWithSecret.address);
     });
 
     it('should fail if no token', async () => {
@@ -209,6 +217,15 @@ describe('Accounts - Integrations', async () => {
       await expect(pendingRequest)
         .to.eventually.be.rejected
         .and.have.property('status', 403);
+    });
+
+    it('should filter by accessLevel', async () => {
+      const response = await apparatus.request()
+        .get('/accounts?accessLevel=2')
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+        .send();
+      expect(response.body.resultCount).to.equal(3);
+      expect(response.body.results[2].address).to.equal(adminAccountWithSecret.address);
     });
   });
 

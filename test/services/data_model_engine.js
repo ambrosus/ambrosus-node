@@ -227,6 +227,7 @@ describe('Data Model Engine', () => {
   });
 
   describe('Finding accounts', () => {
+    const mockParams = {accessLevel: 1};
     let mockFindAccountQueryObjectFactory;
     let mockFindAccountQueryObject;
     let mockAccountAccessDefinitions;
@@ -242,7 +243,8 @@ describe('Data Model Engine', () => {
         execute: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        ensureCanRegisterAccount: sinon.stub()
+        ensureCanRegisterAccount: sinon.stub(),
+        validateAndCastFindAccountParams: sinon.stub()
       };
       modelEngine = new DataModelEngine({}, {}, {}, {}, {}, {}, {}, {}, mockFindAccountQueryObjectFactory, {}, mockAccountAccessDefinitions);
       account = put(accountWithSecret, {registeredBy: adminAccount.address, permissions : ['perm1', 'perm2']});
@@ -254,17 +256,22 @@ describe('Data Model Engine', () => {
       mockFindAccountQueryObjectFactory.create.returns(mockFindAccountQueryObject);
       mockFindAccountQueryObject.execute.returns({result: [accountWithoutSecret], resultCount: 1});
       mockAccountAccessDefinitions.ensureCanRegisterAccount.resolves();
+      mockAccountAccessDefinitions.validateAndCastFindAccountParams.returns(mockParams);
     });
 
     it('uses findAccountQueryObjectFactory and delegates to findAccountQueryObject', async () => {
-      expect(await modelEngine.findAccounts({createdBy : adminAccount.address})).to.deep.equal({result: [accountWithoutSecret], resultCount: 1});
+      expect(await modelEngine.findAccounts(mockParams, {createdBy : adminAccount.address})).to.deep.equal({result: [accountWithoutSecret], resultCount: 1});
       expect(mockFindAccountQueryObjectFactory.create).to.have.been.called;
       expect(mockFindAccountQueryObject.execute).to.have.been.called;
     });
 
+    it('validates params', () => {
+      expect(mockAccountAccessDefinitions.validateAndCastFindAccountParams).to.have.been.called;
+    });
+
     it('throws PermissionError if account misses required permissions', async () => {
       mockAccountAccessDefinitions.ensureCanRegisterAccount.throws(new PermissionError());
-      await expect(modelEngine.findAccounts({createdBy : adminAccount.address})).to.be.rejectedWith(PermissionError);
+      await expect(modelEngine.findAccounts(mockParams, {createdBy : adminAccount.address})).to.be.rejectedWith(PermissionError);
       expect(mockAccountAccessDefinitions.ensureCanRegisterAccount).to.have.been.called;
     });
   });
@@ -642,6 +649,7 @@ describe('Data Model Engine', () => {
       mockAccountAccessDefinitions = {
         getTokenCreatorAccessLevel: sinon.stub()
       };
+
       mockFindEventQueryObject = {
         execute: sinon.stub()
       };

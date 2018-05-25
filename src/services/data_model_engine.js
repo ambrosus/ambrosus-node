@@ -63,9 +63,10 @@ export default class DataModelEngine {
     return result;
   }
 
-  async findAccounts(tokenData) {
+  async findAccounts(params, tokenData) {
+    const validatedParams = this.accountAccessDefinitions.validateAndCastFindAccountParams(params);
     await this.accountAccessDefinitions.ensureCanRegisterAccount(tokenData.createdBy);
-    const findAccountQueryObject = this.findAccountQueryObjectFactory.create();
+    const findAccountQueryObject = this.findAccountQueryObjectFactory.create(validatedParams);
     return await findAccountQueryObject.execute();
   }
 

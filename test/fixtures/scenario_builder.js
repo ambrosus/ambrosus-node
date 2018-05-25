@@ -11,15 +11,15 @@ import {createFullAsset, createFullEvent} from './assets_events';
 import {addAccountRequest} from './account';
 import {put} from '../../src/utils/dict_utils';
 
-const defaultScenarioProcessor = (identityManager) => ({
+const defaultScenarioProcessor = () => ({
   onAddAdminAccount: async (accountWithSecret) => accountWithSecret,
   onAddAsset: async (asset) => asset,
   onAddEvent: async (event) => event,
-  onAddAccount: async () => identityManager.createKeyPair()
+  onAddAccount: async (account) => account
 });
 
 class ScenarioBuilder {
-  constructor(identityManager, processor = defaultScenarioProcessor(identityManager)) {
+  constructor(identityManager, processor = defaultScenarioProcessor()) {
     this.identityManager = identityManager;
     this.processor = processor;
     this.reset();

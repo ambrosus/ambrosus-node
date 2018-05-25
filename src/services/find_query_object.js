@@ -12,6 +12,7 @@ export default class FindQueryObject {
     this.db = db;
     this.collection = collection;
     this.criteria = criteria;
+    this.queryBuilder = null;
   }
 
   getBlacklistedFields() {
@@ -48,6 +49,17 @@ export default class FindQueryObject {
     return options;
   }
 
+  addPartsToQuery(queryParts) {
+    if (!this.queryBuilder) {
+      throw new Error('Query builder has not been created yet');
+    }
+
+    for (const part in queryParts) {
+      if (this.criteria[part]) {
+        this.queryBuilder.add(queryParts[part]);
+      }
+    }
+  }
 
   async execute() {
     const query = this.assembleQuery();

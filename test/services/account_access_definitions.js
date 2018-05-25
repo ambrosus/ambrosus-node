@@ -13,7 +13,7 @@ import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 
 import AccountAccessDefinitions from '../../src/services/account_access_definitions';
-import {PermissionError, ValidationError} from '../../src/errors/errors';
+import {InvalidParametersError, PermissionError, ValidationError} from '../../src/errors/errors';
 import {account, addAccountRequest} from '../fixtures/account';
 import {pick, put} from '../../src/utils/dict_utils';
 import resetHistory from '../helpers/reset_history';
@@ -133,6 +133,26 @@ describe('Account Access Definitions', () => {
         .to.be.eventually.equal(0);
     });
   });
+
+  describe('Validating query parameters', () => {
+    const validParamsAsStrings = {accessLevel: '3'};
+
+    it('passes for proper parameters', () => {
+      const validatedParams = accountAccessDefinitions.validateAndCastFindAccountParams(validParamsAsStrings);
+      expect(validatedParams.accessLevel).to.equal(3);
+    });
+
+    it('throws if surplus parameters are passed', () => {
+      const params = put(validParamsAsStrings, 'additionalParam', '123');
+      expect(() => accountAccessDefinitions.validateAndCastFindAccountParams(params)).to.throw(InvalidParametersError);
+    });
+
+    it('throws if accessLevel value not in valid type', () => {
+      const params = put(validParamsAsStrings, 'fromTimestamp', 'NaN');
+      expect(() => accountAccessDefinitions.validateAndCastFindAccountParams(params)).to.throw(InvalidParametersError);
+    });
+  });
+
 
   describe('validating account registration', () => {
     let account;
