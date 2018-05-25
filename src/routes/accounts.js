@@ -11,6 +11,7 @@ import express from 'express';
 import asyncMiddleware from '../middlewares/async_middleware';
 import bodyParser from 'body-parser';
 import accessTokenMiddleware from '../middlewares/access_token_middleware';
+import ensureJsonMime from '../middlewares/mime_middleware';
 
 export const addAccountHandler = (dataModelEngine) => async (req, res) => {
   const content = await dataModelEngine.addAccount(req.body, req.tokenData);
@@ -43,7 +44,8 @@ export const modifyAccountHandler = (dataModelEngine) => async (req, res) => {
 export default (tokenAuthenticator, dataModelEngine) => {
   const router = new express.Router();
 
-  router.post('/', 
+  router.post('/',
+    ensureJsonMime,
     bodyParser.json(),  
     accessTokenMiddleware(tokenAuthenticator),
     asyncMiddleware(addAccountHandler(dataModelEngine)));
@@ -57,6 +59,7 @@ export default (tokenAuthenticator, dataModelEngine) => {
     asyncMiddleware(findAccountsHandler(dataModelEngine)));
 
   router.put('/:id',
+    ensureJsonMime,
     bodyParser.json(),  
     accessTokenMiddleware(tokenAuthenticator),
     asyncMiddleware(modifyAccountHandler(dataModelEngine)));
