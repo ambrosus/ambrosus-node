@@ -31,6 +31,9 @@ export default class Config {
     if (this.attributes.bundleRegistryContractAddress) {
       return this.attributes.bundleRegistryContractAddress;
     }
+    if (process.env.BUNDLE_REGISTRY_CONTRACT_ADDRESS) {
+      return process.env.BUNDLE_REGISTRY_CONTRACT_ADDRESS;
+    }
     if (!config.has('bundle.registryContractAddress')) {
       return null;
     }
