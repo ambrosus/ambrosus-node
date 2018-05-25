@@ -16,6 +16,7 @@ import prehasherMiddleware from '../middlewares/prehasher_middleware';
 import {ValidationError} from '../errors/errors';
 import ambAuthorizationHeaderMiddleware from '../middlewares/amb_authorization_header_middleware';
 import accessTokenMiddleware from '../middlewares/access_token_middleware';
+import ensureJsonMime from '../middlewares/mime_middleware';
 
 export const createAssetHandler = (modelEngine) => async (req, res) => {
   const createdAsset = await modelEngine.createAsset(req.body);
@@ -67,6 +68,7 @@ const assetRouter = (tokenAuthenticator, identityManager, modelEngine, config) =
   const router = new express.Router();
 
   router.post('/',
+    ensureJsonMime,
     bodyParser.json(),
     ambAuthorizationHeaderMiddleware(config),
     presignerMiddleware(identityManager),
@@ -79,6 +81,7 @@ const assetRouter = (tokenAuthenticator, identityManager, modelEngine, config) =
   );
 
   router.post('/:assetId/events',
+    ensureJsonMime,
     bodyParser.json(),
     ambAuthorizationHeaderMiddleware(config),
     prehasherMiddleware(identityManager, 'content.data', 'content.idData.dataHash'),
