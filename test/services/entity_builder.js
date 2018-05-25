@@ -26,6 +26,7 @@ import {getTimestamp} from '../../src/utils/time_utils';
 
 chai.use(sinonChai);
 const {expect} = chai;
+const oneDayInSeconds = 60 * 60 * 24;
 
 describe('Entity Builder', () => {
   let identityManager;
@@ -41,12 +42,13 @@ describe('Entity Builder', () => {
   describe('validating', () => {
     let mockIdentityManager;
     let entityBuilder;
+    let mockEnsureTimestampIsInLimit;
 
     before(() => {
       mockIdentityManager = {
         validateSignature: sinon.stub()
       };
-      entityBuilder = new EntityBuilder(mockIdentityManager);
+      entityBuilder = new EntityBuilder(mockIdentityManager, oneDayInSeconds);
     });
 
     beforeEach(() => {
@@ -82,6 +84,16 @@ describe('Entity Builder', () => {
         expect(mockIdentityManager.validateSignature).to.have.been.calledOnce;
       });
 
+      it('checks if timestamp does not exceed limit', () => {
+        mockEnsureTimestampIsInLimit = sinon.stub(entityBuilder, 'ensureTimestampIsInLimit');
+        mockEnsureTimestampIsInLimit.throws(new ValidationError('Timestamp exceedes limit'));
+
+        expect(() => entityBuilder.validateAsset(exampleAsset)).to.throw(ValidationError);
+        expect(mockEnsureTimestampIsInLimit).to.have.been.calledOnce;
+
+        mockEnsureTimestampIsInLimit.restore();
+      });
+
       it('passes for proper asset', () => {
         expect(() => entityBuilder.validateAsset(exampleAsset)).to.not.throw();
       });
@@ -90,6 +102,7 @@ describe('Entity Builder', () => {
         const brokenAsset = put(exampleAsset, 'metadata', 'abc');
         expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
       });
+
       it('doesn\'t allow content fields other than idData, and signature', () => {
         const brokenAsset = put(exampleAsset, 'content.metadata', 'abc');
         expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
@@ -162,6 +175,16 @@ describe('Entity Builder', () => {
         expect(mockIdentityManager.validateSignature).to.have.been.calledOnce;
       });
 
+      it('checks if timestamp does not exceed limit', () => {
+        mockEnsureTimestampIsInLimit = sinon.stub(entityBuilder, 'ensureTimestampIsInLimit');
+        mockEnsureTimestampIsInLimit.throws(new ValidationError('Timestamp exceedes limit'));
+
+        expect(() => entityBuilder.validateEvent(exampleEvent)).to.throw(ValidationError);
+        expect(mockEnsureTimestampIsInLimit).to.have.been.calledOnce;
+
+        mockEnsureTimestampIsInLimit.restore();
+      });
+
       it('passes for proper event', () => {
         expect(() => entityBuilder.validateEvent(exampleEvent)).to.not.throw();
       });
@@ -182,7 +205,7 @@ describe('Entity Builder', () => {
     let entityBuilder;
 
     before(() => {
-      entityBuilder = new EntityBuilder({});
+      entityBuilder = new EntityBuilder({}), oneDayInSeconds;
     });
 
     describe('Setting works', () => {
@@ -237,7 +260,7 @@ describe('Entity Builder', () => {
         sign: sinon.stub(),
         addressFromSecret: sinon.stub()
       };
-      entityBuilder = new EntityBuilder(mockIdentityManager);
+      entityBuilder = new EntityBuilder(mockIdentityManager, oneDayInSeconds);
 
       scenario = new ScenarioBuilder(identityManager);
       await scenario.addAdminAccount(adminAccountWithSecret);
@@ -339,7 +362,7 @@ describe('Entity Builder', () => {
     const validParamsAsStrings = {assetId: '0x1234', fromTimestamp: '10', toTimestamp: '20', page: '2', perPage: '4', createdBy: '0x4321'};
 
     before(() => {
-      entityBuilder = new EntityBuilder({});
+      entityBuilder = new EntityBuilder({}, oneDayInSeconds);
     });
 
     it('passes for proper parameters', () => {
@@ -428,6 +451,30 @@ describe('Entity Builder', () => {
     it('throws if perPage value not in valid type', () => {
       const params = put(validParamsAsStrings, 'perPage', 'NaN');
       expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+    });
+  });
+  describe('Validating timestamp', () => {
+    let clock;
+    let entityBuilder;
+    let timestamp;
+
+    before(() => {
+      clock = sinon.useFakeTimers();
+      entityBuilder = new EntityBuilder({}, oneDayInSeconds);
+    });
+
+    it('passes if timestamp is in the limit', () => {
+      timestamp = 0;
+      expect(() => entityBuilder.ensureTimestampIsInLimit(timestamp)).not.to.throw(ValidationError);
+    });
+
+    it('throws if timestamp exceedes the limit', () => {
+      timestamp = oneDayInSeconds + 1;
+      expect(() => entityBuilder.ensureTimestampIsInLimit(timestamp)).to.throw(ValidationError);
+    });
+
+    after(() => {
+      clock.restore();
     });
   });
 });
