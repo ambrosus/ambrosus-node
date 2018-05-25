@@ -44,7 +44,7 @@ export default class EntityBuilder {
       'content.idData.timestamp',
       'content.idData.sequenceNumber'
     ]);
-    this.ensureTimestampIsInLimit(asset.content.idData.timestamp);
+    this.ensureTimestampWithinLimit(asset.content.idData.timestamp);
     validateFieldsConstrainedToSet(asset, ['content', 'assetId']);
     validateFieldsConstrainedToSet(asset.content, ['idData', 'signature']);
 
@@ -64,14 +64,14 @@ export default class EntityBuilder {
       'content.data'
     ]);
     this.eventValidators.forEach((validator) => validator.validate(event.content));
-    this.ensureTimestampIsInLimit(event.content.idData.timestamp);
+    this.ensureTimestampWithinLimit(event.content.idData.timestamp);
     validateFieldsConstrainedToSet(event, ['content', 'eventId']);
     validateFieldsConstrainedToSet(event.content, ['idData', 'data', 'signature']);
     validateNonNegativeInteger(event.content.idData.accessLevel, `Access level should be a non-negative integer, instead got ${event.content.idData.accessLevel}`);
     this.identityManager.validateSignature(event.content.idData.createdBy, event.content.signature, event.content.idData);
   }
 
-  ensureTimestampIsInLimit (timestamp) {
+  ensureTimestampWithinLimit (timestamp) {
     if (getTimestamp() + this.maximumEntityTimestampDelay < timestamp) {
       throw new ValidationError(`Timestamp ${timestamp} located too far in the future`);
     }
