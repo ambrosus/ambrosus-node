@@ -15,6 +15,7 @@ import {
   validatePathsNotEmpty
 } from '../utils/validations';
 import {ValidationError, PermissionError} from '../errors/errors';
+import {getTimestamp} from '../utils/time_utils';
 
 export default class AccountAccessDefinitions {
   constructor(identityManager, accountRepository) {
@@ -59,18 +60,22 @@ export default class AccountAccessDefinitions {
     return {
       address,
       permissions: ['register_account', 'create_entity'],
+      registeredOn: getTimestamp(),
       accessLevel: 1000
     };
   }
 
   validateAndCastFindAccountParams(params) {
-    const allowedParametersList = ['accessLevel', 'page', 'perPage'];
+    const allowedParametersList = ['accessLevel', 'page', 'perPage', 'registeredBy'];
 
     validateFieldsConstrainedToSet(params, allowedParametersList);
 
     params.accessLevel = validateIntegerParameterAndCast(params.accessLevel, 'accessLevel');
     params.page = validateIntegerParameterAndCast(params.page, 'page');
     params.perPage = validateIntegerParameterAndCast(params.perPage, 'perPage');
+    if (params.registeredBy) {
+      validateIsAddress(params.registeredBy);
+    }
 
     return {...params};
   }

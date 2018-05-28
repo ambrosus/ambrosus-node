@@ -40,7 +40,7 @@ describe('Find Account Query Object', () => {
     await scenario.addAccount(0, null,
       {registeredBy: '0x123', registeredOn: 1, permissions: ['perm1', 'perm2'], accessLevel: 1});
     await scenario.addAccount(1, null,
-      {registeredBy: '0x123', registeredOn: 4, permissions: ['perm1', 'perm2'], accessLevel: 2});
+      {registeredBy: '0xabc', registeredOn: 4, permissions: ['perm1', 'perm2'], accessLevel: 2});
     await scenario.addAccount(0, null, {registeredBy: '0x123', permissions: ['perm1'], accessLevel: 3});
     await Promise.all(scenario.accounts.slice(1).map((account) => storage.store(account)));
     findAccountQueryObjectFactory = new FindAccountQueryObjectFactory(db);
@@ -73,6 +73,15 @@ describe('Find Account Query Object', () => {
     const found = await findAccountQueryObject.execute();
     expect(found.results)
       .to.deep.equal([scenario.accounts[2], scenario.accounts[3]]);
+    expect(found.resultCount).to.equal(2);
+  });
+
+  it('when given registeredBy, returns accounts registered by this address', async () => {
+    findAccountQueryObjectFactory = new FindAccountQueryObjectFactory(db);
+    findAccountQueryObject = findAccountQueryObjectFactory.create({registeredBy: '0x123'});
+    const found = await findAccountQueryObject.execute();
+    expect(found.results)
+      .to.deep.equal([scenario.accounts[1], scenario.accounts[3]]);
     expect(found.resultCount).to.equal(2);
   });
 });

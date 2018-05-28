@@ -23,7 +23,8 @@ export class FindAccountQueryObject extends FindQueryObject {
     this.queryBuilder = new QueryBuilder();
 
     const queryParts = {
-      accessLevel: {accessLevel: {$gte: this.criteria.accessLevel}}
+      accessLevel: {accessLevel: {$gte: this.criteria.accessLevel}},
+      registeredBy: {registeredBy: this.criteria.registeredBy}
     };
 
     this.queryBuilder.addNeededPartsToQuery(this.criteria, queryParts);
@@ -39,5 +40,5 @@ export default class FindAccountQueryObjectFactory {
 
   create(criteria) {
     return new FindAccountQueryObject(this.db, criteria);
-  } 
+  }
 }
