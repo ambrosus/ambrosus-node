@@ -26,7 +26,7 @@ export class FindAccountQueryObject extends FindQueryObject {
       accessLevel: {accessLevel: {$gte: this.criteria.accessLevel}}
     };
 
-    this.addPartsToQuery(queryParts);
+    this.queryBuilder.addNeededPartsToQuery(this.criteria, queryParts);
 
     return this.queryBuilder.compose();
   }

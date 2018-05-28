@@ -16,6 +16,14 @@ export default class QueryBuilder {
     this.queryParts.push(part);
   }
 
+  addNeededPartsToQuery(givenCriteria, parts) {
+    for (const part in parts) {
+      if (givenCriteria[part] !== undefined) {
+        this.add(parts[part]);
+      }
+    }
+  }
+
   compose() {
     if (this.queryParts.length === 0) {
       return {};
