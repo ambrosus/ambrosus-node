@@ -182,18 +182,21 @@ describe('Entity Repository', () => {
       }
     });
 
-    it('both assets and earliest event included in the bundle should have the metadata.bundleTransactionHash set after the call to storeBundleProofBlock', async () => {
+    it('both assets and earliest event included in the bundle should have the metadata.bundleTransactionHash and metadata.bundleUploadTimestamp set after the call to storeBundleProofBlock', async () => {
       for (const asset of nonBundledAssets) {
         const storedAsset = await storage.getAsset(asset.assetId);
         expect(storedAsset.metadata.bundleTransactionHash).to.equal(bundleTxHash);
+        expect(storedAsset.metadata.bundleUploadTimestamp).not.to.be.undefined;
       }
 
       for (const event of nonBundledEvents) {
         const storedEvent = await storage.getEvent(event.eventId);
         if (event.content.idData.timestamp === 1) {
           expect(storedEvent.metadata.bundleTransactionHash).to.equal(bundleTxHash);
+          expect(storedEvent.metadata.bundleUploadTimestamp).not.to.be.undefined;
         } else {
           expect(storedEvent.metadata.bundleTransactionHash).to.be.undefined;
+          expect(storedEvent.metadata.bundleUploadTimestamp).to.be.undefined;
         }
       }
     });

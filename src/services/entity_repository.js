@@ -8,6 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {pick} from '../utils/dict_utils';
+import {getTimestamp} from '../utils/time_utils';
 
 export default class EntityRepository {
   constructor(db) {
@@ -143,9 +144,12 @@ export default class EntityRepository {
       'metadata.bundleId': bundleId
     };
 
+    const currentTimestamp = getTimestamp();
+
     const update = {
       $set: {
-        'metadata.bundleTransactionHash': txHash
+        'metadata.bundleTransactionHash': txHash,
+        'metadata.bundleUploadTimestamp': currentTimestamp
       }
     };
 

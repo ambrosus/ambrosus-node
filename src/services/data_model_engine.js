@@ -83,7 +83,8 @@ export default class DataModelEngine {
 
     await this.accountAccessDefinitions.ensureCanCreateEntity(creatorAddress);
 
-    const augmentedAsset = this.entityBuilder.setBundle(asset, null);
+    let augmentedAsset = this.entityBuilder.setBundle(asset, null);
+    augmentedAsset = this.entityBuilder.setEntityUploadTimestamp(augmentedAsset);
 
     if (await this.entityRepository.getAsset(asset.assetId) !== null) {
       throw new ValidationError(`Asset with assetId=${asset.assetId} already exists`);
@@ -116,7 +117,8 @@ export default class DataModelEngine {
       throw new ValidationError(`Target asset with id=${assetId} doesn't exist`);
     }
 
-    const augmentedEvent = this.entityBuilder.setBundle(event, null);
+    let augmentedEvent = this.entityBuilder.setBundle(event, null);
+    augmentedEvent = this.entityBuilder.setEntityUploadTimestamp(augmentedEvent);
 
     if (await this.entityRepository.getEvent(event.eventId) !== null) {
       throw new ValidationError(`Event with eventId=${event.eventId} already exists`);
