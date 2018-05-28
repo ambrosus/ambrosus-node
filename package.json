@@ -16,7 +16,6 @@
     "dev:clean": "rimraf ./dist",
     "dev:setup": "export NODE_ENV=dev && babel-node src/tasks/dev_setup.js",
     "dev:start": "export NODE_ENV=dev && nodemon --watch src --exec babel-node --inspect src/start.js",
-    "dev:db": "mongod --dbpath=./data",
     "dev:lint": "eslint src test config"
   },
   "engines": {

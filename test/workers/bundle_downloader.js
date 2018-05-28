@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
+import url from 'url';
 import {createWeb3, getDefaultAddress} from '../../src/utils/web3_tools';
 import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
 import ScenarioBuilder from '../fixtures/scenario_builder';
@@ -36,16 +37,24 @@ describe('Bundle downloader - integration', () => {
     web3 = await createWeb3();
   });
 
-  const mongoUri = 'mongodb://localhost:27017/ambrosus_gateway_test2';
-
   beforeEach(async () => {
     const bundleRegistryContractAddress = await ContractManager.deploy(web3);
 
+    // Create two configuration objects aimed at two different Mongo DBs
+    // The purpose is to simulate one db where the bundles originate and are
+    // downloaded from, and another db where bundles are inserted to.
+    const config1 = Config.default({bundleRegistryContractAddress});
+    const mongoUrl = url.parse(config1.mongoUri());
+    const config2 = Config.default({
+      bundleRegistryContractAddress,
+      mongoUri: `${mongoUrl.protocol}//${mongoUrl.host}/second_db`
+    });
+
     apparatus = new Apparatus();
-    await apparatus.start(web3, Config.default({bundleRegistryContractAddress}));
-    
+    await apparatus.start(web3, config1);
+
     const builder = new Builder();
-    ({dataModelEngine, client} = await builder.build({web3}, Config.default({bundleRegistryContractAddress, mongoUri})));
+    ({dataModelEngine, client} = await builder.build({web3}, config2));
 
     await dataModelEngine.proofRepository.addVendor(getDefaultAddress(web3), apparatus.url());
 

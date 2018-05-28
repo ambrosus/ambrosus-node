@@ -1,23 +1,31 @@
-dist: trusty
+sudo: required
+
+services:
+  - docker
+
 language: node_js
+node_js:
+  - '9'
+
 cache:
   yarn: true
   directories:
   - node_modules
-services:
-  - mongodb
+
+before_install:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/1.21.2/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+
+install:
+  - docker-compose pull
+  - npx yarn install
+
+script:
+  - docker-compose up -d db
+  - npx yarn dev:lint
+  - npx yarn test
+
 notifications:
   slack: ambrosus:ybmTQyso2XmAp6SM9NQPhdl2
-node_js:
-  - '9'
-install:
-  - yarn install
-script:
-  - mongod --version
-  - sleep 2
-  - yarn test
-  - yarn dev:lint
-env:
-  global:
-    - MONGODB_URI="mongodb://localhost/ambrosus_gateway_test"
-    - PORT=9876
