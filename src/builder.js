@@ -41,7 +41,8 @@ class Builder {
     this.bundleProofRegistryContract = ContractManager.loadBundleRegistryContract(this.web3, bundleRegistryContractAddress);
     this.identityManager = new IdentityManager(this.web3);
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
-    this.entityBuilder = new EntityBuilder(this.identityManager);
+    const maximumEntityTimestampOvertake = this.config.maximumEntityTimestampOvertake();
+    this.entityBuilder = new EntityBuilder(this.identityManager, maximumEntityTimestampOvertake);
     this.entityRepository = new EntityRepository(this.db);
     await this.entityRepository.initializeIndexes();
     this.findEventQueryObjectFactory = new FindEventQueryObjectFactory(this.db);

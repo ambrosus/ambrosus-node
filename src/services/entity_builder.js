@@ -19,10 +19,11 @@ import locationSchema from '../validators/schemas/custom/ambrosus.event.location
 import locationEventGeoSchema from '../validators/schemas/custom/ambrosus.event.location.geo.json';
 import locationAssetGeoSchema from '../validators/schemas/custom/ambrosus.asset.location.geo.json';
 import {put, pick} from '../utils/dict_utils';
-import {InvalidParametersError} from '../errors/errors';
+import {InvalidParametersError, ValidationError} from '../errors/errors';
+import {getTimestamp} from '../utils/time_utils';
 
 export default class EntityBuilder {
-  constructor(identityManager) {
+  constructor(identityManager, maximumEntityTimestampOvertake) {
     this.eventValidators = [
       new JsonSchemaValidator(eventContentSchema),
       new EventEntryValidator('ambrosus.event.identifiers', new JsonSchemaValidator(indentifiersSchema)),
@@ -31,6 +32,7 @@ export default class EntityBuilder {
       new EventEntryValidator('ambrosus.asset.location.geo', new JsonSchemaValidator(locationAssetGeoSchema))
     ];
     this.identityManager = identityManager;
+    this.maximumEntityTimestampOvertake = maximumEntityTimestampOvertake;
   }
 
   validateAsset(asset) {
@@ -42,6 +44,7 @@ export default class EntityBuilder {
       'content.idData.timestamp',
       'content.idData.sequenceNumber'
     ]);
+    this.ensureTimestampWithinLimit(asset.content.idData.timestamp);
     validateFieldsConstrainedToSet(asset, ['content', 'assetId']);
     validateFieldsConstrainedToSet(asset.content, ['idData', 'signature']);
 
@@ -61,10 +64,17 @@ export default class EntityBuilder {
       'content.data'
     ]);
     this.eventValidators.forEach((validator) => validator.validate(event.content));
+    this.ensureTimestampWithinLimit(event.content.idData.timestamp);
     validateFieldsConstrainedToSet(event, ['content', 'eventId']);
     validateFieldsConstrainedToSet(event.content, ['idData', 'data', 'signature']);
     validateNonNegativeInteger(event.content.idData.accessLevel, `Access level should be a non-negative integer, instead got ${event.content.idData.accessLevel}`);
     this.identityManager.validateSignature(event.content.idData.createdBy, event.content.signature, event.content.idData);
+  }
+
+  ensureTimestampWithinLimit (timestamp) {
+    if (getTimestamp() + this.maximumEntityTimestampOvertake < timestamp) {
+      throw new ValidationError(`Timestamp ${timestamp} located too far in the future`);
+    }
   }
 
   prepareEventForBundlePublication(event) {
