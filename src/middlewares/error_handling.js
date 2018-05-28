@@ -9,14 +9,13 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {
   AuthenticationError,
-  InvalidParametersError,
+  ValidationError,
   NotFoundError,
-  PermissionError,
-  ValidationError
+  PermissionError
 } from '../errors/errors';
 
 export default (err, req, res, next) => {
-  if (err instanceof InvalidParametersError || err instanceof ValidationError) {
+  if (err instanceof ValidationError) {
     res.status(400).send({reason: err.message});
   } else if (err instanceof AuthenticationError) {
     res.status(401).send({reason: err.message});

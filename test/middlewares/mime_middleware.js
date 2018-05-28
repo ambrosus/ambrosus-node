@@ -12,7 +12,7 @@ import httpMocks from 'node-mocks-http';
 import {spy} from 'sinon';
 import sinonChai from 'sinon-chai';
 import ensureJsonMime from '../../src/middlewares/mime_middleware';
-import {InvalidParametersError} from '../../src/errors/errors';
+import {ValidationError} from '../../src/errors/errors';
 
 chai.use(sinonChai);
 const {expect} = chai;
@@ -47,7 +47,7 @@ describe('MIME middleware', () => {
         'transfer-encoding': 'chunked',
         'content-length': 100
       }
-    }), response, next)).to.throw(InvalidParametersError);
+    }), response, next)).to.throw(ValidationError);
 
     expect(next).to.be.not.called;
   });

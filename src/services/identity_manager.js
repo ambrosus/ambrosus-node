@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {InvalidParametersError, AuthenticationError} from '../errors/errors';
+import {ValidationError, AuthenticationError} from '../errors/errors';
 import matchHexOfLength from '../utils/regex';
 import {getDefaultPrivateKey, getDefaultAddress} from '../utils/web3_tools';
 
@@ -26,7 +26,7 @@ export default class IdentityManager {
 
   sign(privateKey, data) {
     if (!matchHexOfLength(privateKey, 64)) {
-      throw new InvalidParametersError(`Invalid private key format`);
+      throw new ValidationError(`Invalid private key format`);
     }
     const {signature} = this.web3.eth.accounts.sign(this.serializeForHashing(data), privateKey);
     return signature;
@@ -34,10 +34,10 @@ export default class IdentityManager {
 
   validateSignature(address, signature, data) {
     if (!matchHexOfLength(address, 40)) {
-      throw new InvalidParametersError(`Invalid address format`);
+      throw new ValidationError(`Invalid address format`);
     }
     if (!matchHexOfLength(signature, 130)) {
-      throw new InvalidParametersError(`Invalid signature format`);
+      throw new ValidationError(`Invalid signature format`);
     }
     const signer = this.web3.eth.accounts.recover(this.serializeForHashing(data), signature);
     if (address.toLowerCase() !== signer.toLowerCase()) {

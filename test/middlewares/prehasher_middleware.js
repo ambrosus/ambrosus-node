@@ -11,7 +11,7 @@ import chai from 'chai';
 import httpMocks from 'node-mocks-http';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import {InvalidParametersError} from '../../src/errors/errors';
+import {ValidationError} from '../../src/errors/errors';
 import prehasherMiddleware from '../../src/middlewares/prehasher_middleware';
 
 chai.use(sinonChai);
@@ -59,7 +59,7 @@ describe('Prehasher middleware', () => {
   it('throws exception when path not accessible', () => {
     const configuredMiddleware = prehasherMiddleware(mockIdentityManager, 'content.wrongPath', 'id');
 
-    expect(() => configuredMiddleware(request, response, next)).to.throw(InvalidParametersError);
+    expect(() => configuredMiddleware(request, response, next)).to.throw(ValidationError);
     expect(next).to.be.not.called;
   });
 });

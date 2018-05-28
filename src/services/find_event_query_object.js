@@ -83,11 +83,7 @@ export class FindEventQueryObject extends FindQueryObject {
       toTimestamp : {'content.idData.timestamp': {$lte: this.criteria.toTimestamp}}
     };
 
-    for (const part in queryParts) {
-      if (this.criteria[part]) {
-        this.queryBuilder.add(queryParts[part]);
-      }
-    }
+    this.queryBuilder.addNeededPartsToQuery(this.criteria, queryParts);
 
     return this.queryBuilder.compose();
   }

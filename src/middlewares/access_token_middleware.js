@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {InvalidParametersError, AuthenticationError} from '../errors/errors';
+import {ValidationError, AuthenticationError} from '../errors/errors';
 import {getTimestamp} from '../utils/time_utils';
 
 const accessTokenMiddleware = (tokenAuthenticator, required = true) => ((req, res, next) => {
@@ -24,7 +24,7 @@ const accessTokenMiddleware = (tokenAuthenticator, required = true) => ((req, re
   const [type, token] = authorizationHeader.split(' ');
   if (type !== 'AMB_TOKEN') {
     if (required) {
-      throw new InvalidParametersError(`Expected Authorization type AMB_TOKEN`);
+      throw new ValidationError(`Expected Authorization type AMB_TOKEN`);
     } else {
       next();
       return;

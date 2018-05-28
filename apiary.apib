@@ -171,7 +171,7 @@ Finds newest accounts.
 + Response 200 (application/json)
 
     Up to 100 newest accounts
-        
+
     + Attributes (object)
         + results (array) - An array of accounts.
             + (object) - Account.
@@ -248,7 +248,6 @@ Finds newest accounts.
             Accept: application/json
             Authorization: AMB_TOKEN ...
 
-
 + Response 200 (application/json)
 
     + Attributes (object)
@@ -283,17 +282,80 @@ Finds newest accounts.
                 "registeredOn": {
                   "type": "integer"
                 },
-                "accessLevel": {
-                  "type": "integer"
-                },
                 "permissions": {
                   "type": "array",
                   "items" : {
                   "type" : "string"
                   }
                   "example": ["register_account", "create_entity"]
+                },
+                "accessLevel": {
+                  "type": "integer"
                 }
               }
+            }
+
+
++ Response 400 (application/json)
+
+    Validation error
+
+    + Body
+
++ Response 401 (application/json)
+
+    Authentication error
+
+    + Body
+
++ Response 403 (application/json)
+
+    Invalid signature or missing register_account permission
+
+    + Body
+
+### /accounts{?accessLevel}
+
+#### Find accounts [GET]
+
+Finds accounts satisfying provided criteria.
+
+
++ Parameters
+    + accessLevel (string) - Finds only accounts with access level not smaller than parameter
+
+
++ Request (application/json)
+
+    + Headers
+
+            Accept: application/json
+            Authorization: AMB_TOKEN ...
+
++ Response 200 (application/json)
+
+    + Attributes (object)
+        + results (array) - The latest 100 accounts matching provided criteria
+            + (object) - Account.
+              + registeredBy (string) - The address which has registered the account.
+              + registeredOn (number) -  - UNIX timestamp of account registration.
+              + permissions (array) - A list of permissions granted to this account
+              + accessLevel (number) - Access level of the account. Should be a non-negative integer.
+        + resultCount (number) - Total number of accounts matching provided criteria.
+
+
+    + Body
+
+            {
+                "results": [
+                    {
+                        "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd"
+                        "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
+                        "permissions": ["register_account", "create_entity"],
+                        "accessLevel": 4
+                    }
+                ],
+                "resultCount": 322
             }
 
 + Response 400 (application/json)
@@ -319,6 +381,7 @@ Finds newest accounts.
     Requested account does not exist
 
     + Body
+
 
 #### Modify account [PUT]
 
@@ -562,7 +625,7 @@ Finds newest assets.
                         },
                         "metadata": {
                             "bundleId": "0x85a427a3.....cd1d38ebbd",
-                            "bundleTransactionHash": "0x21ab....1cdf8e55b37" 
+                            "bundleTransactionHash": "0x21ab....1cdf8e55b37"
                         }
                     }
                 ],
@@ -612,7 +675,7 @@ Fetches asset with provided assetId in the system.
                 },
                 "metadata": {
                     "bundleId": "0x85a427a3.....cd1d38ebbd",
-                    "bundleTransactionHash": "0x21ab....1cdf8e55b37" 
+                    "bundleTransactionHash": "0x21ab....1cdf8e55b37"
                 }
             }
 
@@ -856,7 +919,7 @@ Finds event satisfying provided criteria.
 + Parameters
 
     + assetId (string, optional) - ID of the asset the events are targeting
-    + fromTimestamp (integer, optional) - earliest timestamp for the events 
+    + fromTimestamp (integer, optional) - earliest timestamp for the events
     + toTimestamp (integer, optional) - latest timestamp for the events
     + perPage (integer, optional) - number of events to return per page
     + page (integer, optional) - number of page (more search results than specified in perPage parameter concludes more than one page)

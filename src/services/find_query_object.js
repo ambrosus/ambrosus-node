@@ -48,7 +48,6 @@ export default class FindQueryObject {
     return options;
   }
 
-
   async execute() {
     const query = this.assembleQuery();
     const options = this.assembleOptionsForQuery();

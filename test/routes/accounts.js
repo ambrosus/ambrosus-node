@@ -88,18 +88,20 @@ describe('Accounts', () => {
   describe('finding accounts', async () => {
     let injectedHandler;
     const exampleResult = {results: [], resultCount: 0};
+    const exampleQuery = {accessLevel: 1};
     const tokenData = {createdBy : adminAccountWithSecret.address, validUntil: 423543253453};
 
     beforeEach(async () => {
       mockModelEngine.findAccounts.resolves(exampleResult);
       injectedHandler = findAccountsHandler(mockModelEngine);
       req.tokenData = tokenData;
+      req.query = exampleQuery;
     });
 
     it('passes requested id to Data Model Engine and proxies result', async () => {
       await injectedHandler(req, res);
 
-      expect(mockModelEngine.findAccounts).to.have.been.calledWith(tokenData);
+      expect(mockModelEngine.findAccounts).to.have.been.calledWith(exampleQuery, tokenData);
 
       const returnedData = JSON.parse(res._getData());
 

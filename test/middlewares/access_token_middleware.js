@@ -11,7 +11,7 @@ import chai from 'chai';
 import httpMocks from 'node-mocks-http';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import {AuthenticationError, InvalidParametersError} from '../../src/errors/errors';
+import {AuthenticationError, ValidationError} from '../../src/errors/errors';
 import accessTokenMiddleware from '../../src/middlewares/access_token_middleware';
 import TokenAuthenticator from '../../src/utils/token_authenticator';
 import IdentityManager from '../../src/services/identity_manager';
@@ -72,14 +72,14 @@ describe('Access token middleware', () => {
     expect(request).to.not.include.key('tokenData');
   });
 
-  it('throws InvalidParametersError if other type of authorization', async () => {
+  it('throws ValidationError if other type of authorization', async () => {
     request = httpMocks.createRequest({
       headers: {
         authorization: `BAD_TOKEN ${token}`
       }
     });
     const configuredMiddleware = accessTokenMiddleware(mockTokenAuthenticator);
-    expect(() => configuredMiddleware(request, response, next)).to.throw(InvalidParametersError);
+    expect(() => configuredMiddleware(request, response, next)).to.throw(ValidationError);
     expect(request).to.not.include.key('tokenData');
   });
 

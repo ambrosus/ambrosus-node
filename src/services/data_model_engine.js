@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {NotFoundError, InvalidParametersError, PermissionError} from '../errors/errors';
+import {NotFoundError, ValidationError, PermissionError} from '../errors/errors';
 import {getTimestamp} from '../utils/time_utils';
 
 export default class DataModelEngine {
@@ -63,9 +63,10 @@ export default class DataModelEngine {
     return result;
   }
 
-  async findAccounts(tokenData) {
+  async findAccounts(params, tokenData) {
+    const validatedParams = this.accountAccessDefinitions.validateAndCastFindAccountParams(params);
     await this.accountAccessDefinitions.ensureCanRegisterAccount(tokenData.createdBy);
-    const findAccountQueryObject = this.findAccountQueryObjectFactory.create();
+    const findAccountQueryObject = this.findAccountQueryObjectFactory.create(validatedParams);
     return await findAccountQueryObject.execute();
   }
 
@@ -85,7 +86,7 @@ export default class DataModelEngine {
     const augmentedAsset = this.entityBuilder.setBundle(asset, null);
 
     if (await this.entityRepository.getAsset(asset.assetId) !== null) {
-      throw new InvalidParametersError(`Asset with assetId=${asset.assetId} already exists`);
+      throw new ValidationError(`Asset with assetId=${asset.assetId} already exists`);
     }
     await this.entityRepository.storeAsset(augmentedAsset);
 
@@ -112,13 +113,13 @@ export default class DataModelEngine {
     await this.accountAccessDefinitions.ensureCanCreateEntity(creatorAddress);
 
     if (await this.entityRepository.getAsset(assetId) === null) {
-      throw new InvalidParametersError(`Target asset with id=${assetId} doesn't exist`);
+      throw new ValidationError(`Target asset with id=${assetId} doesn't exist`);
     }
 
     const augmentedEvent = this.entityBuilder.setBundle(event, null);
 
     if (await this.entityRepository.getEvent(event.eventId) !== null) {
-      throw new InvalidParametersError(`Event with eventId=${event.eventId} already exists`);
+      throw new ValidationError(`Event with eventId=${event.eventId} already exists`);
     }
     await this.entityRepository.storeEvent(augmentedEvent);
 

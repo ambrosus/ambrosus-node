@@ -28,7 +28,7 @@ export const getAccountHandler = (dataModelEngine) => async (req, res) => {
 };
 
 export const findAccountsHandler = (dataModelEngine) => async (req, res) => {
-  const content = await dataModelEngine.findAccounts(req.tokenData);
+  const content = await dataModelEngine.findAccounts(req.query, req.tokenData);
   res.status(200)
     .type('json')
     .send(JSON.stringify(content));

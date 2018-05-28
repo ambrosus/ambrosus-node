@@ -11,7 +11,7 @@ import chai from 'chai';
 import httpMocks from 'node-mocks-http';
 import {spy} from 'sinon';
 import sinonChai from 'sinon-chai';
-import {InvalidParametersError, PermissionError} from '../../src/errors/errors';
+import {ValidationError, PermissionError} from '../../src/errors/errors';
 import pkPair from '../fixtures/pk_pair';
 import ambAuthorizationHeaderMiddleware from '../../src/middlewares/amb_authorization_header_middleware';
 import {pick} from '../../src/utils/dict_utils';
@@ -60,7 +60,7 @@ describe('Authorisation header middleware', () => {
     it('throws exception if authorization type is not AMB', () => {
       request.headers.authorization = pkPair.secret;
 
-      expect(() => ambAuthorizationHeaderMiddleware(config)(request, response, next)).to.throw(InvalidParametersError);
+      expect(() => ambAuthorizationHeaderMiddleware(config)(request, response, next)).to.throw(ValidationError);
       expect(next).to.be.not.called;
     });
   });

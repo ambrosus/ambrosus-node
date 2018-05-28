@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import base64url from 'base64url';
-import {AuthenticationError, InvalidParametersError} from '../errors/errors';
+import {AuthenticationError, ValidationError} from '../errors/errors';
 import {getTimestamp} from './time_utils';
 
 export default class TokenAuthenticator {
@@ -18,10 +18,10 @@ export default class TokenAuthenticator {
 
   generateToken(secret, timestamp) {
     if (!timestamp || !Number.isInteger(timestamp)) {
-      throw new InvalidParametersError('Unix timestamp was not provided or has an invalid format');
+      throw new ValidationError('Unix timestamp was not provided or has an invalid format');
     }
     if (timestamp <= getTimestamp()) {
-      throw new InvalidParametersError('Timestamp should be in the future');
+      throw new ValidationError('Timestamp should be in the future');
     }
     const address = this.identityManager.addressFromSecret(secret);
     const idData = {

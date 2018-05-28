@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {InvalidParametersError, PermissionError} from '../errors/errors';
+import {ValidationError, PermissionError} from '../errors/errors';
 
 const ambAuthorizationHeaderMiddleware = (config) => (req, res, next) => {
   const authorizationHeader = req.headers.authorization;
@@ -21,7 +21,7 @@ const ambAuthorizationHeaderMiddleware = (config) => (req, res, next) => {
   }
   const [type, secret] = authorizationHeader.split(' ');
   if (type !== 'AMB') {
-    throw new InvalidParametersError(`Only Authorization type AMB is supported`);
+    throw new ValidationError(`Only Authorization type AMB is supported`);
   }
   req.ambSecret = secret;
   next();

@@ -11,9 +11,12 @@ import chai from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
-import {put} from '../../src/utils/dict_utils';
-import {account, adminAccountWithSecret, notRegisteredAccount} from '../fixtures/account';
 import FindAccountQueryObjectFactory, {FindAccountQueryObject} from '../../src/services/find_account_query_object';
+import ScenarioBuilder from '../fixtures/scenario_builder';
+import IdentityManager from '../../src/services/identity_manager';
+import {createWeb3} from '../../src/utils/web3_tools';
+import {adminAccountWithSecret} from '../fixtures/account';
+import AccountRepository from '../../src/services/account_repository';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -26,16 +29,20 @@ describe('Find Account Query Object', () => {
   let client;
   let findAccountQueryObjectFactory;
   let findAccountQueryObject;
-  let accounts;
+  let scenario;
+  let storage;
 
   before(async () => {
     ({db, client} = await connectToMongo());
-    accounts = [put(account, {registeredBy: '0x123', registeredOn: 1, permissions: ['perm1', 'perm2']}),
-      put(notRegisteredAccount, {registeredBy: '0x123', registeredOn: 4, permissions: ['perm1', 'perm2']}),
-      put(adminAccountWithSecret, {registeredBy: '0x123', permissions: ['perm1']})];
-    await db.collection('accounts').insertOne({...accounts[0]});
-    await db.collection('accounts').insertOne({...accounts[1]});
-    await db.collection('accounts').insertOne({...accounts[2]});
+    storage = new AccountRepository(db);
+    scenario = new ScenarioBuilder(new IdentityManager(await createWeb3()));
+    await scenario.addAdminAccount(adminAccountWithSecret);
+    await scenario.addAccount(0, null,
+      {registeredBy: '0x123', registeredOn: 1, permissions: ['perm1', 'perm2'], accessLevel: 1});
+    await scenario.addAccount(1, null,
+      {registeredBy: '0x123', registeredOn: 4, permissions: ['perm1', 'perm2'], accessLevel: 2});
+    await scenario.addAccount(0, null, {registeredBy: '0x123', permissions: ['perm1'], accessLevel: 3});
+    await Promise.all(scenario.accounts.slice(1).map((account) => storage.store(account)));
     findAccountQueryObjectFactory = new FindAccountQueryObjectFactory(db);
     findAccountQueryObject = findAccountQueryObjectFactory.create();
   });
@@ -55,7 +62,17 @@ describe('Find Account Query Object', () => {
 
   it('executed returns accounts sorted by registration time', async () => {
     const found = await findAccountQueryObject.execute();
-    expect(found.results).to.deep.equal([accounts[1],accounts[0],accounts[2]]);
+    expect(found.results)
+      .to.deep.equal([scenario.accounts[2], scenario.accounts[1], scenario.accounts[3]]);
     expect(found.resultCount).to.equal(3);
+  });
+
+  it('when given accessLevel, returns accounts with accessLevel greater or equal then provided', async () => {
+    findAccountQueryObjectFactory = new FindAccountQueryObjectFactory(db);
+    findAccountQueryObject = findAccountQueryObjectFactory.create({accessLevel: 2});
+    const found = await findAccountQueryObject.execute();
+    expect(found.results)
+      .to.deep.equal([scenario.accounts[2], scenario.accounts[3]]);
+    expect(found.resultCount).to.equal(2);
   });
 });

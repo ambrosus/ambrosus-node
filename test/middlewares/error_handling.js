@@ -13,7 +13,7 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import errorHandling from '../../src/middlewares/error_handling';
 
-import {InvalidParametersError, ValidationError, PermissionError, NotFoundError, AuthenticationError} from '../../src/errors/errors';
+import {ValidationError, PermissionError, NotFoundError, AuthenticationError} from '../../src/errors/errors';
 
 chai.use(sinonChai);
 const {expect} = chai;
@@ -30,8 +30,8 @@ describe('Error handling middleware', () => {
   });
 
 
-  it('should return 400 if InvalidParametersError', async () => {
-    errorHandling(new InvalidParametersError(), request, response, next);
+  it('should return 400 if ValidationError', async () => {
+    errorHandling(new ValidationError(), request, response, next);
     expect(response._getStatusCode()).to.eq(400);
     expect(next).to.be.calledOnce;
   });

@@ -7,11 +7,11 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {InvalidParametersError} from '../errors/errors';
+import {ValidationError} from '../errors/errors';
 
 const ensureJsonMime = (req, res, next) => {
   if (!req.is('application/json')) {
-    throw new InvalidParametersError('application/json MIME type expected');
+    throw new ValidationError('application/json MIME type expected');
   }
   next();
 };

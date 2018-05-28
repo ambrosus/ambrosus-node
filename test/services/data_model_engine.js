@@ -14,7 +14,7 @@ import chaiAsPromised from 'chai-as-promised';
 import {pick, put} from '../../src/utils/dict_utils';
 
 import DataModelEngine from '../../src/services/data_model_engine';
-import {InvalidParametersError, NotFoundError, PermissionError, ValidationError} from '../../src/errors/errors';
+import {ValidationError, NotFoundError, PermissionError} from '../../src/errors/errors';
 
 import {createAsset, createBundle, createEvent} from '../fixtures/assets_events';
 import {account, accountWithSecret, addAccountRequest, adminAccount, adminAccountWithSecret} from '../fixtures/account';
@@ -227,6 +227,7 @@ describe('Data Model Engine', () => {
   });
 
   describe('Finding accounts', () => {
+    const mockParams = {accessLevel: 1};
     let mockFindAccountQueryObjectFactory;
     let mockFindAccountQueryObject;
     let mockAccountAccessDefinitions;
@@ -242,7 +243,8 @@ describe('Data Model Engine', () => {
         execute: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        ensureCanRegisterAccount: sinon.stub()
+        ensureCanRegisterAccount: sinon.stub(),
+        validateAndCastFindAccountParams: sinon.stub()
       };
       modelEngine = new DataModelEngine({}, {}, {}, {}, {}, {}, {}, {}, mockFindAccountQueryObjectFactory, {}, mockAccountAccessDefinitions);
       account = put(accountWithSecret, {registeredBy: adminAccount.address, permissions : ['perm1', 'perm2']});
@@ -254,17 +256,22 @@ describe('Data Model Engine', () => {
       mockFindAccountQueryObjectFactory.create.returns(mockFindAccountQueryObject);
       mockFindAccountQueryObject.execute.returns({result: [accountWithoutSecret], resultCount: 1});
       mockAccountAccessDefinitions.ensureCanRegisterAccount.resolves();
+      mockAccountAccessDefinitions.validateAndCastFindAccountParams.returns(mockParams);
     });
 
     it('uses findAccountQueryObjectFactory and delegates to findAccountQueryObject', async () => {
-      expect(await modelEngine.findAccounts({createdBy : adminAccount.address})).to.deep.equal({result: [accountWithoutSecret], resultCount: 1});
+      expect(await modelEngine.findAccounts(mockParams, {createdBy : adminAccount.address})).to.deep.equal({result: [accountWithoutSecret], resultCount: 1});
       expect(mockFindAccountQueryObjectFactory.create).to.have.been.called;
       expect(mockFindAccountQueryObject.execute).to.have.been.called;
     });
 
+    it('validates params', () => {
+      expect(mockAccountAccessDefinitions.validateAndCastFindAccountParams).to.have.been.called;
+    });
+
     it('throws PermissionError if account misses required permissions', async () => {
       mockAccountAccessDefinitions.ensureCanRegisterAccount.throws(new PermissionError());
-      await expect(modelEngine.findAccounts({createdBy : adminAccount.address})).to.be.rejectedWith(PermissionError);
+      await expect(modelEngine.findAccounts(mockParams, {createdBy : adminAccount.address})).to.be.rejectedWith(PermissionError);
       expect(mockAccountAccessDefinitions.ensureCanRegisterAccount).to.have.been.called;
     });
   });
@@ -396,7 +403,7 @@ describe('Data Model Engine', () => {
 
       it('throws if asset with same assetId already exists', async () => {
         mockEntityRepository.getAsset.resolves({});
-        await expect(modelEngine.createAsset(mockAsset)).to.be.rejectedWith(InvalidParametersError);
+        await expect(modelEngine.createAsset(mockAsset)).to.be.rejectedWith(ValidationError);
       });
     });
   });
@@ -567,12 +574,12 @@ describe('Data Model Engine', () => {
       it('throws if target asset doesn\'t exists in Entity Repository', async () => {
         mockEntityRepository.getAsset.resolves(null);
 
-        await expect(modelEngine.createEvent(mockEvent)).to.be.rejectedWith(InvalidParametersError);
+        await expect(modelEngine.createEvent(mockEvent)).to.be.rejectedWith(ValidationError);
       });
 
       it('throws if event with same eventId already exists', async () => {
         mockEntityRepository.getEvent.resolves({});
-        await expect(modelEngine.createEvent(mockEvent)).to.be.rejectedWith(InvalidParametersError);
+        await expect(modelEngine.createEvent(mockEvent)).to.be.rejectedWith(ValidationError);
       });
     });
   });
@@ -642,6 +649,7 @@ describe('Data Model Engine', () => {
       mockAccountAccessDefinitions = {
         getTokenCreatorAccessLevel: sinon.stub()
       };
+
       mockFindEventQueryObject = {
         execute: sinon.stub()
       };
@@ -684,11 +692,11 @@ describe('Data Model Engine', () => {
       expect(ret.resultCount).to.equal(165);
     });
 
-    it('throws InvalidParametersError when parameter validation is not successful', async () => {
+    it('throws ValidationError when parameter validation is not successful', async () => {
       const mockParams = {'a param': 'a value'};
-      mockEntityBuilder.validateAndCastFindEventsParams.throws(new InvalidParametersError);
+      mockEntityBuilder.validateAndCastFindEventsParams.throws(new ValidationError);
 
-      await expect(modelEngine.findEvents(mockParams)).to.be.rejectedWith(InvalidParametersError);
+      await expect(modelEngine.findEvents(mockParams)).to.be.rejectedWith(ValidationError);
 
       // asks the entity builder for parameters validation
       expect(mockEntityBuilder.validateAndCastFindEventsParams).to.have.been.calledWith(mockParams);

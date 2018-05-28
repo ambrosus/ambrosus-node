@@ -11,8 +11,8 @@ import QueryBuilder from './query_builder';
 import FindQueryObject from './find_query_object';
 
 export class FindAccountQueryObject extends FindQueryObject {
-  constructor(db) {
-    super(db, 'accounts');
+  constructor(db, criteria) {
+    super(db, 'accounts', criteria);
   }
 
   getSortingKey() {
@@ -20,8 +20,15 @@ export class FindAccountQueryObject extends FindQueryObject {
   }
 
   assembleQuery() {
-    const queryBuilder = new QueryBuilder();
-    return queryBuilder.compose();
+    this.queryBuilder = new QueryBuilder();
+
+    const queryParts = {
+      accessLevel: {accessLevel: {$gte: this.criteria.accessLevel}}
+    };
+
+    this.queryBuilder.addNeededPartsToQuery(this.criteria, queryParts);
+
+    return this.queryBuilder.compose();
   }
 }
 
@@ -30,7 +37,7 @@ export default class FindAccountQueryObjectFactory {
     this.db = db;
   }
 
-  create() {
-    return new FindAccountQueryObject(this.db);
+  create(criteria) {
+    return new FindAccountQueryObject(this.db, criteria);
   } 
 }

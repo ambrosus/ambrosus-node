@@ -12,7 +12,7 @@ import {
   validatePathsNotEmpty, validateFieldsConstrainedToSet, validateIntegerParameterAndCast,
   validateNonNegativeInteger, validateIsAddress
 } from '../../src/utils/validations';
-import {ValidationError, InvalidParametersError} from '../../src/errors/errors';
+import {ValidationError} from '../../src/errors/errors';
 
 const {expect} = chai;
 
@@ -62,7 +62,7 @@ describe('validation', () => {
     });
   
     it('throws if parameter not parsable', () => {
-      expect(() => validateIntegerParameterAndCast('NaN', 'sampleErrMsg')).to.throw(InvalidParametersError);
+      expect(() => validateIntegerParameterAndCast('NaN', 'sampleErrMsg')).to.throw(ValidationError);
     });
   });
 

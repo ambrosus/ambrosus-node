@@ -13,7 +13,7 @@ import sinon from 'sinon';
 import {createWeb3} from '../../src/utils/web3_tools';
 import TokenAuthenticator from '../../src/utils/token_authenticator';
 import pkPair from '../fixtures/pk_pair';
-import {AuthenticationError, InvalidParametersError} from '../../src/errors/errors';
+import {AuthenticationError, ValidationError} from '../../src/errors/errors';
 import IdentityManager from '../../src/services/identity_manager';
 
 const {expect} = chai;
@@ -51,12 +51,12 @@ describe('TokenAuthenticator', () => {
   });
 
   describe('Invalid data', () => {
-    it('generate token throws InvalidParametersError if no validUntil', async () => {
-      expect(() => authenticator.generateToken(pkPair.secret, undefined)).to.throw(InvalidParametersError);
+    it('generate token throws ValidationError if no validUntil', async () => {
+      expect(() => authenticator.generateToken(pkPair.secret, undefined)).to.throw(ValidationError);
     });
 
-    it('generate token throws InvalidParametersError if validUntil is not integer', async () => {
-      expect(() => authenticator.generateToken(pkPair.secret, '01.01.1970')).to.throw(InvalidParametersError);
+    it('generate token throws ValidationError if validUntil is not integer', async () => {
+      expect(() => authenticator.generateToken(pkPair.secret, '01.01.1970')).to.throw(ValidationError);
     });
 
     it('generate token from invalid secret', async () => {
@@ -64,7 +64,7 @@ describe('TokenAuthenticator', () => {
     });
 
     it('generate token with past timestamp', async () => {
-      expect(() => authenticator.generateToken(pkPair.secret, past)).to.throw(InvalidParametersError);
+      expect(() => authenticator.generateToken(pkPair.secret, past)).to.throw(ValidationError);
     });
 
     it('decode token which is not base64', () => {
@@ -77,7 +77,7 @@ describe('TokenAuthenticator', () => {
         validUntil: 7
       };
       const token = authenticator.encode(authenticator.preparePayload(pkPair.secret, idData));
-      expect(() => authenticator.decodeToken(token)).to.throw(InvalidParametersError);
+      expect(() => authenticator.decodeToken(token)).to.throw(ValidationError);
     });
 
     it('decode token with invalid signature (different data validUntil)', () => {
@@ -103,7 +103,7 @@ describe('TokenAuthenticator', () => {
       const signature = 'fake';
       const payload = {signature, idData: {...idData, validUntil: 8}};
       const token = authenticator.encode(payload);
-      expect(() => authenticator.decodeToken(token)).to.throw(InvalidParametersError);
+      expect(() => authenticator.decodeToken(token)).to.throw(ValidationError);
     });
 
     it('decode expired token', () => {
