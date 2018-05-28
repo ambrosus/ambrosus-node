@@ -205,7 +205,7 @@ describe('Entity Builder', () => {
     let entityBuilder;
 
     before(() => {
-      entityBuilder = new EntityBuilder({}), oneDayInSeconds;
+      entityBuilder = new EntityBuilder({}, oneDayInSeconds);
     });
 
     describe('Setting works', () => {

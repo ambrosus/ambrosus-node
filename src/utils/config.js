@@ -68,8 +68,8 @@ export default class Config {
     return config.get('bundle.bundleSizeLimit');
   }
 
-  maximumEntityTimestampDelay() {
-    return config.get('maximumEntityTimestampDelay');
+  maximumEntityTimestampOvertake() {
+    return config.get('maximumEntityTimestampOvertake');
   }
 
   static default(attributes) {

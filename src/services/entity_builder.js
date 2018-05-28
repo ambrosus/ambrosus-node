@@ -23,7 +23,7 @@ import {InvalidParametersError, ValidationError} from '../errors/errors';
 import {getTimestamp} from '../utils/time_utils';
 
 export default class EntityBuilder {
-  constructor(identityManager, maximumEntityTimestampDelay) {
+  constructor(identityManager, maximumEntityTimestampOvertake) {
     this.eventValidators = [
       new JsonSchemaValidator(eventContentSchema),
       new EventEntryValidator('ambrosus.event.identifiers', new JsonSchemaValidator(indentifiersSchema)),
@@ -32,7 +32,7 @@ export default class EntityBuilder {
       new EventEntryValidator('ambrosus.asset.location.geo', new JsonSchemaValidator(locationAssetGeoSchema))
     ];
     this.identityManager = identityManager;
-    this.maximumEntityTimestampDelay = maximumEntityTimestampDelay;
+    this.maximumEntityTimestampOvertake = maximumEntityTimestampOvertake;
   }
 
   validateAsset(asset) {
@@ -72,7 +72,7 @@ export default class EntityBuilder {
   }
 
   ensureTimestampWithinLimit (timestamp) {
-    if (getTimestamp() + this.maximumEntityTimestampDelay < timestamp) {
+    if (getTimestamp() + this.maximumEntityTimestampOvertake < timestamp) {
       throw new ValidationError(`Timestamp ${timestamp} located too far in the future`);
     }
   }

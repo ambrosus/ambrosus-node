@@ -9,6 +9,6 @@ module.exports = {
     bundleSizeLimit: 10000,
     defaultGasPrice: 5 // in ambits
   },
-  maximumEntityTimestampDelay: 86400, // in seconds
+  maximumEntityTimestampOvertake: 86400, // in seconds
   authorizationWithSecretEnabled: false
 };
