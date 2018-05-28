@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
+import sinon from 'sinon';
 import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
 import {pick, put} from '../../src/utils/dict_utils';
 import {createAsset, createBundle, createEvent} from '../fixtures/assets_events';
@@ -118,6 +119,7 @@ describe('Entity Repository', () => {
     let alreadyBundledEvents;
     let nonBundledAssets;
     let nonBundledEvents;
+    let clock;
 
     let ret;
 
@@ -148,6 +150,8 @@ describe('Entity Repository', () => {
       await Promise.all([...alreadyBundledAssets, ...nonBundledAssets].map((asset) => storage.storeAsset(asset)));
       await Promise.all([...alreadyBundledEvents, ...nonBundledEvents].map((event) => storage.storeEvent(event)));
 
+      clock = sinon.useFakeTimers(5000);
+
       ret = await expect(storage.beginBundle(bundleStubId)).to.be.fulfilled;
       await expect(storage.endBundle(bundleStubId, bundleId, bundleSizeLimit)).to.be.fulfilled;
       await expect(storage.storeBundleProofMetadata(bundleId, 10, bundleTxHash)).to.be.fulfilled;
@@ -155,6 +159,7 @@ describe('Entity Repository', () => {
 
     after(async () => {
       await cleanDatabase(db);
+      clock.restore();
     });
 
     it('returns only assets and events without a bundle', () => {
@@ -186,14 +191,14 @@ describe('Entity Repository', () => {
       for (const asset of nonBundledAssets) {
         const storedAsset = await storage.getAsset(asset.assetId);
         expect(storedAsset.metadata.bundleTransactionHash).to.equal(bundleTxHash);
-        expect(storedAsset.metadata.bundleUploadTimestamp).not.to.be.undefined;
+        expect(storedAsset.metadata.bundleUploadTimestamp).to.be.equal(5);
       }
 
       for (const event of nonBundledEvents) {
         const storedEvent = await storage.getEvent(event.eventId);
         if (event.content.idData.timestamp === 1) {
           expect(storedEvent.metadata.bundleTransactionHash).to.equal(bundleTxHash);
-          expect(storedEvent.metadata.bundleUploadTimestamp).not.to.be.undefined;
+          expect(storedEvent.metadata.bundleUploadTimestamp).to.be.equal(5);
         } else {
           expect(storedEvent.metadata.bundleTransactionHash).to.be.undefined;
           expect(storedEvent.metadata.bundleUploadTimestamp).to.be.undefined;
