@@ -13,7 +13,7 @@ import sinonChai from 'sinon-chai';
 
 import {pick, put} from '../../src/utils/dict_utils';
 import {createWeb3} from '../../src/utils/web3_tools';
-import {InvalidParametersError, JsonValidationError, ValidationError} from '../../src/errors/errors';
+import {ValidationError, JsonValidationError} from '../../src/errors/errors';
 
 import IdentityManager from '../../src/services/identity_manager';
 import EntityBuilder from '../../src/services/entity_builder';
@@ -404,48 +404,48 @@ describe('Entity Builder', () => {
 
       it('throws if unsupported by entry syntax (object)', () => {
         const params = put(validParamsAsStrings, 'data[acceleration]', '{x: 1, y: 2}');
-        expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+        expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
       });
 
       it('throws if unsupported by entry syntax (array)', () => {
         const params = put(validParamsAsStrings, 'data[acceleration]', '[1, 2]');
-        expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+        expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
       });
 
       it('throws if geo data stored in field other than geoJson', () => {
         const params = {data: {someField: {locationLongitude : 2, locationLatitude : 10, locationMaxDistance : 15}}};
-        expect(() => entityBuilder.ensureGeoLocationParamsCorrectlyPlaced(params)).to.throw(InvalidParametersError);
+        expect(() => entityBuilder.ensureGeoLocationParamsCorrectlyPlaced(params)).to.throw(ValidationError);
       });
 
       it('throws if geoJson field contains non geographical data', () => {
         const params = {data: {geoJson: '1'}};
-        expect(() => entityBuilder.ensureGeoLocationParamsCorrectlyPlaced(params)).to.throw(InvalidParametersError);
+        expect(() => entityBuilder.ensureGeoLocationParamsCorrectlyPlaced(params)).to.throw(ValidationError);
       });
     });
 
     it('throws if surplus parameters are passed', () => {
       const params = put(validParamsAsStrings, 'additionalParam', '123');
-      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
     });
 
     it('throws if fromTimestamp value not in valid type', () => {
       const params = put(validParamsAsStrings, 'fromTimestamp', 'NaN');
-      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
     });
 
     it('throws if toTimestamp value not in valid type', () => {
       const params = put(validParamsAsStrings, 'toTimestamp', 'NaN');
-      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
     });
 
     it('throws if page value not in valid type', () => {
       const params = put(validParamsAsStrings, 'page', 'NaN');
-      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
     });
 
     it('throws if perPage value not in valid type', () => {
       const params = put(validParamsAsStrings, 'perPage', 'NaN');
-      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(InvalidParametersError);
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
     });
   });
   describe('Validating timestamp', () => {

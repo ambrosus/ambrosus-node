@@ -11,7 +11,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import httpMocks from 'node-mocks-http';
-import {InvalidParametersError} from '../../src/errors/errors';
+import {ValidationError} from '../../src/errors/errors';
 
 import queryParameterProcessorMiddleware from '../../src/middlewares/query_parameter_processor_middleware';
 
@@ -41,7 +41,7 @@ describe('Query Parameter Processor Middleware', () => {
       param2: 'example2String'
     });
     
-    expect(() => queryParameterProcessorMiddleware(request, response, next)).to.throw(InvalidParametersError);
+    expect(() => queryParameterProcessorMiddleware(request, response, next)).to.throw(ValidationError);
     expect(next).to.not.have.been.called;
   });
 
@@ -71,7 +71,7 @@ describe('Query Parameter Processor Middleware', () => {
         something: 'number(someText)',
         somethingElse: '1234'
       });
-      expect(() => queryParameterProcessorMiddleware(request, response, next)).to.throw(InvalidParametersError);
+      expect(() => queryParameterProcessorMiddleware(request, response, next)).to.throw(ValidationError);
       expect(next).to.not.have.been.called;
     });
   });
@@ -100,7 +100,7 @@ describe('Query Parameter Processor Middleware', () => {
         something: 'geo(2, 4)',
         somethingElse: '1234'
       });
-      expect(() => queryParameterProcessorMiddleware(request, response, next)).to.throw(InvalidParametersError);
+      expect(() => queryParameterProcessorMiddleware(request, response, next)).to.throw(ValidationError);
       expect(next).to.not.have.been.called;
     });
     it('throws if decorated value is not presenting valid geo coordinates (surplus value)', async () => {
@@ -108,7 +108,7 @@ describe('Query Parameter Processor Middleware', () => {
         something: 'geo(1, 2, 3, 5)',
         somethingElse: '1234'
       });
-      expect(() => queryParameterProcessorMiddleware(request, response, next)).to.throw(InvalidParametersError);
+      expect(() => queryParameterProcessorMiddleware(request, response, next)).to.throw(ValidationError);
       expect(next).to.not.have.been.called;
     });
     it('throws if decorated value is not presenting valid geo coordinates (value out of range)', async () => {
@@ -116,7 +116,7 @@ describe('Query Parameter Processor Middleware', () => {
         something: 'geo(200, 4, 3)',
         somethingElse: '1234'
       });
-      expect(() => queryParameterProcessorMiddleware(request, response, next)).to.throw(InvalidParametersError);
+      expect(() => queryParameterProcessorMiddleware(request, response, next)).to.throw(ValidationError);
       expect(next).to.not.have.been.called;
     });
     it('throws if decorated value is not presenting valid geo coordinates (one of values is not a number)', async () => {
@@ -124,7 +124,7 @@ describe('Query Parameter Processor Middleware', () => {
         something: 'geo(NaN, 4, 43)',
         somethingElse: '1234'
       });
-      expect(() => queryParameterProcessorMiddleware(request, response, next)).to.throw(InvalidParametersError);
+      expect(() => queryParameterProcessorMiddleware(request, response, next)).to.throw(ValidationError);
       expect(next).to.not.have.been.called;
     });
   });

@@ -11,7 +11,7 @@ import chai from 'chai';
 import httpMocks from 'node-mocks-http';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import {InvalidParametersError} from '../../src/errors/errors';
+import {ValidationError} from '../../src/errors/errors';
 import presignerMiddleware from '../../src/middlewares/presigner_middleware';
 import pkPair from '../fixtures/pk_pair';
 
@@ -71,7 +71,7 @@ describe('Presigner middleware', () => {
   it('throws exception when path not accessible', () => {
     const configuredMiddleware = presignerMiddleware(mockIdentityManager, 'content.wrongPath', 'content.signature');
 
-    expect(() => configuredMiddleware(request, response, next)).to.throw(InvalidParametersError);
+    expect(() => configuredMiddleware(request, response, next)).to.throw(ValidationError);
     expect(next).to.be.not.called;
   });
 });

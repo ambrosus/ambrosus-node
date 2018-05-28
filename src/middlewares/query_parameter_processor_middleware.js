@@ -7,12 +7,12 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {InvalidParametersError} from '../errors/errors';
+import {ValidationError} from '../errors/errors';
 
 const castToNumberOrThrow = (input) => {
   const number = Number(input);
   if (isNaN(number)) {
-    throw new InvalidParametersError(`${input} is not a valid number`);
+    throw new ValidationError(`${input} is not a valid number`);
   }
   return number;
 };
@@ -24,16 +24,16 @@ const castToCoordinatesOrThrow = (input) => {
     const [, lon, lat, rad] = parseResult;
     const parsedLon = parseFloat(lon);
     if (parsedLon < -180 || parsedLon > 180) {
-      throw new InvalidParametersError('Longitude must be between -180 and 180');
+      throw new ValidationError('Longitude must be between -180 and 180');
     }
     const parsedLat = parseFloat(lat);
     if (parsedLat < -90 || parsedLat > 90) {
-      throw new InvalidParametersError('Latitude must be between -90 and 90');
+      throw new ValidationError('Latitude must be between -90 and 90');
     }
     const parsedRad = parseFloat(rad);
     return {locationLongitude : parsedLon, locationLatitude : parsedLat, locationMaxDistance : parsedRad};
   }
-  throw new InvalidParametersError('Location query must be of format `geo(lon, lat, rad)`');
+  throw new ValidationError('Location query must be of format `geo(lon, lat, rad)`');
 };
 
 const deepMapObject = (input, transformFunc) => Object.keys(input).reduce(
@@ -69,7 +69,7 @@ const ensureDataParamsValuesNotObjects = (entries) => {
   const keys = Object.keys(entries);
   keys.forEach((key) => {
     if (typeof entries[key] === 'object') {
-      throw new InvalidParametersError('Data parameters should not be array or object type');
+      throw new ValidationError('Data parameters should not be array or object type');
     }
   });
 };

@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import IdentityManager from '../../src/services/identity_manager';
 import {createWeb3} from '../../src/utils/web3_tools';
-import {InvalidParametersError, AuthenticationError} from '../../src/errors/errors';
+import {ValidationError, AuthenticationError} from '../../src/errors/errors';
 import {put} from '../../src/utils/dict_utils';
 import pkPair from '../fixtures/pk_pair';
 
@@ -58,7 +58,7 @@ describe('Identity manager', () => {
     });
 
     it('should throw if private key has wrong format', () => {
-      expect(() => identityManager.sign('0x12312312321', exampleData)).to.throw(InvalidParametersError);
+      expect(() => identityManager.sign('0x12312312321', exampleData)).to.throw(ValidationError);
     });
   });
 
@@ -84,11 +84,11 @@ describe('Identity manager', () => {
     });
 
     it('should throw if wrong signature format', () => {
-      expect(() => identityManager.validateSignature(account.address, '0x1312312312', exampleData)).to.throw(InvalidParametersError);
+      expect(() => identityManager.validateSignature(account.address, '0x1312312312', exampleData)).to.throw(ValidationError);
     });
 
     it('should throw is wrong address format', () => {
-      expect(() => identityManager.validateSignature('0x1312312312', signature, exampleData)).to.throw(InvalidParametersError);
+      expect(() => identityManager.validateSignature('0x1312312312', signature, exampleData)).to.throw(ValidationError);
     });
   });
 

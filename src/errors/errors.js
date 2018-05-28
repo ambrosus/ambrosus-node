@@ -15,12 +15,6 @@ export class AmbrosusError extends Error {
   }
 }
 
-export class InvalidParametersError extends AmbrosusError {
-  constructor(message) {
-    super(`Invalid parameter: ${message}`);
-  }
-}
-
 export class ValidationError extends AmbrosusError {
   constructor(message) {
     super(`Invalid data: ${message}`);

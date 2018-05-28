@@ -8,10 +8,13 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {
-  validateFieldsConstrainedToSet, validateIntegerParameterAndCast, validateIsAddress, validateNonNegativeInteger,
+  validateFieldsConstrainedToSet,
+  validateIntegerParameterAndCast,
+  validateIsAddress,
+  validateNonNegativeInteger,
   validatePathsNotEmpty
 } from '../utils/validations';
-import {InvalidParametersError, PermissionError, ValidationError} from '../errors/errors';
+import {ValidationError, PermissionError} from '../errors/errors';
 
 export default class AccountAccessDefinitions {
   constructor(identityManager, accountRepository) {
@@ -63,10 +66,7 @@ export default class AccountAccessDefinitions {
   validateAndCastFindAccountParams(params) {
     const allowedParametersList = ['accessLevel', 'page', 'perPage'];
 
-    const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
-    if (invalidFields.length > 0) {
-      throw new InvalidParametersError(`Some parameters (${invalidFields.join(',')}) are not supported`);
-    }
+    validateFieldsConstrainedToSet(params, allowedParametersList);
 
     params.accessLevel = validateIntegerParameterAndCast(params.accessLevel, 'accessLevel');
     params.page = validateIntegerParameterAndCast(params.page, 'page');

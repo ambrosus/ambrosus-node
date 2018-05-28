@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {InvalidParametersError} from '../errors/errors';
+import {ValidationError} from '../errors/errors';
 import {get, put} from '../utils/dict_utils';
 
 const presignerMiddleware = (identityManager, toSignPath = 'content.idData', signaturePath = 'content.signature') => ((req, res, next) => {
@@ -19,7 +19,7 @@ const presignerMiddleware = (identityManager, toSignPath = 'content.idData', sig
 
   const toSign = get(req.body, toSignPath);
   if (typeof toSign === 'undefined') {
-    throw new InvalidParametersError(`No content found at ${toSignPath}`);
+    throw new ValidationError(`No content found at ${toSignPath}`);
   }
 
   const signature = identityManager.sign(ambSecret, toSign);

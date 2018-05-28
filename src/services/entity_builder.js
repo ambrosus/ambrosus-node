@@ -8,8 +8,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {
-  validatePathsNotEmpty, validateFieldsConstrainedToSet,
-  validateIntegerParameterAndCast, validateNonNegativeInteger
+  validateFieldsConstrainedToSet,
+  validateIntegerParameterAndCast,
+  validateNonNegativeInteger,
+  validatePathsNotEmpty
 } from '../utils/validations';
 import JsonSchemaValidator from '../validators/json_schema_validator';
 import EventEntryValidator from '../validators/event_entry_validator.js';
@@ -18,8 +20,8 @@ import indentifiersSchema from '../validators/schemas/custom/ambrosus.event.iden
 import locationSchema from '../validators/schemas/custom/ambrosus.event.location.asset.json';
 import locationEventGeoSchema from '../validators/schemas/custom/ambrosus.event.location.geo.json';
 import locationAssetGeoSchema from '../validators/schemas/custom/ambrosus.asset.location.geo.json';
-import {put, pick} from '../utils/dict_utils';
-import {InvalidParametersError, ValidationError} from '../errors/errors';
+import {pick, put} from '../utils/dict_utils';
+import {ValidationError} from '../errors/errors';
 import {getTimestamp} from '../utils/time_utils';
 
 export default class EntityBuilder {
@@ -125,11 +127,8 @@ export default class EntityBuilder {
 
   validateAndCastFindEventsParams(params) {
     const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage', 'createdBy', 'data'];
-    
-    const invalidFields = Object.keys(params).filter((key) => !allowedParametersList.includes(key));
-    if (invalidFields.length > 0) {
-      throw new InvalidParametersError(`Some parameters (${invalidFields.join(',')}) are not supported`);
-    }
+
+    validateFieldsConstrainedToSet(params, allowedParametersList);
 
     this.ensureGeoLocationParamsCorrectlyPlaced(params);
 
@@ -147,13 +146,13 @@ export default class EntityBuilder {
         (params.data[key].locationLongitude === undefined
         || params.data[key].locationLatitude === undefined
         || params.data[key].locationMaxDistance === undefined)) {
-        throw new InvalidParametersError(`geoJson field stores only geographical coordinates`);
+        throw new ValidationError(`geoJson field stores only geographical coordinates`);
       }
       if (key !== 'geoJson' &&
         (params.data[key].locationLongitude !== undefined
         || params.data[key].locationLatitude !== undefined
         || params.data[key].locationMaxDistance !== undefined)) {
-        throw new InvalidParametersError(`Location can only be stored on geoJson field`);
+        throw new ValidationError(`Location can only be stored on geoJson field`);
       }
     }
   }

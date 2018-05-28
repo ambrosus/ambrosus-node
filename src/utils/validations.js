@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {get} from './dict_utils';
-import {InvalidParametersError, ValidationError} from '../errors/errors';
+import {ValidationError} from '../errors/errors';
 
 const validatePathsNotEmpty = (dict, paths) => {
   for (const path of paths) {
@@ -22,7 +22,8 @@ const validatePathsNotEmpty = (dict, paths) => {
 const validateFieldsConstrainedToSet = (dict, validFields) => {
   const invalidFields = Object.keys(dict).filter((key) => !validFields.includes(key));
   if (invalidFields.length > 0) {
-    throw new ValidationError(`Some fields (${invalidFields.join(',')}) are outside of the allowed set of fields (${validFields})`);
+    throw new ValidationError(
+      `Some fields (${invalidFields.join(',')}) are outside of the allowed set of fields (${validFields})`);
   }
 };
 
@@ -30,7 +31,7 @@ const validateIntegerParameterAndCast = (value, errorMsg) => {
   if (value) {
     const parsedValue = parseInt(value, 10);
     if (isNaN(parsedValue)) {
-      throw new InvalidParametersError(`Invalid ${errorMsg} parameter value`);
+      throw new ValidationError(`Invalid ${errorMsg} parameter value`);
     }
     return parsedValue;
   }

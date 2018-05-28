@@ -288,6 +288,9 @@ Finds newest accounts.
                   "type" : "string"
                   }
                   "example": ["register_account", "create_entity"]
+                },
+                "accessLevel": {
+                  "type": "integer"
                 }
               }
             }
@@ -311,12 +314,6 @@ Finds newest accounts.
 
     + Body
 
-+ Response 404 (application/json)
-
-    Requested account does not exist
-
-    + Body
-
 ### /accounts{?accessLevel}
 
 #### Find accounts [GET]
@@ -325,7 +322,7 @@ Finds accounts satisfying provided criteria.
 
 
 + Parameters
-    + accessLevel: "3" (string) - Finds only accounts with access level not smaller than parameter
+    + accessLevel (string) - Finds only accounts with access level not smaller than parameter
 
 
 + Request (application/json)
