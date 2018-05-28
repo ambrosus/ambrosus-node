@@ -184,19 +184,30 @@ describe('Accounts - Integrations', async () => {
   describe('Find accounts', () => {
     beforeEach(async () => {
       await scenario.addAccount(0, null,
-        {permissions: ['perm1', 'perm2'], accessLevel: 1});
-      await scenario.addAccount(0, null,
+        {permissions: ['register_account', 'perm2'], accessLevel: 1});
+      await scenario.addAccount(1, null,
         {permissions: ['perm1', 'perm2'], accessLevel: 2});
       await scenario.addAccount(0, null, {permissions: ['perm1'], accessLevel: 3});
     });
 
-    it('find works', async () => {
+    it('finding accounts returns all accounts if no parameters', async () => {
       const response = await apparatus.request()
         .get('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send();
       expect(response.body.resultCount).to.equal(4);
-      expect(response.body.results[3].address).to.equal(adminAccountWithSecret.address);
+      expect(response.body.results.map((account) => account.address).sort())
+        .to.deep.equal(scenario.accounts.map((account) => account.address).sort());
+    });
+
+    it('find results are sorted by registeredOn', async () => {
+      const response = await apparatus.request()
+        .get('/accounts')
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+        .send();
+      for (let ind = 0; ind < response.body.resultCount - 1; ind++) {
+        expect(response.body.results[ind].registeredOn).to.be.at.least(response.body.results[ind + 1].registeredOn);
+      }
     });
 
     it('should fail if no token', async () => {
@@ -225,7 +236,17 @@ describe('Accounts - Integrations', async () => {
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send();
       expect(response.body.resultCount).to.equal(3);
-      expect(response.body.results[2].address).to.equal(adminAccountWithSecret.address);
+      expect(response.body.results.map((account) => account.address).sort())
+        .to.deep.equal([scenario.accounts[2].address, scenario.accounts[3].address, adminAccountWithSecret.address].sort());
+    });
+
+    it('should filter by registeredBy', async () => {
+      const response = await apparatus.request()
+        .get(`/accounts?registeredBy=${scenario.accounts[1].address}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+        .send();
+      expect(response.body.resultCount).to.equal(1);
+      expect(response.body.results[0].address).to.equal(scenario.accounts[2].address);
     });
   });
 

@@ -103,12 +103,15 @@ describe('Account Access Definitions', () => {
   });
 
   it('defaultAdminAccount returns correct object', async () => {
-    expect(accountAccessDefinitions.defaultAdminAccount('0x1234')).to.deep.eq(
+    const clock = sinon.useFakeTimers(15000);
+    expect(accountAccessDefinitions.defaultAdminAccount('0x1234')).to.deep.include(
       {
         address: '0x1234',
         permissions: ['register_account', 'create_entity'],
-        accessLevel: 1000
+        accessLevel: 1000,
+        registeredOn: 15
       });
+    clock.restore();
   });
 
   describe('getTokenCreatorAccessLevel', () => {
@@ -135,7 +138,7 @@ describe('Account Access Definitions', () => {
   });
 
   describe('Validating query parameters', () => {
-    const validParamsAsStrings = {accessLevel: '3'};
+    const validParamsAsStrings = {accessLevel: '3', registeredBy: mockAccount.address};
 
     it('passes for proper parameters', () => {
       const validatedParams = accountAccessDefinitions.validateAndCastFindAccountParams(validParamsAsStrings);
@@ -148,7 +151,12 @@ describe('Account Access Definitions', () => {
     });
 
     it('throws if accessLevel value not in valid type', () => {
-      const params = put(validParamsAsStrings, 'fromTimestamp', 'NaN');
+      const params = put(validParamsAsStrings, 'accessLevel', 'NaN');
+      expect(() => accountAccessDefinitions.validateAndCastFindAccountParams(params)).to.throw(ValidationError);
+    });
+
+    it('throws if registeredBy is not valid address', async () => {
+      const params = put(validParamsAsStrings, 'registeredBy', '0x12312312');
       expect(() => accountAccessDefinitions.validateAndCastFindAccountParams(params)).to.throw(ValidationError);
     });
   });

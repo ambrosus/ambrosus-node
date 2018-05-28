@@ -10,6 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {
   validateFieldsConstrainedToSet,
   validateIntegerParameterAndCast,
+  validateIsAddress,
   validateNonNegativeInteger,
   validatePathsNotEmpty
 } from '../utils/validations';
@@ -136,6 +137,9 @@ export default class EntityBuilder {
     params.toTimestamp = validateIntegerParameterAndCast(params.toTimestamp, 'toTimestamp');
     params.page = validateIntegerParameterAndCast(params.page, 'page');
     params.perPage = validateIntegerParameterAndCast(params.perPage, 'perPage');
+    if (params.createdBy) {
+      validateIsAddress(params.createdBy);
+    }
 
     return {...params};
   }

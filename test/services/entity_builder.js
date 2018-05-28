@@ -359,7 +359,8 @@ describe('Entity Builder', () => {
 
   describe('Validating query parameters', () => {
     let entityBuilder;
-    const validParamsAsStrings = {assetId: '0x1234', fromTimestamp: '10', toTimestamp: '20', page: '2', perPage: '4', createdBy: '0x4321'};
+    const anAddress = '0xEaE0D78450DaB377376206f419E9bCA0D28829F9';
+    const validParamsAsStrings = {assetId: '0x1234', fromTimestamp: '10', toTimestamp: '20', page: '2', perPage: '4', createdBy: anAddress};
 
     before(() => {
       entityBuilder = new EntityBuilder({}, oneDayInSeconds);
@@ -367,7 +368,7 @@ describe('Entity Builder', () => {
 
     it('passes for proper parameters', () => {
       const params = {
-        assetId: '0x1234', fromTimestamp: 10, toTimestamp: 20, page: 2, perPage: 4, createdBy: '0x4321'
+        assetId: '0x1234', fromTimestamp: 10, toTimestamp: 20, page: 2, perPage: 4, createdBy: anAddress
       };
       const validatedParams = entityBuilder.validateAndCastFindEventsParams(params);
       expect(validatedParams.assetId).to.equal('0x1234');
@@ -375,7 +376,7 @@ describe('Entity Builder', () => {
       expect(validatedParams.toTimestamp).to.equal(20);
       expect(validatedParams.page).to.equal(2);
       expect(validatedParams.perPage).to.equal(4);
-      expect(validatedParams.createdBy).to.equal('0x4321');
+      expect(validatedParams.createdBy).to.equal(anAddress);
     });
 
     it('casts strings on integers if needed', () => {
@@ -386,7 +387,7 @@ describe('Entity Builder', () => {
       expect(validatedParams.toTimestamp).to.equal(20);
       expect(validatedParams.page).to.equal(2);
       expect(validatedParams.perPage).to.equal(4);
-      expect(validatedParams.createdBy).to.equal('0x4321');
+      expect(validatedParams.createdBy).to.equal(anAddress);
     });
 
     describe('query with entry', () => {
@@ -420,6 +421,11 @@ describe('Entity Builder', () => {
       it('throws if geoJson field contains non geographical data', () => {
         const params = {data: {geoJson: '1'}};
         expect(() => entityBuilder.ensureGeoLocationParamsCorrectlyPlaced(params)).to.throw(ValidationError);
+      });
+
+      it('throws if createdBy is not valid address', async () => {
+        const params = put(validParamsAsStrings, 'createdBy', '0x12312312');
+        expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
       });
     });
 
