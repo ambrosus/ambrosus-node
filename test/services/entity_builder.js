@@ -235,6 +235,25 @@ describe('Entity Builder', () => {
     });
   });
 
+  describe('Manipulating timestamp in metadata', () => {
+    let entityBuilder;
+    let clock;
+
+    before(() => {
+      entityBuilder = new EntityBuilder({}, oneDayInSeconds);
+      clock = sinon.useFakeTimers(5000);
+    });
+
+    it('adding entity upload timestamp works', () => {
+      const eventWithBundle = entityBuilder.setEntityUploadTimestamp(exampleEvent);
+      expect(eventWithBundle.metadata.entityUploadTimestamp).to.equal(5);
+    });
+
+    after(() => {
+      clock.restore();
+    });
+  });
+
   describe('Assembling a bundle', () => {
     let mockIdentityManager;
     let entityBuilder;

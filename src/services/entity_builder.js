@@ -91,6 +91,11 @@ export default class EntityBuilder {
     return put(entity, 'metadata.bundleId', bundle);
   }
 
+  setEntityUploadTimestamp(entity) {
+    const currentTimestamp = getTimestamp();
+    return put(entity, 'metadata.entityUploadTimestamp', currentTimestamp);
+  }
+
   removeBundle(entity) {
     const afterRemoval = pick(entity, 'metadata.bundleId');
     if (Object.keys(afterRemoval.metadata).length === 0) {

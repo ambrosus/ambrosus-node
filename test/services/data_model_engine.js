@@ -334,7 +334,8 @@ describe('Data Model Engine', () => {
     before(() => {
       mockEntityBuilder = {
         validateAsset: sinon.stub(),
-        setBundle: sinon.stub()
+        setBundle: sinon.stub(),
+        setEntityUploadTimestamp: sinon.stub()
       };
       mockEntityRepository = {
         storeAsset: sinon.stub(),
@@ -352,6 +353,7 @@ describe('Data Model Engine', () => {
 
       mockEntityBuilder.validateAsset.returns();
       mockEntityBuilder.setBundle.returns(mockAsset);
+      mockEntityBuilder.setEntityUploadTimestamp.returns(mockAsset);
       mockEntityRepository.storeAsset.resolves();
       mockEntityRepository.getAsset.resolves(null);
       mockAccountAccessDefinitions.ensureCanCreateEntity.resolves();
@@ -378,6 +380,10 @@ describe('Data Model Engine', () => {
 
       it('sets the bundle to be null', () => {
         expect(mockEntityBuilder.setBundle).to.have.been.calledWith(mockAsset, null);
+      });
+
+      it('sets entity upload timestamp', () => {
+        expect(mockEntityBuilder.setEntityUploadTimestamp).to.have.been.calledWith(mockAsset);
       });
 
       it('stores the asset in the repository', () => {
@@ -497,7 +503,8 @@ describe('Data Model Engine', () => {
     before(() => {
       mockEntityBuilder = {
         validateEvent: sinon.stub(),
-        setBundle: sinon.stub()
+        setBundle: sinon.stub(),
+        setEntityUploadTimestamp: sinon.stub()
       };
       mockEntityRepository = {
         storeEvent: sinon.stub(),
@@ -516,6 +523,7 @@ describe('Data Model Engine', () => {
 
       mockEntityBuilder.validateEvent.returns();
       mockEntityBuilder.setBundle.returns(mockEvent);
+      mockEntityBuilder.setEntityUploadTimestamp.returns(mockEvent);
       mockEntityRepository.storeEvent.resolves();
       mockEntityRepository.getAsset.resolves(mockAsset);
       mockEntityRepository.getEvent.resolves(null);
@@ -547,6 +555,10 @@ describe('Data Model Engine', () => {
 
       it('sets the bundle to be null', () => {
         expect(mockEntityBuilder.setBundle).to.have.been.calledWith(mockEvent, null);
+      });
+
+      it('sets entity upload timestamp', () => {
+        expect(mockEntityBuilder.setEntityUploadTimestamp).to.have.been.calledWith(mockEvent);
       });
 
       it('stores the asset in the repository', () => {

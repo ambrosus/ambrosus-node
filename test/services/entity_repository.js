@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
+import sinon from 'sinon';
 import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
 import {pick, put} from '../../src/utils/dict_utils';
 import {createAsset, createBundle, createEvent} from '../fixtures/assets_events';
@@ -84,9 +85,15 @@ describe('Entity Repository', () => {
 
   describe('Bundles', () => {
     const txHash = '0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009';
+    let clock;
+
+    before(async () => {
+      clock = sinon.useFakeTimers(5000);
+    });
 
     after(async () => {
       await cleanDatabase(db);
+      clock.restore();
     });
 
     it('db round trip works', async () => {
@@ -94,7 +101,8 @@ describe('Entity Repository', () => {
       const exampleBundle = put(createBundle(), 'bundleId', exampleBundleId);
       const exampleBundleWithMetadata = put(exampleBundle, {
         'metadata.proofBlock': 10,
-        'metadata.bundleTransactionHash': txHash
+        'metadata.bundleTransactionHash': txHash,
+        'metadata.bundleUploadTimestamp': 5
       });
       await storage.storeBundle(exampleBundle);
       await storage.storeBundleProofMetadata(exampleBundleId, 10, txHash);
@@ -118,6 +126,7 @@ describe('Entity Repository', () => {
     let alreadyBundledEvents;
     let nonBundledAssets;
     let nonBundledEvents;
+    let clock;
 
     let ret;
 
@@ -128,12 +137,12 @@ describe('Entity Repository', () => {
       alreadyBundledAssets = [
         await scenario.addAsset(0),
         await scenario.addAsset(0)
-      ].map((asset) => put(asset, {'metadata.bundleId': 1, 'metadata.bundleTransactionHash': '0x1'}));
+      ].map((asset) => put(asset, {'metadata.bundleId': 1, 'metadata.bundleTransactionHash': '0x1', 'metadata.bundleUploadTimestamp': 5}));
 
       alreadyBundledEvents = [
         await scenario.addEvent(0, 0),
         await scenario.addEvent(0, 1)
-      ].map((event) => put(event, {'metadata.bundleId': 1, 'metadata.bundleTransactionHash': '0x1'}));
+      ].map((event) => put(event, {'metadata.bundleId': 1, 'metadata.bundleTransactionHash': '0x1', 'metadata.bundleUploadTimestamp': 5}));
 
       nonBundledAssets = [
         await scenario.addAsset(0, {timestamp: 0}),
@@ -148,6 +157,8 @@ describe('Entity Repository', () => {
       await Promise.all([...alreadyBundledAssets, ...nonBundledAssets].map((asset) => storage.storeAsset(asset)));
       await Promise.all([...alreadyBundledEvents, ...nonBundledEvents].map((event) => storage.storeEvent(event)));
 
+      clock = sinon.useFakeTimers(5000);
+
       ret = await expect(storage.beginBundle(bundleStubId)).to.be.fulfilled;
       await expect(storage.endBundle(bundleStubId, bundleId, bundleSizeLimit)).to.be.fulfilled;
       await expect(storage.storeBundleProofMetadata(bundleId, 10, bundleTxHash)).to.be.fulfilled;
@@ -155,6 +166,7 @@ describe('Entity Repository', () => {
 
     after(async () => {
       await cleanDatabase(db);
+      clock.restore();
     });
 
     it('returns only assets and events without a bundle', () => {
@@ -182,18 +194,21 @@ describe('Entity Repository', () => {
       }
     });
 
-    it('both assets and earliest event included in the bundle should have the metadata.bundleTransactionHash set after the call to storeBundleProofBlock', async () => {
+    it('both assets and earliest event included in the bundle should have the metadata.bundleTransactionHash and metadata.bundleUploadTimestamp set after the call to storeBundleProofBlock', async () => {
       for (const asset of nonBundledAssets) {
         const storedAsset = await storage.getAsset(asset.assetId);
         expect(storedAsset.metadata.bundleTransactionHash).to.equal(bundleTxHash);
+        expect(storedAsset.metadata.bundleUploadTimestamp).to.be.equal(5);
       }
 
       for (const event of nonBundledEvents) {
         const storedEvent = await storage.getEvent(event.eventId);
         if (event.content.idData.timestamp === 1) {
           expect(storedEvent.metadata.bundleTransactionHash).to.equal(bundleTxHash);
+          expect(storedEvent.metadata.bundleUploadTimestamp).to.be.equal(5);
         } else {
           expect(storedEvent.metadata.bundleTransactionHash).to.be.undefined;
+          expect(storedEvent.metadata.bundleUploadTimestamp).to.be.undefined;
         }
       }
     });

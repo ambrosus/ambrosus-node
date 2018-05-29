@@ -84,13 +84,14 @@ export default class DataModelEngine {
     await this.accountAccessDefinitions.ensureCanCreateEntity(creatorAddress);
 
     const augmentedAsset = this.entityBuilder.setBundle(asset, null);
+    const augmentedAssetWithUploadTimestamp = this.entityBuilder.setEntityUploadTimestamp(augmentedAsset);
 
     if (await this.entityRepository.getAsset(asset.assetId) !== null) {
       throw new ValidationError(`Asset with assetId=${asset.assetId} already exists`);
     }
-    await this.entityRepository.storeAsset(augmentedAsset);
+    await this.entityRepository.storeAsset(augmentedAssetWithUploadTimestamp);
 
-    return augmentedAsset;
+    return augmentedAssetWithUploadTimestamp;
   }
 
   async getAsset(assetId) {
@@ -117,13 +118,14 @@ export default class DataModelEngine {
     }
 
     const augmentedEvent = this.entityBuilder.setBundle(event, null);
+    const augmentedEventWithUploadTimestamp = this.entityBuilder.setEntityUploadTimestamp(augmentedEvent);
 
     if (await this.entityRepository.getEvent(event.eventId) !== null) {
       throw new ValidationError(`Event with eventId=${event.eventId} already exists`);
     }
-    await this.entityRepository.storeEvent(augmentedEvent);
+    await this.entityRepository.storeEvent(augmentedEventWithUploadTimestamp);
 
-    return augmentedEvent;
+    return augmentedEventWithUploadTimestamp;
   }
 
   async getEvent(eventId, tokenData) {

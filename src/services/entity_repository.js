@@ -8,6 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {pick} from '../utils/dict_utils';
+import {getTimestamp} from '../utils/time_utils';
 
 export default class EntityRepository {
   constructor(db) {
@@ -132,10 +133,13 @@ export default class EntityRepository {
   }
 
   async storeBundleProofMetadata(bundleId, proofBlock, txHash) {
+    const currentTimestamp = getTimestamp();
+
     await this.db.collection('bundles').update({bundleId}, {
       $set: {
         'metadata.bundleTransactionHash': txHash,
-        'metadata.proofBlock': proofBlock
+        'metadata.proofBlock': proofBlock,
+        'metadata.bundleUploadTimestamp': currentTimestamp
       }
     });
 
@@ -145,7 +149,8 @@ export default class EntityRepository {
 
     const update = {
       $set: {
-        'metadata.bundleTransactionHash': txHash
+        'metadata.bundleTransactionHash': txHash,
+        'metadata.bundleUploadTimestamp': currentTimestamp
       }
     };
 
