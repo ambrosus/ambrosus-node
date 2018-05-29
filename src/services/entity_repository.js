@@ -133,18 +133,19 @@ export default class EntityRepository {
   }
 
   async storeBundleProofMetadata(bundleId, proofBlock, txHash) {
+    const currentTimestamp = getTimestamp();
+
     await this.db.collection('bundles').update({bundleId}, {
       $set: {
         'metadata.bundleTransactionHash': txHash,
-        'metadata.proofBlock': proofBlock
+        'metadata.proofBlock': proofBlock,
+        'metadata.bundleUploadTimestamp': currentTimestamp
       }
     });
 
     const thisBundleQuery = {
       'metadata.bundleId': bundleId
     };
-
-    const currentTimestamp = getTimestamp();
 
     const update = {
       $set: {

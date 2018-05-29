@@ -85,9 +85,15 @@ describe('Entity Repository', () => {
 
   describe('Bundles', () => {
     const txHash = '0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009';
+    let clock;
+
+    before(async () => {
+      clock = sinon.useFakeTimers(5000);
+    });
 
     after(async () => {
       await cleanDatabase(db);
+      clock.restore();
     });
 
     it('db round trip works', async () => {
@@ -95,7 +101,8 @@ describe('Entity Repository', () => {
       const exampleBundle = put(createBundle(), 'bundleId', exampleBundleId);
       const exampleBundleWithMetadata = put(exampleBundle, {
         'metadata.proofBlock': 10,
-        'metadata.bundleTransactionHash': txHash
+        'metadata.bundleTransactionHash': txHash,
+        'metadata.bundleUploadTimestamp': 5
       });
       await storage.storeBundle(exampleBundle);
       await storage.storeBundleProofMetadata(exampleBundleId, 10, txHash);
@@ -130,12 +137,12 @@ describe('Entity Repository', () => {
       alreadyBundledAssets = [
         await scenario.addAsset(0),
         await scenario.addAsset(0)
-      ].map((asset) => put(asset, {'metadata.bundleId': 1, 'metadata.bundleTransactionHash': '0x1'}));
+      ].map((asset) => put(asset, {'metadata.bundleId': 1, 'metadata.bundleTransactionHash': '0x1', 'metadata.bundleUploadTimestamp': 5}));
 
       alreadyBundledEvents = [
         await scenario.addEvent(0, 0),
         await scenario.addEvent(0, 1)
-      ].map((event) => put(event, {'metadata.bundleId': 1, 'metadata.bundleTransactionHash': '0x1'}));
+      ].map((event) => put(event, {'metadata.bundleId': 1, 'metadata.bundleTransactionHash': '0x1', 'metadata.bundleUploadTimestamp': 5}));
 
       nonBundledAssets = [
         await scenario.addAsset(0, {timestamp: 0}),

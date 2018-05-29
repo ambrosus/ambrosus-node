@@ -93,7 +93,7 @@ describe('Bundles - Integrations', () => {
         .get(`/bundle/${res.bundleId}`);
       expect(response.body.content).to.deep.equal(res.content);
       expect(response.body.bundleId).to.equal(res.bundleId);
-      expect(response.body.metadata).to.have.keys(['proofBlock', 'bundleTransactionHash']);
+      expect(response.body.metadata).to.have.keys(['proofBlock', 'bundleTransactionHash', 'bundleUploadTimestamp']);
       expect(response.body.metadata.bundleTransactionHash).to.be.properTxHash;
     });
 
@@ -104,8 +104,10 @@ describe('Bundles - Integrations', () => {
         .get(`/events/${entitiesIds[3]}`);
       expect(assetResponse.body.metadata.bundleId).to.equal(res.bundleId);
       expect(assetResponse.body.metadata.bundleTransactionHash).to.be.properTxHash;
+      expect(assetResponse.body.metadata.bundleUploadTimestamp).not.to.be.undefined;
       expect(eventResponse.body.metadata.bundleId).to.equal(res.bundleId);
       expect(eventResponse.body.metadata.bundleTransactionHash).to.be.properTxHash;
+      expect(eventResponse.body.metadata.bundleUploadTimestamp).not.to.be.undefined;
     });
 
     it('return 404 if bundle with requested id does not exist', async () => {
