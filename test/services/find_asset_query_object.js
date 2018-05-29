@@ -30,9 +30,9 @@ describe('Find Asset Query Object', () => {
   before(async () => {
     ({db, client} = await connectToMongo());
     assets = [
-      createAsset({timestamp : 1}),
-      createAsset({timestamp : 2}),
-      createAsset({timestamp : 3})
+      createAsset({timestamp : 1, createdBy: '0x123'}),
+      createAsset({timestamp : 2, createdBy: '0xabc'}),
+      createAsset({timestamp : 3, createdBy: '0x123'})
     ];
     await db.collection('assets').insertOne({...assets[0]});
     await db.collection('assets').insertOne({...assets[1]});
@@ -58,5 +58,14 @@ describe('Find Asset Query Object', () => {
     const found = await findAssetQueryObject.execute();
     expect(found.results).to.deep.equal([assets[2],assets[1],assets[0]]);
     expect(found.resultCount).to.equal(3);
+  });
+
+  it('with createdBy param returns events for selected creator', async () => {
+    findAssetQueryObject = findAssetQueryObjectFactory.create({createdBy: '0x123'});
+    const found = await findAssetQueryObject.execute();
+    expect(found.results).have.lengthOf(2);
+    expect(found.resultCount).to.equal(2);
+    expect(found.results).to.deep.equal([assets[2],assets[0]]);
+    found.results.forEach((element) => expect(element.content.idData.createdBy).to.equal('0x123'));
   });
 });

@@ -149,6 +149,21 @@ export default class EntityBuilder {
     return {...params};
   }
 
+  validateAndCastFindAssetsParams(params) {
+    const allowedParametersList = ['page', 'perPage', 'createdBy'];
+
+    validateFieldsConstrainedToSet(params, allowedParametersList);
+
+    params.page = validateIntegerParameterAndCast(params.page, 'page');
+    params.perPage = validateIntegerParameterAndCast(params.perPage, 'perPage');
+    if (params.createdBy) {
+      validateIsAddress(params.createdBy);
+    }
+
+    return {...params};
+  }
+
+
   ensureGeoLocationParamsCorrectlyPlaced(params) {
     for (const key in params.data) {
       if (key === 'geoJson' &&

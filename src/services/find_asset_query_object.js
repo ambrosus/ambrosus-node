@@ -11,8 +11,8 @@ import QueryBuilder from './query_builder';
 import FindQueryObject from './find_query_object';
 
 export class FindAssetQueryObject extends FindQueryObject {
-  constructor(db) {
-    super(db, 'assets');
+  constructor(db, criteria) {
+    super(db, 'assets', criteria);
   }
 
   getSortingKey() {
@@ -20,8 +20,15 @@ export class FindAssetQueryObject extends FindQueryObject {
   }
 
   assembleQuery() {
-    const queryBuilder = new QueryBuilder();
-    return queryBuilder.compose();
+    this.queryBuilder = new QueryBuilder();
+
+    const queryParts = {
+      createdBy: {'content.idData.createdBy': this.criteria.createdBy}
+    };
+
+    this.queryBuilder.addNeededPartsToQuery(this.criteria, queryParts);
+
+    return this.queryBuilder.compose();
   }
 }
 
@@ -30,7 +37,7 @@ export default class FindAssetQueryObjectFactory {
     this.db = db;
   }
 
-  create() {
-    return new FindAssetQueryObject(this.db);
+  create(criteria) {
+    return new FindAssetQueryObject(this.db, criteria);
   }
 }

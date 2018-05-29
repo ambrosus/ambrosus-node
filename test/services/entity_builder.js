@@ -13,7 +13,7 @@ import sinonChai from 'sinon-chai';
 
 import {pick, put} from '../../src/utils/dict_utils';
 import {createWeb3} from '../../src/utils/web3_tools';
-import {ValidationError, JsonValidationError} from '../../src/errors/errors';
+import {JsonValidationError, ValidationError} from '../../src/errors/errors';
 
 import IdentityManager from '../../src/services/identity_manager';
 import EntityBuilder from '../../src/services/entity_builder';
@@ -376,10 +376,38 @@ describe('Entity Builder', () => {
     });
   });
 
-  describe('Validating query parameters', () => {
+  describe('Validating query parameters - Asset', () => {
     let entityBuilder;
     const anAddress = '0xEaE0D78450DaB377376206f419E9bCA0D28829F9';
-    const validParamsAsStrings = {assetId: '0x1234', fromTimestamp: '10', toTimestamp: '20', page: '2', perPage: '4', createdBy: anAddress};
+    const validParamsAsStrings = {
+      createdBy: anAddress
+    };
+
+    before(() => {
+      entityBuilder = new EntityBuilder({}, oneDayInSeconds);
+    });
+
+    it('passes for proper parameters', () => {
+      const params = {
+        createdBy: anAddress
+      };
+      const validatedParams = entityBuilder.validateAndCastFindAssetsParams(params);
+      expect(validatedParams.createdBy).to.equal(anAddress);
+    });
+
+    it('throws if createdBy is not valid address', async () => {
+      const params = put(validParamsAsStrings, 'createdBy', '0x12312312');
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
+    });
+  });
+
+  describe('Validating query parameters - Event', () => {
+    let entityBuilder;
+    const anAddress = '0xEaE0D78450DaB377376206f419E9bCA0D28829F9';
+    const validParamsAsStrings = {
+      assetId: '0x1234', fromTimestamp: '10', toTimestamp: '20', page: '2', perPage: '4',
+      createdBy: anAddress
+    };
 
     before(() => {
       entityBuilder = new EntityBuilder({}, oneDayInSeconds);
@@ -473,6 +501,7 @@ describe('Entity Builder', () => {
       expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
     });
   });
+
   describe('Validating timestamp', () => {
     let clock;
     let entityBuilder;
