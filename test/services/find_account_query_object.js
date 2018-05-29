@@ -84,4 +84,13 @@ describe('Find Account Query Object', () => {
       .to.deep.equal([scenario.accounts[1], scenario.accounts[3]]);
     expect(found.resultCount).to.equal(2);
   });
+
+  it('when given page and perPage, returns requested number of accounts from requested page', async () => {
+    findAccountQueryObjectFactory = new FindAccountQueryObjectFactory(db);
+    findAccountQueryObject = findAccountQueryObjectFactory.create({perPage: 1, page: 1});
+    const found = await findAccountQueryObject.execute();
+    expect(found.results)
+      .to.deep.equal([scenario.accounts[1]]);
+    expect(found.resultCount).to.equal(3);
+  });
 });
