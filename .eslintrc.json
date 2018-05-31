@@ -105,6 +105,7 @@
         "allowTemplateLiterals": true
       }
     ],
+    "no-trailing-spaces": 2,
     "no-console": "off",
     "import/no-unresolved": "error",
     "curly": [
