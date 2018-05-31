@@ -155,7 +155,7 @@ describe('Entity Builder', () => {
         expect(() => entityBuilder.validateEvent(brokenEvent))
           .to.throw(JsonValidationError)
           .and.have.nested.property('errors[0].dataPath', '.geoJson.coordinates');
-      });      
+      });
 
       it('throws if accessLevel not positive integer', () => {
         let brokenEvent = put('content.idData.accessLevel', exampleEvent, 1.1);
@@ -359,7 +359,7 @@ describe('Entity Builder', () => {
       before(() => {
         entityBuilder.prepareEventForBundlePublication.restore();
       });
-      
+
       it('removes data if access level is greater than 0', () => {
         const ret = entityBuilder.prepareEventForBundlePublication(scenario.events[2]);
         expect(ret.content.data).to.be.undefined;

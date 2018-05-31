@@ -96,5 +96,5 @@ export default class FindEventQueryObjectFactory {
 
   create(criteria, accessLevel) {
     return new FindEventQueryObject(this.db, criteria, accessLevel);
-  } 
+  }
 }

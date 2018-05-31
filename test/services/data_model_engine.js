@@ -125,7 +125,7 @@ describe('Data Model Engine', () => {
         count: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        ensureCanRegisterAccount: sinon.stub(),        
+        ensureCanRegisterAccount: sinon.stub(),
         validateAddAccountRequest: sinon.stub()
       };
       modelEngine = new DataModelEngine(mockIdentityManager, {}, {}, {}, {}, {}, mockAccountRepository, {}, {}, {}, mockAccountAccessDefinitions);
@@ -908,7 +908,7 @@ describe('Data Model Engine', () => {
       });
     });
   });
-  
+
   describe('Downloading a bundle', async () => {
     const bundleId = '0x123';
     const vendorId = '0x987';

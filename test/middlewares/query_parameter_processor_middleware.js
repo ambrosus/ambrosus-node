@@ -30,17 +30,17 @@ describe('Query Parameter Processor Middleware', () => {
     response = httpMocks.createResponse();
     next = sinon.spy();
   });
-  
+
   it('ensures non of passed parameters is object', async () => {
     const request = createRequest({
       data: {
-        subparam1: 'exampleString', 
+        subparam1: 'exampleString',
         subparam2: [{anotherThing : '123'}, {oneMoreThing: '456'}]
       },
       param1: 'number(5)',
       param2: 'example2String'
     });
-    
+
     expect(() => queryParameterProcessorMiddleware(request, response, next)).to.throw(ValidationError);
     expect(next).to.not.have.been.called;
   });
@@ -50,7 +50,7 @@ describe('Query Parameter Processor Middleware', () => {
       // from ?data[subparam1]=exampleString&data[subparam2]=number(2)&param1=number(5)&param2=example2String
       const request = createRequest({
         data: {
-          subparam1: 'exampleString', 
+          subparam1: 'exampleString',
           subparam2: 'number(2)'
         },
         param1: 'number(5)',
@@ -81,7 +81,7 @@ describe('Query Parameter Processor Middleware', () => {
     it('casts decorated value to {lon, lat, rad} object', async () => {
       const request = createRequest({
         data: {
-          subparam1: 'exampleString', 
+          subparam1: 'exampleString',
           subparam2: 'geo(2,10,15)'
         },
         param1: 'example2String'

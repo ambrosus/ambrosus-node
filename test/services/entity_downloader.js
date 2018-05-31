@@ -30,7 +30,7 @@ describe('Entity downloader', () => {
     };
     entityDownloader = new EntityDownloader(mockHttpsClient);
   });
-  
+
   describe('download bundle', () => {
     const exampleVendorId = '0x123';
     const exampleBundleId = '0x321';

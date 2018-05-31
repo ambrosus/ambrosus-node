@@ -25,7 +25,7 @@ export default class PeriodicWorker {
   }
 
   async beforeStart() {
-    
+
   }
 
   async work() {

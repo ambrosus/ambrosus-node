@@ -55,7 +55,7 @@ describe('Accounts', () => {
       await injectedHandler(req, res);
 
       expect(mockModelEngine.addAccount).to.have.been.calledWith(accountRegistrationRequest, tokenData);
-    
+
       expect(res._getStatusCode()).to.eq(201);
       expect(res._isJSON()).to.be.true;
     });
@@ -79,7 +79,7 @@ describe('Accounts', () => {
       await injectedHandler(req, res);
 
       expect(mockModelEngine.getAccount).to.have.been.calledWith(mockAccount.address, tokenData);
-    
+
       expect(res._getStatusCode()).to.eq(200);
       expect(res._isJSON()).to.be.true;
     });
@@ -131,7 +131,7 @@ describe('Accounts', () => {
       await injectedHandler(req, res);
 
       expect(mockModelEngine.modifyAccount).to.have.been.calledWith(account.address, accountModificationRequest, tokenData);
-    
+
       expect(res._getStatusCode()).to.eq(200);
       expect(res._isJSON()).to.be.true;
     });

@@ -13,9 +13,9 @@ import URL from 'url';
 
 import {NotFoundError, PermissionError, ValidationError, AuthenticationError} from '../errors/errors';
 export default class HttpsClient {
-  async performHTTPSGet(uri, path) {    
+  async performHTTPSGet(uri, path) {
     const {protocol, hostname, port} = URL.parse(uri);
-    const agent = this.getAgentFromProtocol(protocol);        
+    const agent = this.getAgentFromProtocol(protocol);
     const options = {
       hostname,
       path,
@@ -42,8 +42,8 @@ export default class HttpsClient {
       return https;
     } else if (protocol.startsWith('http')) {
       return http;
-    } 
-    throw Error(`Invalid protocol ${protocol}`);       
+    }
+    throw Error(`Invalid protocol ${protocol}`);
   }
 
   validateIncomingStatusCode(statusCode) {

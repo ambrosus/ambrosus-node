@@ -25,7 +25,7 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Bundles - Integrations', () => {
-  const url = 'node.ambrosus.com';  
+  const url = 'node.ambrosus.com';
   let apparatus;
   let scenario;
   let res;
@@ -62,7 +62,7 @@ describe('Bundles - Integrations', () => {
 
     res = await apparatus.dataModelEngine.finaliseBundle(1);
 
-    // this additional event should not go into the bundle 
+    // this additional event should not go into the bundle
     await scenario.addEvent(0, 1, {timestamp: 3}, [{type: '4'}]);
   });
 

@@ -21,7 +21,7 @@ export default class JsonSchemaValidator extends Validator {
   isValid(data) {
     return this.ajv.validate(this.schema, data);
   }
-  
+
   validate(data) {
     if (!this.isValid(data)) {
       throw new JsonValidationError(this.ajv.errors);

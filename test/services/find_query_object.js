@@ -71,7 +71,7 @@ describe('FindQueryObject', () => {
   it('assembles options for query', () => {
     const mockGetSortingKey = sinon.stub(findQueryObject, 'getSortingKey');
     mockGetSortingKey.returns(mockSortingKey);
-    
+
     const res = findQueryObject.assembleOptionsForQuery();
     expect(res).to.deep.equal(assembledOptions);
 

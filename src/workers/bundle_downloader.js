@@ -25,20 +25,20 @@ export default class BundleDownloader extends PeriodicWorker {
     return this.downloadAllNew();
   }
 
-  async downloadAllNew() {    
+  async downloadAllNew() {
     const count = await this.proofRepository.getBundleCount();
     this.output.log(`Found ${count - this.last} new bundles.`);
     for (let index = this.last; index < count; index++) {
       await this.downloadOne(index);
-    }    
+    }
     this.last = count;
   }
 
-  async downloadOne(index) {    
+  async downloadOne(index) {
     const bundleId = await this.proofRepository.getBundleByIndex(index);
     const vendorId = (await this.proofRepository.getNodeForBundle(bundleId)).toLowerCase();
     const vendorUrl = await this.proofRepository.getVendorUrl(vendorId);
-    this.output.log(`Downloading bundle ${bundleId} (index: ${index}) for vendor: ${vendorId} from ${vendorUrl}...`);    
+    this.output.log(`Downloading bundle ${bundleId} (index: ${index}) for vendor: ${vendorId} from ${vendorUrl}...`);
     await this.dataModelEngine.downloadBundle(bundleId, vendorId);
     this.output.log(`Bundle downloaded.`);
   }

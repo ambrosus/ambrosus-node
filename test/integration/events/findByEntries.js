@@ -49,7 +49,7 @@ describe('Events Integrations: Find by data entries', () => {
       acceleration: {
         valueX: '1',
         valueY: 2
-      }      
+      }
     }]);
   });
 
@@ -96,7 +96,7 @@ describe('Events Integrations: Find by data entries', () => {
     await scenario.addEvent(0, 0, {timestamp: 1, accessLevel: 0}, [{
       type: 'ambrosus.event.illustration',
       confirmationAddress: '0x2222222222222222222222222222222222222222',
-      confirmationSignature: '0x39FFe6D49f20a83471D3a32f8CfDd987504fC822f8CfDd987504fC82'      
+      confirmationSignature: '0x39FFe6D49f20a83471D3a32f8CfDd987504fC822f8CfDd987504fC82'
     }]);
     const response = await get('/events?data[type]=ambrosus.event.illustration&fromTimestamp=1');
     expect(response.body.resultCount).to.eq(1);
@@ -189,9 +189,9 @@ describe('Events Integrations: Find by data entries', () => {
     });
   });
 
-  afterEach(async () => {    
+  afterEach(async () => {
     await apparatus.cleanDB();
-    scenario.reset();    
+    scenario.reset();
   });
 
   after(async () => {

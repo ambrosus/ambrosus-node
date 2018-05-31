@@ -32,5 +32,5 @@ export default class FindAssetQueryObjectFactory {
 
   create() {
     return new FindAssetQueryObject(this.db);
-  } 
+  }
 }

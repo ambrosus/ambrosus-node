@@ -50,7 +50,7 @@ export default class TokenAuthenticator {
   preparePayload(secret, idData) {
     const signature = this.identityManager.sign(secret, idData);
     const payload = {signature, idData};
-    return payload;  
+    return payload;
   }
 
   decode(token) {

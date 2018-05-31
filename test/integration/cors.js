@@ -44,7 +44,7 @@ describe('CORS - Integrations', async () => {
   it('Does nothing if the Origin request header is missing', async () => {
     const response = await apparatus.request()
       .post('/token')
-      .set('authorization', `AMB ${pkPair.secret}`) 
+      .set('authorization', `AMB ${pkPair.secret}`)
       .send(requestData);
     expect(response.header).to.not.have.property('access-control-allow-origin');
   });

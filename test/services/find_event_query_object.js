@@ -52,7 +52,7 @@ describe('Find Event Query Object', () => {
   it('has default sorting key', () => {
     expect(findEventQueryObject.getSortingKey()).to.be.deep.equal([['content.idData.timestamp', 'descending']]);
   });
-  
+
   it('properly assembles mongodb query', () => {
     const params = {
       assetId: 12,
@@ -138,12 +138,12 @@ describe('Find Event Query Object', () => {
     describe('with additional criteria', () => {
       let scenario;
       let eventsSet;
-  
+
       const makeLocationAssetEntry = (assetIndex) => ({
         type: 'ambrosus.event.location.asset',
         asset: scenario.assets[assetIndex].assetId
       });
-  
+
       const makeLocationGeoEntry = (lon, lat) => ({
         type: 'ambrosus.event.location.geo',
         geoJson: {
@@ -151,14 +151,14 @@ describe('Find Event Query Object', () => {
           coordinates: [lon, lat]
         }
       });
-  
+
       before(async () => {
         scenario = new ScenarioBuilder(identityManager);
         await scenario.addAdminAccount(adminAccountWithSecret);
         await scenario.addAccount(0, accountWithSecret, {permissions: ['create_entity']});
         await scenario.addAsset(0, {timestamp: 0});
         await scenario.addAsset(0, {timestamp: 1});
-  
+
         eventsSet = [
           await scenario.addEvent(0, 0, {timestamp: 0, accessLevel: 0}, [makeLocationAssetEntry(0)]),
           await scenario.addEvent(0, 0, {timestamp: 1, accessLevel: 1}, [makeLocationAssetEntry(1)]),
@@ -171,16 +171,16 @@ describe('Find Event Query Object', () => {
           await scenario.addEvent(1, 1, {timestamp: 8, accessLevel: 2}, [makeLocationGeoEntry(0, 1)]),
           await scenario.addEvent(1, 1, {timestamp: 9, accessLevel: 0}, [makeLocationGeoEntry(0, 0.00005)])
         ];
-  
+
         for (const event of eventsSet) {
           await storage.storeEvent(event);
         }
       });
-  
+
       after(async () => {
         await cleanDatabase(db);
       });
-  
+
       it('with assetId param returns events for selected asset', async () => {
         const targetAssetId = scenario.assets[0].assetId;
         findEventQueryObject = findEventQueryObjectFactory.create({assetId: targetAssetId}, 10);
@@ -190,7 +190,7 @@ describe('Find Event Query Object', () => {
         expect(ret.results).to.deep.equal([eventsSet[0], eventsSet[1], eventsSet[2], eventsSet[3], eventsSet[4]].reverse());
         ret.results.forEach((element) => expect(element.content.idData.assetId).to.equal(targetAssetId));
       });
-  
+
       it('with createdBy param returns events for selected creator', async () => {
         const targetCreatorAddress = scenario.accounts[0].address;
         findEventQueryObject = findEventQueryObjectFactory.create({createdBy: targetCreatorAddress}, 10);
@@ -200,7 +200,7 @@ describe('Find Event Query Object', () => {
         expect(ret.results).to.deep.equal([eventsSet[0], eventsSet[1], eventsSet[2], eventsSet[5], eventsSet[6], eventsSet[7]].reverse());
         ret.results.forEach((element) => expect(element.content.idData.createdBy).to.equal(targetCreatorAddress));
       });
-  
+
       it('with fromTimestamp param returns only events newer than selected timestamp', async () => {
         findEventQueryObject = findEventQueryObjectFactory.create({fromTimestamp: 4}, 10);
         const ret = await findEventQueryObject.execute();
@@ -209,7 +209,7 @@ describe('Find Event Query Object', () => {
         expect(ret.results).to.deep.equal([eventsSet[4], eventsSet[5], eventsSet[6], eventsSet[7], eventsSet[8], eventsSet[9]].reverse());
         ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.at.least(4));
       });
-  
+
       it('with toTimestamp param returns only events older than selected timestamp', async () => {
         findEventQueryObject = findEventQueryObjectFactory.create({toTimestamp: 2}, 10);
         const ret = await findEventQueryObject.execute();
@@ -218,7 +218,7 @@ describe('Find Event Query Object', () => {
         expect(ret.results).to.deep.equal([eventsSet[0], eventsSet[1], eventsSet[2]].reverse());
         ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.at.most(2));
       });
-  
+
       it('with fromTimestamp param and toTimestamp param returns events from between selected timestamps', async () => {
         findEventQueryObject = findEventQueryObjectFactory.create({fromTimestamp: 2, toTimestamp: 4}, 10);
         const ret = await findEventQueryObject.execute();
@@ -227,7 +227,7 @@ describe('Find Event Query Object', () => {
         expect(ret.results).to.deep.equal([eventsSet[2], eventsSet[3], eventsSet[4]].reverse());
         ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(2, 4));
       });
-  
+
       it('with perPage returns requested number of events', async () => {
         findEventQueryObject = findEventQueryObjectFactory.create({perPage: 3}, 10);
         const ret = await findEventQueryObject.execute();
@@ -235,7 +235,7 @@ describe('Find Event Query Object', () => {
         expect(ret.resultCount).to.equal(10);
         expect(ret.results).to.deep.equal([eventsSet[7], eventsSet[8], eventsSet[9]].reverse());
       });
-  
+
       it('with page and perPage returns limited requested of events from requested page', async () => {
         findEventQueryObject = findEventQueryObjectFactory.create({page: 2, perPage: 3}, 10);
         const ret = await findEventQueryObject.execute();
@@ -243,7 +243,7 @@ describe('Find Event Query Object', () => {
         expect(ret.resultCount).to.equal(10);
         expect(ret.results).to.deep.equal([eventsSet[1], eventsSet[2], eventsSet[3]].reverse());
       });
-  
+
       it('with all params provided returns events for selected asset and creator, from between selected timestamps and with requested paging', async () => {
         const targetAssetId = scenario.assets[0].assetId;
         const targetCreatorAddress = scenario.accounts[1].address;
@@ -255,7 +255,7 @@ describe('Find Event Query Object', () => {
         expect(ret.results[1]).to.deep.equal(eventsSet[3]);
         ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(1, 4));
       });
-  
+
       it('search by data entry', async () => {
         const targetAssetId = scenario.assets[0].assetId;
         findEventQueryObject = findEventQueryObjectFactory.create({data: {asset: targetAssetId}}, 1);
@@ -264,7 +264,7 @@ describe('Find Event Query Object', () => {
         expect(ret.resultCount).to.equal(3);
         expect(ret.results).to.deep.equal([eventsSet[6], eventsSet[4], eventsSet[0]]);
       });
-  
+
       it('search by geo location', async () => {
         findEventQueryObject = findEventQueryObjectFactory.create({data: {geoJson: {locationLongitude : 0, locationLatitude: 0, locationMaxDistance: 1000}}}, 3);
         const ret = await findEventQueryObject.execute();

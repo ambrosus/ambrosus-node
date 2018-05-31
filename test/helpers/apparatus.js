@@ -46,7 +46,7 @@ export default class Apparatus extends Application {
   async cleanDB() {
     return cleanDatabase(this.db);
   }
-  
+
   url() {
     return `http://127.0.0.1:${this.config.serverPort()}`;
   }

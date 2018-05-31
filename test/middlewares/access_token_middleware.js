@@ -62,7 +62,7 @@ describe('Access token middleware', () => {
   it('throws if authenticator rejects', () => {
     mockTokenAuthenticator.decodeToken.throws(new AuthenticationError());
     const configuredMiddleware = accessTokenMiddleware(mockTokenAuthenticator);
-    expect(() => configuredMiddleware(request, response, next)).to.throw(AuthenticationError);    
+    expect(() => configuredMiddleware(request, response, next)).to.throw(AuthenticationError);
   });
 
   it('throws AuthenticationError if no token provided', async () => {

@@ -94,7 +94,7 @@ describe('Assets - Integrations', () => {
 
     it('returns 403 for authorisation error (user does not exist)', async () => {
       const failingAsset = createFullAsset(apparatus.identityManager, {createdBy: notRegisteredAccount.address}, notRegisteredAccount.secret);
-      
+
       const request = apparatus.request()
         .post('/assets')
         .send(failingAsset);

@@ -9,8 +9,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 class NullConsole {
   log() {
-    
-  }    
+
+  }
 }
 
 export default new NullConsole();

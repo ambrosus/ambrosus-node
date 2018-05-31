@@ -61,7 +61,7 @@ describe('Periodic Worker', () => {
 
   it('should execute the work method exactly every 10 seconds', async () => {
     await expect(worker.start()).to.be.fulfilled;
-    
+
     expect(workStub).to.not.have.been.called;
     clock.tick(interval);
     expect(workStub).to.have.been.calledOnce;
