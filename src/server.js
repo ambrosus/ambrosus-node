@@ -17,9 +17,11 @@ import bundlesRouter from './routes/bundles';
 import eventsRouter from './routes/events';
 import tokenRouter from './routes/token';
 import nodeInfoRouter from './routes/nodeinfo';
+import healthCheckHandler from './routes/health_check';
 
 export default class Server {
-  constructor(modelEngine, config) {
+  constructor(modelEngine, mongoClient, config) {
+    this.mongoClient = mongoClient;
     this.modelEngine = modelEngine;
     this.config = config;
   }
@@ -40,6 +42,7 @@ export default class Server {
     app.use('/events', eventsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine));
     app.use('/token', tokenRouter(this.modelEngine.tokenAuthenticator, this.config));
     app.use('/bundle', bundlesRouter(this.modelEngine));
+    app.use('/health_check', healthCheckHandler(this.mongoClient, this.modelEngine.proofRepository.web3));
 
     // Should always be last
     app.use(errorHandling);
