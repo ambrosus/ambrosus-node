@@ -135,6 +135,6 @@ const newEvent = await eventResponse.json();
 As a result, it will return JSON, containing the whole event.
 
 ## What is next?
-Visit [ambrosus.docs.apiary.io](https://ambrosus.docs.apiary.io/) for full API documentation.
+Visit [dev.ambrosus.com](https://dev.ambrosus.com/) for full API documentation.
 
 You can use [Ambrosus Postman collections](https://github.com/ambrosus/ambrosus-node/tree/master/postman) to play with Ambrosus API. You can read the [instructions](https://github.com/ambrosus/ambrosus-node#postman-collections) on how to import them in README.
