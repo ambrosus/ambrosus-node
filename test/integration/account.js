@@ -248,6 +248,16 @@ describe('Accounts - Integrations', async () => {
       expect(response.body.resultCount).to.equal(1);
       expect(response.body.results[0].address).to.equal(scenario.accounts[2].address);
     });
+
+    it('should apply paging', async () => {
+      const response = await apparatus.request()
+        .get(`/accounts?page=1&perPage=2`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+        .send();
+      expect(response.body.resultCount).to.equal(4);
+      expect(response.body.results[0].address).to.equal(scenario.accounts[2].address);
+      expect(response.body.results[1].address).to.equal(scenario.accounts[3].address);
+    });
   });
 
   after(async () => {

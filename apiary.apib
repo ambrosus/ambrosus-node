@@ -156,9 +156,19 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 
     + Body
 
+### /accounts{?accessLevel,perPage,page}
+
 #### Find accounts [GET]
 
-Finds newest accounts.
+Finds accounts satisfying provided criteria.
+
+
++ Parameters
+
+    + accessLevel (string, optional) - Finds only accounts with access level not smaller than parameter
+    + perPage (integer, optional) - number of assets to return per page
+    + page (integer, optional) - number of page (more search results than specified in perPage parameter concludes more than one page)
+    
 
 + Request (application/json)
 
@@ -167,59 +177,37 @@ Finds newest accounts.
             Accept: application/json
             Authorization: AMB_TOKEN ...
 
-
 + Response 200 (application/json)
 
-    Up to 100 newest accounts
-
     + Attributes (object)
-        + results (array) - An array of accounts.
+        + results (array) - The latest 100 accounts matching provided criteria
             + (object) - Account.
-                + registeredBy (string) - The address which has registered the account.
-                + registeredOn (number) -  - UNIX timestamp of account registration.
-                + permissions (array) - A list of permissions granted to this account.
-                + accessLevel (number) - Access level of the account. Should be a non-negative integer.
+              + registeredBy (string) - The address which has registered the account.
+              + registeredOn (number) -  - UNIX timestamp of account registration.
+              + permissions (array) - A list of permissions granted to this account
+              + accessLevel (number) - Access level of the account. Should be a non-negative integer.
+        + resultCount (number) - Total number of accounts matching provided criteria.
 
-        + resultCount (number) - Total number of accounts.
 
     + Body
 
             {
-                "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
-                "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
-                "registeredOn": 32141243,
-                "permissions": ["register_account", "create_entity"],
-                "accessLevel": 4
+                "results": [
+                    {
+                        "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd"
+                        "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
+                        "permissions": ["register_account", "create_entity"],
+                        "accessLevel": 4
+                    }
+                ],
+                "resultCount": 322
             }
 
-    + Schema
++ Response 400 (application/json)
 
-            {
-              "type": "object",
-              "properties": {
-                "address": {
-                  "type": "string",
-                  "example": "0x162a44701727a31f457a53801cd181cd38eb5bbd"
-                },
-                "registeredBy": {
-                  "type": "string",
-                  "example": "0x345b44701723a31f457a534801cd181cd38eb5bcd"
-                },
-                "registeredOn": {
-                  "type": "integer"
-                },
-                "accessLevel": {
-                  "type": "integer"
-                },
-                "permissions": {
-                  "type": "array",
-                  "items" : {
-                  "type" : "string"
-                  }
-                  "example": ["register_account", "create_entity"]
-                }
-              }
-            }
+    Validation error
+
+    + Body
 
 + Response 401 (application/json)
 
@@ -232,6 +220,13 @@ Finds newest accounts.
     Invalid signature or missing register_account permission
 
     + Body
+
++ Response 404 (application/json)
+
+    Requested account does not exist
+
+    + Body
+
 
 ### /accounts/{accountAddress}
 
@@ -314,76 +309,12 @@ Finds newest accounts.
 
     + Body
 
-### /accounts{?accessLevel}
-
-#### Find accounts [GET]
-
-Finds accounts satisfying provided criteria.
-
-
-+ Parameters
-    + accessLevel (string) - Finds only accounts with access level not smaller than parameter
-
-
-+ Request (application/json)
-
-    + Headers
-
-            Accept: application/json
-            Authorization: AMB_TOKEN ...
-
-+ Response 200 (application/json)
-
-    + Attributes (object)
-        + results (array) - The latest 100 accounts matching provided criteria
-            + (object) - Account.
-              + registeredBy (string) - The address which has registered the account.
-              + registeredOn (number) -  - UNIX timestamp of account registration.
-              + permissions (array) - A list of permissions granted to this account
-              + accessLevel (number) - Access level of the account. Should be a non-negative integer.
-        + resultCount (number) - Total number of accounts matching provided criteria.
-
-
-    + Body
-
-            {
-                "results": [
-                    {
-                        "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd"
-                        "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
-                        "permissions": ["register_account", "create_entity"],
-                        "accessLevel": 4
-                    }
-                ],
-                "resultCount": 322
-            }
-
-+ Response 400 (application/json)
-
-    Validation error
-
-    + Body
-
-+ Response 401 (application/json)
-
-    Authentication error
-
-    + Body
-
-+ Response 403 (application/json)
-
-    Invalid signature or missing register_account permission
-
-    + Body
-
-+ Response 404 (application/json)
-
-    Requested account does not exist
-
-    + Body
-
 
 #### Modify account [PUT]
+
++ Parameters
+    + accountAddress (string) - An address of the account
+
 
 + Request (application/json)
 
