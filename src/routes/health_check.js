@@ -8,25 +8,30 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 const healthCheckHandler = (mongoClient, web3) => async (req, res) => {
+  const status = {
+    mongo: {connected: true},
+    web3: {connected: true}
+  };
+
   if (!mongoClient.isConnected()) {
-    res.status(500)
-      .type('json')
-      .send({msg: 'Is not connected to MongoDB'});
-    return;
+    status.mongo.connected = false;
   }
 
   try {
     await web3.eth.getNodeInfo();
   } catch (err) {
-    res.status(500)
-      .type('json')
-      .send({msg: 'Failed to call getNodeInfo'});
-    return;
+    status.web3.connected = false;
   }
 
-  res.status(200)
-    .type('json')
-    .send();
+  if (!status.mongo.connected || !status.web3.connected) {
+    res.status(500)
+      .type('json')
+      .send(status);
+  } else {
+    res.status(200)
+      .type('json')
+      .send();
+  }
 };
 
 export default healthCheckHandler;

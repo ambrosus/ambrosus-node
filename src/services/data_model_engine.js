@@ -11,7 +11,7 @@ import {NotFoundError, ValidationError, PermissionError} from '../errors/errors'
 import {getTimestamp} from '../utils/time_utils';
 
 export default class DataModelEngine {
-  constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, proofRepository, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions) {
+  constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, proofRepository, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
@@ -23,6 +23,7 @@ export default class DataModelEngine {
     this.findAccountQueryObjectFactory = findAccountQueryObjectFactory;
     this.findAssetQueryObjectFactory = findAssetQueryObjectFactory;
     this.accountAccessDefinitions = accountAccessDefinitions;
+    this.mongoClient = mongoClient;
   }
 
   async addAdminAccount(address = this.identityManager.nodeAddress()) {

@@ -26,19 +26,22 @@ describe('Health check tests', () => {
   });
 
   it('returns 200 if both MongoDb and web3 are connected', async () => {
-    const response = await apparatus.request().get('/health_check');
+    const response = await apparatus.request().get('/health');
     expect(response.status).to.eql(200);
   });
 
   it('returns 500 if MongoDb is not connected', async () => {
-    await apparatus.server.mongoClient.close();
+    await apparatus.dataModelEngine.mongoClient.close();
 
     const {response} = await apparatus.request()
-      .get('/health_check')
+      .get('/health')
       .catch((err) => err);
 
     expect(response.status).to.eql(500);
-    expect(response.body).to.eql({msg: 'Is not connected to MongoDB'});
+    expect(response.body).to.eql({
+      mongo: {connected: false},
+      web3: {connected: true}
+    });
   });
 
   it('returns 500 if web3 is not connected', async () => {
@@ -48,10 +51,30 @@ describe('Health check tests', () => {
     stub.returns(Promise.reject('Error: Invalid JSON RPC response: ""'));
 
     const {response} = await apparatus.request()
-      .get('/health_check')
+      .get('/health')
       .catch((err) => err);
 
     expect(response.status).to.eql(500);
-    expect(response.body).to.eql({msg: 'Failed to call getNodeInfo'});
+    expect(response.body).to.eql({
+      mongo: {connected: true},
+      web3: {connected: false}
+    });
+  });
+
+  it('returns 500 if web3 or mongo are not connected', async () => {
+    await apparatus.dataModelEngine.mongoClient.close();
+
+    const stub = sinon.stub(apparatus.web3.eth, 'getNodeInfo');
+    stub.returns(Promise.reject('Error: Invalid JSON RPC response: ""'));
+
+    const {response} = await apparatus.request()
+      .get('/health')
+      .catch((err) => err);
+
+    expect(response.status).to.eql(500);
+    expect(response.body).to.eql({
+      mongo: {connected: false},
+      web3: {connected: false}
+    });
   });
 });

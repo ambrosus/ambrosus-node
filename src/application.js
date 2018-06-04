@@ -19,7 +19,7 @@ class Application extends Builder {
   }
 
   async startServer() {
-    this.server = new Server(this.dataModelEngine, this.client, this.config);
+    this.server = new Server(this.dataModelEngine, this.config);
     this.server.start();
   }
 
