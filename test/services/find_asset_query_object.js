@@ -68,4 +68,11 @@ describe('Find Asset Query Object', () => {
     expect(found.results).to.deep.equal([assets[2],assets[0]]);
     found.results.forEach((element) => expect(element.content.idData.createdBy).to.equal('0x123'));
   });
+
+  it('when given page and perPage, returns requested number of assets from requested page', async () => {
+    findAssetQueryObject = findAssetQueryObjectFactory.create({perPage: 1, page: 1});
+    const found = await findAssetQueryObject.execute();
+    expect(found.results).to.deep.equal([assets[1]]);
+    expect(found.resultCount).to.equal(3);
+  });
 });

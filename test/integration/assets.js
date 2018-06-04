@@ -169,6 +169,16 @@ describe('Assets - Integrations', () => {
       expect(response.body.resultCount).to.equal(3);
       expect(response.body.results).to.deep.equal([assetSet[5], assetSet[3], assetSet[1]]);
     });
+
+    it('should apply paging', async () => {
+      const response = await apparatus.request()
+        .get(`/assets?page=1&perPage=2`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+        .send();
+      expect(response.body.resultCount).to.equal(6);
+      expect(response.body.results[0]).to.deep.equal(assetSet[3]);
+      expect(response.body.results[1]).to.deep.equal(assetSet[2]);
+    });
   });
 
   after(async () => {
