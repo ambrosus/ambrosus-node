@@ -26,5 +26,5 @@ describe('Config', () => {
   it('withAttibutes (override)', () => {
     const config = new Config({attribute: 2}).withAttributes({attribute: 1});
     expect(config.attributes).to.deep.eq({attribute: 1});
-  });  
+  });
 });

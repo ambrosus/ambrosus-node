@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 /* eslint no-underscore-dangle: ["error", { "allow": ["_obj"] }] */
 module.exports = function () {
-  const emitEventMethod = function (eventName) {    
+  const emitEventMethod = function (eventName) {
     const tx = this._obj;
     const eventOccurences = tx.events[eventName];
     this.assert(

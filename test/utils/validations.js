@@ -55,12 +55,12 @@ describe('validation', () => {
       expect(() => output = validateIntegerParameterAndCast(6969, 'sampleErrMsg')).to.not.throw();
       expect(output).to.equal(6969);
     });
-  
+
     it('works for parsable string parameter', () => {
       expect(() => output = validateIntegerParameterAndCast('6969', 'sampleErrMsg')).to.not.throw();
       expect(output).to.equal(6969);
     });
-  
+
     it('throws if parameter not parsable', () => {
       expect(() => validateIntegerParameterAndCast('NaN', 'sampleErrMsg')).to.throw(ValidationError);
     });

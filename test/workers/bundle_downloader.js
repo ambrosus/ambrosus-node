@@ -99,8 +99,8 @@ describe('Bundle downloader - integration', () => {
       .post('/assets')
       .send(asset);
     const bundle3 = await apparatus.dataModelEngine.finaliseBundle(3);
-  
-    await bundleDownloader.downloadAllNew();  
+
+    await bundleDownloader.downloadAllNew();
     let bundle = await dataModelEngine.entityRepository.getBundle(bundleId);
     expect(bundle.bundleId).to.eq(bundleId);
     bundle = await dataModelEngine.entityRepository.getBundle(bundle2.bundleId);

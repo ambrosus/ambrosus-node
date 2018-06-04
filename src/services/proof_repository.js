@@ -16,14 +16,14 @@ export default class ProofRepository {
     this.registryContract = registryContract;
     this.defaultGas = defaultGas;
   }
-  
+
   async getVendorUrl(vendorAddress) {
     const from = getDefaultAddress(this.web3);
     return this.registryContract
       .methods
       .getUrlForVendor(vendorAddress)
       .call({from});
-  }    
+  }
 
   async isWhitelisted(vendorAddress) {
     const from = getDefaultAddress(this.web3);
@@ -31,7 +31,7 @@ export default class ProofRepository {
       .methods
       .isWhitelisted(vendorAddress)
       .call({from});
-  }    
+  }
 
   async addVendor(vendorAddress, url) {
     return this.registryContract

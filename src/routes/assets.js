@@ -37,7 +37,7 @@ export const createEventHandler = (modelEngine) => async (req, res) => {
   if (req.params.assetId !== req.body.content.idData.assetId) {
     throw new ValidationError('The assetId in the path mismatches the one in the event body');
   }
-  
+
   const createdEvent = await modelEngine.createEvent(req.body);
 
   res.status(201)

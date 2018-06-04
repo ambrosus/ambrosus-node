@@ -46,7 +46,7 @@ export default (tokenAuthenticator, dataModelEngine) => {
 
   router.post('/',
     ensureJsonMime,
-    bodyParser.json(),  
+    bodyParser.json(),
     accessTokenMiddleware(tokenAuthenticator),
     asyncMiddleware(addAccountHandler(dataModelEngine)));
 
@@ -60,7 +60,7 @@ export default (tokenAuthenticator, dataModelEngine) => {
 
   router.put('/:id',
     ensureJsonMime,
-    bodyParser.json(),  
+    bodyParser.json(),
     accessTokenMiddleware(tokenAuthenticator),
     asyncMiddleware(modifyAccountHandler(dataModelEngine)));
 

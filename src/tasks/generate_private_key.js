@@ -22,7 +22,7 @@ async function execute() {
 
   const account = web3.eth.accounts.create();
   const {privateKey, address} = account;
-  
+
   await writeFile(keyFilePath, JSON.stringify(privateKey));
   console.log(`Generated address/privateKey pair:\n\taddress: ${address}\n\tprivate key: ${privateKey}\n\nSaving under ${keyFilePath}`);
 }

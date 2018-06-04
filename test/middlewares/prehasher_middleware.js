@@ -49,7 +49,7 @@ describe('Prehasher middleware', () => {
   it('adds hash based on provided paths', () => {
     const configuredMiddleware = prehasherMiddleware(mockIdentityManager, 'content.idData', 'id');
     configuredMiddleware(request, response, next);
-    
+
     expect(request.body).to.include.key('id');
     expect(request.body.id).to.equal(exampleHash);
     expect(next).to.be.calledOnce;

@@ -43,7 +43,7 @@ export default class Server {
 
     // Should always be last
     app.use(errorHandling);
-    
+
     this.server = app.listen(this.config.serverPort());
   }
 

@@ -13,8 +13,8 @@ import BundleDownloader from './workers/bundle_downloader';
 import BundleFinaliser from './workers/bundle_finaliser';
 
 class Application extends Builder {
-  constructor(output = console) {  
-    super();  
+  constructor(output = console) {
+    super();
     this.output = output;
   }
 
@@ -29,7 +29,7 @@ class Application extends Builder {
     this.bundleFinaliser = new BundleFinaliser(this.dataModelEngine, this.config.bundleFinalisationInterval(),
       this.config.bundleSizeLimit(), this.output);
     this.bundleFinaliser.start();
-  }  
+  }
 }
 
 export default Application;
