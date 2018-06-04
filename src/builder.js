@@ -66,7 +66,9 @@ class Builder {
       this.findEventQueryObjectFactory,
       this.findAccountQueryObjectFactory,
       this.findAssetQueryObjectFactory,
-      this.accountAccessDefinitions);
+      this.accountAccessDefinitions,
+      this.client,
+    );
     return {dataModelEngine: this.dataModelEngine, client: this.client};
   }
 }
