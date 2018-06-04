@@ -1,8 +1,11 @@
 /* eslint-disable header/header */
+
+const registryContractAddress = (
+  process.env.BUNDLE_REGISTRY_CONTRACT_ADDRESS || require('./registryContractAddress.json')
+);
+
 module.exports = {
-  bundle: {
-    registryContractAddress: require('./registryContractAddress.json')
-  },
+  bundle: {registryContractAddress},
   web3 : {
     nodePrivateKey: require('./nodePrivateKey.json')
   },
