@@ -58,7 +58,7 @@ export const findEventsPerAssetHandler = (modelEngine) => async (req, res) => {
 };
 
 export const findAssetsHandler = (dataModelEngine) => async (req, res) => {
-  const content = await dataModelEngine.findAssets();
+  const content = await dataModelEngine.findAssets(req.query);
   res.status(200)
     .type('json')
     .send(JSON.stringify(content));

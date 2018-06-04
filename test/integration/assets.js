@@ -29,6 +29,7 @@ describe('Assets - Integrations', () => {
   let scenario;
   let adminAccount;
   let otherAccount;
+  let otherAccountWithPermissions;
 
   before(async () => {
     apparatus = new Apparatus();
@@ -40,7 +41,8 @@ describe('Assets - Integrations', () => {
     await apparatus.cleanDB();
     scenario.reset();
     adminAccount = await scenario.addAdminAccount(adminAccountWithSecret);
-    otherAccount = await scenario.addAccount(0, accountWithSecret);
+    otherAccountWithPermissions = await scenario.addAccount(0, accountWithSecret, {permissions: ['create_entity']});
+    otherAccount = await scenario.addAccount(0, notRegisteredAccount);
   });
 
   describe('creating asset', () => {
@@ -144,24 +146,38 @@ describe('Assets - Integrations', () => {
     beforeEach(async () => {
       assetSet = [
         await scenario.addAsset(0, {timestamp : 1}),
-        await scenario.addAsset(0, {timestamp : 2}),
+        await scenario.addAsset(1, {timestamp : 2}),
         await scenario.addAsset(0, {timestamp : 3}),
-        await scenario.addAsset(0, {timestamp : 4}),
+        await scenario.addAsset(1, {timestamp : 4}),
         await scenario.addAsset(0, {timestamp : 5}),
-        await scenario.addAsset(0, {timestamp : 6})
+        await scenario.addAsset(1, {timestamp : 6})
       ];
     });
+
     it('find works', async () => {
       const response = await apparatus.request()
         .get('/assets')
         .send();
       expect(response.body.resultCount).to.equal(6);
-      expect(response.body.results[0]).to.deep.equal(assetSet[5]);
-      expect(response.body.results[1]).to.deep.equal(assetSet[4]);
-      expect(response.body.results[2]).to.deep.equal(assetSet[3]);
-      expect(response.body.results[3]).to.deep.equal(assetSet[2]);
-      expect(response.body.results[4]).to.deep.equal(assetSet[1]);
-      expect(response.body.results[5]).to.deep.equal(assetSet[0]);
+      expect(response.body.results).to.deep.equal([...assetSet].reverse());
+    });
+
+    it('filters by createdBy', async () => {
+      const response = await apparatus.request()
+        .get(`/assets?createdBy=${otherAccountWithPermissions.address}`)
+        .send();
+      expect(response.body.resultCount).to.equal(3);
+      expect(response.body.results).to.deep.equal([assetSet[5], assetSet[3], assetSet[1]]);
+    });
+
+    it('should apply paging', async () => {
+      const response = await apparatus.request()
+        .get(`/assets?page=1&perPage=2`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+        .send();
+      expect(response.body.resultCount).to.equal(6);
+      expect(response.body.results[0]).to.deep.equal(assetSet[3]);
+      expect(response.body.results[1]).to.deep.equal(assetSet[2]);
     });
   });
 

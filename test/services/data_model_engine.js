@@ -450,12 +450,13 @@ describe('Data Model Engine', () => {
   describe('Finding assets', () => {
     let mockFindAssetQueryObjectFactory;
     let mockFindAssetQueryObject;
+    let mockEntityBuilder;
     let modelEngine;
 
     let scenario;
     let assetSet;
     let asset;
-
+    const params = {foo: 'bar'};
     let ret;
 
     before(async () => {
@@ -467,6 +468,10 @@ describe('Data Model Engine', () => {
         execute: sinon.stub()
       };
 
+      mockEntityBuilder = {
+        validateAndCastFindAssetsParams: sinon.stub()
+      };
+
       scenario = new ScenarioBuilder(identityManager);
       await scenario.addAdminAccount(adminAccountWithSecret);
       asset = await scenario.addAsset(0);
@@ -474,10 +479,10 @@ describe('Data Model Engine', () => {
       mockFindAssetQueryObjectFactory.create.returns(mockFindAssetQueryObject);
       mockFindAssetQueryObject.execute.returns({results: assetSet, resultCount: 165});
 
-      modelEngine = new DataModelEngine({}, {}, {}, {},
+      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, {},
         {}, {}, {}, {}, {}, mockFindAssetQueryObjectFactory, {});
 
-      ret = await expect(modelEngine.findAssets()).to.fulfilled;
+      ret = await expect(modelEngine.findAssets(params)).to.fulfilled;
     });
 
     it('creates asset query object', async () => {
@@ -486,6 +491,10 @@ describe('Data Model Engine', () => {
 
     it('asks the asset query object for the assets', async () => {
       expect(mockFindAssetQueryObject.execute).to.have.been.called;
+    });
+
+    it('calls validateAndCastFindAssetsParams with params', () => {
+      expect(mockEntityBuilder.validateAndCastFindAssetsParams).to.have.been.calledWith(params);
     });
 
     it('properly assembles the result', () => {

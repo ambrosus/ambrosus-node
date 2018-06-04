@@ -103,9 +103,10 @@ export default class DataModelEngine {
     return asset;
   }
 
-  async findAssets() {
-    const findAssetQueryObject = this.findAssetQueryObjectFactory.create();
-    return await findAssetQueryObject.execute();
+  async findAssets(params) {
+    const validatedParams = this.entityBuilder.validateAndCastFindAssetsParams(params);
+    const findEventQueryObject = this.findAssetQueryObjectFactory.create(validatedParams);
+    return await findEventQueryObject.execute();
   }
 
   async createEvent(event) {
