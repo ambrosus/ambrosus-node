@@ -71,6 +71,8 @@ export default class EntityBuilder {
     validateFieldsConstrainedToSet(event, ['content', 'eventId']);
     validateFieldsConstrainedToSet(event.content, ['idData', 'data', 'signature']);
     validateNonNegativeInteger(event.content.idData.accessLevel, `Access level should be a non-negative integer, instead got ${event.content.idData.accessLevel}`);
+    validateNonNegativeInteger(event.content.idData.timestamp, `Timestamp should be a non-negative integer, instead got ${event.content.idData.timestamp}`);
+
     this.identityManager.validateSignature(event.content.idData.createdBy, event.content.signature, event.content.idData);
   }
 

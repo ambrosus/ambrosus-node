@@ -157,11 +157,24 @@ describe('Entity Builder', () => {
           .and.have.nested.property('errors[0].dataPath', '.geoJson.coordinates');
       });
 
-      it('throws if accessLevel not positive integer', () => {
+      it('throws if timestamp is not a positive integer', () => {
+        let brokenEvent = put('content.idData.timestamp', exampleEvent, '1');
+        expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
+        brokenEvent = put('content.idData.timestamp', exampleEvent, 1.1);
+        expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
+        brokenEvent = put('content.idData.timestamp', exampleEvent, -1);
+        expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
+        expect(() => entityBuilder.validateEvent(exampleEvent)).not.to.throw;
+      });
+
+      it('throws if accessLevel is not a positive integer', () => {
         let brokenEvent = put('content.idData.accessLevel', exampleEvent, 1.1);
+        expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
+        brokenEvent = put('content.idData.accessLevel', exampleEvent, 1.1);
         expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
         brokenEvent = put('content.idData.accessLevel', exampleEvent, -1);
         expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
+        expect(() => entityBuilder.validateEvent(exampleEvent)).not.to.throw;
       });
 
       it('uses the IdentityManager for checking signature (correct)', () => {
