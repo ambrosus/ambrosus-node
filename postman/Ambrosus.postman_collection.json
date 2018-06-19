@@ -52,6 +52,52 @@
 			"response": []
 		},
 		{
+			"name": "Generate token (user)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "d0ef5814-8b51-43ba-b0fa-8a2377c1ceb0",
+						"type": "text/javascript",
+						"exec": [
+							"pm.environment.set(\"userToken\", JSON.parse(responseBody).token);"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "AMB {{userSecret}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"validUntil\": 1600000000\n}"
+				},
+				"url": {
+					"raw": "{{url}}/token",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Add account",
 			"event": [
 				{
@@ -133,52 +179,6 @@
 			"response": []
 		},
 		{
-			"name": "Generate token (user)",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "d0ef5814-8b51-43ba-b0fa-8a2377c1ceb0",
-						"type": "text/javascript",
-						"exec": [
-							"pm.environment.set(\"userToken\", JSON.parse(responseBody).token);"
-						]
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Accept",
-						"value": "application/json"
-					},
-					{
-						"key": "Authorization",
-						"value": "AMB {{userSecret}}"
-					},
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"validUntil\": 1600000000\n}"
-				},
-				"url": {
-					"raw": "{{url}}/token",
-					"host": [
-						"{{url}}"
-					],
-					"path": [
-						"token"
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "Get account",
 			"request": {
 				"method": "GET",
@@ -208,6 +208,49 @@
 					"path": [
 						"accounts",
 						"{{userAddress}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Finding accounts",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "AMB_TOKEN {{userToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/accounts?accessLevel=0&perPage=100&page=0",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"accounts"
+					],
+					"query": [
+						{
+							"key": "accessLevel",
+							"value": "0",
+							"description": "Minimum access level of the accounts"
+						},
+						{
+							"key": "perPage",
+							"value": "100",
+							"description": "number of events to return per page"
+						},
+						{
+							"key": "page",
+							"value": "0",
+							"description": "number of page"
+						}
 					]
 				}
 			},
@@ -276,6 +319,49 @@
 					"path": [
 						"assets",
 						"{{assetId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Finding assets",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "AMB_TOKEN {{userToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/assets?perPage=100&page=0&createdBy={{userAddress}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"assets"
+					],
+					"query": [
+						{
+							"key": "perPage",
+							"value": "100",
+							"description": "number of events to return per page"
+						},
+						{
+							"key": "page",
+							"value": "0",
+							"description": "number of page"
+						},
+						{
+							"key": "createdBy",
+							"value": "{{userAddress}}",
+							"description": "address of account that created targeting assets"
+						}
 					]
 				}
 			},
