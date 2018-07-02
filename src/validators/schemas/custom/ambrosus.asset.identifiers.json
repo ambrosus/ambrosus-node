@@ -1,0 +1,20 @@
+{
+  "title": "ambrosus.asset.identifiers",
+  "description": "Known identifiers for an asset",
+  "type": "object",
+  "properties": {
+    "type": {
+      "description": "Event entry type",
+      "type": "string",
+      "const": "ambrosus.asset.identifiers"
+    }
+  },
+  "required": ["type"],
+  "uniqueItems": true,
+  "minProperties": 2,
+  "additionalProperties": {
+    "type": "array",
+    "minItems": 1,
+    "uniqueItems": true
+  }
+}
