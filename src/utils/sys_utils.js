@@ -9,18 +9,16 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {exec} from 'child_process';
 
-const getGitCommitHash = async () => {
-  const child = exec('git log -n1 --format=format:"%H"');
-
-  return new Promise(((resolve, reject) => {
-    child.stdout.on('data', (data) => {
-      resolve(data.toString());
-    });
-
-    child.stderr.on('data', (data) => {
-      reject(data.toString());
-    });
-  }));
-};
+const getGitCommitHash = async () => new Promise(((resolve, reject) => {
+  exec('git log -n1 --format=format:"%H"', (err, stdout, stderr) => {
+    if (err) {
+      reject(err);
+    } else if (stderr) {
+      reject(stderr);
+    } else {
+      resolve(stdout);
+    }
+  });
+}));
 
 export default getGitCommitHash;
