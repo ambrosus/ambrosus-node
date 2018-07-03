@@ -8,33 +8,33 @@ Following document specifies a basic set of entry types, that most events should
 
 ```json
 {
-	*"type": "ambrosus.asset.info",
-	"assetType":"...",
-	*"name": "...",
-	"localisedName" : {
-		"..." : "..."
+  *"type": "ambrosus.asset.info",
+  "assetType": "...",
+  *"name": "...",
+  "localisedName": {
+    "...": "..."
 	},
-	"description": "...",
-	"localisedDescription" : {
-		"..." : "..."
-	},
-	"tags":["...","..."],
-	"images" : {
-		*"default" : {
-      *"url":"http://...",
-      "size":{
-          "width":300,
-          "height":600
-        }
-		},
-		"...":{
-			*"url":"http://...",
-			"size":{
-				"width":300,
-				"height":600
-			}
-		}
-	}
+  "description": "...",
+  "localisedDescription": {
+    "...": "..."
+  },
+  "tags":["...","..."],
+  "images": {
+    "default": {
+      *"url": "http://...",
+      "size": {
+        *"width": 300,
+        *"height": 600
+      }
+    },
+		"...": {
+      *"url": "http://...",
+      "size": {
+        *"width": 300,
+        *"height": 600
+      }
+    }
+  }
 }
 ```
 
@@ -51,25 +51,25 @@ Following document specifies a basic set of entry types, that most events should
 ```json
 {
   "...",
-	"images" : {
-		"default" : {
-			*"url":"https://5.imimg.com/data5/WQ/JP/MY-10901605/coffee-packaging-bags-500x500.jpg",
-			"name":"Main product image",
-			"size":{
-				"width":300,
-				"height":600
-			}
-		},
-		"second" : {
-			"url":"https://5.imimg.com/data5/WQ/JP/MY-10901605/coffee-packaging-bags-500x500.jpg",
-			"name":"Alternative product image",
-			"size":{
-				"width":300,
-				"height":600
-			}
-		},
-		"mobile":{...}		
-	}
+  "images": {
+    "default": {
+      *"url": "https://5.imimg.com/data5/WQ/JP/MY-10901605/coffee-packaging-bags-500x500.jpg",
+      "name": "Main product image",
+      "size": {
+        *"width": 300,
+        *"height": 600
+      }
+    },
+    "second": {
+      "url": "https://5.imimg.com/data5/WQ/JP/MY-10901605/coffee-packaging-bags-500x500.jpg",
+      "name": "Alternative product image",
+			"size": {
+        *"width": 300,
+        *"height": 600
+      }
+    },
+    "mobile": {...}
+  }
 }
 ```
 
@@ -81,11 +81,11 @@ The different identifiers for an asset. Can represent a unique item (e.g. unique
 
 ```json
 {
-	*"type": "ambrosus.asset.identifiers",
-	*"identifiers": {
-		"ean13": ["...."],
-		"...": ["...."]
-	}
+  *"type": "ambrosus.asset.identifiers",
+  *"identifiers": {
+    "ean13": ["...."],
+    "...": ["...."]
+  }
 }
 ```
 
@@ -93,10 +93,10 @@ Similarly, identifiers for a event (as opposed to assets) can be represented usi
 
 ```json
 {
-	*"type": "ambrosus.event.identifiers",
-	*"identifiers": {
-		"...": ["...."]
-	}
+  *"type": "ambrosus.event.identifiers",
+  *"identifiers": {
+    "...": ["...."]
+  }
 }
 ```
 
@@ -110,17 +110,17 @@ Represents the location of the asset (ambrosus.asset.location) or an event (ambr
 
 ```json
 {
-	*"type": "ambrosus.event.location",
-	"geoJson" : { 
-		*"type" : "Point",
-		*"coordinates": [13, -15]
-	},
-  "assetId":"0x...00",
+  *"type": "ambrosus.event.location",
+  "geoJson": { 
+    *"type": "Point",
+    *"coordinates": [13, -15]
+  },
+  "assetId": "0x...00",
   "name": "Huxley Building, Imperial College London",
-	"city":"London",
-	"country":"UK",	
-	"locationId":"809c578721b74cae1d56504594819285",
-	"GLN":9501101530003
+  "city": "London",
+  "country": "UK",	
+  "locationId": "809c578721b74cae1d56504594819285",
+  "GLN": 9501101530003
 }
 ```
 
