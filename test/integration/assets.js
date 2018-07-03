@@ -214,8 +214,10 @@ describe('Assets - Integrations', () => {
             },
             data: [{
               type: 'ambrosus.event.identifiers',
-              isbn: [(inx % 2).toString()],
-              gs1: [(inx % 3).toString()]
+              identifiers: {
+                isbn: [(inx % 2).toString()],
+                gs1: [(inx % 3).toString()]
+              }
             }]
           })
         );

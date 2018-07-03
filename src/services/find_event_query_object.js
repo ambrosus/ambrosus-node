@@ -39,6 +39,13 @@ export class FindEventQueryObject extends FindQueryObject {
     }}});
   }
 
+  addIdentifierPart(value) {
+    for (const key in value) {
+      const element = value[key];
+      this.queryBuilder.add({'content.data': {$elemMatch: {[`identifiers.${key}`]: element}}});
+    }
+  }
+
   addDataAccessLevelLimitationIfNeeded(accessLevel) {
     if (!this.queryBuilder.queryParts.some((queryPart) => queryPart['content.idData.accessLevel'] !== undefined)) {
       const part = {'content.idData.accessLevel': {$lte: accessLevel}};
@@ -70,6 +77,9 @@ export class FindEventQueryObject extends FindQueryObject {
       switch (key) {
         case 'geoJson':
           this.addGeoPart(this.criteria.data[key]);
+          break;
+        case 'identifiers':
+          this.addIdentifierPart(this.criteria.data[key]);
           break;
         default:
           this.addDefaultPart(key, this.criteria.data[key]);

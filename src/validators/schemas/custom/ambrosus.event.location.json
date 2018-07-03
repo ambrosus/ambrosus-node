@@ -1,12 +1,12 @@
 {
-  "title": "ambrosus.asset.location.geo",
-  "description": "Location of an asset expressed with geographical coordinates",
+  "title": "ambrosus.event.location",
+  "description": "Location of an event",
   "type": "object",
   "properties": {
     "type": {
       "description": "Event entry type",
       "type": "string",
-      "const": "ambrosus.asset.location.geo"
+      "const": "ambrosus.event.location"
     },
     "geoJson": {
       "description": "A geographical coordinate (point in GeoJSON formula)",
@@ -37,13 +37,24 @@
       "required": [
         "type", "coordinates"
       ],
-      "additionalItems": false  
+      "additionalProperties": false  
+    },
+    "assetId": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{64}$"
+    },
+    "name": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
     }
   },
   "required": [
-    "type",
-    "geoJson"
-  ],
-  "additionalItems": false  
+    "type"
+  ] 
 }
 

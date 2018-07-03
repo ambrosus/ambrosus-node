@@ -554,8 +554,10 @@ describe('Data Model Engine', () => {
           expect(mockFindEventQueryObjectFactory.create).to.be.calledWith({
             data: {
               type: 'ambrosus.event.identifiers',
-              isbn: 'abc-def',
-              gs1: '123'
+              identifiers: {
+                isbn: 'abc-def',
+                gs1: '123'
+              }
             }
           }, accessLevel);
         });
@@ -570,8 +572,10 @@ describe('Data Model Engine', () => {
           expect(mockFindEventQueryObjectFactory.create).to.be.calledWith({
             data: {
               type: 'ambrosus.event.identifiers',
-              isbn: 'abc-def',
-              gs1: '123'
+              identifiers: {
+                isbn: 'abc-def',
+                gs1: '123'
+              }
             }
           }, 0);
         });
