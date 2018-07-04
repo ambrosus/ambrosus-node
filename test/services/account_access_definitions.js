@@ -155,7 +155,11 @@ describe('Account Access Definitions', () => {
       expect(() => accountAccessDefinitions.validateAndCastFindAccountParams(params)).to.throw(ValidationError);
     });
 
-    it('throws if registeredBy is not valid address', async () => {
+    it('throws if accessLevel is not integer or not positive', () => {
+      expect(() => accountAccessDefinitions.validateAndCastFindAccountParams(put(validParamsAsStrings, 'accessLevel', '-10'))).to.throw(ValidationError);
+    });
+
+    it('throws if registeredBy is not valid address', () => {
       const params = put(validParamsAsStrings, 'registeredBy', '0x12312312');
       expect(() => accountAccessDefinitions.validateAndCastFindAccountParams(params)).to.throw(ValidationError);
     });

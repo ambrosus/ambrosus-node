@@ -17,7 +17,7 @@ Read below to learn about ambrosus node development.
 Start the MongoDB and Parity containers
 
 ```
-docker-compose up -d db parity
+yarn dev:docker
 ```
 
 Install the dependencies

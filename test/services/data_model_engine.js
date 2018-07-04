@@ -452,11 +452,15 @@ describe('Data Model Engine', () => {
     let mockFindAssetQueryObject;
     let mockEntityBuilder;
     let modelEngine;
+    let mockAccountAccessDefinitions;
 
     let scenario;
     let assetSet;
     let asset;
     const params = {foo: 'bar'};
+    const accessLevel = 2;
+    const token = {one: 1};
+    const validatedParams = {bar: 'foo'};
     let ret;
 
     before(async () => {
@@ -472,25 +476,35 @@ describe('Data Model Engine', () => {
         validateAndCastFindAssetsParams: sinon.stub()
       };
 
+      mockAccountAccessDefinitions = {
+        getTokenCreatorAccessLevel: sinon.stub()
+      };
+
       scenario = new ScenarioBuilder(identityManager);
       await scenario.addAdminAccount(adminAccountWithSecret);
       asset = await scenario.addAsset(0);
       assetSet = [asset];
       mockFindAssetQueryObjectFactory.create.returns(mockFindAssetQueryObject);
+      mockEntityBuilder.validateAndCastFindAssetsParams.returns(validatedParams);
       mockFindAssetQueryObject.execute.returns({results: assetSet, resultCount: 165});
+      mockAccountAccessDefinitions.getTokenCreatorAccessLevel.resolves(2);
 
       modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, {},
-        {}, {}, {}, {}, {}, mockFindAssetQueryObjectFactory, {});
+        {}, {}, {}, {}, {}, mockFindAssetQueryObjectFactory, mockAccountAccessDefinitions);
 
-      ret = await expect(modelEngine.findAssets(params)).to.fulfilled;
+      ret = await expect(modelEngine.findAssets(params, token)).to.fulfilled;
     });
 
     it('creates asset query object', async () => {
-      expect(mockFindAssetQueryObjectFactory.create).to.have.been.called;
+      expect(mockFindAssetQueryObjectFactory.create).to.have.been.calledWith(validatedParams, accessLevel);
     });
 
     it('asks the asset query object for the assets', async () => {
       expect(mockFindAssetQueryObject.execute).to.have.been.called;
+    });
+
+    it('asks for access level', async () => {
+      expect(mockAccountAccessDefinitions.getTokenCreatorAccessLevel).to.be.calledWith(token);
     });
 
     it('calls validateAndCastFindAssetsParams with params', () => {

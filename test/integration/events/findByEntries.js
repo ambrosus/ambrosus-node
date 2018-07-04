@@ -103,7 +103,6 @@ describe('Events Integrations: Find by data entries', () => {
     expect(response.body.results[0].content.data[0].confirmationAddress).to.equal('0x2222222222222222222222222222222222222222');
   });
 
-
   describe('geo based search', () => {
     beforeEach(async () => {
       await scenario.addEvent(0, 0, {timestamp: 1, accessLevel: 0}, [{

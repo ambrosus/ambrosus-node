@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {
   validateFieldsConstrainedToSet,
-  validateIntegerParameterAndCast,
+  validateNumberParameterAndCast,
   validateIsAddress,
   validateNonNegativeInteger,
   validatePathsNotEmpty
@@ -70,9 +70,12 @@ export default class AccountAccessDefinitions {
 
     validateFieldsConstrainedToSet(params, allowedParametersList);
 
-    params.accessLevel = validateIntegerParameterAndCast(params.accessLevel, 'accessLevel');
-    params.page = validateIntegerParameterAndCast(params.page, 'page');
-    params.perPage = validateIntegerParameterAndCast(params.perPage, 'perPage');
+    params.accessLevel = validateNumberParameterAndCast(params.accessLevel, 'accessLevel');
+    params.page = validateNumberParameterAndCast(params.page, 'page');
+    params.perPage = validateNumberParameterAndCast(params.perPage, 'perPage');
+    validateNonNegativeInteger(params.accessLevel, 'accessLevel');
+    validateNonNegativeInteger(params.page, 'page');
+    validateNonNegativeInteger(params.perPage, 'perPage');
     if (params.registeredBy) {
       validateIsAddress(params.registeredBy);
     }

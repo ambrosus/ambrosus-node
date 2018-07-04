@@ -400,17 +400,35 @@ describe('Entity Builder', () => {
       entityBuilder = new EntityBuilder({}, oneDayInSeconds);
     });
 
-    it('passes for proper parameters', () => {
+    it('passes and casts when passed correct parameters', () => {
       const params = {
-        createdBy: anAddress
+        createdBy: anAddress,
+        page: '2',
+        perPage: '10'
       };
       const validatedParams = entityBuilder.validateAndCastFindAssetsParams(params);
-      expect(validatedParams.createdBy).to.equal(anAddress);
+      expect(validatedParams).to.deep.equal({
+        createdBy: anAddress,
+        page: 2,
+        perPage: 10
+      });
     });
 
     it('throws if createdBy is not valid address', async () => {
       const params = put(validParamsAsStrings, 'createdBy', '0x12312312');
-      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
+      expect(() => entityBuilder.validateAndCastFindAssetsParams(params)).to.throw(ValidationError);
+    });
+
+    it('throws if page is not positive integer', async () => {
+      expect(() => entityBuilder.validateAndCastFindAssetsParams({page: 'avc'})).to.throw(ValidationError);
+      expect(() => entityBuilder.validateAndCastFindAssetsParams({page: '1.3'})).to.throw(ValidationError);
+      expect(() => entityBuilder.validateAndCastFindAssetsParams({page: '-10'})).to.throw(ValidationError);
+    });
+
+    it('throws if perPage is not positive integer', async () => {
+      expect(() => entityBuilder.validateAndCastFindAssetsParams({perPage: 'avc'})).to.throw(ValidationError);
+      expect(() => entityBuilder.validateAndCastFindAssetsParams({perPage: '1.3'})).to.throw(ValidationError);
+      expect(() => entityBuilder.validateAndCastFindAssetsParams({perPage: '-10'})).to.throw(ValidationError);
     });
   });
 
@@ -511,6 +529,34 @@ describe('Entity Builder', () => {
 
     it('throws if perPage value not in valid type', () => {
       const params = put(validParamsAsStrings, 'perPage', 'NaN');
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
+    });
+
+    it('throws if fromTimestamp value is float or negative', () => {
+      let params = put(validParamsAsStrings, 'fromTimestamp', '1.1');
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
+      params = put(validParamsAsStrings, 'fromTimestamp', '-1');
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
+    });
+
+    it('throws if toTimestamp value is float or negative', () => {
+      let params = put(validParamsAsStrings, 'toTimestamp', '1.1');
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
+      params = put(validParamsAsStrings, 'toTimestamp', '-1');
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
+    });
+
+    it('throws if page value is float or negative', () => {
+      let params = put(validParamsAsStrings, 'page', '1.1');
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
+      params = put(validParamsAsStrings, 'page', '-1');
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
+    });
+
+    it('throws if perPage value is float or negative', () => {
+      let params = put(validParamsAsStrings, 'perPage', '1.1');
+      expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
+      params = put(validParamsAsStrings, 'perPage', '-1');
       expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
     });
   });

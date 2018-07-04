@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {
   validateFieldsConstrainedToSet,
-  validateIntegerParameterAndCast,
+  validateNumberParameterAndCast,
   validateIsAddress,
   validateNonNegativeInteger,
   validatePathsNotEmpty
@@ -140,10 +140,16 @@ export default class EntityBuilder {
 
     this.ensureGeoLocationParamsCorrectlyPlaced(params);
 
-    params.fromTimestamp = validateIntegerParameterAndCast(params.fromTimestamp, 'fromTimestamp');
-    params.toTimestamp = validateIntegerParameterAndCast(params.toTimestamp, 'toTimestamp');
-    params.page = validateIntegerParameterAndCast(params.page, 'page');
-    params.perPage = validateIntegerParameterAndCast(params.perPage, 'perPage');
+    params.fromTimestamp = validateNumberParameterAndCast(params.fromTimestamp, 'fromTimestamp');
+    params.toTimestamp = validateNumberParameterAndCast(params.toTimestamp, 'toTimestamp');
+    params.page = validateNumberParameterAndCast(params.page, 'page');
+    params.perPage = validateNumberParameterAndCast(params.perPage, 'perPage');
+
+    validateNonNegativeInteger(params.fromTimestamp, 'fromTimestamp');
+    validateNonNegativeInteger(params.toTimestamp, 'toTimestamp');
+    validateNonNegativeInteger(params.page, 'page');
+    validateNonNegativeInteger(params.perPage, 'perPage');
+
     if (params.createdBy) {
       validateIsAddress(params.createdBy);
     }
@@ -152,12 +158,15 @@ export default class EntityBuilder {
   }
 
   validateAndCastFindAssetsParams(params) {
-    const allowedParametersList = ['page', 'perPage', 'createdBy'];
+    const allowedParametersList = ['page', 'perPage', 'createdBy', 'identifier'];
 
     validateFieldsConstrainedToSet(params, allowedParametersList);
 
-    params.page = validateIntegerParameterAndCast(params.page, 'page');
-    params.perPage = validateIntegerParameterAndCast(params.perPage, 'perPage');
+    params.page = validateNumberParameterAndCast(params.page, 'page');
+    params.perPage = validateNumberParameterAndCast(params.perPage, 'perPage');
+    validateNonNegativeInteger(params.page, 'page');
+    validateNonNegativeInteger(params.perPage, 'perPage');
+
     if (params.createdBy) {
       validateIsAddress(params.createdBy);
     }
