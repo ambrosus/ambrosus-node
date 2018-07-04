@@ -39,13 +39,12 @@ export default class FindQueryObject {
     const pageNumber = this.criteria.page || 0;
     const resultsToSkip = pageNumber * pageSize;
 
-    const options = {
+    return {
       skip: resultsToSkip,
       limit: pageSize,
       sort: this.getSortingKey(),
       fields: this.getBlacklistedFields()
     };
-    return options;
   }
 
   async execute() {

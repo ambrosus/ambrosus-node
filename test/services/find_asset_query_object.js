@@ -54,6 +54,18 @@ describe('Find Asset Query Object', () => {
     expect(findAssetQueryObject.getSortingKey()).to.be.deep.equal([['content.idData.timestamp', 'descending']]);
   });
 
+  it('default assemble options', async () => {
+    expect(findAssetQueryObject.assembleOptionsForQuery()).to.deep.equal({
+      skip: 0,
+      limit: 100,
+      sort: [['content.idData.timestamp', 'descending']],
+      fields: {
+        _id: 0,
+        repository: 0
+      }
+    });
+  });
+
   it('executed returns assets sorted by timestamp', async () => {
     const found = await findAssetQueryObject.execute();
     expect(found.results).to.deep.equal([assets[2],assets[1],assets[0]]);
