@@ -24,6 +24,8 @@ export class FindAssetQueryObject extends FindQueryObject {
 
     const queryParts = {
       createdBy: {'content.idData.createdBy': this.criteria.createdBy},
+      fromTimestamp : {'content.idData.timestamp': {$gte: this.criteria.fromTimestamp}},
+      toTimestamp : {'content.idData.timestamp': {$lte: this.criteria.toTimestamp}},
       assetIds: {assetId: {$in: this.criteria.assetIds}}
     };
 

@@ -156,7 +156,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 
     + Body
 
-### /accounts{?accessLevel,perPage,page}
+### /accounts{?accessLevel,perPage,page,fromTimestamp,toTimestamp}
 
 #### Find accounts [GET]
 
@@ -168,7 +168,8 @@ Finds accounts satisfying provided criteria.
     + accessLevel (string, optional) - Finds only accounts with access level not smaller than parameter
     + perPage (integer, optional) - number of assets to return per page
     + page (integer, optional) - number of page (more search results than specified in perPage parameter concludes more than one page)
-    
+    + fromTimestamp (integer, optional) - earliest timestamp for the asset
+    + toTimestamp (integer, optional) - latest timestamp for the asset
 
 + Request (application/json)
 

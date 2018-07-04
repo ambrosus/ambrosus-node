@@ -404,13 +404,17 @@ describe('Entity Builder', () => {
       const params = {
         createdBy: anAddress,
         page: '2',
-        perPage: '10'
+        perPage: '10',
+        fromTimestamp: '15000000000',
+        toTimestamp: '17000000000'
       };
       const validatedParams = entityBuilder.validateAndCastFindAssetsParams(params);
       expect(validatedParams).to.deep.equal({
         createdBy: anAddress,
         page: 2,
-        perPage: 10
+        perPage: 10,
+        fromTimestamp: 15000000000,
+        toTimestamp: 17000000000
       });
     });
 
@@ -429,6 +433,18 @@ describe('Entity Builder', () => {
       expect(() => entityBuilder.validateAndCastFindAssetsParams({perPage: 'avc'})).to.throw(ValidationError);
       expect(() => entityBuilder.validateAndCastFindAssetsParams({perPage: '1.3'})).to.throw(ValidationError);
       expect(() => entityBuilder.validateAndCastFindAssetsParams({perPage: '-10'})).to.throw(ValidationError);
+    });
+
+    it('throws if fromTimestamp is not positive integer', async () => {
+      expect(() => entityBuilder.validateAndCastFindAssetsParams({fromTimestamp: 'avc'})).to.throw(ValidationError);
+      expect(() => entityBuilder.validateAndCastFindAssetsParams({fromTimestamp: '1.3'})).to.throw(ValidationError);
+      expect(() => entityBuilder.validateAndCastFindAssetsParams({fromTimestamp: '-10'})).to.throw(ValidationError);
+    });
+
+    it('throws if toTimestamp is not positive integer', async () => {
+      expect(() => entityBuilder.validateAndCastFindAssetsParams({toTimestamp: 'avc'})).to.throw(ValidationError);
+      expect(() => entityBuilder.validateAndCastFindAssetsParams({toTimestamp: '1.3'})).to.throw(ValidationError);
+      expect(() => entityBuilder.validateAndCastFindAssetsParams({toTimestamp: '-10'})).to.throw(ValidationError);
     });
   });
 
