@@ -9,8 +9,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import cors from 'cors';
 import express from 'express';
+import promClient from 'prom-client';
 import cachePreventionMiddleware from './middlewares/cache_prevention_middleware';
 import errorHandling from './middlewares/error_handling';
+import prometheusMiddleware from './middlewares/prometheus_middleware.js';
 import accountsRouter from './routes/accounts';
 import assetsRouter from './routes/assets';
 import bundlesRouter from './routes/bundles';
@@ -18,6 +20,7 @@ import eventsRouter from './routes/events';
 import tokenRouter from './routes/token';
 import nodeInfoRouter from './routes/nodeinfo';
 import healthCheckHandler from './routes/health_check';
+import prometheusMetricsHandler from './routes/prometheus_metrics.js';
 
 export default class Server {
   constructor(modelEngine, config) {
@@ -26,8 +29,10 @@ export default class Server {
   }
 
   start() {
+    this.collectMetricsInterval = promClient.collectDefaultMetrics({timeout: 10000});
     const app = express();
 
+    app.use(prometheusMiddleware(promClient));
     app.use(cors({
       origin : true,
       credentials: true
@@ -42,6 +47,7 @@ export default class Server {
     app.use('/token', tokenRouter(this.modelEngine.tokenAuthenticator, this.config));
     app.use('/bundle', bundlesRouter(this.modelEngine));
     app.use('/health', healthCheckHandler(this.modelEngine.mongoClient, this.modelEngine.proofRepository.web3));
+    app.use('/metrics', prometheusMetricsHandler(promClient));
 
     // Should always be last
     app.use(errorHandling);
@@ -50,6 +56,8 @@ export default class Server {
   }
 
   stop() {
+    clearInterval(this.collectMetricsInterval);
+    promClient.register.clear();
     this.server.close();
   }
 }
