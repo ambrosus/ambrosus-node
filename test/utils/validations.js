@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import {
-  validatePathsNotEmpty, validateFieldsConstrainedToSet, validateIntegerParameterAndCast,
+  validatePathsNotEmpty, validateFieldsConstrainedToSet, validateNumberParameterAndCast,
   validateNonNegativeInteger, validateIsAddress
 } from '../../src/utils/validations';
 import {ValidationError} from '../../src/errors/errors';
@@ -48,21 +48,25 @@ describe('validation', () => {
     });
   });
 
-  describe('validateIntegerParameterAndCast', () => {
+  describe('validateNumberParameterAndCast', () => {
     let output;
 
     it('works for an integer parameter', () => {
-      expect(() => output = validateIntegerParameterAndCast(6969, 'sampleErrMsg')).to.not.throw();
+      expect(() => output = validateNumberParameterAndCast(6969, 'sampleErrMsg')).to.not.throw();
       expect(output).to.equal(6969);
     });
 
     it('works for parsable string parameter', () => {
-      expect(() => output = validateIntegerParameterAndCast('6969', 'sampleErrMsg')).to.not.throw();
+      expect(() => output = validateNumberParameterAndCast('6969', 'sampleErrMsg')).to.not.throw();
       expect(output).to.equal(6969);
     });
 
+    it('does nothing if parameter is undefined', async () => {
+      expect(validateNumberParameterAndCast()).to.be.undefined;
+    });
+
     it('throws if parameter not parsable', () => {
-      expect(() => validateIntegerParameterAndCast('NaN', 'sampleErrMsg')).to.throw(ValidationError);
+      expect(() => validateNumberParameterAndCast('NaN', 'sampleErrMsg')).to.throw(ValidationError);
     });
   });
 
@@ -72,6 +76,10 @@ describe('validation', () => {
       expect(() => validateNonNegativeInteger(1.5)).to.throw(ValidationError);
       expect(() => validateNonNegativeInteger('1')).to.throw(ValidationError);
       expect(() => validateNonNegativeInteger([1])).to.throw(ValidationError);
+    });
+
+    it('does nothing if parameter is undefined', async () => {
+      expect(() => validateNonNegativeInteger()).to.not.throw();
     });
 
     it('throws if negative integer provided', async () => {

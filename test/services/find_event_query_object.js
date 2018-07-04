@@ -53,7 +53,7 @@ describe('Find Event Query Object', () => {
     expect(findEventQueryObject.getSortingKey()).to.be.deep.equal([['content.idData.timestamp', 'descending']]);
   });
 
-  it('properly assembles mongodb query', () => {
+  it('properly assembles mongodb query', async () => {
     const params = {
       assetId: 12,
       createdBy: '0x123',
@@ -63,7 +63,7 @@ describe('Find Event Query Object', () => {
     };
 
     findEventQueryObject = findEventQueryObjectFactory.create(params, 0);
-    const result = findEventQueryObject.assembleQuery();
+    const result = await findEventQueryObject.assembleQuery();
     expect(result).to.deep.eq({
       $and: [
         {'content.idData.accessLevel': {$lte: 0}},

@@ -27,19 +27,19 @@ const validateFieldsConstrainedToSet = (dict, validFields) => {
   }
 };
 
-const validateIntegerParameterAndCast = (value, errorMsg) => {
+const validateNumberParameterAndCast = (value, valueName) => {
   if (value) {
-    const parsedValue = parseInt(value, 10);
+    const parsedValue = parseFloat(value);
     if (isNaN(parsedValue)) {
-      throw new ValidationError(`Invalid ${errorMsg} parameter value`);
+      throw new ValidationError(`Invalid ${valueName} parameter value`);
     }
     return parsedValue;
   }
 };
 
-const validateNonNegativeInteger = (value, errorMsg = '') => {
-  if (!Number.isInteger(value) || value < 0) {
-    throw new ValidationError(errorMsg);
+const validateNonNegativeInteger = (value, valueName) => {
+  if (value !== undefined && (!Number.isInteger(value) || value < 0)) {
+    throw new ValidationError(`Invalid ${valueName} parameter value. Should be a non-negative integer.`);
   }
 };
 
@@ -53,7 +53,7 @@ const validateIsAddress = (address, errorMsg = `${address} is not a valid ethere
 export {
   validatePathsNotEmpty,
   validateFieldsConstrainedToSet,
-  validateIntegerParameterAndCast,
+  validateNumberParameterAndCast,
   validateNonNegativeInteger,
   validateIsAddress
 };

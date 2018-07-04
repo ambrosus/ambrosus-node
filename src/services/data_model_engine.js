@@ -103,10 +103,11 @@ export default class DataModelEngine {
     return asset;
   }
 
-  async findAssets(params) {
+  async findAssets(params, tokenData) {
     const validatedParams = this.entityBuilder.validateAndCastFindAssetsParams(params);
-    const findEventQueryObject = this.findAssetQueryObjectFactory.create(validatedParams);
-    return await findEventQueryObject.execute();
+    const accessLevel = await this.accountAccessDefinitions.getTokenCreatorAccessLevel(tokenData);
+    const findAssetQueryObject = this.findAssetQueryObjectFactory.create(validatedParams, accessLevel);
+    return await findAssetQueryObject.execute();
   }
 
   async createEvent(event) {

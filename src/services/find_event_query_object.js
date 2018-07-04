@@ -60,7 +60,7 @@ export class FindEventQueryObject extends FindQueryObject {
     return event.content.idData.accessLevel <= accessLevel ? event : pick(event, 'content.data');
   }
 
-  assembleQuery() {
+  async assembleQuery() {
     this.queryBuilder = new QueryBuilder();
 
     if (this.criteria.data) {

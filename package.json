@@ -16,7 +16,8 @@
     "dev:clean": "rimraf ./dist",
     "dev:setup": "export NODE_ENV=dev && babel-node src/tasks/dev_setup.js",
     "dev:start": "export NODE_ENV=dev && nodemon --watch src --exec babel-node --inspect src/start.js",
-    "dev:lint": "eslint src test config"
+    "dev:lint": "eslint src test config",
+    "dev:docker": "docker-compose up -d db parity"
   },
   "engines": {
     "node": ">=9.0",

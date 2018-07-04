@@ -171,13 +171,75 @@ describe('Assets - Integrations', () => {
     });
 
     it('should apply paging', async () => {
-      const response = await apparatus.request()
+      const page0Response = await apparatus.request()
+        .get(`/assets?page=0&perPage=2`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+        .send();
+      expect(page0Response.body.resultCount).to.equal(6);
+      expect(page0Response.body.results).to.deep.equal([assetSet[5], assetSet[4]]);
+
+      const page1Response = await apparatus.request()
         .get(`/assets?page=1&perPage=2`)
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send();
-      expect(response.body.resultCount).to.equal(6);
-      expect(response.body.results[0]).to.deep.equal(assetSet[3]);
-      expect(response.body.results[1]).to.deep.equal(assetSet[2]);
+      expect(page1Response.body.resultCount).to.equal(6);
+      expect(page1Response.body.results).to.deep.equal([assetSet[3], assetSet[2]]);
+    });
+
+    describe('Find by identifiers', () => {
+      beforeEach(async () => {
+        await scenario.generateEvents(
+          10,
+          (inx) => ({
+            accountInx: 0,
+            subjectInx: inx % 6,
+            fields: {
+              timestamp: inx
+            },
+            data: [{
+              type: 'ambrosus.event.identifiers',
+              isbn: [(inx % 2).toString()],
+              gs1: [(inx % 3).toString()]
+            }]
+          })
+        );
+      });
+
+      it('should find assets with identifiers', async () => {
+        const response = await apparatus.request()
+          .get(`/assets?identifier[isbn]=0`)
+          .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+          .send();
+        expect(response.body.resultCount).to.equal(3);
+        expect(response.body.results).to.deep.equal([assetSet[4], assetSet[2], assetSet[0]]);
+      });
+
+      it('should find with several identifiers', async () => {
+        const response = await apparatus.request()
+          .get(`/assets?identifier[isbn]=0&identifier[gs1]=2`)
+          .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+          .send();
+        expect(response.body.resultCount).to.equal(1);
+        expect(response.body.results).to.deep.equal([assetSet[2]]);
+      });
+
+      it('returns none if identifier not found', async () => {
+        const response = await apparatus.request()
+          .get(`/assets?identifier[foo]=0&identifier[gs1]=2`)
+          .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+          .send();
+        expect(response.body.resultCount).to.equal(0);
+        expect(response.body.results).to.deep.equal([]);
+      });
+
+      it('works with other queries', async () => {
+        const response = await apparatus.request()
+          .get(`/assets?identifier[isbn]=0&page=1&perPage=2`)
+          .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+          .send();
+        expect(response.body.resultCount).to.equal(3);
+        expect(response.body.results).to.deep.equal([assetSet[0]]);
+      });
     });
   });
 
