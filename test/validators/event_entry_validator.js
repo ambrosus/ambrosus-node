@@ -10,7 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {JsonValidationError} from '../../src/errors/errors';
 import EventEntryValidator from '../../src/validators/event_entry_validator.js';
 import JsonSchemaValidator from '../../src/validators/json_schema_validator';
-import identifiersSchema from '../../src/validators/schemas/custom/ambrosus.event.identifiers.json';
+import identifiersEventSchema from '../../src/validators/schemas/custom/ambrosus.event.identifiers.json';
+import identifiersAssetSchema from '../../src/validators/schemas/custom/ambrosus.asset.identifiers.json';
 import locationSchema from '../../src/validators/schemas/custom/ambrosus.event.location.asset.json';
 import locationEventGeoSchema from '../../src/validators/schemas/custom/ambrosus.event.location.geo.json';
 import locationAssetGeoSchema from '../../src/validators/schemas/custom/ambrosus.asset.location.geo.json';
@@ -24,11 +25,11 @@ const createEventWithEntries = (entries) => ({
 
 describe('EventEntryValidator', () => {
   describe('ambrosus.event.identifiers', () => {
-    let identifiersValidator;
+    let identifiersEventValidator;
 
     before(() => {
-      identifiersValidator = new EventEntryValidator('ambrosus.event.identifiers',
-        new JsonSchemaValidator(identifiersSchema));
+      identifiersEventValidator = new EventEntryValidator('ambrosus.event.identifiers',
+        new JsonSchemaValidator(identifiersEventSchema));
     });
 
     it('should accept if valid entry', () => {
@@ -36,26 +37,64 @@ describe('EventEntryValidator', () => {
         {type: 'ambrosus.event.identifiers', isbn: ['abc', 'cde'], VIN: ['000']},
         {type: 'ambrosus.event.identifiers', abc: ['abc']}
       ]);
-      expect(() => identifiersValidator.validate(event)).to.not.throw();
+      expect(() => identifiersEventValidator.validate(event)).to.not.throw();
     });
 
     it('throws when no identifiers', () => {
       const event = createEventWithEntries([{type: 'ambrosus.event.identifiers'}]);
-      expect(() => identifiersValidator.validate(event))
+      expect(() => identifiersEventValidator.validate(event))
         .to.throw(JsonValidationError)
         .and.have.nested.property('errors[0].message', 'should NOT have less than 2 properties');
     });
 
     it('throws when invalid identifier is an empty array', () => {
       const event = createEventWithEntries([{type: 'ambrosus.event.identifiers', foo: []}]);
-      expect(() => identifiersValidator.validate(event))
+      expect(() => identifiersEventValidator.validate(event))
         .to.throw(JsonValidationError)
         .and.have.nested.property('errors[0].message', 'should NOT have less than 1 items');
     });
 
     it('throws when invalid identifier is not an object', () => {
       const event = createEventWithEntries([{type: 'ambrosus.event.identifiers', foo: 0}]);
-      expect(() => identifiersValidator.validate(event))
+      expect(() => identifiersEventValidator.validate(event))
+        .to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should be array');
+    });
+  });
+
+  describe('ambrosus.asset.identifiers', () => {
+    let identifiersAssetValidator;
+
+    before(() => {
+      identifiersAssetValidator = new EventEntryValidator('ambrosus.asset.identifiers',
+        new JsonSchemaValidator(identifiersAssetSchema));
+    });
+
+    it('should accept if valid entry', () => {
+      const event = createEventWithEntries([
+        {type: 'ambrosus.asset.identifiers', isbn: ['abc', 'cde'], VIN: ['000']},
+        {type: 'ambrosus.asset.identifiers', abc: ['abc']}
+      ]);
+      expect(() => identifiersAssetValidator.validate(event)).to.not.throw();
+    });
+
+    it('throws when no identifiers', () => {
+      const event = createEventWithEntries([{type: 'ambrosus.asset.identifiers'}]);
+      expect(() => identifiersAssetValidator.validate(event))
+        .to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should NOT have less than 2 properties');
+    });
+
+    it('throws when invalid identifier is an empty array', () => {
+      const event = createEventWithEntries([{type: 'ambrosus.asset.identifiers', foo: []}]);
+      expect(() => identifiersAssetValidator.validate(event))
+        .to.throw(JsonValidationError)
+        .and.have.nested.property('errors[0].message', 'should NOT have less than 1 items');
+    });
+
+    it('throws when invalid identifier is not an object', () => {
+      const event = createEventWithEntries([{type: 'ambrosus.asset.identifiers', foo: 0}]);
+      expect(() => identifiersAssetValidator.validate(event))
         .to.throw(JsonValidationError)
         .and.have.nested.property('errors[0].message', 'should be array');
     });
