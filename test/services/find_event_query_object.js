@@ -305,7 +305,7 @@ describe('Find Event Query Object', () => {
           expect(found.resultCount).to.equal(1);
         });
 
-        it('omits events when the access level in event was higher than user\'s', async () => {
+        it(`omits events when the access level in event was higher than user's`, async () => {
           findEventQueryObject = findEventQueryObjectFactory.create(makeAssetIdentifierSearchParams({id: '2'}), 1);
           const found = await findEventQueryObject.execute();
           expect(found.results).to.deep.equal([eventsSet[1]]);

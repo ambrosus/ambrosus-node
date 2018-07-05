@@ -24,7 +24,7 @@ export class FindAssetQueryObject extends FindQueryObject {
 
     const queryParts = {
       createdBy: {'content.idData.createdBy': this.criteria.createdBy},
-      consideredAssets: {assetId: {$in: this.criteria.consideredAssets}}
+      assetIds: {assetId: {$in: this.criteria.assetIds}}
     };
 
     this.queryBuilder.addNeededPartsToQuery(this.criteria, queryParts);

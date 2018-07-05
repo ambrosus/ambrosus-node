@@ -104,11 +104,11 @@ export default class DataModelEngine {
     return asset;
   }
 
-  async selectAssetsByIdentifier(identifiers, accessLevel) {
+  async selectAssetsIdsByIdentifier(identifier, accessLevel) {
     const findEventQueryObject = this.findEventQueryObjectFactory.create({
       data: {
         type: 'ambrosus.event.identifiers',
-        ...identifiers
+        ...identifier
       }
     }, accessLevel ? accessLevel : 0);
     const events = await findEventQueryObject.execute();
@@ -119,8 +119,8 @@ export default class DataModelEngine {
     let validatedParams = this.entityBuilder.validateAndCastFindAssetsParams(params);
     if (validatedParams.identifier) {
       const accessLevel = await this.accountAccessDefinitions.getTokenCreatorAccessLevel(tokenData);
-      const consideredAssets = await this.selectAssetsByIdentifier(validatedParams.identifier, accessLevel);
-      validatedParams = pick(put(validatedParams, 'consideredAssets', consideredAssets), 'identifier');
+      const consideredAssetIds = await this.selectAssetsIdsByIdentifier(validatedParams.identifier, accessLevel);
+      validatedParams = pick(put(validatedParams, 'assetIds', consideredAssetIds), 'identifier');
     }
     const findAssetQueryObject = this.findAssetQueryObjectFactory.create(validatedParams);
     return await findAssetQueryObject.execute();

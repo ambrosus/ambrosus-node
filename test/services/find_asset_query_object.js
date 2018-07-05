@@ -77,7 +77,7 @@ describe('Find Asset Query Object', () => {
   });
 
   it('when given list of possible assets selects only among them', async () => {
-    findAssetQueryObject = findAssetQueryObjectFactory.create({consideredAssets: ['0x0', '0x2']});
+    findAssetQueryObject = findAssetQueryObjectFactory.create({assetIds: ['0x0', '0x2']});
     const found = await findAssetQueryObject.execute();
     expect(found.results).to.deep.equal([assets[2], assets[0]]);
     expect(found.resultCount).to.equal(2);

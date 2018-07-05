@@ -508,7 +508,6 @@ describe('Data Model Engine', () => {
       let mockFindEventQueryObject;
       let mockFindEventQueryObjectFactory;
       let mockAccountAccessDefinitions;
-      let result;
       const identifier = {
         isbn: 'abc-def',
         gs1: '123'
@@ -542,44 +541,54 @@ describe('Data Model Engine', () => {
 
         modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, {},
           {}, {}, {}, mockFindEventQueryObjectFactory, {}, mockFindAssetQueryObjectFactory, mockAccountAccessDefinitions);
-
-        result = await modelEngine.selectAssetsByIdentifier(identifier, accessLevel);
       });
 
-      it('should create FindEventQueryObject with correct parameters', () => {
-        expect(mockFindEventQueryObjectFactory.create).to.be.calledWith({
-          data: {
-            type: 'ambrosus.event.identifiers',
-            isbn: 'abc-def',
-            gs1: '123'
-          }
-        }, accessLevel);
+      describe('selectAssetsIdsByIdentifier', () => {
+        let result;
+
+        before(async () => {
+          result = await modelEngine.selectAssetsIdsByIdentifier(identifier, accessLevel);
+        });
+
+        it('should create FindEventQueryObject with correct parameters', () => {
+          expect(mockFindEventQueryObjectFactory.create).to.be.calledWith({
+            data: {
+              type: 'ambrosus.event.identifiers',
+              isbn: 'abc-def',
+              gs1: '123'
+            }
+          }, accessLevel);
+        });
+
+        it('should execute and return unique ids', () => {
+          expect(mockFindEventQueryObject.execute).to.be.calledOnce;
+          expect(result).to.deep.equal(['1', '10']);
+        });
+
+        it('when accessLevel was not given it defaults to 0', async () => {
+          await modelEngine.selectAssetsIdsByIdentifier(identifier);
+          expect(mockFindEventQueryObjectFactory.create).to.be.calledWith({
+            data: {
+              type: 'ambrosus.event.identifiers',
+              isbn: 'abc-def',
+              gs1: '123'
+            }
+          }, 0);
+        });
       });
 
-      it('should execute and return unique ids', () => {
-        expect(mockFindEventQueryObject.execute).to.be.calledOnce;
-        expect(result).to.deep.equal(['1', '10']);
-      });
+      describe('findAssets', () => {
+        before(async () => {
+          await modelEngine.findAssets({identifier}, token);
+        });
 
-      it('when accessLevel was not given it defaults to 0', async () => {
-        await modelEngine.selectAssetsByIdentifier(identifier);
-        expect(mockFindEventQueryObjectFactory.create).to.be.calledWith({
-          data: {
-            type: 'ambrosus.event.identifiers',
-            isbn: 'abc-def',
-            gs1: '123'
-          }
-        }, 0);
-      });
+        it('takes access level from token when filter by identifiers', async () => {
+          expect(mockAccountAccessDefinitions.getTokenCreatorAccessLevel).to.be.calledWith(token);
+        });
 
-      it('takes access level from token when filter by identifiers', async () => {
-        await modelEngine.findAssets({identifier}, token);
-        expect(mockAccountAccessDefinitions.getTokenCreatorAccessLevel).to.be.calledWith(token);
-      });
-
-      it('puts assetIds to consideredAssets', async () => {
-        await modelEngine.findAssets({identifier}, token);
-        expect(mockFindAssetQueryObjectFactory.create).to.be.calledWith({consideredAssets: ['1', '10']});
+        it('puts assetIds to consideredAssets', async () => {
+          expect(mockFindAssetQueryObjectFactory.create).to.be.calledWith({assetIds: ['1', '10']});
+        });
       });
     });
   });
@@ -819,8 +828,6 @@ describe('Data Model Engine', () => {
       mockEntityRepository = {
         getBundle: sinon.stub()
       };
-
-
 
       mockEntityRepository.getBundle.resolves(exampleBundle);
 
