@@ -54,8 +54,8 @@ describe('FindQueryObject', () => {
     expect(() => findQueryObject.getSortingKey()).to.throw(Error);
   });
 
-  it('doesn\'t have default assemble query method', async () => {
-    await expect(findQueryObject.assembleQuery()).to.be.eventually.rejected;
+  it('doesn\'t have default assemble query method', () => {
+    expect(() => findQueryObject.assembleQuery()).to.throw(Error);
   });
 
   it('doesn\'t have default item transformer', () => {

@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {NotFoundError, ValidationError, PermissionError} from '../errors/errors';
 import {getTimestamp} from '../utils/time_utils';
+import {put, pick} from '../utils/dict_utils';
 
 export default class DataModelEngine {
   constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, proofRepository, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient) {
@@ -103,10 +104,25 @@ export default class DataModelEngine {
     return asset;
   }
 
+  async selectAssetsIdsByIdentifier(identifier, accessLevel) {
+    const findEventQueryObject = this.findEventQueryObjectFactory.create({
+      data: {
+        type: 'ambrosus.event.identifiers',
+        ...identifier
+      }
+    }, accessLevel ? accessLevel : 0);
+    const events = await findEventQueryObject.execute();
+    return [...new Set(events.results.map((event) => event.content.idData.assetId))];
+  }
+
   async findAssets(params, tokenData) {
-    const validatedParams = this.entityBuilder.validateAndCastFindAssetsParams(params);
-    const accessLevel = await this.accountAccessDefinitions.getTokenCreatorAccessLevel(tokenData);
-    const findAssetQueryObject = this.findAssetQueryObjectFactory.create(validatedParams, accessLevel);
+    let validatedParams = this.entityBuilder.validateAndCastFindAssetsParams(params);
+    if (validatedParams.identifier) {
+      const accessLevel = await this.accountAccessDefinitions.getTokenCreatorAccessLevel(tokenData);
+      const consideredAssetIds = await this.selectAssetsIdsByIdentifier(validatedParams.identifier, accessLevel);
+      validatedParams = pick(put(validatedParams, 'assetIds', consideredAssetIds), 'identifier');
+    }
+    const findAssetQueryObject = this.findAssetQueryObjectFactory.create(validatedParams);
     return await findAssetQueryObject.execute();
   }
 

@@ -12,7 +12,7 @@ import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
 import FindAssetQueryObjectFactory, {FindAssetQueryObject} from '../../src/services/find_asset_query_object';
-import {createAsset, createEvent} from '../fixtures/assets_events';
+import {createAsset} from '../fixtures/assets_events';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -76,60 +76,10 @@ describe('Find Asset Query Object', () => {
     expect(found.resultCount).to.equal(3);
   });
 
-  describe('Select by identifiers', () => {
-    let events;
-
-    before(async () => {
-      events = [
-        await createEvent({assetId: assets[0].assetId}, [{type: 'ambrosus.event.identifiers', id: '1'}]),
-        await createEvent({assetId: assets[0].assetId, timestamp: 2}, [{type: 'ambrosus.event.identifiers', id: '2'}]),
-        await createEvent({assetId: assets[1].assetId, accessLevel: 2}, [{type: 'ambrosus.event.identifiers', id: '2',
-          id2: 'abc'}]),
-        await createEvent({assetId: assets[2].assetId}, [{type: 'some.other.type', id: '3'}])
-      ];
-      await Promise.all(events.map((event) => db.collection('events').insertOne({...event})));
-    });
-
-    it('returns assets with matching identifiers', async () => {
-      findAssetQueryObject = findAssetQueryObjectFactory.create({identifier: {id: '2'}}, 100);
-      const found = await findAssetQueryObject.execute();
-      expect(found.results).to.deep.equal([assets[1], assets[0]]);
-      expect(found.resultCount).to.equal(2);
-    });
-
-    it('finds assets when select by several ids', async () => {
-      findAssetQueryObject = findAssetQueryObjectFactory.create({identifier: {id: '2', id2: 'abc'}}, 100);
-      const found = await findAssetQueryObject.execute();
-      expect(found.results).to.deep.equal([assets[1]]);
-      expect(found.resultCount).to.equal(1);
-    });
-
-    it('omits assets when the access level in event was higher than user\'s', async () => {
-      findAssetQueryObject = findAssetQueryObjectFactory.create({identifier: {id: '2'}}, 1);
-      const found = await findAssetQueryObject.execute();
-      expect(found.results).to.deep.equal([assets[0]]);
-      expect(found.resultCount).to.equal(1);
-    });
-
-    it('when access level was not given assumes it equals 0', async () => {
-      findAssetQueryObject = findAssetQueryObjectFactory.create({identifier: {id: '2'}});
-      const found = await findAssetQueryObject.execute();
-      expect(found.results).to.deep.equal([assets[0]]);
-      expect(found.resultCount).to.equal(1);
-    });
-
-    it('ignores events with type other than ambrosus.event.identifiers', async () => {
-      findAssetQueryObject = findAssetQueryObjectFactory.create({identifier: {id: '3'}}, 100);
-      const found = await findAssetQueryObject.execute();
-      expect(found.results).to.deep.equal([]);
-      expect(found.resultCount).to.equal(0);
-    });
-
-    it('returns empty array when unknown identifier', async () => {
-      findAssetQueryObject = findAssetQueryObjectFactory.create({identifier: {unknownId: '3'}}, 100);
-      const found = await findAssetQueryObject.execute();
-      expect(found.results).to.deep.equal([]);
-      expect(found.resultCount).to.equal(0);
-    });
+  it('when given list of possible assets selects only among them', async () => {
+    findAssetQueryObject = findAssetQueryObjectFactory.create({assetIds: ['0x0', '0x2']});
+    const found = await findAssetQueryObject.execute();
+    expect(found.results).to.deep.equal([assets[2], assets[0]]);
+    expect(found.resultCount).to.equal(2);
   });
 });

@@ -53,7 +53,7 @@ describe('Find Event Query Object', () => {
     expect(findEventQueryObject.getSortingKey()).to.be.deep.equal([['content.idData.timestamp', 'descending']]);
   });
 
-  it('properly assembles mongodb query', async () => {
+  it('properly assembles mongodb query', () => {
     const params = {
       assetId: 12,
       createdBy: '0x123',
@@ -63,7 +63,7 @@ describe('Find Event Query Object', () => {
     };
 
     findEventQueryObject = findEventQueryObjectFactory.create(params, 0);
-    const result = await findEventQueryObject.assembleQuery();
+    const result = findEventQueryObject.assembleQuery();
     expect(result).to.deep.eq({
       $and: [
         {'content.idData.accessLevel': {$lte: 0}},
@@ -152,6 +152,11 @@ describe('Find Event Query Object', () => {
         }
       });
 
+      const makeIdentifiersEntry = (identifiers) => ({
+        type: 'ambrosus.event.identifiers',
+        ...identifiers
+      });
+
       before(async () => {
         scenario = new ScenarioBuilder(identityManager);
         await scenario.addAdminAccount(adminAccountWithSecret);
@@ -160,10 +165,14 @@ describe('Find Event Query Object', () => {
         await scenario.addAsset(0, {timestamp: 1});
 
         eventsSet = [
-          await scenario.addEvent(0, 0, {timestamp: 0, accessLevel: 0}, [makeLocationAssetEntry(0)]),
-          await scenario.addEvent(0, 0, {timestamp: 1, accessLevel: 1}, [makeLocationAssetEntry(1)]),
-          await scenario.addEvent(0, 0, {timestamp: 2, accessLevel: 2}, [makeLocationAssetEntry(0)]),
-          await scenario.addEvent(1, 0, {timestamp: 3, accessLevel: 0}, [makeLocationAssetEntry(1)]),
+          await scenario.addEvent(0, 0, {timestamp: 0, accessLevel: 0},
+            [makeLocationAssetEntry(0), makeIdentifiersEntry({id: '1'})]),
+          await scenario.addEvent(0, 0, {timestamp: 1, accessLevel: 1},
+            [makeLocationAssetEntry(1), makeIdentifiersEntry({id: '2'})]),
+          await scenario.addEvent(0, 0, {timestamp: 2, accessLevel: 2},
+            [makeLocationAssetEntry(0), makeIdentifiersEntry({id: '2', id2: 'abc'})]),
+          await scenario.addEvent(1, 0, {timestamp: 3, accessLevel: 0},
+            [makeLocationAssetEntry(1), {type: 'some.other.type', id: '3'}]),
           await scenario.addEvent(1, 0, {timestamp: 4, accessLevel: 1}, [makeLocationAssetEntry(0)]),
           await scenario.addEvent(0, 1, {timestamp: 5, accessLevel: 2}, [makeLocationAssetEntry(1)]),
           await scenario.addEvent(0, 1, {timestamp: 6, accessLevel: 0}, [makeLocationAssetEntry(0)]),
@@ -271,6 +280,51 @@ describe('Find Event Query Object', () => {
         expect(ret.results).have.lengthOf(2);
         expect(ret.resultCount).to.equal(2);
         expect(ret.results).to.deep.equal([eventsSet[9], eventsSet[7]]);
+      });
+
+      describe('search by asset identifiers', () => {
+        const makeAssetIdentifierSearchParams = (identifiers) => ({
+          data: {
+            type: 'ambrosus.event.identifiers',
+            ...identifiers
+          }
+        });
+
+        it('returns events with matching identifiers', async () => {
+          findEventQueryObject = findEventQueryObjectFactory.create(makeAssetIdentifierSearchParams({id: '2'}), 100);
+          const found = await findEventQueryObject.execute();
+          expect(found.results).to.deep.equal([eventsSet[2], eventsSet[1]]);
+          expect(found.resultCount).to.equal(2);
+        });
+
+        it('finds events when select by several ids', async () => {
+          findEventQueryObject = findEventQueryObjectFactory.create(
+            makeAssetIdentifierSearchParams({id: '2', id2: 'abc'}), 100);
+          const found = await findEventQueryObject.execute();
+          expect(found.results).to.deep.equal([eventsSet[2]]);
+          expect(found.resultCount).to.equal(1);
+        });
+
+        it(`omits events when the access level in event was higher than user's`, async () => {
+          findEventQueryObject = findEventQueryObjectFactory.create(makeAssetIdentifierSearchParams({id: '2'}), 1);
+          const found = await findEventQueryObject.execute();
+          expect(found.results).to.deep.equal([eventsSet[1]]);
+          expect(found.resultCount).to.equal(1);
+        });
+
+        it('ignores events with type other than ambrosus.event.identifiers', async () => {
+          findEventQueryObject = findEventQueryObjectFactory.create(makeAssetIdentifierSearchParams({id: '3'}), 100);
+          const found = await findEventQueryObject.execute();
+          expect(found.results).to.deep.equal([]);
+          expect(found.resultCount).to.equal(0);
+        });
+
+        it('returns empty array when unknown identifier', async () => {
+          findEventQueryObject = findEventQueryObjectFactory.create(makeAssetIdentifierSearchParams({unknownId: '3'}), 100);
+          const found = await findEventQueryObject.execute();
+          expect(found.results).to.deep.equal([]);
+          expect(found.resultCount).to.equal(0);
+        });
       });
     });
   });

@@ -14,7 +14,7 @@ import chaiAsPromised from 'chai-as-promised';
 import {pick, put} from '../../src/utils/dict_utils';
 
 import DataModelEngine from '../../src/services/data_model_engine';
-import {ValidationError, NotFoundError, PermissionError} from '../../src/errors/errors';
+import {NotFoundError, PermissionError, ValidationError} from '../../src/errors/errors';
 
 import {createAsset, createBundle, createEvent} from '../fixtures/assets_events';
 import {account, accountWithSecret, addAccountRequest, adminAccount, adminAccountWithSecret} from '../fixtures/account';
@@ -452,14 +452,11 @@ describe('Data Model Engine', () => {
     let mockFindAssetQueryObject;
     let mockEntityBuilder;
     let modelEngine;
-    let mockAccountAccessDefinitions;
 
     let scenario;
     let assetSet;
     let asset;
     const params = {foo: 'bar'};
-    const accessLevel = 2;
-    const token = {one: 1};
     const validatedParams = {bar: 'foo'};
     let ret;
 
@@ -476,10 +473,6 @@ describe('Data Model Engine', () => {
         validateAndCastFindAssetsParams: sinon.stub()
       };
 
-      mockAccountAccessDefinitions = {
-        getTokenCreatorAccessLevel: sinon.stub()
-      };
-
       scenario = new ScenarioBuilder(identityManager);
       await scenario.addAdminAccount(adminAccountWithSecret);
       asset = await scenario.addAsset(0);
@@ -487,24 +480,19 @@ describe('Data Model Engine', () => {
       mockFindAssetQueryObjectFactory.create.returns(mockFindAssetQueryObject);
       mockEntityBuilder.validateAndCastFindAssetsParams.returns(validatedParams);
       mockFindAssetQueryObject.execute.returns({results: assetSet, resultCount: 165});
-      mockAccountAccessDefinitions.getTokenCreatorAccessLevel.resolves(2);
 
       modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, {},
-        {}, {}, {}, {}, {}, mockFindAssetQueryObjectFactory, mockAccountAccessDefinitions);
+        {}, {}, {}, {}, {}, mockFindAssetQueryObjectFactory, {});
 
-      ret = await expect(modelEngine.findAssets(params, token)).to.fulfilled;
+      ret = await expect(modelEngine.findAssets(params)).to.fulfilled;
     });
 
     it('creates asset query object', async () => {
-      expect(mockFindAssetQueryObjectFactory.create).to.have.been.calledWith(validatedParams, accessLevel);
+      expect(mockFindAssetQueryObjectFactory.create).to.have.been.calledWith(validatedParams);
     });
 
     it('asks the asset query object for the assets', async () => {
       expect(mockFindAssetQueryObject.execute).to.have.been.called;
-    });
-
-    it('asks for access level', async () => {
-      expect(mockAccountAccessDefinitions.getTokenCreatorAccessLevel).to.be.calledWith(token);
     });
 
     it('calls validateAndCastFindAssetsParams with params', () => {
@@ -514,6 +502,94 @@ describe('Data Model Engine', () => {
     it('properly assembles the result', () => {
       expect(ret.results).to.equal(assetSet);
       expect(ret.resultCount).to.equal(165);
+    });
+
+    describe('Finding assets by identifiers', () => {
+      let mockFindEventQueryObject;
+      let mockFindEventQueryObjectFactory;
+      let mockAccountAccessDefinitions;
+      const identifier = {
+        isbn: 'abc-def',
+        gs1: '123'
+      };
+      const token = {one: 1};
+      const accessLevel = 2;
+
+      before(async () => {
+        mockFindEventQueryObjectFactory = {
+          create: sinon.stub()
+        };
+
+        mockFindEventQueryObject = {
+          execute: sinon.stub()
+        };
+
+        mockAccountAccessDefinitions = {
+          getTokenCreatorAccessLevel: sinon.stub()
+        };
+
+        mockEntityBuilder.validateAndCastFindAssetsParams.returns({identifier});
+        mockFindEventQueryObjectFactory.create.returns(mockFindEventQueryObject);
+        mockFindEventQueryObject.execute.resolves({
+          results: [
+            {content: {idData: {assetId: '1', foo: 'bar'}}},
+            {content: {idData: {assetId: '10', one: {two: 2}}}},
+            {content: {idData: {assetId: '1'}}}
+          ]
+        });
+        mockAccountAccessDefinitions.getTokenCreatorAccessLevel.resolves(accessLevel);
+
+        modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, {},
+          {}, {}, {}, mockFindEventQueryObjectFactory, {}, mockFindAssetQueryObjectFactory, mockAccountAccessDefinitions);
+      });
+
+      describe('selectAssetsIdsByIdentifier', () => {
+        let result;
+
+        before(async () => {
+          result = await modelEngine.selectAssetsIdsByIdentifier(identifier, accessLevel);
+        });
+
+        it('should create FindEventQueryObject with correct parameters', () => {
+          expect(mockFindEventQueryObjectFactory.create).to.be.calledWith({
+            data: {
+              type: 'ambrosus.event.identifiers',
+              isbn: 'abc-def',
+              gs1: '123'
+            }
+          }, accessLevel);
+        });
+
+        it('should execute and return unique ids', () => {
+          expect(mockFindEventQueryObject.execute).to.be.calledOnce;
+          expect(result).to.deep.equal(['1', '10']);
+        });
+
+        it('when accessLevel was not given it defaults to 0', async () => {
+          await modelEngine.selectAssetsIdsByIdentifier(identifier);
+          expect(mockFindEventQueryObjectFactory.create).to.be.calledWith({
+            data: {
+              type: 'ambrosus.event.identifiers',
+              isbn: 'abc-def',
+              gs1: '123'
+            }
+          }, 0);
+        });
+      });
+
+      describe('findAssets', () => {
+        before(async () => {
+          await modelEngine.findAssets({identifier}, token);
+        });
+
+        it('takes access level from token when filter by identifiers', async () => {
+          expect(mockAccountAccessDefinitions.getTokenCreatorAccessLevel).to.be.calledWith(token);
+        });
+
+        it('puts assetIds to consideredAssets', async () => {
+          expect(mockFindAssetQueryObjectFactory.create).to.be.calledWith({assetIds: ['1', '10']});
+        });
+      });
     });
   });
 
@@ -752,8 +828,6 @@ describe('Data Model Engine', () => {
       mockEntityRepository = {
         getBundle: sinon.stub()
       };
-
-
 
       mockEntityRepository.getBundle.resolves(exampleBundle);
 
