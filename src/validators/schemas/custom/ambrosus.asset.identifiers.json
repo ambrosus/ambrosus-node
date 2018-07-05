@@ -1,12 +1,12 @@
 {
-  "title": "ambrosus.event.identifiers",
-  "description": "Known identifiers for an event",
+  "title": "ambrosus.asset.identifiers",
+  "description": "Known identifiers for an asset",
   "type": "object",
   "properties": {
     "type": {
       "description": "Event entry type",
       "type": "string",
-      "const": "ambrosus.event.identifiers"
+      "const": "ambrosus.asset.identifiers"
     },
     "identifiers": {
       "type": "object",

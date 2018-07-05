@@ -108,7 +108,7 @@ export default class DataModelEngine {
     const findEventQueryObject = this.findEventQueryObjectFactory.create({
       data: {
         type: 'ambrosus.event.identifiers',
-        ...identifier
+        identifiers : {... identifier}
       }
     }, accessLevel ? accessLevel : 0);
     const events = await findEventQueryObject.execute();

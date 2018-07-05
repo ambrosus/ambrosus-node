@@ -130,10 +130,11 @@ describe('Entity Builder', () => {
 
       it('validates all predefined data types', async () => {
         const dataTypes = [
+          'ambrosus.asset.identifiers',
           'ambrosus.event.identifiers',
-          'ambrosus.event.location.asset',
-          'ambrosus.event.location.geo',
-          'ambrosus.asset.location.geo'];
+          'ambrosus.asset.location',
+          'ambrosus.event.location',
+          'ambrosus.asset.info'];
         expect(entityBuilder.eventValidators
           .map((validator) => validator.type)
           .filter((type) => type !== undefined)
@@ -151,7 +152,7 @@ describe('Entity Builder', () => {
 
       it('throws ValidationError if event not passing custom entity validation', () => {
         const brokenEvent = put(exampleEvent, 'content.data',
-          [...exampleEvent.content.data, {type: 'ambrosus.event.location.geo', geoJson : {type : 'Point', coordinates : [50]}}]);
+          [...exampleEvent.content.data, {type: 'ambrosus.event.location', geoJson : {type : 'Point', coordinates : [50]}}]);
         expect(() => entityBuilder.validateEvent(brokenEvent))
           .to.throw(JsonValidationError)
           .and.have.nested.property('errors[0].dataPath', '.geoJson.coordinates');

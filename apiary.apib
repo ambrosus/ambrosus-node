@@ -641,12 +641,12 @@ Events describe all registered changes of state that occurred with the asset. E.
 Every event has a `data` array, located at `content` with information what actually happened.
 Each item in this array is an object with a required `type` field of `string` type.
 Following event types are predefined:
+* `ambrosus.asset.info` - Human readable information about an asset, such as its name, photos, description, etc.
+* `ambrosus.asset.identifiers` - Known identifiers for an asset, must have at least 1 property of type `array`
 * `ambrosus.event.identifiers` - Known identifiers for an event, must have at least 1 property of type `array`
-* `ambrosus.event.location.asset` - Location expressed with an assetId, required are:
-    * `asset`: id of the other asset where event's subject is located
-* `ambrosus.event.location.geo` - Location of an event expressed with geographical coordinates.
+* `ambrosus.asset.location` - Location of an asset. Can be expressed with geographical coordinates.
     * `geoJson`: geographical point described with geoJson formula (As described in RFC7946, The GeoJSON Format)
-* `ambrosus.asset.location.geo` - Location of an asset expressed with geographical coordinates.
+* `ambrosus.event.location` - Location of an event. Can be expressed with geographical coordinates.
     * `geoJson`: geographical point described with geoJson formula (As described in RFC7946, The GeoJSON Format)
 
 ### /assets/{assetId}/events

@@ -17,10 +17,11 @@ import {
 import JsonSchemaValidator from '../validators/json_schema_validator';
 import EventEntryValidator from '../validators/event_entry_validator.js';
 import eventContentSchema from '../validators/schemas/event';
-import indentifiersSchema from '../validators/schemas/custom/ambrosus.event.identifiers.json';
-import locationSchema from '../validators/schemas/custom/ambrosus.event.location.asset.json';
-import locationEventGeoSchema from '../validators/schemas/custom/ambrosus.event.location.geo.json';
-import locationAssetGeoSchema from '../validators/schemas/custom/ambrosus.asset.location.geo.json';
+import identifiersAssetSchema from '../validators/schemas/custom/ambrosus.asset.identifiers.json';
+import identifiersEventSchema from '../validators/schemas/custom/ambrosus.event.identifiers.json';
+import locationEventSchema from '../validators/schemas/custom/ambrosus.event.location.json';
+import locationAssetSchema from '../validators/schemas/custom/ambrosus.asset.location.json';
+import infoAssetSchema from '../validators/schemas/custom/ambrosus.asset.info.json';
 import {pick, put} from '../utils/dict_utils';
 import {ValidationError} from '../errors/errors';
 import {getTimestamp} from '../utils/time_utils';
@@ -29,10 +30,11 @@ export default class EntityBuilder {
   constructor(identityManager, maximumEntityTimestampOvertake) {
     this.eventValidators = [
       new JsonSchemaValidator(eventContentSchema),
-      new EventEntryValidator('ambrosus.event.identifiers', new JsonSchemaValidator(indentifiersSchema)),
-      new EventEntryValidator('ambrosus.event.location.asset', new JsonSchemaValidator(locationSchema)),
-      new EventEntryValidator('ambrosus.event.location.geo', new JsonSchemaValidator(locationEventGeoSchema)),
-      new EventEntryValidator('ambrosus.asset.location.geo', new JsonSchemaValidator(locationAssetGeoSchema))
+      new EventEntryValidator('ambrosus.asset.identifiers', new JsonSchemaValidator(identifiersAssetSchema)),
+      new EventEntryValidator('ambrosus.event.identifiers', new JsonSchemaValidator(identifiersEventSchema)),
+      new EventEntryValidator('ambrosus.asset.location', new JsonSchemaValidator(locationAssetSchema)),
+      new EventEntryValidator('ambrosus.event.location', new JsonSchemaValidator(locationEventSchema)),
+      new EventEntryValidator('ambrosus.asset.info', new JsonSchemaValidator(infoAssetSchema))
     ];
     this.identityManager = identityManager;
     this.maximumEntityTimestampOvertake = maximumEntityTimestampOvertake;

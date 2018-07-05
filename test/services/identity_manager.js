@@ -57,7 +57,7 @@ describe('Identity manager', () => {
       expect(signature1).to.not.eq(signature2);
     });
 
-    it('should throw if private key has wrong format', () => {
+    it('throws if private key has wrong format', () => {
       expect(() => identityManager.sign('0x12312312321', exampleData)).to.throw(ValidationError);
     });
   });
@@ -83,11 +83,11 @@ describe('Identity manager', () => {
       expect(() => identityManager.validateSignature(account.address, signature, modifiedData)).to.throw(AuthenticationError);
     });
 
-    it('should throw if wrong signature format', () => {
+    it('throws if wrong signature format', () => {
       expect(() => identityManager.validateSignature(account.address, '0x1312312312', exampleData)).to.throw(ValidationError);
     });
 
-    it('should throw is wrong address format', () => {
+    it('throws is wrong address format', () => {
       expect(() => identityManager.validateSignature('0x1312312312', signature, exampleData)).to.throw(ValidationError);
     });
   });
@@ -112,7 +112,7 @@ describe('Identity manager', () => {
       expect(address).to.eq(pkPair.address);
     });
 
-    it('should throw if invalid secret', () => {
+    it('throws if invalid secret', () => {
       expect(() => identityManager.addressFromSecret('badSecret')).to.throw(AuthenticationError);
     });
   });
