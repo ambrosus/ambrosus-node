@@ -186,6 +186,22 @@ describe('Assets - Integrations', () => {
       expect(page1Response.body.results).to.deep.equal([assetSet[3], assetSet[2]]);
     });
 
+    it('should filter by timestamps', async () => {
+      const response = await apparatus.request()
+        .get(`/assets?fromTimestamp=2&toTimestamp=4`)
+        .send();
+      expect(response.body.resultCount).to.equal(3);
+      expect(response.body.results).to.deep.equal([assetSet[3], assetSet[2], assetSet[1]]);
+    });
+
+    it('returns none if no assets in timestamp scope', async () => {
+      const response = await apparatus.request()
+        .get(`/assets?fromTimestamp=200`)
+        .send();
+      expect(response.body.resultCount).to.equal(0);
+      expect(response.body.results).to.deep.equal([]);
+    });
+
     describe('Find by identifiers', () => {
       beforeEach(async () => {
         await scenario.generateEvents(

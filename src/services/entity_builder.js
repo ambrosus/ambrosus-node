@@ -158,14 +158,18 @@ export default class EntityBuilder {
   }
 
   validateAndCastFindAssetsParams(params) {
-    const allowedParametersList = ['page', 'perPage', 'createdBy', 'identifier'];
+    const allowedParametersList = ['page', 'perPage', 'createdBy', 'identifier', 'fromTimestamp', 'toTimestamp'];
 
     validateFieldsConstrainedToSet(params, allowedParametersList);
 
     params.page = validateNumberParameterAndCast(params.page, 'page');
     params.perPage = validateNumberParameterAndCast(params.perPage, 'perPage');
+    params.fromTimestamp = validateNumberParameterAndCast(params.fromTimestamp, 'fromTimestamp');
+    params.toTimestamp = validateNumberParameterAndCast(params.toTimestamp, 'toTimestamp');
     validateNonNegativeInteger(params.page, 'page');
     validateNonNegativeInteger(params.perPage, 'perPage');
+    validateNonNegativeInteger(params.fromTimestamp, 'fromTimestamp');
+    validateNonNegativeInteger(params.toTimestamp, 'toTimestamp');
 
     if (params.createdBy) {
       validateIsAddress(params.createdBy);
