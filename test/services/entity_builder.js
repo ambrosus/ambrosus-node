@@ -85,7 +85,7 @@ describe('Entity Builder', () => {
       });
 
       it('checks if timestamp does not exceed limit', () => {
-        mockEnsureTimestampWithinLimit = sinon.stub(entityBuilder, 'ensureTimestampWithinLimit');
+        mockEnsureTimestampWithinLimit = sinon.stub(entityBuilder, 'isTimestampWithinLimit');
         mockEnsureTimestampWithinLimit.throws(new ValidationError('Timestamp exceeds limit'));
 
         expect(() => entityBuilder.validateAsset(exampleAsset)).to.throw(ValidationError);
@@ -190,7 +190,7 @@ describe('Entity Builder', () => {
       });
 
       it('checks if timestamp does not exceed limit', () => {
-        mockEnsureTimestampWithinLimit = sinon.stub(entityBuilder, 'ensureTimestampWithinLimit');
+        mockEnsureTimestampWithinLimit = sinon.stub(entityBuilder, 'isTimestampWithinLimit');
         mockEnsureTimestampWithinLimit.throws(new ValidationError('Timestamp exceeds limit'));
 
         expect(() => entityBuilder.validateEvent(exampleEvent)).to.throw(ValidationError);
@@ -588,14 +588,14 @@ describe('Entity Builder', () => {
       entityBuilder = new EntityBuilder({}, oneDayInSeconds);
     });
 
-    it('passes if timestamp is in the limit', () => {
+    it('returns true if timestamp is in the limit', () => {
       timestamp = 0;
-      expect(() => entityBuilder.ensureTimestampWithinLimit(timestamp)).not.to.throw(ValidationError);
+      expect(entityBuilder.isTimestampWithinLimit(timestamp)).to.be.true;
     });
 
-    it('throws if timestamp exceeds the limit', () => {
+    it('returns false if timestamp exceeds the limit', () => {
       timestamp = oneDayInSeconds + 1;
-      expect(() => entityBuilder.ensureTimestampWithinLimit(timestamp)).to.throw(ValidationError);
+      expect(entityBuilder.isTimestampWithinLimit(timestamp)).to.be.false;
     });
 
     after(() => {

@@ -47,6 +47,7 @@ describe('Events Integrations: Find', () => {
       })
     );
   });
+
   describe('Fetch', () => {
     it('fetches an event when valid event id provided', async () => {
       const exampleEventId = scenario.events[0].eventId;

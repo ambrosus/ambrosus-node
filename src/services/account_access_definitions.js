@@ -7,14 +7,8 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {
-  validateFieldsConstrainedToSet,
-  validateNumberParameterAndCast,
-  validateIsAddress,
-  validateNonNegativeInteger,
-  validatePathsNotEmpty
-} from '../utils/validations';
-import {ValidationError, PermissionError} from '../errors/errors';
+import validateAndCast from '../utils/validations';
+import {PermissionError} from '../errors/errors';
 import {getTimestamp} from '../utils/time_utils';
 
 export default class AccountAccessDefinitions {
@@ -68,19 +62,12 @@ export default class AccountAccessDefinitions {
   validateAndCastFindAccountParams(params) {
     const allowedParametersList = ['accessLevel', 'page', 'perPage', 'registeredBy'];
 
-    validateFieldsConstrainedToSet(params, allowedParametersList);
-
-    params.accessLevel = validateNumberParameterAndCast(params.accessLevel, 'accessLevel');
-    params.page = validateNumberParameterAndCast(params.page, 'page');
-    params.perPage = validateNumberParameterAndCast(params.perPage, 'perPage');
-    validateNonNegativeInteger(params.accessLevel, 'accessLevel');
-    validateNonNegativeInteger(params.page, 'page');
-    validateNonNegativeInteger(params.perPage, 'perPage');
-    if (params.registeredBy) {
-      validateIsAddress(params.registeredBy);
-    }
-
-    return {...params};
+    return validateAndCast(params)
+      .fieldsConstrainedToSet(allowedParametersList)
+      .castNumber(['accessLevel', 'page', 'perPage'])
+      .isNonNegativeInteger(['accessLevel', 'page', 'perPage'])
+      .isAddress(['registeredBy'])
+      .getCastedParams();
   }
 
   validateAddAccountRequest(account) {
@@ -89,20 +76,20 @@ export default class AccountAccessDefinitions {
       'permissions',
       'accessLevel'
     ];
-    validatePathsNotEmpty(account, registrationFields);
-    validateFieldsConstrainedToSet(account, registrationFields);
-    validateNonNegativeInteger(account.accessLevel, 'AccessLevel should be a non-negative integer');
-    validateIsAddress(account.address);
+
+    validateAndCast(account)
+      .required(registrationFields)
+      .fieldsConstrainedToSet(registrationFields)
+      .isNonNegativeInteger(['accessLevel'])
+      .isAddress(['address']);
   }
 
   validateModifyAccountRequest(params) {
     const allowedParametersList = ['permissions', 'accessLevel'];
-    validateFieldsConstrainedToSet(params, allowedParametersList);
-    if (params.accessLevel) {
-      validateNonNegativeInteger(params.accessLevel, 'Access level should be a non-negative integer');
-    }
-    if (params.permissions && !Array.isArray(params.permissions)) {
-      throw new ValidationError(`Invalid permissions parameter value`);
-    }
+
+    validateAndCast(params)
+      .fieldsConstrainedToSet(allowedParametersList)
+      .isNonNegativeInteger(['accessLevel'])
+      .validate(['permissions'], (permissions) => Array.isArray(permissions), 'Permissions should be an array');
   }
 }

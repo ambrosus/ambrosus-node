@@ -165,6 +165,7 @@ describe('Events Integrations: Find by data entries', () => {
       expect(response.body.results[0].content.data[0].type).to.equal('ambrosus.asset.location');
       expect(response.body.results[0].content.idData.timestamp).to.equal(1);
     });
+
     it('works with an area containing one result', async () => {
       const response = await get(`/events?data[geoJson]=geo(0, 0.017, 1000)`);
       expect(response.body.resultCount).to.eq(1);

@@ -7,13 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {
-  validateFieldsConstrainedToSet,
-  validateNumberParameterAndCast,
-  validateIsAddress,
-  validateNonNegativeInteger,
-  validatePathsNotEmpty
-} from '../utils/validations';
+import validateAndCast from '../utils/validations';
 import JsonSchemaValidator from '../validators/json_schema_validator';
 import EventEntryValidator from '../validators/event_entry_validator.js';
 import eventContentSchema from '../validators/schemas/event';
@@ -41,47 +35,51 @@ export default class EntityBuilder {
   }
 
   validateAsset(asset) {
-    validatePathsNotEmpty(asset, [
-      'assetId',
-      'content.idData',
-      'content.signature',
-      'content.idData.createdBy',
-      'content.idData.timestamp',
-      'content.idData.sequenceNumber'
-    ]);
-    this.ensureTimestampWithinLimit(asset.content.idData.timestamp);
-    validateFieldsConstrainedToSet(asset, ['content', 'assetId']);
-    validateFieldsConstrainedToSet(asset.content, ['idData', 'signature']);
+    validateAndCast(asset)
+      .required([
+        'assetId',
+        'content.idData',
+        'content.signature',
+        'content.idData.createdBy',
+        'content.idData.timestamp',
+        'content.idData.sequenceNumber'
+      ])
+      .fieldsConstrainedToSet(['content', 'assetId'])
+      .fieldsConstrainedToSet(['idData', 'signature'], 'content')
+      .validate(['content.idData.timestamp'], (timestamp) => this.isTimestampWithinLimit(timestamp),
+        'Timestamp located too far in the future');
 
-    this.identityManager.validateSignature(asset.content.idData.createdBy, asset.content.signature, asset.content.idData);
+    this.identityManager.validateSignature(asset.content.idData.createdBy, asset.content.signature,
+      asset.content.idData);
   }
 
   validateEvent(event) {
-    validatePathsNotEmpty(event, [
-      'eventId',
-      'content.signature',
-      'content.idData',
-      'content.idData.assetId',
-      'content.idData.createdBy',
-      'content.idData.timestamp',
-      'content.idData.dataHash',
-      'content.idData.accessLevel',
-      'content.data'
-    ]);
-    this.eventValidators.forEach((validator) => validator.validate(event.content));
-    this.ensureTimestampWithinLimit(event.content.idData.timestamp);
-    validateFieldsConstrainedToSet(event, ['content', 'eventId']);
-    validateFieldsConstrainedToSet(event.content, ['idData', 'data', 'signature']);
-    validateNonNegativeInteger(event.content.idData.accessLevel, `Access level should be a non-negative integer, instead got ${event.content.idData.accessLevel}`);
-    validateNonNegativeInteger(event.content.idData.timestamp, `Timestamp should be a non-negative integer, instead got ${event.content.idData.timestamp}`);
+    validateAndCast(event)
+      .required([
+        'eventId',
+        'content.signature',
+        'content.idData',
+        'content.idData.assetId',
+        'content.idData.createdBy',
+        'content.idData.timestamp',
+        'content.idData.dataHash',
+        'content.idData.accessLevel',
+        'content.data'
+      ])
+      .validate(['content.idData.timestamp'], (timestamp) => this.isTimestampWithinLimit(timestamp),
+        'Timestamp located too far in the future')
+      .fieldsConstrainedToSet(['content', 'eventId'])
+      .fieldsConstrainedToSet(['idData', 'data', 'signature'], 'content')
+      .isNonNegativeInteger(['content.idData.accessLevel', 'content.idData.timestamp']);
 
-    this.identityManager.validateSignature(event.content.idData.createdBy, event.content.signature, event.content.idData);
+    this.eventValidators.forEach((validator) => validator.validate(event.content));
+
+    this.identityManager.validateSignature(event.content.idData.createdBy, event.content.signature,
+      event.content.idData);
   }
 
-  ensureTimestampWithinLimit (timestamp) {
-    if (getTimestamp() + this.maximumEntityTimestampOvertake < timestamp) {
-      throw new ValidationError(`Timestamp ${timestamp} located too far in the future`);
-    }
+  isTimestampWithinLimit(timestamp) {
+    return getTimestamp() + this.maximumEntityTimestampOvertake >= timestamp;
   }
 
   prepareEventForBundlePublication(event) {
@@ -138,61 +136,40 @@ export default class EntityBuilder {
   validateAndCastFindEventsParams(params) {
     const allowedParametersList = ['assetId', 'fromTimestamp', 'toTimestamp', 'page', 'perPage', 'createdBy', 'data'];
 
-    validateFieldsConstrainedToSet(params, allowedParametersList);
+    const castedParams = validateAndCast(params)
+      .fieldsConstrainedToSet(allowedParametersList)
+      .castNumber(['fromTimestamp', 'toTimestamp', 'page', 'perPage'])
+      .isNonNegativeInteger(['fromTimestamp', 'toTimestamp', 'page', 'perPage'])
+      .isAddress(['createdBy'])
+      .getCastedParams();
 
     this.ensureGeoLocationParamsCorrectlyPlaced(params);
-
-    params.fromTimestamp = validateNumberParameterAndCast(params.fromTimestamp, 'fromTimestamp');
-    params.toTimestamp = validateNumberParameterAndCast(params.toTimestamp, 'toTimestamp');
-    params.page = validateNumberParameterAndCast(params.page, 'page');
-    params.perPage = validateNumberParameterAndCast(params.perPage, 'perPage');
-
-    validateNonNegativeInteger(params.fromTimestamp, 'fromTimestamp');
-    validateNonNegativeInteger(params.toTimestamp, 'toTimestamp');
-    validateNonNegativeInteger(params.page, 'page');
-    validateNonNegativeInteger(params.perPage, 'perPage');
-
-    if (params.createdBy) {
-      validateIsAddress(params.createdBy);
-    }
-
-    return {...params};
+    return castedParams;
   }
 
   validateAndCastFindAssetsParams(params) {
     const allowedParametersList = ['page', 'perPage', 'createdBy', 'identifier', 'fromTimestamp', 'toTimestamp'];
 
-    validateFieldsConstrainedToSet(params, allowedParametersList);
-
-    params.page = validateNumberParameterAndCast(params.page, 'page');
-    params.perPage = validateNumberParameterAndCast(params.perPage, 'perPage');
-    params.fromTimestamp = validateNumberParameterAndCast(params.fromTimestamp, 'fromTimestamp');
-    params.toTimestamp = validateNumberParameterAndCast(params.toTimestamp, 'toTimestamp');
-    validateNonNegativeInteger(params.page, 'page');
-    validateNonNegativeInteger(params.perPage, 'perPage');
-    validateNonNegativeInteger(params.fromTimestamp, 'fromTimestamp');
-    validateNonNegativeInteger(params.toTimestamp, 'toTimestamp');
-
-    if (params.createdBy) {
-      validateIsAddress(params.createdBy);
-    }
-
-    return {...params};
+    return validateAndCast(params)
+      .fieldsConstrainedToSet(allowedParametersList)
+      .castNumber(['page', 'perPage', 'fromTimestamp', 'toTimestamp'])
+      .isNonNegativeInteger(['page', 'perPage', 'fromTimestamp', 'toTimestamp'])
+      .isAddress(['createdBy'])
+      .getCastedParams();
   }
-
 
   ensureGeoLocationParamsCorrectlyPlaced(params) {
     for (const key in params.data) {
       if (key === 'geoJson' &&
         (params.data[key].locationLongitude === undefined
-        || params.data[key].locationLatitude === undefined
-        || params.data[key].locationMaxDistance === undefined)) {
+          || params.data[key].locationLatitude === undefined
+          || params.data[key].locationMaxDistance === undefined)) {
         throw new ValidationError(`geoJson field stores only geographical coordinates`);
       }
       if (key !== 'geoJson' &&
         (params.data[key].locationLongitude !== undefined
-        || params.data[key].locationLatitude !== undefined
-        || params.data[key].locationMaxDistance !== undefined)) {
+          || params.data[key].locationLatitude !== undefined
+          || params.data[key].locationMaxDistance !== undefined)) {
         throw new ValidationError(`Location can only be stored on geoJson field`);
       }
     }
