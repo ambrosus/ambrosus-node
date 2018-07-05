@@ -25,7 +25,7 @@ export default class FindQueryObject {
     throw new Error(`Method 'getSortingKey' should be overridden`);
   }
 
-  async assembleQuery() {
+  assembleQuery() {
     throw new Error(`Method 'assembleQuery' should be overridden`);
   }
 
@@ -49,7 +49,7 @@ export default class FindQueryObject {
   }
 
   async execute() {
-    const query = await this.assembleQuery();
+    const query = this.assembleQuery();
     const options = this.assembleOptionsForQuery();
     let cursor = this.db
       .collection(this.collection)

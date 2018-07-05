@@ -9,43 +9,25 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import QueryBuilder from './query_builder';
 import FindQueryObject from './find_query_object';
-import FindEventQueryObjectFactory from './find_event_query_object';
 
 export class FindAssetQueryObject extends FindQueryObject {
-  constructor(db, criteria, accessLevel) {
+  constructor(db, criteria) {
     super(db, 'assets', criteria);
-    this.accessLevel = accessLevel;
   }
 
   getSortingKey() {
     return [['content.idData.timestamp', 'descending']];
   }
 
-  async selectByIdentifier(identifiers) {
-    const findEventQueryObject = new FindEventQueryObjectFactory(this.db).create({
-      data: {
-        type: 'ambrosus.event.identifiers',
-        ...identifiers
-      }
-    }, this.accessLevel ? this.accessLevel : 0);
-    const events = await findEventQueryObject.execute();
-    return events.results.map((event) => event.content.idData.assetId);
-  }
-
-  async assembleQuery() {
+  assembleQuery() {
     this.queryBuilder = new QueryBuilder();
-    let identifierIds;
 
-    if (this.criteria.identifier) {
-      identifierIds = await this.selectByIdentifier(this.criteria.identifier);
-    }
     const queryParts = {
       createdBy: {'content.idData.createdBy': this.criteria.createdBy},
-      identifier: {assetId: {$in: identifierIds}}
+      consideredAssets: {assetId: {$in: this.criteria.consideredAssets}}
     };
 
     this.queryBuilder.addNeededPartsToQuery(this.criteria, queryParts);
-
     return this.queryBuilder.compose();
   }
 }
@@ -55,7 +37,7 @@ export default class FindAssetQueryObjectFactory {
     this.db = db;
   }
 
-  create(criteria, accessLevel) {
-    return new FindAssetQueryObject(this.db, criteria, accessLevel);
+  create(criteria) {
+    return new FindAssetQueryObject(this.db, criteria);
   }
 }
