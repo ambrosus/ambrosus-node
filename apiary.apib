@@ -156,7 +156,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 
     + Body
 
-### /accounts{?accessLevel,perPage,page,fromTimestamp,toTimestamp}
+### /accounts{?accessLevel,perPage,page}
 
 #### Find accounts [GET]
 
@@ -168,8 +168,6 @@ Finds accounts satisfying provided criteria.
     + accessLevel (string, optional) - Finds only accounts with access level not smaller than parameter
     + perPage (integer, optional) - number of assets to return per page
     + page (integer, optional) - number of page (more search results than specified in perPage parameter concludes more than one page)
-    + fromTimestamp (integer, optional) - earliest timestamp for the asset
-    + toTimestamp (integer, optional) - latest timestamp for the asset
 
 + Request (application/json)
 
@@ -570,7 +568,7 @@ Fetches asset with provided assetId in the system.
     + Body
 
 
-### /assets{?perPage,page,createdBy}
+### /assets{?perPage,page,createdBy,fromTimestamp,toTimestamp,identifier}
 
 #### Find assets [GET]
 
@@ -581,7 +579,10 @@ Finds assets satisfying provided criteria.
     + perPage (integer, optional) - number of assets to return per page
     + page (integer, optional) - number of page (more search results than specified in perPage parameter concludes more than one page)
     + createdBy (string, optional) - address of account that created targeting assets
-    
+    + fromTimestamp (integer, optional) - earliest timestamp for the asset
+    + toTimestamp (integer, optional) - latest timestamp for the asset
+    + identifier : identifier[{identifierType}]={identifierValue} (string, optional) - This syntax allows to query for assets that have an associated event containing data type `ambrosus.event.identifier` (see Events Data field section) with same identifier of same type. It's possible to search for several identifiers e.g. `identifier[vin]=3FRNF65N97V448821&identifier[registration]=zh123456`. This will return only assets described by both identifiers.
+
 + Response 200 (application/json)
 
     Up to 100 newest assets
