@@ -988,3 +988,26 @@ Fetches a bundle by identifier
     Bundle not found
 
     + Body
+
+## Group Nodeinfo
+
+Information on the Gateway node.
+
+## /nodeinfo
+
+#### Get node info [GET]
+
++ Response 200
+
+    + Attributes (object)
+        + commit (string) - Hash of the latest git commit on the node
+        + version (string) - Version of the Ambrosus Node
+        + nodeAddress (string) - An Ambrosus address of the node
+
+    + Body
+
+          {
+              "commit": "e7b85366ba78e34d4ec98cbcc01a4ae0aa36b098",
+              "version": "0.0.1",
+              "nodeAddress": "0xEbDEAC82424a053DFf79397862BD122F76798bC5"
+          }

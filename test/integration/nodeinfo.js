@@ -34,6 +34,7 @@ describe('Nodeinfo - Integrations', async () => {
 
     it('should return version and address', async () => {
       const nodeinfo = await apparatus.request().get('/nodeinfo');
+      expect(nodeinfo.body.commit).to.match(/^[0-9a-f]{40}$/);
       expect(nodeinfo.body.version).to.match(/^\d+\.\d+\.\d+$/);
       expect(nodeinfo.body.nodeAddress).to.be.properAddress;
     });

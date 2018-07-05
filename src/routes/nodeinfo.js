@@ -8,10 +8,13 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import express from 'express';
+import asyncMiddleware from '../middlewares/async_middleware';
+import getGitCommitHash from '../utils/sys_utils';
 
-export const getNodeInfoHandler = (identityManager) => (req, res) => {
+export const getNodeInfoHandler = (identityManager) => async (req, res) => {
   require('pkginfo')(module, 'version');
   res.status(200).send({
+    commit: await getGitCommitHash(),
     version: module.exports.version,
     nodeAddress: identityManager.nodeAddress()
   });
@@ -20,7 +23,7 @@ export const getNodeInfoHandler = (identityManager) => (req, res) => {
 const nodeInfoRouter = (identityManager) => {
   const router = new express.Router();
   router.get('/',
-    getNodeInfoHandler(identityManager)
+    asyncMiddleware(getNodeInfoHandler(identityManager))
   );
   return router;
 };
