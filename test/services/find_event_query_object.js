@@ -53,6 +53,18 @@ describe('Find Event Query Object', () => {
     expect(findEventQueryObject.getSortingKey()).to.be.deep.equal([['content.idData.timestamp', 'descending']]);
   });
 
+  it('default assemble options', async () => {
+    expect(findEventQueryObject.assembleOptionsForQuery()).to.deep.equal({
+      skip: 0,
+      limit: 100,
+      sort: [['content.idData.timestamp', 'descending']],
+      fields: {
+        _id: 0,
+        repository: 0
+      }
+    });
+  });
+
   it('properly assembles mongodb query', () => {
     const params = {
       assetId: 12,
