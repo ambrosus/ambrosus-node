@@ -59,9 +59,9 @@ Multiple entities (assets and events) are packed into bundles. The proof of the 
 Example bundle look like this:
 ```json
 {
-  "bundleId": "<hash (content addressable) calcuated from contents field>",
+  "bundleId": "<hash (content addressable) calculated from contents field>",
   "content": {
-    "signature": "<eliptic curve signature of the idData field>",
+    "signature": "<elliptic curve signature of the idData field>",
     "idData": {
       "createdBy": "<address (public key derived) of vendor holding data>",
       "timestamp": "<unix epoch timestamp>",
@@ -79,7 +79,7 @@ Bundles are mainly used for backward verification of entities and node syncing.
 
 ## Basic principles: 
 
-### Immutability, permanence and persistance
+### Immutability, permanence and persistence
 All entities are immutable and are permanent. You will not find any update or delete calls.
 
 Note that permanence is not the same thing as persistence. Permanence is related to content-addressing, meaning an object's identity (name/id/address) will always be the same. Permanent supply chain data means linking between entities with permanent ids. Ids are always the same, and thus the links won't break.
@@ -90,15 +90,15 @@ Persistence is a property we are aiming to achieve in future releases.
 Ids of entities are strings with a hex value. Entities are content-addressable, meaning that their id depends on the content. There is only one valid id per content and if content changes the id changes as well. Technically id is keccak-256 hash of a serialized content object.
 
 ### Signatures
-Content of the proper entitiy is signed by the creator. `createdBy` stores information about who creator is in form of ethereum compatible address. Signature is ethereum compatible signature with private key.
+Content of the proper entity is signed by the creator. `createdBy` stores information about who creator is in form of ethereum compatible address. Signature is ethereum compatible signature with private key.
 
 ## Permissions
-All `idData` of every entity is always publically available. Entity creator can however define `accessLevel`, required to access `data` field. 
- * If access level equals `0` it means entity `data` is publically available.
+All `idData` of every entity is always publicly available. Entity creator can however define `accessLevel`, required to access `data` field. 
+ * If access level equals `0` it means entity `data` is publicly available.
  * If access level is greater than `0` it means entity `data` is only available to users registered with given node and with adequate `accessLevel` (e.g.m you need to have permission level 3 to access data on `accessLevel` 1, 2, 3).
 
 ## What is next?
 
 Go to step-by-step [tutorial](https://github.com/ambrosus/ambrosus-node/blob/master/docs/tutorial.md).
 
-Alternativelly, visit [ambrosus.docs.apiary.io](https://ambrosus.docs.apiary.io/) for full API documentation.
+Alternatively, visit [ambrosus.docs.apiary.io](https://ambrosus.docs.apiary.io/) for full API documentation.

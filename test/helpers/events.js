@@ -11,9 +11,9 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 module.exports = function () {
   const emitEventMethod = function (eventName) {
     const tx = this._obj;
-    const eventOccurences = tx.events[eventName];
+    const eventOccurrences = tx.events[eventName];
     this.assert(
-      eventOccurences,
+      eventOccurrences,
       `expected the tx to emit event: "${eventName}", but it was not emitted`,
       `expected the tx not to emit event: "${eventName}", but it was emitted one or more times`
     );

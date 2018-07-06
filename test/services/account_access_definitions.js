@@ -58,7 +58,7 @@ describe('Account Access Definitions', () => {
   });
 
   describe('ensurePermission', () => {
-    it('asks accountRepository for acocunt', async () => {
+    it('asks accountRepository for account', async () => {
       await expect(accountAccessDefinitions.ensureHasPermission(mockAccount.address, permissions[0]))
         .to.be.fulfilled;
       expect(mockAccountRepository.get).to.be.calledWith(mockAccount.address);

@@ -26,7 +26,7 @@ const DEFAULT_GAS = 4700000;
 
 const ensureSameLength = (array1, array2) => {
   if ((array1.length || array2.length) && array1.length !== array2.length) {
-    throw new Error('Different length of addreses and url lists');
+    throw new Error('Different length of addresses and url lists');
   }
 };
 
