@@ -46,7 +46,7 @@ describe('Contract Manager', () => {
       expect(contract).to.equal(exampleContract);
     });
 
-    it('should throw if addresses are not configured', () => {
+    it('throws if addresses are not configured', () => {
       expect(() => ContractManager.loadBundleRegistryContract(mockWeb3)).to.throw();
       expect(deployContractStub).to.not.have.been.called;
       expect(loadContractStub).to.not.have.been.called;

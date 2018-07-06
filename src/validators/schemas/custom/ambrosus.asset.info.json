@@ -1,0 +1,80 @@
+{
+  "title": "ambrosus.asset.info",
+  "description": "Human readable information about an asset",
+  "type": "object",
+  "properties": {
+    "type": {
+      "description": "Event entry type",
+      "type": "string",
+      "const": "ambrosus.asset.info"
+    },
+    "assetType": {
+      "description": "Type of the asset",
+      "type": "string"
+    },
+    "name": {
+      "description": "Default human readable name of the asset",
+      "type": "string"
+    },
+    "localisedName": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "description": {
+      "description": "Default human readable description of the asset",
+      "type": "string"
+    },
+    "localisedDescription": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "images": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "size": {
+            "type": "object",
+            "properties": {
+              "width": {
+                "type": "number"
+              },
+              "height": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "width",
+              "height"
+            ]
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      }
+    }
+  },
+  "required": [
+    "type",
+    "name"
+  ]
+}
+

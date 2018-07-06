@@ -554,8 +554,10 @@ describe('Data Model Engine', () => {
           expect(mockFindEventQueryObjectFactory.create).to.be.calledWith({
             data: {
               type: 'ambrosus.event.identifiers',
-              isbn: 'abc-def',
-              gs1: '123'
+              identifiers: {
+                isbn: 'abc-def',
+                gs1: '123'
+              }
             }
           }, accessLevel);
         });
@@ -570,8 +572,10 @@ describe('Data Model Engine', () => {
           expect(mockFindEventQueryObjectFactory.create).to.be.calledWith({
             data: {
               type: 'ambrosus.event.identifiers',
-              isbn: 'abc-def',
-              gs1: '123'
+              identifiers: {
+                isbn: 'abc-def',
+                gs1: '123'
+              }
             }
           }, 0);
         });
@@ -1049,7 +1053,7 @@ describe('Data Model Engine', () => {
       it(`asks proof repository for vendor's url`, async() => {
         expect(mockProofRepository.getVendorUrl).to.have.been.calledWith(vendorId);
       });
-      it(`delegetes entity downloader to download bundle from given url`, async() => {
+      it(`delegates entity downloader to download bundle from given url`, async() => {
         expect(mockEntityDownloader.downloadBundle).to.have.been.calledWith(vendorUrl, bundleId);
       });
       it(`saves downloaded bundle to entity repository`, async() => {

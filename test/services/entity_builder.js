@@ -86,7 +86,7 @@ describe('Entity Builder', () => {
 
       it('checks if timestamp does not exceed limit', () => {
         mockEnsureTimestampWithinLimit = sinon.stub(entityBuilder, 'ensureTimestampWithinLimit');
-        mockEnsureTimestampWithinLimit.throws(new ValidationError('Timestamp exceedes limit'));
+        mockEnsureTimestampWithinLimit.throws(new ValidationError('Timestamp exceeds limit'));
 
         expect(() => entityBuilder.validateAsset(exampleAsset)).to.throw(ValidationError);
         expect(mockEnsureTimestampWithinLimit).to.have.been.calledOnce;
@@ -130,10 +130,11 @@ describe('Entity Builder', () => {
 
       it('validates all predefined data types', async () => {
         const dataTypes = [
+          'ambrosus.asset.identifiers',
           'ambrosus.event.identifiers',
-          'ambrosus.event.location.asset',
-          'ambrosus.event.location.geo',
-          'ambrosus.asset.location.geo'];
+          'ambrosus.asset.location',
+          'ambrosus.event.location',
+          'ambrosus.asset.info'];
         expect(entityBuilder.eventValidators
           .map((validator) => validator.type)
           .filter((type) => type !== undefined)
@@ -151,7 +152,7 @@ describe('Entity Builder', () => {
 
       it('throws ValidationError if event not passing custom entity validation', () => {
         const brokenEvent = put(exampleEvent, 'content.data',
-          [...exampleEvent.content.data, {type: 'ambrosus.event.location.geo', geoJson : {type : 'Point', coordinates : [50]}}]);
+          [...exampleEvent.content.data, {type: 'ambrosus.event.location', geoJson : {type : 'Point', coordinates : [50]}}]);
         expect(() => entityBuilder.validateEvent(brokenEvent))
           .to.throw(JsonValidationError)
           .and.have.nested.property('errors[0].dataPath', '.geoJson.coordinates');
@@ -190,7 +191,7 @@ describe('Entity Builder', () => {
 
       it('checks if timestamp does not exceed limit', () => {
         mockEnsureTimestampWithinLimit = sinon.stub(entityBuilder, 'ensureTimestampWithinLimit');
-        mockEnsureTimestampWithinLimit.throws(new ValidationError('Timestamp exceedes limit'));
+        mockEnsureTimestampWithinLimit.throws(new ValidationError('Timestamp exceeds limit'));
 
         expect(() => entityBuilder.validateEvent(exampleEvent)).to.throw(ValidationError);
         expect(mockEnsureTimestampWithinLimit).to.have.been.calledOnce;
@@ -592,7 +593,7 @@ describe('Entity Builder', () => {
       expect(() => entityBuilder.ensureTimestampWithinLimit(timestamp)).not.to.throw(ValidationError);
     });
 
-    it('throws if timestamp exceedes the limit', () => {
+    it('throws if timestamp exceeds the limit', () => {
       timestamp = oneDayInSeconds + 1;
       expect(() => entityBuilder.ensureTimestampWithinLimit(timestamp)).to.throw(ValidationError);
     });
