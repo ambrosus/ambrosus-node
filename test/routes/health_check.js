@@ -48,7 +48,7 @@ describe('Health check tests', () => {
     // We can't close the connection to web3 because we're using ganache,
     // mocking is the second best option.
     const stub = sinon.stub(apparatus.web3.eth, 'getNodeInfo');
-    stub.returns(Promise.reject('Error: Invalid JSON RPC response: ""'));
+    stub.rejects('Error: Invalid JSON RPC response: ""');
 
     const {response} = await apparatus.request()
       .get('/health')
@@ -65,7 +65,7 @@ describe('Health check tests', () => {
     await apparatus.dataModelEngine.mongoClient.close();
 
     const stub = sinon.stub(apparatus.web3.eth, 'getNodeInfo');
-    stub.returns(Promise.reject('Error: Invalid JSON RPC response: ""'));
+    stub.rejects('Error: Invalid JSON RPC response: ""');
 
     const {response} = await apparatus.request()
       .get('/health')

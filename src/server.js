@@ -21,6 +21,7 @@ import tokenRouter from './routes/token';
 import nodeInfoRouter from './routes/nodeinfo';
 import healthCheckHandler from './routes/health_check';
 import prometheusMetricsHandler from './routes/prometheus_metrics.js';
+import asyncMiddleware from './middlewares/async_middleware';
 
 export default class Server {
   constructor(modelEngine, config) {
@@ -46,8 +47,8 @@ export default class Server {
     app.use('/events', eventsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine));
     app.use('/token', tokenRouter(this.modelEngine.tokenAuthenticator, this.config));
     app.use('/bundle', bundlesRouter(this.modelEngine));
-    app.use('/health', healthCheckHandler(this.modelEngine.mongoClient, this.modelEngine.proofRepository.web3));
-    app.use('/metrics', prometheusMetricsHandler(promClient));
+    app.get('/health', asyncMiddleware(healthCheckHandler(this.modelEngine.mongoClient, this.modelEngine.proofRepository.web3)));
+    app.get('/metrics', prometheusMetricsHandler(promClient));
 
     // Should always be last
     app.use(errorHandling);
