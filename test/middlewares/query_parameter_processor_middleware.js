@@ -13,7 +13,10 @@ import sinonChai from 'sinon-chai';
 import httpMocks from 'node-mocks-http';
 import {ValidationError} from '../../src/errors/errors';
 
-import queryParameterProcessorMiddleware from '../../src/middlewares/query_parameter_processor_middleware';
+import queryParameterProcessorMiddleware, {
+  escapeRegExpSymbols, regexifyPatternAndOptimizeTrailingStars,
+  regexifyPattern
+} from '../../src/middlewares/query_parameter_processor_middleware';
 
 chai.use(sinonChai);
 const {expect} = chai;
@@ -45,7 +48,7 @@ describe('Query Parameter Processor Middleware', () => {
     expect(next).to.not.have.been.called;
   });
 
-  describe('number decorator', () => {
+  describe('Number decorator', () => {
     it('casts decorated value to number', async () => {
       // from ?data[subparam1]=exampleString&data[subparam2]=number(2)&param1=number(5)&param2=example2String
       const request = createRequest({
@@ -76,7 +79,7 @@ describe('Query Parameter Processor Middleware', () => {
     });
   });
 
-  describe('geo decorator', () => {
+  describe('Geo decorator', () => {
     // from ?data[subparam1]=exampleString&data[subparam2]=geo(2,10,15)&param1=example2String
     it('casts decorated value to {lon, lat, rad} object', async () => {
       const request = createRequest({
@@ -122,6 +125,69 @@ describe('Query Parameter Processor Middleware', () => {
     it('throws if decorated value is not presenting valid geo coordinates (one of values is not a number)', async () => {
       const request = createRequest({
         something: 'geo(NaN, 4, 43)',
+        somethingElse: '1234'
+      });
+      expect(() => queryParameterProcessorMiddleware(request, response, next)).to.throw(ValidationError);
+      expect(next).to.not.have.been.called;
+    });
+  });
+
+  describe('Pattern decorator', () => {
+    it('escapeRegExpSymbols works', () => {
+      const notEscapedString = '[?]()?*abc()^{}';
+      const escapedString = `\\[?\\]\\(\\)?*abc\\(\\)\\^\\{\\}`;
+      expect(escapeRegExpSymbols(notEscapedString)).to.equal(escapedString);
+    });
+
+    it('regexifyPattern works', async () => {
+      const input = 'a?bc*def?*';
+      const expectedRegex = '^a.bc.*def..*';
+      expect(regexifyPattern(input)).to.equal(expectedRegex);
+    });
+
+    it('regexifyPatternAndOptimizeTrailingStars removes all `*` from the end and skips `$` character', () => {
+      const input = 'a?bc*def?***';
+      const expectedRegex = '^a.bc.*def.';
+      expect(regexifyPatternAndOptimizeTrailingStars(input)).to.equal(expectedRegex);
+    });
+
+    it('regexifyPatternAndOptimizeTrailingStars adds `$` character if no trailing `*` found', () => {
+      const input = 'a?bc*def?';
+      const expectedRegex = '^a.bc.*def.$';
+      expect(regexifyPatternAndOptimizeTrailingStars(input)).to.equal(expectedRegex);
+    });
+
+    it('casts decorated pattern to regex', () => {
+      const request = createRequest({
+        data: {
+          subparam1: 'exampleString',
+          subparam2: 'pattern(abc.*.de?)'
+        },
+        param1: 'pattern(a*)',
+        param2: 'example2String'
+      });
+
+      queryParameterProcessorMiddleware(request, response, next);
+
+      expect(request.query.data.subparam2).to.deep.equal(/^abc\..*\.de.$/);
+      expect(request.query.param1).to.deep.equal(/^a/);
+      expect(request.query.data.subparam1).to.be.a('string').and.equal('exampleString');
+      expect(request.query.param2).to.be.a('string').and.equal('example2String');
+      expect(next).to.have.been.calledOnce;
+    });
+
+    it('throws if the pattern starts with *', () => {
+      const request = createRequest({
+        something: 'pattern(*abc)',
+        somethingElse: '1234'
+      });
+      expect(() => queryParameterProcessorMiddleware(request, response, next)).to.throw(ValidationError);
+      expect(next).to.not.have.been.called;
+    });
+
+    it('throws if the pattern starts with ?', () => {
+      const request = createRequest({
+        something: 'pattern(?abc)',
         somethingElse: '1234'
       });
       expect(() => queryParameterProcessorMiddleware(request, response, next)).to.throw(ValidationError);

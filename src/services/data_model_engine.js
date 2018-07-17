@@ -7,9 +7,9 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {NotFoundError, ValidationError, PermissionError} from '../errors/errors';
+import {NotFoundError, PermissionError, ValidationError} from '../errors/errors';
 import {getTimestamp} from '../utils/time_utils';
-import {put, pick} from '../utils/dict_utils';
+import {pick, put} from '../utils/dict_utils';
 
 export default class DataModelEngine {
   constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, proofRepository, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient) {
@@ -108,7 +108,7 @@ export default class DataModelEngine {
     const findEventQueryObject = this.findEventQueryObjectFactory.create({
       data: {
         type: 'ambrosus.event.identifiers',
-        identifiers : {... identifier}
+        identifiers: {...identifier}
       }
     }, accessLevel ? accessLevel : 0);
     const events = await findEventQueryObject.execute();

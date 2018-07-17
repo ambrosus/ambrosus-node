@@ -216,7 +216,7 @@ describe('Assets - Integrations', () => {
               type: 'ambrosus.event.identifiers',
               identifiers: {
                 isbn: [(inx % 2).toString()],
-                gs1: [(inx % 3).toString()]
+                gs1: [(inx % 3).toString(), 'abcdef'.substring(0, inx % 6)]
               }
             }]
           })
@@ -257,6 +257,15 @@ describe('Assets - Integrations', () => {
           .send();
         expect(response.body.resultCount).to.equal(3);
         expect(response.body.results).to.deep.equal([assetSet[0]]);
+      });
+
+      it('can search by pattern', async () => {
+        const response = await apparatus.request()
+          .get(`/assets?identifier[gs1]=pattern(a?cd*)`)
+          .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+          .send();
+        expect(response.body.resultCount).to.equal(2);
+        expect(response.body.results).to.deep.equal([assetSet[5], assetSet[4]]);
       });
     });
   });

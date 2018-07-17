@@ -103,6 +103,17 @@ describe('Events Integrations: Find by data entries', () => {
     expect(response.body.results[0].content.data[0].confirmationAddress).to.equal('0x2222222222222222222222222222222222222222');
   });
 
+  it('with pattern matching', async () => {
+    await scenario.addEvent(0, 0, {timestamp: 1, accessLevel: 0}, [{
+      type: 'ambrosus.event.illustration',
+      confirmationAddress: '0x2222222222222222222222222222222222222222',
+      confirmationSignature: '0x39FFe6D49f20a83471D3a32f8CfDd987504fC822f8CfDd987504fC82'
+    }]);
+    const response = await get('/events?data[type]=pattern(ambrosus.event.*)&data[confirmationAddress]=pattern(0x?2*2)');
+    expect(response.body.resultCount).to.eq(1);
+    expect(response.body.results[0].content.data[0].confirmationAddress).to.equal('0x2222222222222222222222222222222222222222');
+  });
+
   describe('geo based search', () => {
     beforeEach(async () => {
       await scenario.addEvent(0, 0, {timestamp: 1, accessLevel: 0}, [{
