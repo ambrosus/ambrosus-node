@@ -13,18 +13,14 @@ const prometheusMiddleware = (promClient) => {
     name: 'http_request_duration_seconds',
     help: 'Request duration in seconds',
     buckets: promClient.linearBuckets(0.1, 0.2, 20),
-    labelNames: ['path', 'status']
+    labelNames: ['status']
   });
 
   return (req, res, next) => {
     if (!excludedPaths.includes(req.path)) {
-      // Save req.path in a local variable because it changed during
-      // `res.on('finish')` to `/`.
-      const {path} = req;
       const endTimer = httpRequestDurationSeconds.startTimer();
 
       res.on('finish', () => endTimer({
-        path,
         status: res.statusCode
       }));
     }

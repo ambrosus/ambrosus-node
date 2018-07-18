@@ -37,7 +37,7 @@ describe('Prometheus middleware tests', () => {
 
     // Custom metrics
     expect(response.text.indexOf(
-      'http_request_duration_seconds_count{path="/nodeInfo",status="200"} 1'
+      'http_request_duration_seconds_count{status="200"} 1'
     ) > -1)
       .to.eql(true);
   });
