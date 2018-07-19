@@ -9,7 +9,7 @@ Welcome to Ambrosus Node API Documentation.
 Before you can start interacting with API you need to create an account. An account is a pair: address and secret.
 
 Each state-modifying call needs to have the `content.idData.createdBy` field with creator address and one of two:
-* A body field `content.signature`. It is generated with ethereum sign function from the serialized `content.data` object. Serialisation algorithm will be described in separate section.
+* A body field `content.signature`. It is generated with ethereum sign function from the serialized `content.idData` object. Serialisation algorithm will be described in separate section.
 * A http authorization header `AMB ...`: You can supply your secret to API and gateway will calculate the signature for you. __Warning__: This is only allowed in development and testing environment. We strongly recommend against using it in a production environment.
 
 ### Immutability
