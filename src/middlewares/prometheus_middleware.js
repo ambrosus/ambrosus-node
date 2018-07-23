@@ -12,7 +12,11 @@ const prometheusMiddleware = (promClient) => {
   const httpRequestDurationSeconds = new promClient.Histogram({
     name: 'http_request_duration_seconds',
     help: 'Request duration in seconds',
-    buckets: promClient.linearBuckets(0.1, 0.2, 20),
+    buckets: promClient.linearBuckets(0.1, 0.2, 15)
+  });
+  const httpRequestsTotal = new promClient.Counter({
+    name: 'http_requests_total',
+    help: 'Total number of HTTP requests',
     labelNames: ['status']
   });
 
@@ -20,9 +24,10 @@ const prometheusMiddleware = (promClient) => {
     if (!excludedPaths.includes(req.path)) {
       const endTimer = httpRequestDurationSeconds.startTimer();
 
-      res.on('finish', () => endTimer({
-        status: res.statusCode
-      }));
+      res.on('finish', () => {
+        endTimer();
+        httpRequestsTotal.inc({status: res.statusCode});
+      });
     }
     next();
   };
