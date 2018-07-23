@@ -36,6 +36,29 @@ const castToCoordinatesOrThrow = (input) => {
   throw new ValidationError('Location query must be of format `geo(lon, lat, rad)`');
 };
 
+/*
+ Taken from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
+ Modified to not escape `*` and `?` characters
+*/
+export const escapeRegExpSymbols = (input) => input.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+
+export const regexifyPattern = (input) => `^${input.replace(/\*/g, '.$&').replace(/\?/g, '.')}`;
+
+// Boosts performance, see: https://docs.mongodb.com/manual/reference/operator/query/regex/#index-use
+export const regexifyPatternAndOptimizeTrailingStars = (input) => {
+  if (input.endsWith('*')) {
+    return regexifyPattern(input.replace(/\*+$/, ''));
+  }
+  return `${regexifyPattern(input)}$`;
+};
+
+const castToRegexOrThrow = (input) => {
+  if (input.startsWith('*') || input.startsWith('?')) {
+    throw new ValidationError('Patterns starting with special characters are not supported');
+  }
+  return new RegExp(regexifyPatternAndOptimizeTrailingStars(escapeRegExpSymbols(input)));
+};
+
 const deepMapObject = (input, transformFunc) => Object.keys(input).reduce(
   (accumulated, key) => {
     const value = input[key];
@@ -82,7 +105,8 @@ const queryParameterProcessorMiddleware = (req, res, next) => {
     req.query,
     {
       number: (value) => castToNumberOrThrow(value),
-      geo: (value) => castToCoordinatesOrThrow(value)
+      geo: (value) => castToCoordinatesOrThrow(value),
+      pattern: (value) => castToRegexOrThrow(value)
     }
   );
 

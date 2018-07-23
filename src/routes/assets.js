@@ -17,6 +17,7 @@ import {ValidationError} from '../errors/errors';
 import ambAuthorizationHeaderMiddleware from '../middlewares/amb_authorization_header_middleware';
 import accessTokenMiddleware from '../middlewares/access_token_middleware';
 import ensureJsonMime from '../middlewares/mime_middleware';
+import queryParameterProcessorMiddleware from '../middlewares/query_parameter_processor_middleware';
 
 export const createAssetHandler = (modelEngine) => async (req, res) => {
   const createdAsset = await modelEngine.createAsset(req.body);
@@ -97,6 +98,7 @@ const assetRouter = (tokenAuthenticator, identityManager, modelEngine, config) =
 
   router.get('/',
     accessTokenMiddleware(tokenAuthenticator, false),
+    queryParameterProcessorMiddleware,
     asyncMiddleware(findAssetsHandler(modelEngine)));
 
   return router;

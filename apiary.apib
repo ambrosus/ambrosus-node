@@ -581,7 +581,10 @@ Finds assets satisfying provided criteria.
     + createdBy (string, optional) - address of account that created targeting assets
     + fromTimestamp (integer, optional) - earliest timestamp for the asset
     + toTimestamp (integer, optional) - latest timestamp for the asset
-    + identifier : identifier[{identifierType}]={identifierValue} (string, optional) - This syntax allows to query for assets that have an associated event containing data type `ambrosus.event.identifier` (see Events Data field section) with same identifier of same type. It's possible to search for several identifiers e.g. `identifier[vin]=3FRNF65N97V448821&identifier[registration]=zh123456`. This will return only assets described by both identifiers.
+    + identifier : identifier[{identifierType}]={identifierValue} (string, optional) - This syntax allows to query for assets that have an associated event containing data type `ambrosus.event.identifier` (see Events Data field section) with same identifier of same type. It is possible to find identifiers matching a pattern with help of the pattern decorator. You can use like this: identifier[vin]=pattern(3FRNF65N*). It supports 2 kinds of special characters:
+      - __*__ matches any string, including the null string.
+      - __?__ matches any single character
+      Note that patterns cannot have a special character as the first symbol for performance reasons. It is not possible to escape special characters.
 
 + Response 200 (application/json)
 
@@ -867,7 +870,10 @@ Finds event satisfying provided criteria.
     + perPage (integer, optional) - number of events to return per page
     + page (integer, optional) - number of page (more search results than specified in perPage parameter concludes more than one page)
     + createdBy (string, optional) - address of account that created targeting events
-    + data : data[type]=ambrosus.event.custom (object, optional) - This syntax allows to query for events by any fields in data array. Query for nested fields is possible, e.g. data[acceleration.x]=10. By default the type of the value is string. To provide a number, use data[acceleration.x]=number(10). To provide geo coordinates use data[geoJson]=geo(longitude, latitude, radius).
+    + data : data[type]=ambrosus.event.custom (object, optional) - This syntax allows to query for events by any fields in data array. Query for nested fields is possible, e.g. data[acceleration.x]=10. By default the type of the value is string. To provide a number, use data[acceleration.x]=number(10). To provide geo coordinates use data[geoJson]=geo(longitude, latitude, radius). It is possible to match data values by the pattern using the pattern decorator like so `data[type]=pattern(ambrosus.event.*)`. It support 2 kinds of special characters:
+       - __*__ matches any string, including the null string.
+       - __?__ matches any single character
+       Note that patterns cannot have a special character as the first symbol for performance reasons. It is not possible to escape special characters.
 
 + Response 200 (application/json)
 

@@ -277,6 +277,18 @@ describe('Find Event Query Object', () => {
         ret.results.forEach((element) => expect(element.content.idData.timestamp).to.be.within(1, 4));
       });
 
+      it('can search by regular expressions', async () => {
+        const targetAssetId = scenario.assets[0].assetId;
+        const targetCreatorAddress = scenario.accounts[1].address;
+
+        findEventQueryObject = findEventQueryObjectFactory.create({assetId: new RegExp(targetAssetId), createdBy: new RegExp(targetCreatorAddress)}, 10);
+        const ret = await findEventQueryObject.execute();
+        expect(ret.results).have.lengthOf(2);
+        expect(ret.resultCount).to.equal(2);
+        expect(ret.results[0]).to.deep.equal(eventsSet[4]);
+        expect(ret.results[1]).to.deep.equal(eventsSet[3]);
+      });
+
       it('search by data entry', async () => {
         const targetAssetId = scenario.assets[0].assetId;
         findEventQueryObject = findEventQueryObjectFactory.create({data: {asset: targetAssetId}}, 1);
@@ -307,6 +319,13 @@ describe('Find Event Query Object', () => {
           const found = await findEventQueryObject.execute();
           expect(found.results).to.deep.equal([eventsSet[2], eventsSet[1]]);
           expect(found.resultCount).to.equal(2);
+        });
+
+        it('finds by regex', async () => {
+          findEventQueryObject = findEventQueryObjectFactory.create(makeAssetIdentifierSearchParams({id2: /^a.c$/}), 100);
+          const found = await findEventQueryObject.execute();
+          expect(found.results).to.deep.equal([eventsSet[2]]);
+          expect(found.resultCount).to.equal(1);
         });
 
         it('finds events when select by several ids', async () => {
