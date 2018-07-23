@@ -72,6 +72,10 @@ export default class Config {
     return config.get('maximumEntityTimestampOvertake');
   }
 
+  gitCommit() {
+    return process.env.GIT_COMMIT;
+  }
+
   static default(attributes) {
     return new Config(attributes);
   }
