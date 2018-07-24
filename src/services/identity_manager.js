@@ -50,6 +50,10 @@ export default class IdentityManager {
     return this.web3.eth.accounts.hashMessage(serialized);
   }
 
+  checkHashMatches(hash, data) {
+    return hash === this.calculateHash(data);
+  }
+
   serializeForHashing(object) {
     const isDict = (subject) => typeof subject === 'object' && !Array.isArray(subject);
     const isString = (subject) => typeof subject === 'string';
