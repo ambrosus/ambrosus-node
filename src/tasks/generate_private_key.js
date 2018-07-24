@@ -10,13 +10,14 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import Web3 from 'web3';
 import {writeFile, checkFileExists} from '../utils/file';
 import path from 'path';
+import {WinstonConsoleLogger} from '../utils/loggers';
 
-async function execute() {
+async function execute(logger) {
   const web3 = new Web3();
 
   const keyFilePath = path.join('config', 'nodePrivateKey.json');
   if (await checkFileExists(keyFilePath)) {
-    console.log('A private key file already exists. Silently quitting');
+    logger.info('A private key file already exists. Silently quitting');
     return;
   }
 
@@ -24,11 +25,13 @@ async function execute() {
   const {privateKey, address} = account;
 
   await writeFile(keyFilePath, JSON.stringify(privateKey));
-  console.log(`Generated address/privateKey pair:\n\taddress: ${address}\n\tprivate key: ${privateKey}\n\nSaving under ${keyFilePath}`);
+  logger.info(`Generated address/privateKey pair:\n\taddress: ${address}\n\tprivate key: ${privateKey}\n\nSaving under ${keyFilePath}`);
 }
 
-execute()
+const logger = new WinstonConsoleLogger();
+
+execute(logger)
   .catch((err) => {
-    console.error(`${err}`);
+    logger.error(`${err}`);
     process.exit(1);
   });

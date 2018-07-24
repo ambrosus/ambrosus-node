@@ -11,6 +11,7 @@ import {createWeb3} from '../utils/web3_tools';
 import Config from '../utils/config';
 import commandLineArgs from 'command-line-args';
 import ContractManager from '../services/contract_manager';
+import {WinstonConsoleLogger} from '../utils/loggers';
 
 const optionDefinitions = [
   {name: 'add', type: Boolean},
@@ -30,20 +31,22 @@ const ensureSameLength = (array1, array2) => {
   }
 };
 
-console.log('Connecting to AMB chain...');
+const logger = new WinstonConsoleLogger();
+
+logger.info('Connecting to AMB chain...');
 createWeb3()
   .then(async (web3) => {
-    console.log('Connected.');
+    logger.info('Connected.');
     const config = Config.default();
     const bundleRegistry = ContractManager.loadBundleRegistryContract(web3, config.bundleRegistryContractAddress());
     const options = commandLineArgs(optionDefinitions);
     if ([options.add, options.remove, options.check, options.geturl, options.seturl].filter((opt) => opt).length !== 1) {
-      console.error('One of the arguments --add, --remove or --check should be given, e.g.');
-      console.error('yarn run ops:bundle:whitelist --add -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466" -u "node.ambrosus.com"');
-      console.error('yarn run ops:bundle:whitelist --remove -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"');
-      console.error('yarn run ops:bundle:whitelist --check -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"');
-      console.error('yarn run ops:bundle:whitelist --seturl -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466" -u "node.amb.to"');
-      console.error('yarn run ops:bundle:whitelist --geturl -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"');
+      logger.error('One of the arguments --add, --remove or --check should be given, e.g.');
+      logger.error('yarn run ops:bundle:whitelist --add -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466" -u "node.ambrosus.com"');
+      logger.error('yarn run ops:bundle:whitelist --remove -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"');
+      logger.error('yarn run ops:bundle:whitelist --check -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"');
+      logger.error('yarn run ops:bundle:whitelist --seturl -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466" -u "node.amb.to"');
+      logger.error('yarn run ops:bundle:whitelist --geturl -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"');
       return;
     }
     if (options.add) {
@@ -64,7 +67,7 @@ createWeb3()
       await setUrl(web3, bundleRegistry, options.address, options.url);
     }
   })
-  .catch(console.error);
+  .catch(logger.error);
 
 const addToWhiteList = async (web3, bundleRegistry, addresses, urls) => {
   for (const index in addresses) {
@@ -73,9 +76,9 @@ const addToWhiteList = async (web3, bundleRegistry, addresses, urls) => {
         from: web3.eth.defaultAccount,
         gas: DEFAULT_GAS
       });
-      console.log(`${addresses[index]} was added to whitelist`);
+      logger.info(`${addresses[index]} was added to whitelist`);
     } catch (err) {
-      console.error(`Failed to add ${addresses[index]} to whitelist\n${err}`);
+      logger.error(`Failed to add ${addresses[index]} to whitelist\n${err}`);
     }
   }
 };
@@ -87,9 +90,9 @@ const removeFromWhiteList = async (web3, bundleRegistry, addresses) => {
         from: web3.eth.defaultAccount,
         gas: DEFAULT_GAS
       });
-      console.log(`${address} was removed from whitelist`);
+      logger.info(`${address} was removed from whitelist`);
     } catch (err) {
-      console.error(`Failed to remove ${address} from whitelist\n${err}`);
+      logger.error(`Failed to remove ${address} from whitelist\n${err}`);
     }
   }
 };
@@ -98,9 +101,9 @@ const checkWhiteList = async (web3, bundleRegistry, addresses) => {
   for (const address of addresses) {
     try {
       const result = await bundleRegistry.methods.isWhitelisted(address).call();
-      console.log(result === true ? `✔️ ${address} is whitelisted` : `🚫 ${address} is not whitelisted`);
+      logger.info(result === true ? `✔️ ${address} is whitelisted` : `🚫 ${address} is not whitelisted`);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   }
 };
@@ -109,9 +112,9 @@ const getUrl = async (web3, bundleRegistry, addresses) => {
   for (const address of addresses) {
     try {
       const result = await bundleRegistry.methods.getUrlForVendor(address).call();
-      console.log(`Url for ${address} is ${result}`);
+      logger.info(`Url for ${address} is ${result}`);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   }
 };
@@ -123,9 +126,9 @@ const setUrl = async (web3, bundleRegistry, addresses, urls) => {
         from: web3.eth.defaultAccount,
         gas: DEFAULT_GAS
       });
-      console.log(`${addresses[index]} was added to whitelist`);
+      logger.info(`${addresses[index]} was added to whitelist`);
     } catch (err) {
-      console.error(`Failed to add ${addresses[index]} to whitelist\n${err}`);
+      logger.error(`Failed to add ${addresses[index]} to whitelist\n${err}`);
     }
   }
 };
