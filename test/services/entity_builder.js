@@ -19,7 +19,7 @@ import IdentityManager from '../../src/services/identity_manager';
 import EntityBuilder from '../../src/services/entity_builder';
 
 import {adminAccountWithSecret} from '../fixtures/account';
-import {createFullAsset, createFullEvent} from '../fixtures/assets_events';
+import {createFullAsset, createFullEvent, createFullBundle} from '../fixtures/assets_events';
 
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {getTimestamp} from '../../src/utils/time_utils';
@@ -32,11 +32,13 @@ describe('Entity Builder', () => {
   let identityManager;
   let exampleAsset;
   let exampleEvent;
+  let exampleBundle;
 
   before(async () => {
     identityManager = new IdentityManager(await createWeb3());
     exampleAsset = createFullAsset(identityManager);
     exampleEvent = createFullEvent(identityManager, {assetId: exampleAsset.assetId});
+    exampleBundle = createFullBundle(identityManager, {}, [exampleAsset, exampleEvent]);
   });
 
   describe('validating', () => {
@@ -46,17 +48,24 @@ describe('Entity Builder', () => {
 
     before(() => {
       mockIdentityManager = {
-        validateSignature: sinon.stub()
+        validateSignature: sinon.stub(),
+        checkHashMatches: sinon.stub()
       };
       entityBuilder = new EntityBuilder(mockIdentityManager, oneDayInSeconds);
     });
 
     beforeEach(() => {
-      mockIdentityManager.validateSignature.resetHistory();
+      mockIdentityManager.validateSignature.reset();
       mockIdentityManager.validateSignature.returns();
+      mockIdentityManager.checkHashMatches.reset();
+      mockIdentityManager.checkHashMatches.returns(true);
     });
 
     describe('Asset', () => {
+      it('passes for proper asset', () => {
+        expect(() => entityBuilder.validateAsset(exampleAsset)).to.not.throw();
+      });
+
       for (const field of [
         'assetId',
         'content',
@@ -72,12 +81,18 @@ describe('Entity Builder', () => {
         });
       }
 
-      it('uses the IdentityManager for checking signature (correct)', () => {
+      it('checks if assetId matches the hash of content (delegated to IdentityManager)', () => {
+        mockIdentityManager.checkHashMatches.returns(false);
+        expect(() => entityBuilder.validateAsset(exampleAsset)).to.throw(ValidationError);
+        expect(mockIdentityManager.checkHashMatches).to.have.been.calledOnce;
+      });
+
+      it('checks if signature is correct (delegated to IdentityManager)', () => {
         expect(() => entityBuilder.validateAsset(exampleAsset)).to.not.throw();
         expect(mockIdentityManager.validateSignature).to.have.been.calledOnce;
       });
 
-      it('uses the IdentityManager for checking signature (incorrect)', () => {
+      it('checks if signature is incorrect (delegated to IdentityManager)', () => {
         mockIdentityManager.validateSignature.throws(new ValidationError('Signature is invalid'));
 
         expect(() => entityBuilder.validateAsset(exampleAsset)).to.throw(ValidationError);
@@ -94,22 +109,22 @@ describe('Entity Builder', () => {
         mockEnsureTimestampWithinLimit.restore();
       });
 
-      it('passes for proper asset', () => {
-        expect(() => entityBuilder.validateAsset(exampleAsset)).to.not.throw();
-      });
-
-      it('doesn\'t allow root-level fields other than content, and assetId', () => {
+      it(`doesn't allow root-level fields other than content, and assetId`, () => {
         const brokenAsset = put(exampleAsset, 'metadata', 'abc');
         expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
       });
 
-      it('doesn\'t allow content fields other than idData, and signature', () => {
+      it(`doesn't allow content fields other than idData, and signature`, () => {
         const brokenAsset = put(exampleAsset, 'content.metadata', 'abc');
         expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
       });
     });
 
     describe('Event', () => {
+      it('passes for proper event', () => {
+        expect(() => entityBuilder.validateEvent(exampleEvent)).to.not.throw();
+      });
+
       for (const field of [
         'eventId',
         'content',
@@ -142,17 +157,35 @@ describe('Entity Builder', () => {
           .to.deep.equal(dataTypes.sort());
       });
 
+      it('checks if eventId is the hash of content (delegated to IdentityManager)', () => {
+        mockIdentityManager.checkHashMatches.withArgs(exampleEvent.eventId, exampleEvent.content).returns(false);
+        expect(() => entityBuilder.validateEvent(exampleEvent)).to.throw(ValidationError);
+        expect(mockIdentityManager.checkHashMatches).to.have.been.calledWith(exampleEvent.eventId, exampleEvent.content);
+      });
+
+      it('checks if dataHash matches the hash of data (delegated to IdentityManager)', () => {
+        mockIdentityManager.checkHashMatches.withArgs(exampleEvent.content.idData.dataHash, exampleEvent.content.data).returns(false);
+        expect(() => entityBuilder.validateEvent(exampleEvent)).to.throw(ValidationError);
+        expect(mockIdentityManager.checkHashMatches).to.have.been.calledWith(exampleEvent.content.idData.dataHash, exampleEvent.content.data);
+      });
+
       it('throws ValidationError if event not passing event format validation', () => {
-        const brokenEvent = put(exampleEvent, 'content.data',
-          [...exampleEvent.content.data, {}]);
+        const brokenEvent = put(
+          exampleEvent,
+          'content.data',
+          [...exampleEvent.content.data, {}]
+        );
         expect(() => entityBuilder.validateEvent(brokenEvent))
           .to.throw(JsonValidationError)
           .and.have.nested.property('errors[0].message', `should have required property 'type'`);
       });
 
       it('throws ValidationError if event not passing custom entity validation', () => {
-        const brokenEvent = put(exampleEvent, 'content.data',
-          [...exampleEvent.content.data, {type: 'ambrosus.event.location', geoJson : {type : 'Point', coordinates : [50]}}]);
+        const brokenEvent = put(
+          exampleEvent,
+          'content.data',
+          [...exampleEvent.content.data, {type: 'ambrosus.event.location', geoJson : {type : 'Point', coordinates : [50]}}]
+        );
         expect(() => entityBuilder.validateEvent(brokenEvent))
           .to.throw(JsonValidationError)
           .and.have.nested.property('errors[0].dataPath', '.geoJson.coordinates');
@@ -199,10 +232,6 @@ describe('Entity Builder', () => {
         mockEnsureTimestampWithinLimit.restore();
       });
 
-      it('passes for proper event', () => {
-        expect(() => entityBuilder.validateEvent(exampleEvent)).to.not.throw();
-      });
-
       it('doesn\'t allow root-level fields other than content, and eventId', () => {
         const brokenEvent = put(exampleEvent, 'metadata', 'abc');
         expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
@@ -211,6 +240,62 @@ describe('Entity Builder', () => {
       it('doesn\'t allow content fields other than data, idData and signature', () => {
         const brokenEvent = put(exampleEvent, 'content.metadata', 'abc');
         expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
+      });
+    });
+
+    describe('Bundle', () => {
+      it('passes for proper bundle', () => {
+        expect(() => entityBuilder.validateBundle(exampleBundle)).to.not.throw();
+      });
+
+      for (const field of [
+        'bundleId',
+        'content',
+        'content.signature',
+        'content.idData',
+        'content.idData.createdBy',
+        'content.idData.timestamp',
+        'content.idData.entriesHash',
+        'content.entries']) {
+        // eslint-disable-next-line no-loop-func
+        it(`throws if the ${field} field is missing`, () => {
+          const brokenBundle = pick(exampleBundle, field);
+          expect(() => entityBuilder.validateBundle(brokenBundle)).to.throw(ValidationError);
+        });
+      }
+
+      it('checks if bundleId matches the hash of content (delegated to IdentityManager)', () => {
+        mockIdentityManager.checkHashMatches.withArgs(exampleBundle.bundleId, exampleBundle.content).returns(false);
+        expect(() => entityBuilder.validateBundle(exampleBundle)).to.throw(ValidationError);
+        expect(mockIdentityManager.checkHashMatches).to.have.been.calledWith(exampleBundle.bundleId, exampleBundle.content);
+      });
+
+      it('checks if entriesHash matches the hash of entries (delegated to IdentityManager)', () => {
+        mockIdentityManager.checkHashMatches.withArgs(exampleBundle.content.idData.entriesHash, exampleBundle.content.entries).returns(false);
+        expect(() => entityBuilder.validateBundle(exampleBundle)).to.throw(ValidationError);
+        expect(mockIdentityManager.checkHashMatches).to.have.been.calledWith(exampleBundle.content.idData.entriesHash, exampleBundle.content.entries);
+      });
+
+      it('checks if signature is correct (delegated to IdentityManager)', () => {
+        expect(() => entityBuilder.validateBundle(exampleBundle)).to.not.throw();
+        expect(mockIdentityManager.validateSignature).to.have.been.calledOnce;
+      });
+
+      it('checks if signature is incorrect (delegated to IdentityManager)', () => {
+        mockIdentityManager.validateSignature.throws(new ValidationError('Signature is invalid'));
+
+        expect(() => entityBuilder.validateBundle(exampleBundle)).to.throw(ValidationError);
+        expect(mockIdentityManager.validateSignature).to.have.been.calledOnce;
+      });
+
+      it(`doesn't allow root-level fields other than content, and bundleId`, () => {
+        const brokenBundle = put(exampleBundle, 'metadata', 'abc');
+        expect(() => entityBuilder.validateBundle(brokenBundle)).to.throw(ValidationError);
+      });
+
+      it(`doesn't allow content fields other than idData, and signature`, () => {
+        const brokenBundle = put(exampleBundle, 'content.metadata', 'abc');
+        expect(() => entityBuilder.validateBundle(brokenBundle)).to.throw(ValidationError);
       });
     });
   });

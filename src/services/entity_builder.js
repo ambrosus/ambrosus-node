@@ -46,11 +46,22 @@ export default class EntityBuilder {
       ])
       .fieldsConstrainedToSet(['content', 'assetId'])
       .fieldsConstrainedToSet(['idData', 'signature'], 'content')
-      .validate(['content.idData.timestamp'], (timestamp) => this.isTimestampWithinLimit(timestamp),
-        'Timestamp located too far in the future');
+      .validate(
+        ['content.idData.timestamp'],
+        (timestamp) => this.isTimestampWithinLimit(timestamp),
+        'Timestamp located too far in the future'
+      )
+      .validate(
+        ['assetId'],
+        (assetId) => this.identityManager.checkHashMatches(assetId, asset.content),
+        `assetId value doesn't match the content hash`
+      );
 
-    this.identityManager.validateSignature(asset.content.idData.createdBy, asset.content.signature,
-      asset.content.idData);
+    this.identityManager.validateSignature(
+      asset.content.idData.createdBy,
+      asset.content.signature,
+      asset.content.idData
+    );
   }
 
   validateEvent(event) {
@@ -70,12 +81,25 @@ export default class EntityBuilder {
         'Timestamp located too far in the future')
       .fieldsConstrainedToSet(['content', 'eventId'])
       .fieldsConstrainedToSet(['idData', 'data', 'signature'], 'content')
-      .isNonNegativeInteger(['content.idData.accessLevel', 'content.idData.timestamp']);
+      .isNonNegativeInteger(['content.idData.accessLevel', 'content.idData.timestamp'])
+      .validate(
+        ['eventId'],
+        (hash) => this.identityManager.checkHashMatches(hash, event.content),
+        `eventId value doesn't match the content hash`
+      )
+      .validate(
+        ['content.idData.dataHash'],
+        (hash) => this.identityManager.checkHashMatches(hash, event.content.data),
+        `dataHash value doesn't match the data hash`
+      );
 
     this.eventValidators.forEach((validator) => validator.validate(event.content));
 
-    this.identityManager.validateSignature(event.content.idData.createdBy, event.content.signature,
-      event.content.idData);
+    this.identityManager.validateSignature(
+      event.content.idData.createdBy,
+      event.content.signature,
+      event.content.idData
+    );
   }
 
   isTimestampWithinLimit(timestamp) {
@@ -131,6 +155,38 @@ export default class EntityBuilder {
       bundleId,
       content
     };
+  }
+
+  validateBundle(bundle) {
+    validateAndCast(bundle)
+      .required([
+        'bundleId',
+        'content.signature',
+        'content.idData',
+        'content.idData.createdBy',
+        'content.idData.timestamp',
+        'content.idData.entriesHash',
+        'content.entries'
+      ])
+      .fieldsConstrainedToSet(['content', 'bundleId'])
+      .fieldsConstrainedToSet(['idData', 'entries', 'signature'], 'content')
+      .isNonNegativeInteger(['content.idData.timestamp'])
+      .validate(
+        ['bundleId'],
+        (hash) => this.identityManager.checkHashMatches(hash, bundle.content),
+        `bundleId value doesn't match the content hash`
+      )
+      .validate(
+        ['content.idData.entriesHash'],
+        (hash) => this.identityManager.checkHashMatches(hash, bundle.content.entries),
+        `entriesHash value doesn't match the entries hash`
+      );
+
+    this.identityManager.validateSignature(
+      bundle.content.idData.createdBy,
+      bundle.content.signature,
+      bundle.content.idData
+    );
   }
 
   validateAndCastFindEventsParams(params) {

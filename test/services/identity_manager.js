@@ -125,6 +125,15 @@ describe('Identity manager', () => {
     expect(identityManager.calculateHash(input)).to.equal(expectedHash);
   });
 
+  it('Checking provided hash value against hash of data', () => {
+    const input = {one: {two: {three: '3', four: 4}}, five: false};
+    const expectedHash = '0x1a9a56b79d8e360cf056f04ea43869479fdf79f60f72d5a6e9bda0eea7bbe947';
+    const otherHash = '0x5a2a56b79d8e360cf056f04ea43869479fdf79f60f72d5a6e9bda0eea7bbe947';
+
+    expect(identityManager.checkHashMatches(expectedHash, input)).to.be.true;
+    expect(identityManager.checkHashMatches(otherHash, input)).to.be.false;
+  });
+
   it('Calculating a stable serialization', async () => {
     const serialized = identityManager.serializeForHashing({bar: {test1: 'test1', test2: [1, false], test3: 123}, foo: 'foo'});
     const expectedResult = '{"bar":{"test1":"test1","test2":[1,false],"test3":123},"foo":"foo"}';
