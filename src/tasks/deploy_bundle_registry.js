@@ -9,19 +9,23 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {createWeb3, deployContract, getDefaultAddress} from '../utils/web3_tools';
 import BundleRegistry from '../../contracts/BundleRegistry.json';
+import {WinstonConsoleLogger} from '../utils/loggers';
 
-async function deployBundleRegistry() {
+
+async function deployBundleRegistry(logger) {
   const web3 = await createWeb3();
-  console.log(`Deploying bundle registry contract from address: ${getDefaultAddress(web3)}`);
+  logger.info(`Deploying bundle registry contract from address: ${getDefaultAddress(web3)}`);
   return deployContract(web3, BundleRegistry.abi, BundleRegistry.bytecode);
 }
 
-deployBundleRegistry()
+const logger = new WinstonConsoleLogger();
+
+deployBundleRegistry(logger)
   .then((contract) => {
-    console.log(`Bundle registry has been deployed at: ${contract.options.address}`);
+    logger.info(`Bundle registry has been deployed at: ${contract.options.address}`);
     process.exit(0);
   })
   .catch((err) => {
-    console.error(err);
+    logger.error(err);
     process.exit(1);
   });

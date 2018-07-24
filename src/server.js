@@ -24,9 +24,10 @@ import prometheusMetricsHandler from './routes/prometheus_metrics.js';
 import asyncMiddleware from './middlewares/async_middleware';
 
 export default class Server {
-  constructor(modelEngine, config) {
+  constructor(modelEngine, config, logger) {
     this.modelEngine = modelEngine;
     this.config = config;
+    this.logger = logger;
   }
 
   start() {
@@ -51,7 +52,7 @@ export default class Server {
     app.get('/metrics', prometheusMetricsHandler(promClient));
 
     // Should always be last
-    app.use(errorHandling);
+    app.use(errorHandling(this.logger));
 
     this.server = app.listen(this.config.serverPort());
   }

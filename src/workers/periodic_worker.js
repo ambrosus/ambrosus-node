@@ -8,9 +8,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 export default class PeriodicWorker {
-  constructor(interval) {
+  constructor(interval, logger) {
     this.interval = interval;
     this.timerId = null;
+    this.logger = logger;
   }
 
   async start() {
@@ -20,7 +21,7 @@ export default class PeriodicWorker {
 
     await this.beforeStart();
     this.timerId = setInterval(() => {
-      this.work().catch(console.error);
+      this.work().catch((err) => this.logger.error(err));
     }, this.interval);
   }
 

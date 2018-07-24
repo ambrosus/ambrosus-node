@@ -19,52 +19,62 @@ chai.use(sinonChai);
 const {expect} = chai;
 
 describe('Error handling middleware', () => {
+  let errorHandlingMiddleware;
   let request;
   let response;
   let next;
+  let mockLogger;
 
   beforeEach(async () => {
+    mockLogger = {
+      info: sinon.stub(),
+      error: sinon.stub()
+    };
     request = httpMocks.createRequest({});
     response = httpMocks.createResponse();
     next = sinon.spy();
+    errorHandlingMiddleware = errorHandling(mockLogger);
   });
 
 
   it('should return 400 if ValidationError', async () => {
-    errorHandling(new ValidationError(), request, response, next);
+    errorHandlingMiddleware(new ValidationError(), request, response, next);
     expect(response._getStatusCode()).to.eq(400);
+    expect(mockLogger.info).to.be.calledOnce;
     expect(next).to.be.calledOnce;
   });
 
   it('should return 400 if ValidationError', async () => {
-    errorHandling(new ValidationError(), request, response, next);
+    errorHandlingMiddleware(new ValidationError(), request, response, next);
     expect(response._getStatusCode()).to.eq(400);
+    expect(mockLogger.info).to.be.calledOnce;
     expect(next).to.be.calledOnce;
   });
 
   it('should return 401 if AuthenticationError', async () => {
-    errorHandling(new AuthenticationError(), request, response, next);
+    errorHandlingMiddleware(new AuthenticationError(), request, response, next);
     expect(response._getStatusCode()).to.eq(401);
+    expect(mockLogger.info).to.be.calledOnce;
     expect(next).to.be.calledOnce;
   });
 
   it('should return 403 if PermissionError', async () => {
-    errorHandling(new PermissionError(), request, response, next);
+    errorHandlingMiddleware(new PermissionError(), request, response, next);
     expect(response._getStatusCode()).to.eq(403);
+    expect(mockLogger.info).to.be.calledOnce;
     expect(next).to.be.calledOnce;
   });
 
   it('should return 404 if NotFoundError', async () => {
-    errorHandling(new NotFoundError(), request, response, next);
+    errorHandlingMiddleware(new NotFoundError(), request, response, next);
     expect(response._getStatusCode()).to.eq(404);
+    expect(mockLogger.info).to.be.calledOnce;
     expect(next).to.be.calledOnce;
   });
 
   it('should return 500 if other error', async () => {
-    sinon.stub(console, 'error');
-    errorHandling(new Error(), request, response, next);
-    expect(console.error).to.be.calledOnce;
-    console.error.restore();
+    errorHandlingMiddleware(new Error(), request, response, next);
+    expect(mockLogger.error).to.be.calledOnce;
     expect(response._getStatusCode()).to.eq(500);
     expect(next).to.be.calledOnce;
   });

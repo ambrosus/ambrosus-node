@@ -11,11 +11,10 @@ import PeriodicWorker from './periodic_worker';
 import {getTimestamp} from '../utils/time_utils';
 
 export default class BundleFinaliser extends PeriodicWorker {
-  constructor(dataModelEngine, interval, sizeLimit, output = console) {
-    super(interval);
+  constructor(dataModelEngine, interval, sizeLimit, logger) {
+    super(interval, logger);
     this.dataModelEngine = dataModelEngine;
     this.sizeLimit = sizeLimit;
-    this.output = output;
   }
 
   async work() {
@@ -26,7 +25,7 @@ export default class BundleFinaliser extends PeriodicWorker {
     const bundleStubId = getTimestamp().toString();
     const bundle = await this.dataModelEngine.finaliseBundle(bundleStubId, this.sizeLimit);
     if (bundle) {
-      this.output.log(`Bundle ${bundle.bundleId} with ${bundle.content.entries.length} entries created`);
+      this.logger.info(`Bundle ${bundle.bundleId} with ${bundle.content.entries.length} entries created`);
     }
   }
 }

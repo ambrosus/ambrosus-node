@@ -13,7 +13,7 @@ import url from 'url';
 import {createWeb3, getDefaultAddress} from '../../src/utils/web3_tools';
 import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
 import ScenarioBuilder from '../fixtures/scenario_builder';
-import nullConsole from '../helpers/null_console';
+import EmptyLogger from '../helpers/empty_logger';
 import BundleDownloader from '../../src/workers/bundle_downloader';
 import ContractManager from '../../src/services/contract_manager';
 import Builder from '../../src/builder';
@@ -58,7 +58,7 @@ describe('Bundle downloader - integration', () => {
 
     await dataModelEngine.proofRepository.addVendor(getDefaultAddress(web3), apparatus.url());
 
-    bundleDownloader = new BundleDownloader(dataModelEngine, 5000, nullConsole);
+    bundleDownloader = new BundleDownloader(dataModelEngine, 5000, new EmptyLogger());
     await bundleDownloader.beforeStart();
 
 

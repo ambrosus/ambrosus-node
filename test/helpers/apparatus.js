@@ -16,11 +16,16 @@ import {getTimestamp} from '../../src/utils/time_utils';
 import {createWeb3} from '../../src/utils/web3_tools';
 import {adminAccountWithSecret} from '../fixtures/account';
 import Config from '../../src/utils/config';
+import EmptyLogger from './empty_logger';
 
 chai.use(chaiHttp);
 
 export default class Apparatus extends Application {
   DEFAULT_TOKEN_EXPIRATION = 60 * 60 * 24 * 28;
+
+  constructor() {
+    super(new EmptyLogger());
+  }
 
   async start(_web3, config = Config.default()) {
     const web3 = _web3 || await createWeb3(config);

@@ -13,21 +13,21 @@ import BundleDownloader from './workers/bundle_downloader';
 import BundleFinaliser from './workers/bundle_finaliser';
 
 class Application extends Builder {
-  constructor(output = console) {
+  constructor(logger) {
     super();
-    this.output = output;
+    this.logger = logger;
   }
 
   async startServer() {
-    this.server = new Server(this.dataModelEngine, this.config);
+    this.server = new Server(this.dataModelEngine, this.config, this.logger);
     this.server.start();
   }
 
   async startBackground() {
-    this.bundleDownloader = new BundleDownloader(this.dataModelEngine, this.config.bundleDownloadInterval(), this.output);
+    this.bundleDownloader = new BundleDownloader(this.dataModelEngine, this.config.bundleDownloadInterval(), this.logger);
     this.bundleDownloader.start();
     this.bundleFinaliser = new BundleFinaliser(this.dataModelEngine, this.config.bundleFinalisationInterval(),
-      this.config.bundleSizeLimit(), this.output);
+      this.config.bundleSizeLimit(), this.logger);
     this.bundleFinaliser.start();
   }
 }

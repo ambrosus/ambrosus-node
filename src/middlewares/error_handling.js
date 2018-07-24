@@ -14,18 +14,33 @@ import {
   PermissionError
 } from '../errors/errors';
 
-export default (err, req, res, next) => {
+export default (logger) => (err, req, res, next) => {
+  const requestData = {
+    httpVersion: req.httpVersion,
+    headers: req.headers,
+    url: req.url,
+    method: req.method,
+    body: req.body
+  };
+  let status;
+
   if (err instanceof ValidationError) {
-    res.status(400).send({reason: err.message});
+    status = 400;
   } else if (err instanceof AuthenticationError) {
-    res.status(401).send({reason: err.message});
+    status = 401;
   } else if (err instanceof PermissionError) {
-    res.status(403).send({reason: err.message});
+    status = 403;
   } else if (err instanceof NotFoundError) {
-    res.status(404).send({reason: err.message});
+    status = 404;
   } else {
-    console.error(err);
-    res.status(500).send({reason: err.message});
+    status = 500;
   }
+  if (status !== 500) {
+    logger.info(`${status}: ${err}\nRequest info: ${JSON.stringify(requestData, null, 4)}`);
+  } else {
+    logger.error(`500: ${err}\nRequest info: ${JSON.stringify(requestData, null, 4)}`);
+  }
+  res.status(status).send({reason: err.message});
+
   next();
 };

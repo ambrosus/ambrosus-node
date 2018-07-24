@@ -12,17 +12,18 @@ import path from 'path';
 import Builder from '../builder';
 import BundleRegistry from '../../contracts/BundleRegistry.json';
 import {deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
+import {WinstonConsoleLogger} from '../utils/loggers';
 
-async function createAdminAccount(dataModelEngine) {
+async function createAdminAccount(dataModelEngine, logger) {
   try {
-    console.log('Creating admin account');
+    logger.info('Creating admin account');
     const account = await dataModelEngine.addAdminAccount();
-    console.log(`Address: ${account.address}`);
+    logger.info(`Address: ${account.address}`);
     if (account.secret) {
-      console.log(`Secret:  ${account.secret}`);
+      logger.info(`Secret:  ${account.secret}`);
     }
   } catch (exception) {
-    console.log(exception.message);
+    logger.error(exception.message);
   }
 }
 
@@ -38,8 +39,8 @@ async function whitelist(bundleRegistryContract, dataModelEngine) {
     });
 }
 
-async function deployRegistryContract(dataModelEngine) {
-  console.log('\nDeploying bundle registry contract...');
+async function deployRegistryContract(dataModelEngine, logger) {
+  logger.info('\nDeploying bundle registry contract...');
   const bundleRegistryContract = await deployContract(
     dataModelEngine.proofRepository.web3,
     BundleRegistry.abi,
@@ -47,29 +48,30 @@ async function deployRegistryContract(dataModelEngine) {
 
   const contractAddress = bundleRegistryContract.options.address;
   const filePath = path.join('config', 'registryContractAddress.json');
-  console.log(`Contract deployed at ${contractAddress}`);
-  whitelist(bundleRegistryContract, dataModelEngine);
+  logger.info(`Contract deployed at ${contractAddress}`);
+  await whitelist(bundleRegistryContract, dataModelEngine);
   await writeFile(filePath, JSON.stringify(contractAddress));
-  console.log(`Contract address stored in ${filePath}.`);
+  logger.info(`Contract address stored in ${filePath}.`);
 }
 
-async function setupDevelopment(dataModelEngine) {
-  await createAdminAccount(dataModelEngine);
-  await deployRegistryContract(dataModelEngine);
+async function setupDevelopment(dataModelEngine, logger) {
+  await createAdminAccount(dataModelEngine, logger);
+  await deployRegistryContract(dataModelEngine, logger);
 }
 
 const builder = new Builder();
+const logger = new WinstonConsoleLogger();
 
 builder.build()
   .then(async ({client, dataModelEngine}) => {
     try {
-      await setupDevelopment(dataModelEngine);
+      await setupDevelopment(dataModelEngine, logger);
     } catch (err) {
-      console.error(`Verify if config files have correctly set 'web3.rpc' and 'web3.nodePrivateKey'\n${err.message}`);
+      logger.error(`Verify if config files have correctly set 'web3.rpc' and 'web3.nodePrivateKey'\n${err.message}`);
     }
     await client.close();
   })
   .catch((exception) => {
-    console.error(exception);
+    logger.error(exception);
     process.exit(1);
   });

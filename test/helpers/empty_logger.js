@@ -7,10 +7,12 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-class NullConsole {
-  log() {
+import {Logger} from '../../src/utils/loggers';
 
-  }
+class EmptyLogger extends Logger {
+  info() { }
+
+  error() { }
 }
 
-export default new NullConsole();
+export default EmptyLogger;

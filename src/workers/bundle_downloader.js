@@ -10,11 +10,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import PeriodicWorker from './periodic_worker';
 
 export default class BundleDownloader extends PeriodicWorker {
-  constructor(dataModelEngine, interval, output = console) {
-    super(interval);
+  constructor(dataModelEngine, interval, logger) {
+    super(interval, logger);
     this.dataModelEngine = dataModelEngine;
     this.proofRepository = dataModelEngine.proofRepository;
-    this.output = output;
   }
 
   async beforeStart() {
@@ -27,7 +26,7 @@ export default class BundleDownloader extends PeriodicWorker {
 
   async downloadAllNew() {
     const count = await this.proofRepository.getBundleCount();
-    this.output.log(`Found ${count - this.last} new bundles.`);
+    this.logger.info(`Found ${count - this.last} new bundles.`);
     for (let index = this.last; index < count; index++) {
       await this.downloadOne(index);
     }
@@ -38,8 +37,8 @@ export default class BundleDownloader extends PeriodicWorker {
     const bundleId = await this.proofRepository.getBundleByIndex(index);
     const vendorId = (await this.proofRepository.getNodeForBundle(bundleId)).toLowerCase();
     const vendorUrl = await this.proofRepository.getVendorUrl(vendorId);
-    this.output.log(`Downloading bundle ${bundleId} (index: ${index}) for vendor: ${vendorId} from ${vendorUrl}...`);
+    this.logger.info(`Downloading bundle ${bundleId} (index: ${index}) for vendor: ${vendorId} from ${vendorUrl}...`);
     await this.dataModelEngine.downloadBundle(bundleId, vendorId);
-    this.output.log(`Bundle downloaded.`);
+    this.logger.info(`Bundle downloaded.`);
   }
 }
