@@ -16,7 +16,7 @@ const ambAuthorizationHeaderMiddleware = (config) => (req, res, next) => {
     return;
   }
 
-  if (!config.isAuthorizationWithSecretKeyEnabled()) {
+  if (!config.authorizationWithSecretKeyEnabled) {
     throw new PermissionError('Authorization by secret key is not possible');
   }
   const [type, secret] = authorizationHeader.split(' ');

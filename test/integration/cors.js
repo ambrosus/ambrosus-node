@@ -12,7 +12,6 @@ import chaiHttp from 'chai-http';
 import chaiAsPromised from 'chai-as-promised';
 import Apparatus from '../helpers/apparatus';
 import pkPair from '../fixtures/pk_pair';
-import Config from '../../src/utils/config';
 
 chai.use(chaiHttp);
 chai.use(chaiAsPromised);
@@ -28,7 +27,7 @@ describe('CORS - Integrations', async () => {
 
   before(async () => {
     apparatus = new Apparatus();
-    await apparatus.start(null, Config.default({isAuthorizationWithSecretKeyEnabled: true}));
+    await apparatus.start();
   });
 
   it('Adds the Access-Control-Allow-Origin response header matching the Origin', async () => {

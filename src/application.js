@@ -24,10 +24,10 @@ class Application extends Builder {
   }
 
   async startBackground() {
-    this.bundleDownloader = new BundleDownloader(this.dataModelEngine, this.config.bundleDownloadInterval(), this.logger);
+    this.bundleDownloader = new BundleDownloader(this.dataModelEngine, this.config.bundleDownloadInterval, this.logger);
     this.bundleDownloader.start();
-    this.bundleFinaliser = new BundleFinaliser(this.dataModelEngine, this.config.bundleFinalisationInterval(),
-      this.config.bundleSizeLimit(), this.logger);
+    this.bundleFinaliser = new BundleFinaliser(this.dataModelEngine, this.config.bundleFinalisationInterval,
+      this.config.bundleSizeLimit, this.logger);
     this.bundleFinaliser.start();
   }
 }

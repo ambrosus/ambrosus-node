@@ -15,6 +15,7 @@ import {ValidationError, PermissionError} from '../../src/errors/errors';
 import pkPair from '../fixtures/pk_pair';
 import ambAuthorizationHeaderMiddleware from '../../src/middlewares/amb_authorization_header_middleware';
 import {pick} from '../../src/utils/dict_utils';
+import config from '../../config/config';
 
 chai.use(sinonChai);
 const {expect} = chai;
@@ -23,7 +24,6 @@ describe('Authorisation header middleware', () => {
   let request;
   let response;
   let next;
-  let config;
 
   beforeEach(async () => {
     next = spy();
@@ -36,12 +36,10 @@ describe('Authorisation header middleware', () => {
   });
 
   describe('Amb authorization is enabled', () => {
-    before(() => {
-      config = {isAuthorizationWithSecretKeyEnabled: () => true};
-    });
+    const conf = {...config, authorizationWithSecretKeyEnabled: true};
 
     it('adds ambSecret to the request if authorization header with an AMB secret provided', () => {
-      ambAuthorizationHeaderMiddleware(config)(request, response, next);
+      ambAuthorizationHeaderMiddleware(conf)(request, response, next);
 
       expect(request).to.include.key('ambSecret');
       expect(request.ambSecret).to.equal(pkPair.secret);
@@ -51,7 +49,7 @@ describe('Authorisation header middleware', () => {
     it('does nothing if no authorization header with an AMB secret was provided', () => {
       const noAuthReq = pick(request, 'headers.authorization');
 
-      ambAuthorizationHeaderMiddleware(config)(noAuthReq, response, next);
+      ambAuthorizationHeaderMiddleware(conf)(noAuthReq, response, next);
 
       expect(request).to.not.include.key('ambSecret');
       expect(next).to.be.calledOnce;
@@ -60,27 +58,25 @@ describe('Authorisation header middleware', () => {
     it('throws exception if authorization type is not AMB', () => {
       request.headers.authorization = pkPair.secret;
 
-      expect(() => ambAuthorizationHeaderMiddleware(config)(request, response, next)).to.throw(ValidationError);
+      expect(() => ambAuthorizationHeaderMiddleware(conf)(request, response, next)).to.throw(ValidationError);
       expect(next).to.be.not.called;
     });
   });
 
   describe('Amb authorization is disabled', () => {
-    before(() => {
-      config = {isAuthorizationWithSecretKeyEnabled: () => false};
-    });
+    const conf = {...config, authorizationWithSecretKeyEnabled: false};
 
     it('does nothing if no authorization header with an AMB secret was provided', () => {
       const noAuthReq = pick(request, 'headers.authorization');
 
-      ambAuthorizationHeaderMiddleware(config)(noAuthReq, response, next);
+      ambAuthorizationHeaderMiddleware(conf)(noAuthReq, response, next);
 
       expect(request).to.not.include.key('ambSecret');
       expect(next).to.be.calledOnce;
     });
 
     it('throws if amb authorization is disabled', async () => {
-      expect(() => ambAuthorizationHeaderMiddleware(config)(request, response, next)).to.throw(PermissionError);
+      expect(() => ambAuthorizationHeaderMiddleware(conf)(request, response, next)).to.throw(PermissionError);
       expect(next).to.be.not.called;
     });
   });

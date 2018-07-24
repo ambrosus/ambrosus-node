@@ -17,6 +17,7 @@ import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {adminAccountWithSecret} from '../fixtures/account';
+import config from '../../config/config';
 
 import EntityRepository from '../../src/services/entity_repository';
 
@@ -29,7 +30,7 @@ describe('Entity Repository', () => {
   let storage;
 
   before(async () => {
-    ({db, client} = await connectToMongo());
+    ({db, client} = await connectToMongo(config));
     storage = new EntityRepository(db);
   });
 

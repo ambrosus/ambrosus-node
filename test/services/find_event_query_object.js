@@ -17,6 +17,7 @@ import EntityRepository from '../../src/services/entity_repository';
 import IdentityManager from '../../src/services/identity_manager';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {adminAccountWithSecret, accountWithSecret} from '../fixtures/account';
+import config from '../../config/config';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -33,7 +34,7 @@ describe('Find Event Query Object', () => {
   let identityManager;
 
   before(async () => {
-    ({db, client} = await connectToMongo());
+    ({db, client} = await connectToMongo(config));
     storage = new EntityRepository(db);
     findEventQueryObjectFactory = new FindEventQueryObjectFactory(db);
     findEventQueryObject = findEventQueryObjectFactory.create();

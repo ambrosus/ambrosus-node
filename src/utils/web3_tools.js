@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import Web3 from 'web3';
-import Config from './config';
+import config from '../../config/config';
 
 const DEFAULT_GAS = 4700000;
 
@@ -47,7 +47,7 @@ async function ganacheTopUpDefaultAccount(web3) {
 
 function importPrivateKey(web3, config) {
   try {
-    const privateKey = config.nodePrivateKey();
+    const privateKey = config.nodePrivateKey;
     const account = web3.eth.accounts.privateKeyToAccount(privateKey);
     web3.eth.accounts.wallet.add(account);
     web3.eth.defaultAccount = account.address;
@@ -57,12 +57,12 @@ function importPrivateKey(web3, config) {
   }
 }
 
-export async function createWeb3(config = Config.default()) {
+export async function createWeb3(conf = config) {
   const web3 = new Web3();
 
-  const rpc = config.web3Rpc();
+  const rpc = conf.web3Rpc;
 
-  const account = importPrivateKey(web3, config);
+  const account = importPrivateKey(web3, conf);
 
   if (isValidRPCAddress(rpc)) {
     web3.setProvider(rpc);
@@ -94,9 +94,7 @@ export function getDefaultPrivateKey(web3) {
 export function loadContract(web3, abi, address) {
   return new web3.eth.Contract(abi, address, {
     gas: DEFAULT_GAS,
-    gasPrice: web3.utils.toWei(Config.default()
-      .defaultGasPrice()
-      .toString(), 'gwei')
+    gasPrice: web3.utils.toWei(config.defaultGasPrice.toString(), 'gwei')
   });
 }
 
@@ -104,9 +102,7 @@ export async function deployContract(web3, abi, bytecode, args = [], options = {
   const defaultAddress = getDefaultAddress(web3);
   return new web3.eth.Contract(abi, undefined, {
     gas: DEFAULT_GAS,
-    gasPrice: web3.utils.toWei(Config.default()
-      .defaultGasPrice()
-      .toString(), 'gwei')
+    gasPrice: web3.utils.toWei(config.defaultGasPrice.toString(), 'gwei')
   }).deploy({data: bytecode, arguments: args})
     .send({
       from: defaultAddress,

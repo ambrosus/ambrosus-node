@@ -15,23 +15,30 @@ import {cleanDatabase} from '../../src/utils/db_utils';
 import {getTimestamp} from '../../src/utils/time_utils';
 import {createWeb3} from '../../src/utils/web3_tools';
 import {adminAccountWithSecret} from '../fixtures/account';
-import Config from '../../src/utils/config';
 import EmptyLogger from './empty_logger';
+import config from '../../config/config';
 
 chai.use(chaiHttp);
 
 export default class Apparatus extends Application {
   DEFAULT_TOKEN_EXPIRATION = 60 * 60 * 24 * 28;
 
-  constructor() {
+  constructor(customConfig) {
     super(new EmptyLogger());
+    // Read defaults from global config, but allow the options to be customized
+    // for each test.
+    this.config = Object.freeze({...config, ...customConfig});
   }
 
-  async start(_web3, config = Config.default()) {
-    const web3 = _web3 || await createWeb3(config);
-    const bundleRegistryContractAddress = config.bundleRegistryContractAddress() || await ContractManager.deploy(web3);
-    const configWith = config.withAttributes({bundleRegistryContractAddress});
-    await this.build({web3}, configWith);
+  async start(_web3) {
+    const web3 = _web3 || await createWeb3(this.config);
+
+    if (!config.bundleRegistryContractAddress) {
+      const bundleRegistryContractAddress = await ContractManager.deploy(web3);
+      this.config = Object.freeze({...this.config, bundleRegistryContractAddress});
+    }
+
+    await this.build(this.config, {web3});
     await this.cleanDB();
     await this.startServer();
   }
@@ -53,7 +60,7 @@ export default class Apparatus extends Application {
   }
 
   url() {
-    return `http://127.0.0.1:${this.config.serverPort()}`;
+    return `http://127.0.0.1:${this.config.serverPort}`;
   }
 
   async stop() {

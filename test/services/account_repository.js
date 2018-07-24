@@ -12,6 +12,8 @@ import AccountStore from '../../src/services/account_repository';
 import {connectToMongo, cleanDatabase} from '../../src/utils/db_utils';
 import {put} from '../../src/utils/dict_utils';
 import {account} from '../fixtures/account';
+import config from '../../config/config';
+
 const {expect} = chai;
 
 describe('Account Repository', () => {
@@ -20,7 +22,7 @@ describe('Account Repository', () => {
   let accountStore;
 
   before(async () => {
-    ({client, db} = await connectToMongo());
+    ({client, db} = await connectToMongo(config));
     accountStore = new AccountStore(db);
   });
 
