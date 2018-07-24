@@ -8,13 +8,39 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {MongoClient} from 'mongodb';
-import url from 'url';
+import fs from 'fs';
+import querystring from 'querystring';
 
 const connectToMongo = async (config) => {
-  const uri = config.mongoUri;
-  const database = url.parse(uri).pathname.substr(1);
-  const client = await MongoClient.connect(uri);
-  const db = await client.db(database);
+  const query = {};
+  const options = {};
+  let user = '';
+
+  if (config.mongoReplicaSet) {
+    Object.assign(query, {replicaSet: config.mongoReplicaSet});
+  }
+
+  if (config.mongoX509User) {
+    Object.assign(query, {
+      ssl: true,
+      authMechanism: 'MONGODB-X509'
+    });
+
+    Object.assign(options, {
+      sslValidate: true,
+      sslCA: [fs.readFileSync(config.mongoX509SslCaPath)],
+      sslCert: fs.readFileSync(config.mongox509SslCertPath),
+      sslKey: fs.readFileSync(config.mongox509SslKeyPath)
+    });
+
+    user = `${encodeURIComponent(config.mongoX509User)}@`;
+  }
+
+  const queryStr = querystring.stringify(query);
+  const url = `mongodb://${user}${config.mongoHosts}/?${queryStr}`;
+
+  const client = await MongoClient.connect(url, options);
+  const db = await client.db(config.mongoDbName);
   return {client, db};
 };
 
