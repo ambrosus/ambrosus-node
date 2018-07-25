@@ -33,8 +33,7 @@ export default class TokenAuthenticator {
 
   decodeToken(token, timeNow = getTimestamp()) {
     const decoded = this.decode(token);
-    const {signature} = decoded;
-    const {idData} = decoded;
+    const {signature, idData} = decoded;
     this.identityManager.validateSignature(idData.createdBy, signature, idData);
     if (!decoded.idData.validUntil) {
       throw new AuthenticationError('Invalid token, no expiration date.');
