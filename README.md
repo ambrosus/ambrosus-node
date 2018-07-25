@@ -73,37 +73,6 @@ Finally, start the server:
 yarn start
 ```
 
-## Bundle smart contract related  tasks
-Entities (assets and events) are packaged together into bundles. Proof (hash) of the bundle is then uploaded to the bundle management smart contract.
-There are a couple of handy tasks to manage bundle contract.
-
-To use those tasks you need select the node environment first, i.e. to run in development mode:
-```
-export NODE_ENV=dev && ...
-```
-
-Available commands:
-
-```
-//deploy new instance of a contract (don't forget to update /config/{env}.json)
-yarn ops:deploy:bundleregistry
-
-//add an address to the whitelist 
-yarn ops:bundle:whitelist --add -a "0x00a329c0648769A73afAc7F9381E08FB43dBEA72" -u "node.ambrosus.com"
-
-//check if address is on a whitelist
-yarn  ops:bundle:whitelist --check -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"
-
-//remove address from whitelist
-yarn ops:bundle:whitelist --remove -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"
-
-//get url of the node
-yarn ops:bundle:whitelist --geturl -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466"
-
-//set node url
-yarn ops:bundle:whitelist --seturl -a "0x925ea5af075bde17811e4bcdc198dc5d3675e466" -u "node.amb.to"
-```
-
 ## Postman collections
 
 Additionally we provide the postman collection to make it easier to test REST queries. To use them you need to run the server, create the admin account and:
