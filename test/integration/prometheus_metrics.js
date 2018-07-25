@@ -36,9 +36,10 @@ describe('Prometheus middleware tests', () => {
       .to.eql(true);
 
     // Custom metrics
-    expect(response.text.indexOf(
-      'http_request_duration_seconds_count{status="200"} 1'
-    ) > -1)
+    expect(response.text.indexOf('http_request_duration_seconds_count 1') > -1)
+      .to.eql(true);
+
+    expect(response.text.indexOf('http_requests_total{status="200"} 1') > -1)
       .to.eql(true);
   });
 });
