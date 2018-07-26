@@ -8,11 +8,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {MongoClient} from 'mongodb';
-import Config from './config';
 import url from 'url';
 
-const connectToMongo = async (config = Config.default()) => {
-  const uri = config.mongoUri();
+const connectToMongo = async (config) => {
+  const uri = config.mongoUri;
   const database = url.parse(uri).pathname.substr(1);
   const client = await MongoClient.connect(uri);
   const db = await client.db(database);

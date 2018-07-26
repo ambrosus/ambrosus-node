@@ -13,6 +13,7 @@ import chaiAsPromised from 'chai-as-promised';
 import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
 import FindAssetQueryObjectFactory, {FindAssetQueryObject} from '../../src/services/find_asset_query_object';
 import {createAsset} from '../fixtures/assets_events';
+import config from '../../config/config';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -28,7 +29,7 @@ describe('Find Asset Query Object', () => {
   let assets;
 
   before(async () => {
-    ({db, client} = await connectToMongo());
+    ({db, client} = await connectToMongo(config));
     assets = [
       {assetId: '0x0', ...createAsset({timestamp: 1, createdBy: '0x123'})},
       {assetId: '0x1', ...createAsset({timestamp: 2, createdBy: '0xabc'})},

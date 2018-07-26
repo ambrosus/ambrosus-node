@@ -1,0 +1,4 @@
+--require babel-register
+--require test/mocha_env.js
+--timeout 5000
+--recursive

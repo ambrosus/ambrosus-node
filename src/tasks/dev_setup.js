@@ -13,6 +13,7 @@ import Builder from '../builder';
 import BundleRegistry from '../../contracts/BundleRegistry.json';
 import {deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
 import {WinstonConsoleLogger} from '../utils/loggers';
+import config from '../../config/config';
 
 async function createAdminAccount(dataModelEngine, logger) {
   try {
@@ -62,7 +63,7 @@ async function setupDevelopment(dataModelEngine, logger) {
 const builder = new Builder();
 const logger = new WinstonConsoleLogger();
 
-builder.build()
+builder.build(config)
   .then(async ({client, dataModelEngine}) => {
     try {
       await setupDevelopment(dataModelEngine, logger);

@@ -9,7 +9,7 @@
   "scripts": {
     "build": "babel ./src -d ./dist --copy-files",
     "start": "node dist/start.js",
-    "test": "export NODE_ENV=test && mocha --require babel-register --timeout 5000 --recursive",
+    "test": "mocha",
     "ops:generate_private_key": "babel-node src/tasks/generate_private_key.js",
     "dev:clean": "rimraf ./dist",
     "dev:setup": "export NODE_ENV=dev && babel-node src/tasks/dev_setup.js",
@@ -26,7 +26,6 @@
     "base64url": "^2.0.0",
     "body-parser": "^1.18.2",
     "command-line-args": "^5.0.2",
-    "config": "^1.29.2",
     "cors": "^2.8.4",
     "express": "^4.16.2",
     "mongodb": "^3.0.2",

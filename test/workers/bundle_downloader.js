@@ -9,15 +9,13 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
-import url from 'url';
-import {createWeb3, getDefaultAddress} from '../../src/utils/web3_tools';
+import {getDefaultAddress} from '../../src/utils/web3_tools';
 import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import EmptyLogger from '../helpers/empty_logger';
 import BundleDownloader from '../../src/workers/bundle_downloader';
-import ContractManager from '../../src/services/contract_manager';
 import Builder from '../../src/builder';
-import Config from '../../src/utils/config';
+import config from '../../config/config';
 import {createFullAsset} from '../fixtures/assets_events';
 import {adminAccountWithSecret} from '../fixtures/account';
 
@@ -25,7 +23,6 @@ chai.use(sinonChai);
 const {expect} = chai;
 
 describe('Bundle downloader - integration', () => {
-  let web3;
   let client;
   let bundleId;
   let apparatus;
@@ -33,30 +30,23 @@ describe('Bundle downloader - integration', () => {
   let bundleDownloader;
   let asset;
 
-  before(async () => {
-    web3 = await createWeb3();
-  });
-
   beforeEach(async () => {
-    const bundleRegistryContractAddress = await ContractManager.deploy(web3);
+    apparatus = new Apparatus();
+    await apparatus.start();
 
     // Create two configuration objects aimed at two different Mongo DBs
     // The purpose is to simulate one db where the bundles originate and are
     // downloaded from, and another db where bundles are inserted to.
-    const config1 = Config.default({bundleRegistryContractAddress});
-    const mongoUrl = url.parse(config1.mongoUri());
-    const config2 = Config.default({
-      bundleRegistryContractAddress,
-      mongoUri: `${mongoUrl.protocol}//${mongoUrl.host}/second_db`
+    const config2 = Object.freeze({
+      ...config,
+      mongoUri: 'mongodb://localhost:27017/second_db',
+      bundleRegistryContractAddress: apparatus.config.bundleRegistryContractAddress
     });
 
-    apparatus = new Apparatus();
-    await apparatus.start(web3, config1);
-
     const builder = new Builder();
-    ({dataModelEngine, client} = await builder.build({web3}, config2));
+    ({dataModelEngine, client} = await builder.build(config2, {web3: apparatus.web3}));
 
-    await dataModelEngine.proofRepository.addVendor(getDefaultAddress(web3), apparatus.url());
+    await dataModelEngine.proofRepository.addVendor(getDefaultAddress(apparatus.web3), apparatus.url());
 
     bundleDownloader = new BundleDownloader(dataModelEngine, 5000, new EmptyLogger());
     await bundleDownloader.beforeStart();

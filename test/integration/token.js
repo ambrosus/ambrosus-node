@@ -12,7 +12,6 @@ import chaiHttp from 'chai-http';
 import chaiAsPromised from 'chai-as-promised';
 import Apparatus from '../helpers/apparatus';
 import pkPair from '../fixtures/pk_pair';
-import Config from '../../src/utils/config';
 
 chai.use(chaiHttp);
 chai.use(chaiAsPromised);
@@ -30,8 +29,8 @@ describe('Token - Integrations', async () => {
 
   describe('With authorization with secret key enabled', async () => {
     before(async () => {
-      apparatus = new Apparatus();
-      await apparatus.start(null, Config.default({isAuthorizationWithSecretKeyEnabled: true}));
+      apparatus = new Apparatus({authorizationWithSecretKeyEnabled: true});
+      await apparatus.start();
     });
 
     beforeEach(async () => {
@@ -101,8 +100,8 @@ describe('Token - Integrations', async () => {
 
   describe('With authorization with secret key disabled', async () => {
     before(async () => {
-      apparatus = new Apparatus();
-      await apparatus.start(null, Config.default({isAuthorizationWithSecretKeyEnabled: false}));
+      apparatus = new Apparatus({authorizationWithSecretKeyEnabled: false});
+      await apparatus.start();
     });
 
     it('throws 403 if amb auth is disabled', async () => {

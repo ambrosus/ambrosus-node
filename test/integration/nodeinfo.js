@@ -20,14 +20,12 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Nodeinfo - Integrations', async () => {
+  const gitCommit = 'aaaaaaa';
   let apparatus;
-  let gitCommit;
 
   describe('Check if it works', async () => {
     before(async () => {
-      gitCommit = 'aaaaaaa';
-      process.env.GIT_COMMIT = gitCommit;
-      apparatus = new Apparatus();
+      apparatus = new Apparatus({gitCommit});
       await apparatus.start(null);
     });
 

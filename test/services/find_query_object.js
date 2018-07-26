@@ -12,6 +12,7 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
+import config from '../../config/config';
 
 import FindQueryObject from '../../src/services/find_query_object';
 
@@ -29,7 +30,7 @@ describe('FindQueryObject', () => {
   let mockSortingKey;
 
   before(async () => {
-    ({db, client} = await connectToMongo());
+    ({db, client} = await connectToMongo(config));
     mockParams = {perPage : 2, page : 2};
     findQueryObject = new FindQueryObject(db, 'mockName', mockParams);
     blacklistedFields = {

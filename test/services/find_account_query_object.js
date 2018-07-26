@@ -17,6 +17,7 @@ import IdentityManager from '../../src/services/identity_manager';
 import {createWeb3} from '../../src/utils/web3_tools';
 import {adminAccountWithSecret} from '../fixtures/account';
 import AccountRepository from '../../src/services/account_repository';
+import config from '../../config/config';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -33,7 +34,7 @@ describe('Find Account Query Object', () => {
   let storage;
 
   before(async () => {
-    ({db, client} = await connectToMongo());
+    ({db, client} = await connectToMongo(config));
     storage = new AccountRepository(db);
     scenario = new ScenarioBuilder(new IdentityManager(await createWeb3()));
     await scenario.addAdminAccount(adminAccountWithSecret);
