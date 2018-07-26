@@ -19,6 +19,6 @@ const logger = new WinstonConsoleLogger();
 
 start(logger)
   .catch((err) => {
-    logger.error(`${err}`);
+    logger.error(err);
     process.exit(1);
   });
