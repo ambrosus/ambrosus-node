@@ -7,16 +7,21 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import Application from './application';
 import {WinstonConsoleLogger} from './utils/loggers';
 import config from '../config/config';
+import Builder from './builder';
+import ServerWorker from './workers/server_worker';
 
 async function start(logger) {
-  const application = new Application(logger);
-  await application.build(config);
-  await application.ensureAdminAccountExist();
-  await application.startServer();
-  await application.startBackground();
+  const builder = new Builder(logger);
+  await builder.build(config);
+  await builder.ensureAdminAccountExist();
+  const worker = new ServerWorker(
+    builder.dataModelEngine,
+    config,
+    logger
+  );
+  await worker.start();
 }
 
 const logger = new WinstonConsoleLogger();

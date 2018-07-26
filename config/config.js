@@ -16,8 +16,6 @@ module.exports = Object.freeze({
   mongoUri: process.env.MONGODB_URI,
 
   bundleRegistryContractAddress: process.env.BUNDLE_REGISTRY_CONTRACT_ADDRESS,
-  bundleFinalisationInterval: parseInt(process.env.BUNDLE_FINALISATION_INTERVAL, 10) || 15000,
-  bundleDownloadInterval: parseInt(process.env.BUNDLE_DOWNLOAD_INTERVAL, 10) || 5000,
   bundleSizeLimit: parseInt(process.env.BUNDLE_SIZE_LIMIT, 10) || 10000,
 
   maximumEntityTimestampOvertake:

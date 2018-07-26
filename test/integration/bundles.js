@@ -13,7 +13,7 @@ import chaiAsPromised from 'chai-as-promised';
 import chaiHttp from 'chai-http';
 
 import {adminAccountWithSecret} from '../fixtures/account';
-import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
+import ServerApparatus, {apparatusScenarioProcessor} from '../helpers/server_apparatus';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {getDefaultAddress, createWeb3} from '../../src/utils/web3_tools';
 import {properTxHash} from '../helpers/web3chai';
@@ -42,7 +42,7 @@ describe('Bundles - Integrations', () => {
   };
 
   before(async () => {
-    apparatus = new Apparatus();
+    apparatus = new ServerApparatus();
     await apparatus.start();
 
     scenario = new ScenarioBuilder(apparatus.identityManager, apparatusScenarioProcessor(apparatus));

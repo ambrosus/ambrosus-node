@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import Apparatus, {apparatusScenarioProcessor} from '../../helpers/apparatus';
+import ServerApparatus, {apparatusScenarioProcessor} from '../../helpers/server_apparatus';
 import chaiHttp from 'chai-http';
 import {accountWithSecret, adminAccountWithSecret} from '../../fixtures/account';
 import ScenarioBuilder from '../../fixtures/scenario_builder';
@@ -27,7 +27,7 @@ describe('Events Integrations: Find by data entries', () => {
   let scenario;
 
   before(async () => {
-    apparatus = new Apparatus();
+    apparatus = new ServerApparatus();
     await apparatus.start();
     scenario = new ScenarioBuilder(apparatus.identityManager, apparatusScenarioProcessor(apparatus));
   });
