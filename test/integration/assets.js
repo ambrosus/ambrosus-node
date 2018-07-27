@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
+import ServerApparatus, {apparatusScenarioProcessor} from '../helpers/server_apparatus';
 import chaiHttp from 'chai-http';
 
 import {pick} from '../../src/utils/dict_utils';
@@ -32,7 +32,7 @@ describe('Assets - Integrations', () => {
   let otherAccountWithPermissions;
 
   before(async () => {
-    apparatus = new Apparatus();
+    apparatus = new ServerApparatus();
     await apparatus.start();
     scenario = new ScenarioBuilder(apparatus.identityManager, apparatusScenarioProcessor(apparatus));
   });

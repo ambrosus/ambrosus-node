@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import sinon from 'sinon';
-import Apparatus from '../helpers/apparatus';
+import ServerApparatus from '../helpers/server_apparatus';
 
 const {expect} = chai;
 
@@ -17,7 +17,7 @@ describe('Health check tests', () => {
   let apparatus;
 
   beforeEach(async () => {
-    apparatus = new Apparatus();
+    apparatus = new ServerApparatus();
     await apparatus.start();
   });
 

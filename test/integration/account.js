@@ -11,7 +11,7 @@ import chai from 'chai';
 import chaiHttp from 'chai-http';
 import chaiAsPromised from 'chai-as-promised';
 import {properAddress, properSecret} from '../helpers/web3chai';
-import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
+import ServerApparatus, {apparatusScenarioProcessor} from '../helpers/server_apparatus';
 import {addAccountRequest, adminAccountWithSecret, accountWithSecret, account} from '../fixtures/account';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {put} from '../../src/utils/dict_utils';
@@ -29,7 +29,7 @@ describe('Accounts - Integrations', async () => {
   let scenario;
 
   before(async () => {
-    apparatus = new Apparatus();
+    apparatus = new ServerApparatus();
     await apparatus.start();
     scenario = new ScenarioBuilder(apparatus.identityManager, apparatusScenarioProcessor(apparatus));
   });

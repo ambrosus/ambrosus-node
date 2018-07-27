@@ -7,29 +7,39 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-export default class PeriodicWorker {
+import Worker from './worker';
+
+export default class PeriodicWorker extends Worker {
   constructor(interval, logger) {
+    super(logger);
     this.interval = interval;
     this.timerId = null;
-    this.logger = logger;
-  }
-
-  async start() {
-    if (this.timerId !== null) {
-      throw new Error('Already started');
-    }
-
-    await this.beforeStart();
-    this.timerId = setInterval(() => {
-      this.work().catch((err) => this.logger.error(err));
-    }, this.interval);
-  }
-
-  async beforeStart() {
-
   }
 
   async work() {
+    await this.beforeWorkLoop();
+    this.timerId = setInterval(
+      () => {
+        this.periodicWork().catch((err) => this.logger.error(err));
+      },
+      this.interval);
+  }
+
+  async teardown() {
+    clearInterval(this.timerId);
+    this.timerId = null;
+    await this.afterWorkLoop();
+  }
+
+  async periodicWork() {
     throw new Error('Abstract method work() needs to be overridden');
+  }
+
+  async beforeWorkLoop() {
+
+  }
+
+  async afterWorkLoop() {
+
   }
 }

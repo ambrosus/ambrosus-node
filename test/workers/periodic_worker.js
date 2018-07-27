@@ -21,8 +21,9 @@ const {expect} = chai;
 describe('Periodic Worker', () => {
   let clock;
   let worker;
-  let beforeStartSpy;
-  let workStub;
+  let beforeWorkLoopSpy;
+  let afterWorkLoopSpy;
+  let periodicWorkStub;
   const interval = 10000;
 
   before(() => {
@@ -31,43 +32,74 @@ describe('Periodic Worker', () => {
 
   beforeEach(() => {
     worker = new PeriodicWorker(interval);
-    beforeStartSpy = sinon.spy(worker, 'beforeStart');
-    workStub = sinon.stub(worker, 'work');
-    workStub.resolves();
+    beforeWorkLoopSpy = sinon.spy(worker, 'beforeWorkLoop');
+    afterWorkLoopSpy = sinon.spy(worker, 'afterWorkLoop');
+    periodicWorkStub = sinon.stub(worker, 'periodicWork');
+    periodicWorkStub.resolves();
   });
 
   afterEach(() => {
-    clearInterval(worker.timerId);
-    beforeStartSpy.restore();
-    workStub.restore();
+    beforeWorkLoopSpy.restore();
+    afterWorkLoopSpy.restore();
+    periodicWorkStub.restore();
   });
 
   after(() => {
     clock.restore();
   });
 
-  it('should call beforeStart when the worker is started', async () => {
-    await expect(worker.start()).to.have.been.fulfilled;
+  describe('start', () => {
+    beforeEach(async () => {
+      await worker.start();
+    });
 
-    expect(beforeStartSpy).to.have.been.calledOnce;
+    afterEach(async () => {
+      await worker.stop();
+    });
+
+    it('stores the timerId', () => {
+      expect(worker.timerId).to.not.be.null;
+    });
+
+    it('calls the beforeWorkLoop method', () => {
+      expect(beforeWorkLoopSpy).to.have.been.calledOnce;
+    });
+
+    it(`doesn't call the afterWorkLoop method`, () => {
+      expect(afterWorkLoopSpy).to.not.have.been.called;
+    });
+
+    it('begins execution of the periodicWork method exactly every interval', async () => {
+      expect(periodicWorkStub).to.not.have.been.called;
+      clock.tick(interval);
+      expect(periodicWorkStub).to.have.been.calledOnce;
+      clock.tick(interval - 1);
+      expect(periodicWorkStub).to.have.been.calledOnce;
+      clock.tick(1);
+      expect(periodicWorkStub).to.have.been.calledTwice;
+    });
   });
 
-  it('should not allow start to be called twice', async () => {
-    await expect(worker.start()).to.be.fulfilled;
-    await expect(worker.start()).to.be.rejected;
+  describe('stop', () => {
+    beforeEach(async () => {
+      await worker.start();
+      clock.tick(interval);
+      await worker.stop();
+    });
 
-    expect(beforeStartSpy).to.have.been.calledOnce;
-  });
+    it('resets the timerId', () => {
+      expect(worker.timerId).to.be.null;
+    });
 
-  it('should execute the work method exactly every 10 seconds', async () => {
-    await expect(worker.start()).to.be.fulfilled;
+    it('calls the afterWorkLoop method', () => {
+      expect(afterWorkLoopSpy).to.have.been.calledOnce;
+    });
 
-    expect(workStub).to.not.have.been.called;
-    clock.tick(interval);
-    expect(workStub).to.have.been.calledOnce;
-    clock.tick(interval - 1);
-    expect(workStub).to.have.been.calledOnce;
-    clock.tick(1);
-    expect(workStub).to.have.been.calledTwice;
+    it('stops execution of the periodicWork method', () => {
+      expect(periodicWorkStub).to.have.been.calledOnce;
+      clock.tick(interval);
+      clock.tick(interval);
+      expect(periodicWorkStub).to.have.been.calledOnce;
+    });
   });
 });
