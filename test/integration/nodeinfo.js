@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import chaiAsPromised from 'chai-as-promised';
-import Apparatus from '../helpers/apparatus';
+import ServerApparatus from '../helpers/server_apparatus';
 import {properAddress} from '../helpers/web3chai';
 
 chai.use(properAddress);
@@ -25,7 +25,7 @@ describe('Nodeinfo - Integrations', async () => {
 
   describe('Check if it works', async () => {
     before(async () => {
-      apparatus = new Apparatus({gitCommit});
+      apparatus = new ServerApparatus({gitCommit});
       await apparatus.start(null);
     });
 

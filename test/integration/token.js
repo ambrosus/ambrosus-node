@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import chaiAsPromised from 'chai-as-promised';
-import Apparatus from '../helpers/apparatus';
+import ServerApparatus from '../helpers/server_apparatus';
 import pkPair from '../fixtures/pk_pair';
 
 chai.use(chaiHttp);
@@ -29,7 +29,7 @@ describe('Token - Integrations', async () => {
 
   describe('With authorization with secret key enabled', async () => {
     before(async () => {
-      apparatus = new Apparatus({authorizationWithSecretKeyEnabled: true});
+      apparatus = new ServerApparatus({authorizationWithSecretKeyEnabled: true});
       await apparatus.start();
     });
 
@@ -37,6 +37,9 @@ describe('Token - Integrations', async () => {
       await apparatus.cleanDB();
     });
 
+    after(async () => {
+      await apparatus.stop();
+    });
 
     it('gets new token', async () => {
       const token = await apparatus.request()
@@ -92,16 +95,16 @@ describe('Token - Integrations', async () => {
         token: expectedToken
       });
     });
-
-    after(async () => {
-      await apparatus.stop();
-    });
   });
 
   describe('With authorization with secret key disabled', async () => {
     before(async () => {
-      apparatus = new Apparatus({authorizationWithSecretKeyEnabled: false});
+      apparatus = new ServerApparatus({authorizationWithSecretKeyEnabled: false});
       await apparatus.start();
+    });
+
+    after(async () => {
+      await apparatus.stop();
     });
 
     it('throws 403 if amb auth is disabled', async () => {
@@ -110,11 +113,6 @@ describe('Token - Integrations', async () => {
         .set('authorization', `AMB ${pkPair.secret}`)
         .send(requestData);
       await expect(request).to.eventually.be.rejected.and.have.property('status', 403);
-      await apparatus.stop();
-    });
-
-    after(async () => {
-      await apparatus.stop();
     });
   });
 });

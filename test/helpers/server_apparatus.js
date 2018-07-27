@@ -9,25 +9,28 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiHttp from 'chai-http';
-import Application from '../../src/application';
-import ContractManager from '../../src/services/contract_manager';
 import {cleanDatabase} from '../../src/utils/db_utils';
 import {getTimestamp} from '../../src/utils/time_utils';
 import {createWeb3} from '../../src/utils/web3_tools';
 import {adminAccountWithSecret} from '../fixtures/account';
 import EmptyLogger from './empty_logger';
 import config from '../../config/config';
+import Builder from '../../src/builder';
+import ContractManager from '../../src/services/contract_manager';
+import ServerWorker from '../../src/workers/server_worker';
 
 chai.use(chaiHttp);
 
-export default class Apparatus extends Application {
+export default class ServerApparatus extends Builder {
   DEFAULT_TOKEN_EXPIRATION = 60 * 60 * 24 * 28;
 
   constructor(customConfig) {
-    super(new EmptyLogger());
+    super();
+    this.logger = new EmptyLogger();
     // Read defaults from global config, but allow the options to be customized
     // for each test.
     this.config = Object.freeze({...config, ...customConfig});
+    this.worker = null;
   }
 
   async start(_web3) {
@@ -40,7 +43,13 @@ export default class Apparatus extends Application {
 
     await this.build(this.config, {web3});
     await this.cleanDB();
-    await this.startServer();
+    await this.ensureAdminAccountExist();
+    this.worker = new ServerWorker(
+      this.dataModelEngine,
+      this.config,
+      this.logger
+    );
+    await this.worker.start();
   }
 
   generateToken(secret = adminAccountWithSecret.secret, validUntil = this.defaultValidUntil()) {
@@ -52,7 +61,7 @@ export default class Apparatus extends Application {
   }
 
   request() {
-    return chai.request(this.server.server);
+    return chai.request(this.worker.apiServer);
   }
 
   async cleanDB() {
@@ -64,7 +73,8 @@ export default class Apparatus extends Application {
   }
 
   async stop() {
-    await this.server.stop();
+    await this.worker.stop();
+    this.worker = null;
     await this.client.close();
   }
 }

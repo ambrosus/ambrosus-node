@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import chaiAsPromised from 'chai-as-promised';
-import Apparatus from '../helpers/apparatus';
+import ServerApparatus from '../helpers/server_apparatus';
 import pkPair from '../fixtures/pk_pair';
 
 chai.use(chaiHttp);
@@ -26,7 +26,7 @@ describe('CORS - Integrations', async () => {
   let apparatus;
 
   before(async () => {
-    apparatus = new Apparatus();
+    apparatus = new ServerApparatus();
     await apparatus.start();
   });
 

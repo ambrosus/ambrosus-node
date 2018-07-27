@@ -7,6 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+import Worker from './worker';
 import cors from 'cors';
 import express from 'express';
 import promClient from 'prom-client';
@@ -23,15 +24,29 @@ import nodeInfoRouter from './routes/nodeinfo';
 import healthCheckHandler from './routes/health_check';
 import prometheusMetricsHandler from './routes/prometheus_metrics.js';
 import asyncMiddleware from './middlewares/async_middleware';
+import cachePreventionMiddleware from '../middlewares/cache_prevention_middleware';
+import errorHandling from '../middlewares/error_handling';
+import prometheusMiddleware from '../middlewares/prometheus_middleware.js';
+import accountsRouter from '../routes/accounts';
+import assetsRouter from '../routes/assets';
+import bundlesRouter from '../routes/bundles';
+import eventsRouter from '../routes/events';
+import tokenRouter from '../routes/token';
+import nodeInfoRouter from '../routes/nodeinfo';
+import healthCheckHandler from '../routes/health_check';
+import prometheusMetricsHandler from '../routes/prometheus_metrics.js';
+import asyncMiddleware from '../middlewares/async_middleware';
 
-export default class Server {
+export default class ServerWorker extends Worker {
   constructor(modelEngine, config, logger) {
+    super(logger);
     this.modelEngine = modelEngine;
     this.config = config;
-    this.logger = logger;
   }
 
-  start() {
+  async work() {
+    this.logger.info('starting server');
+
     this.collectMetricsInterval = promClient.collectDefaultMetrics({timeout: 10000});
     const app = express();
 
@@ -60,12 +75,12 @@ export default class Server {
     // Should always be last
     app.use(errorHandling(this.logger));
 
-    this.server = app.listen(this.config.serverPort);
+    this.apiServer = app.listen(this.config.serverPort);
   }
 
-  stop() {
+  async teardown() {
     clearInterval(this.collectMetricsInterval);
     promClient.register.clear();
-    this.server.close();
+    this.apiServer.close();
   }
 }
