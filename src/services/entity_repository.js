@@ -20,7 +20,28 @@ export default class EntityRepository {
   }
 
   async initializeIndexes() {
+    // assets
+    await this.db.collection('assets').ensureIndex({assetId : 1});
+    await this.db.collection('assets').ensureIndex({'content.idData.timestamp' : 1});
+    await this.db.collection('assets').ensureIndex({'content.idData.createdBy' : 1});
+
+    // events
+    await this.db.collection('events').ensureIndex({eventId : 1});
+    await this.db.collection('events').ensureIndex({'content.idData.timestamp' : 1});
+    await this.db.collection('events').ensureIndex({'content.idData.createdBy' : 1});
+    await this.db.collection('events').ensureIndex({'content.idData.accessLevel' : 1});
+    await this.db.collection('events').ensureIndex({'content.idData.assetId' : 1});
+    await this.db.collection('events').ensureIndex({'content.data.type' : 1});
     await this.db.collection('events').ensureIndex({'content.data.geoJson' : '2dsphere'});
+
+    // bundles
+    await this.db.collection('bundles').ensureIndex({bundleId : 1});
+    await this.db.collection('bundles').ensureIndex({'content.idData.timestamp' : 1});
+    await this.db.collection('bundles').ensureIndex({'content.idData.createdBy' : 1});
+
+    // for internal use by repository
+    await this.db.collection('assets').ensureIndex({'repository.bundleStubId' : 1});
+    await this.db.collection('events').ensureIndex({'repository.bundleStubId' : 1});
   }
 
   async storeAsset(asset) {
