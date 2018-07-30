@@ -13,6 +13,7 @@ import express from 'express';
 import promClient from 'prom-client';
 import cachePreventionMiddleware from '../middlewares/cache_prevention_middleware';
 import errorHandling from '../middlewares/error_handling';
+import loggerMiddleware from '../middlewares/logger_middleware';
 import prometheusMiddleware from '../middlewares/prometheus_middleware.js';
 import accountsRouter from '../routes/accounts';
 import assetsRouter from '../routes/assets';
@@ -37,6 +38,7 @@ export default class ServerWorker extends Worker {
     this.collectMetricsInterval = promClient.collectDefaultMetrics({timeout: 10000});
     const app = express();
 
+    app.use(loggerMiddleware(this.logger));
     app.use(prometheusMiddleware(promClient));
     app.use(cors({
       origin : true,

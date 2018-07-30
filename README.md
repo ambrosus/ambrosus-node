@@ -74,15 +74,15 @@ yarn dev:prerun
 
 Finaly run on of the workers you are interested in:
 ```sh
-yarn dev:start_server
+yarn dev:start:server
 ```
 or 
 ```sh
-yarn dev:start_hermes
+yarn dev:start:hermes
 ```
 or
 ```sh
-yarn dev:start_atlas
+yarn dev:start:atlas
 ```
 
 ## Running in production mode

@@ -15,13 +15,6 @@ import {
 } from '../errors/errors';
 
 export default (logger) => (err, req, res, next) => {
-  const requestData = {
-    httpVersion: req.httpVersion,
-    headers: req.headers,
-    url: req.url,
-    method: req.method,
-    body: req.body
-  };
   let status;
 
   if (err instanceof ValidationError) {
@@ -33,13 +26,10 @@ export default (logger) => (err, req, res, next) => {
   } else if (err instanceof NotFoundError) {
     status = 404;
   } else {
+    logger.error(err);
     status = 500;
   }
-  if (status !== 500) {
-    logger.info(`${status}: ${err}\nRequest info: ${JSON.stringify(requestData, null, 4)}`);
-  } else {
-    logger.error(`500: ${err}\nRequest info: ${JSON.stringify(requestData, null, 4)}`);
-  }
+
   res.status(status).send({reason: err.message});
 
   next();

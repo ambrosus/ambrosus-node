@@ -40,35 +40,30 @@ describe('Error handling middleware', () => {
   it('should return 400 if ValidationError', async () => {
     errorHandlingMiddleware(new ValidationError(), request, response, next);
     expect(response._getStatusCode()).to.eq(400);
-    expect(mockLogger.info).to.be.calledOnce;
     expect(next).to.be.calledOnce;
   });
 
   it('should return 400 if ValidationError', async () => {
     errorHandlingMiddleware(new ValidationError(), request, response, next);
     expect(response._getStatusCode()).to.eq(400);
-    expect(mockLogger.info).to.be.calledOnce;
     expect(next).to.be.calledOnce;
   });
 
   it('should return 401 if AuthenticationError', async () => {
     errorHandlingMiddleware(new AuthenticationError(), request, response, next);
     expect(response._getStatusCode()).to.eq(401);
-    expect(mockLogger.info).to.be.calledOnce;
     expect(next).to.be.calledOnce;
   });
 
   it('should return 403 if PermissionError', async () => {
     errorHandlingMiddleware(new PermissionError(), request, response, next);
     expect(response._getStatusCode()).to.eq(403);
-    expect(mockLogger.info).to.be.calledOnce;
     expect(next).to.be.calledOnce;
   });
 
   it('should return 404 if NotFoundError', async () => {
     errorHandlingMiddleware(new NotFoundError(), request, response, next);
     expect(response._getStatusCode()).to.eq(404);
-    expect(mockLogger.info).to.be.calledOnce;
     expect(next).to.be.calledOnce;
   });
 
