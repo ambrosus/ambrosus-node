@@ -13,3 +13,5 @@ services:
     # Parity by default only exposes it's API on localhost. For it to be
     # accessible from the other containers we need --unsafe-expose
     command: ['--chain', 'dev', '--unsafe-expose']
+    ports:
+      - '8545:8545'
