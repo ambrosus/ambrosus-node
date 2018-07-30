@@ -16,8 +16,8 @@ import {adminAccountWithSecret} from '../fixtures/account';
 import EmptyLogger from './empty_logger';
 import config from '../../config/config';
 import Builder from '../../src/builder';
-import ContractManager from '../../src/services/contract_manager';
 import ServerWorker from '../../src/workers/server_worker';
+import {deployAll} from '../../src/utils/deployment';
 
 chai.use(chaiHttp);
 
@@ -36,9 +36,9 @@ export default class ServerApparatus extends Builder {
   async start(_web3) {
     const web3 = _web3 || await createWeb3(this.config);
 
-    if (!config.bundleRegistryContractAddress) {
-      const bundleRegistryContractAddress = await ContractManager.deploy(web3);
-      this.config = Object.freeze({...this.config, bundleRegistryContractAddress});
+    if (!config.headContractAddress) {
+      const headContractAddress = await deployAll(web3, this.logger);
+      this.config = Object.freeze({...this.config, headContractAddress});
     }
 
     await this.build(this.config, {web3});
@@ -46,6 +46,7 @@ export default class ServerApparatus extends Builder {
     await this.ensureAdminAccountExist();
     this.worker = new ServerWorker(
       this.dataModelEngine,
+      web3,
       this.config,
       this.logger
     );

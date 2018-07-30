@@ -110,3 +110,9 @@ export async function deployContract(web3, abi, bytecode, args = [], options = {
       ...options
     });
 }
+
+export function link(contract, name, library) {
+  const address = library.options.address.replace('0x', '');
+  const pattern = new RegExp(`_+${name}_+`, 'g');
+  contract.bytecode = contract.bytecode.replace(pattern, address);
+}
