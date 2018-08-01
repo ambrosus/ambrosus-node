@@ -20,6 +20,17 @@ const writeFile = (path, data) =>
     });
   });
 
+const readFile = (path) =>
+  new Promise((resolve, reject) => {
+    fs.readFile(path, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+
 const checkFileExists = (path) =>
   new Promise((resolve) => {
     fs.access(path, (err) => {
@@ -27,4 +38,15 @@ const checkFileExists = (path) =>
     });
   });
 
-export {writeFile, checkFileExists};
+const listDirectory = (path) =>
+  new Promise((resolve, reject) => {
+    fs.readdir(path, (err, files) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(files);
+      }
+    });
+  });
+
+export {writeFile, readFile, checkFileExists, listDirectory};
