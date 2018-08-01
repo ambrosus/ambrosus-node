@@ -6,40 +6,43 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
-import fs from 'fs';
+
+import {readFile, writeFile, listDirectory} from '../utils/file';
 import path from 'path';
 import {WinstonConsoleLogger} from '../utils/loggers';
 
-const stripContracts = (contractsDirectory, logger) => {
+
+const stripContracts = async (contractsDir, logger) => {
   if (!contractsDirectory) {
     throw new Error('Contracts directory not specified');
   }
+  logger.info(`Stripping contracts in '${contractsDirectory}'`);
+  const contractFiles = await listDirectory(contractsDir);
+  console.log(contractFiles);
 
-  fs.readdir(contractsDirectory, (err, contracts) => {
-    if (err) {
-      throw err;
+  for (const contractFile of contractFiles) {
+    try {
+      const filePath = path.join(contractsDir, contractFile);
+      const contract = JSON.parse(await readFile(filePath));
+      const stripedContract = {
+        contractName : contract.contractName,
+        updatedAt: contract.updatedAt,
+        abi : contract.abi,
+        bytecode : contract.bytecode
+      };
+      await writeFile(filePath, JSON.stringify(stripedContract, null, 2));
+      logger.info(`✅ ${contractFile}`);
+    } catch (err) {
+      logger.error({message: `❌ ${contractFile}`, error: err});
     }
-    logger.info(`Stripping contracts in ${contractsDirectory}`);
-    contracts.forEach((file) => {
-      if (path.extname(file) === '.json') {
-        const filePath = path.join(contractsDirectory, file);
-        try {
-          const {abi, bytecode, contractName, updatedAt} = JSON.parse(fs.readFileSync(filePath).toString());
-          fs.writeFileSync(filePath, JSON.stringify({abi, bytecode, contractName, updatedAt}, null, 2));
-          logger.info(`✅ ${file}`);
-        } catch (err) {
-          logger.error({message: `❌ ${file}`, error: err});
-        }
-      }
-    });
-  });
+  }
 };
 
 const logger = new WinstonConsoleLogger();
 const [, , contractsDirectory] = process.argv;
-try {
-  stripContracts(contractsDirectory, logger);
-} catch (err) {
-  logger.error(err);
-  process.exit(1);
-}
+
+stripContracts(contractsDirectory, logger)
+  .catch((exception) => {
+    logger.error(exception);
+    process.exit(1);
+  });

@@ -7,6 +7,7 @@
   "private": true,
   "license": "MPL-2.0-no-copyleft-exception",
   "scripts": {
+    "strip_contracts": "babel-node src/tasks/strip_contracts.js contracts",
     "build": "babel ./src -d ./dist --copy-files",
     "start:atlas": "node dist/start_atlas.js",
     "start:hermes": "node dist/start_hermes.js",
@@ -18,7 +19,6 @@
     "dev:start:atlas": "source ./dev.env && nodemon --watch src --exec babel-node --inspect src/start_atlas.js",
     "dev:start:hermes": "source ./dev.env && nodemon --watch src --exec babel-node --inspect src/start_hermes.js",
     "dev:start:server": "source ./dev.env && nodemon --watch src --exec babel-node --inspect src/start_server.js",
-    "dev:stripcontracts": "babel-node src/tasks/strip_contracts.js contracts",
     "dev:lint": "eslint src test config",
     "dev:docker:db": "docker-compose up -d db",
     "dev:docker:parity": "docker-compose up -d parity"
