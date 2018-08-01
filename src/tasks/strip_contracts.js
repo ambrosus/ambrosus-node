@@ -18,11 +18,13 @@ const stripContracts = async (contractsDir, logger) => {
   }
   logger.info(`Stripping contracts in '${contractsDirectory}'`);
   const contractFiles = await listDirectory(contractsDir);
-  console.log(contractFiles);
 
   for (const contractFile of contractFiles) {
     try {
       const filePath = path.join(contractsDir, contractFile);
+      if (path.extname(filePath) !== '.json') {
+        continue;
+      }
       const contract = JSON.parse(await readFile(filePath));
       const stripedContract = {
         contractName : contract.contractName,
