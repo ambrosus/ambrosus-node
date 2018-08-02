@@ -65,7 +65,7 @@ Run the contract deployment task:
 yarn dev:deploy
 ```
 
-Update `BUNDLE_REGISTRY_CONTRACT_ADDRESS` in `dev.env` to match the address given from `yarn dev:deploy`.
+Update `HEAD_CONTRACT_ADDRESS` in `dev.env` to match the address given from `yarn dev:deploy`.
 
 Run the system pre-run task:
 ```sh
@@ -96,7 +96,7 @@ Build the whole suit:
 yarn build
 ```
 
-Configure environment variables for `WEB3_RPC`, `WEB3_NODEPRIVATEKEY`, `MONGODB_URI`, `BUNDLE_REGISTRY_CONTRACT_ADDRESS` (provided by the Ambrosus developer team).
+Configure environment variables for `WEB3_RPC`, `WEB3_NODEPRIVATEKEY`, `MONGODB_URI`, `HEAD_CONTRACT_ADDRESS` (provided by the Ambrosus developer team).
 
 Finally, start the server:
 ```sh

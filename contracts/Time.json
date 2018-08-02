@@ -1,0 +1,106 @@
+{
+  "contractName": "Time",
+  "updatedAt": "2018-07-30T11:59:36.085Z",
+  "abi": [
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "PAYOUT_PERIOD_DURATION",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "currentTimestamp",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "currentPayoutPeriod",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "payoutPeriod",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "period",
+          "type": "uint64"
+        }
+      ],
+      "name": "payoutPeriodStart",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "payoutPeriodOffset",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b50610320806100206000396000f300608060405260043610610078576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063076ac8071461007d5780631e2ff94f146100be578063277c7732146100e9578063278e421e1461013e57806341fc41ff1461017d5780634c877913146101a8575b600080fd5b34801561008957600080fd5b506100a8600480360381019080803590602001909291905050506101f3565b6040518082815260200191505060405180910390f35b3480156100ca57600080fd5b506100d361021f565b6040518082815260200191505060405180910390f35b3480156100f557600080fd5b5061011460048036038101908080359060200190929190505050610227565b604051808267ffffffffffffffff1667ffffffffffffffff16815260200191505060405180910390f35b34801561014a57600080fd5b50610153610246565b604051808267ffffffffffffffff1667ffffffffffffffff16815260200191505060405180910390f35b34801561018957600080fd5b5061019261025d565b6040518082815260200191505060405180910390f35b3480156101b457600080fd5b506101dd600480360381019080803567ffffffffffffffff169060200190929190505050610264565b6040518082815260200191505060405180910390f35b600061021861020961020484610227565b610264565b8361028d90919063ffffffff16565b9050919050565b600042905090565b600061023f6224ea00836102a690919063ffffffff16565b9050919050565b600061025861025361021f565b610227565b905090565b6224ea0081565b60006102866224ea008367ffffffffffffffff166102bc90919063ffffffff16565b9050919050565b600082821115151561029b57fe5b818303905092915050565b600081838115156102b357fe5b04905092915050565b6000808314156102cf57600090506102ee565b81830290508183828115156102e057fe5b041415156102ea57fe5b8090505b929150505600a165627a7a72305820feb5add77dba620dfebcd1562999e1c739a8e595c9266b58efffb456f6e47b5e0029"
+}

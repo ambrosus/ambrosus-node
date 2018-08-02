@@ -18,6 +18,7 @@ async function start(logger) {
   await builder.ensureAdminAccountExist();
   const worker = new ServerWorker(
     builder.dataModelEngine,
+    builder.web3,
     config,
     logger
   );
