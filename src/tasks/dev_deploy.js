@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {WinstonConsoleLogger} from '../utils/loggers';
 import {createWeb3} from '../../src/utils/web3_tools';
 import config from '../../config/config';
-import {deployAll} from '../utils/deployment';
+import deployAll from '../utils/deployment';
 
 const logger = new WinstonConsoleLogger();
 

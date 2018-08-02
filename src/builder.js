@@ -21,11 +21,22 @@ import IdentityManager from './services/identity_manager';
 import {connectToMongo} from './utils/db_utils';
 import HttpsClient from './utils/https_client';
 import TokenAuthenticator from './utils/token_authenticator';
-import {createWeb3} from './utils/web3_tools';
+import {createWeb3, getDefaultAddress} from './utils/web3_tools';
+import RolesRepository from './services/roles_repository';
 
 class Builder {
   async ensureAdminAccountExist() {
     await this.dataModelEngine.addAdminAccount();
+  }
+
+  async ensureAccountIsOnboarded(allowedRoles) {
+    const role = await this.rolesRepository.onboardedRole(getDefaultAddress(this.web3));
+    if (role.name === 'NONE') {
+      throw new Error('You must be onboarded in order to start a node');
+    }
+    if (!allowedRoles.includes(role.name)) {
+      throw new Error(`You must be onboarded as one of the following roles: ${allowedRoles.toString()}. Instead onboarded as ${role.name}`);
+    }
   }
 
   async build(config, dependencies = {}) {
@@ -37,6 +48,7 @@ class Builder {
     this.web3 = web3 || await createWeb3(this.config);
     const {headContractAddress} = this.config;
     this.contractManager = new ContractManager(this.web3, headContractAddress);
+    this.rolesRepository = new RolesRepository(this.contractManager);
     this.identityManager = new IdentityManager(this.web3);
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
     const {maximumEntityTimestampOvertake} = this.config;
