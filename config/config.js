@@ -16,7 +16,7 @@ module.exports = Object.freeze({
   mongoUri: process.env.MONGODB_URI,
   sentryDSN: process.env.SENTRY_DSN,
 
-  bundleRegistryContractAddress: process.env.BUNDLE_REGISTRY_CONTRACT_ADDRESS,
+  headContractAddress: process.env.HEAD_CONTRACT_ADDRESS,
   bundleSizeLimit: parseInt(process.env.BUNDLE_SIZE_LIMIT, 10) || 10000,
 
   maximumEntityTimestampOvertake:

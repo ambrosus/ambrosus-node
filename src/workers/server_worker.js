@@ -27,9 +27,10 @@ import prometheusMetricsHandler from '../routes/prometheus_metrics.js';
 import asyncMiddleware from '../middlewares/async_middleware';
 
 export default class ServerWorker extends Worker {
-  constructor(modelEngine, config, logger) {
+  constructor(modelEngine, web3, config, logger) {
     super(logger);
     this.modelEngine = modelEngine;
+    this.web3 = web3;
     this.config = config;
   }
 
@@ -56,7 +57,7 @@ export default class ServerWorker extends Worker {
     app.use('/events', eventsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine));
     app.use('/token', tokenRouter(this.modelEngine.tokenAuthenticator, this.config));
     app.use('/bundle', bundlesRouter(this.modelEngine));
-    app.get('/health', asyncMiddleware(healthCheckHandler(this.modelEngine.mongoClient, this.modelEngine.proofRepository.web3)));
+    app.get('/health', asyncMiddleware(healthCheckHandler(this.modelEngine.mongoClient, this.web3)));
     app.get('/metrics', prometheusMetricsHandler(promClient));
 
     app.use(Raven.errorHandler());

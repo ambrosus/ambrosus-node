@@ -1,0 +1,203 @@
+{
+  "contractName": "Config",
+  "updatedAt": "2018-07-30T11:59:36.084Z",
+  "abi": [
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "HERMES_STAKE",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "FINISH_SHELTERING_REWARD_SPLIT",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "ATLAS3_STAKE",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "ATLAS1_STAKE",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "CHALLENGE_DURATION",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "ATLAS2_STORAGE_LIMIT",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "ATLAS3_STORAGE_LIMIT",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "PENALTY_DIVIDER",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "PENALTY_ESCALATION_TIMEOUT",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "STORAGE_PERIOD_UNIT",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "ATLAS1_STORAGE_LIMIT",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "APOLLO_DEPOSIT",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "ATLAS2_STAKE",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "BURN_ADDRESS",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b5061041a806100206000396000f3006080604052600436106100d0576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806323a6a89a146100d557806346f385831461010057806347de8bf41461012b57806364b3a5c01461015657806367ab845b1461018157806378f3b045146101ac578063841dbb21146101d75780638d3ce8ac146102025780639c3de76d1461022d578063a300b6ad14610258578063c3f6df6514610283578063d7c2f320146102ae578063f7d48d61146102d9578063fccc281314610304575b600080fd5b3480156100e157600080fd5b506100ea61035b565b6040518082815260200191505060405180910390f35b34801561010c57600080fd5b50610115610369565b6040518082815260200191505060405180910390f35b34801561013757600080fd5b5061014061036e565b6040518082815260200191505060405180910390f35b34801561016257600080fd5b5061016b61037c565b6040518082815260200191505060405180910390f35b34801561018d57600080fd5b5061019661038a565b6040518082815260200191505060405180910390f35b3480156101b857600080fd5b506101c1610391565b6040518082815260200191505060405180910390f35b3480156101e357600080fd5b506101ec610398565b6040518082815260200191505060405180910390f35b34801561020e57600080fd5b5061021761039f565b6040518082815260200191505060405180910390f35b34801561023957600080fd5b506102426103a4565b6040518082815260200191505060405180910390f35b34801561026457600080fd5b5061026d6103ab565b6040518082815260200191505060405180910390f35b34801561028f57600080fd5b506102986103b3565b6040518082815260200191505060405180910390f35b3480156102ba57600080fd5b506102c36103ba565b6040518082815260200191505060405180910390f35b3480156102e557600080fd5b506102ee6103c8565b6040518082815260200191505060405180910390f35b34801561031057600080fd5b506103196103d6565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b691fc3842bd1f071c0000081565b601681565b690fe1c215e8f838e0000081565b69021e19e0c9bab240000081565b6203f48081565b62061a8081565b620f424081565b606481565b6276a70081565b6301dfe20081565b620186a081565b6934f086f3b33b6840000081565b69065a4da25d3016c0000081565b731000000000000000000000000000000000000000815600a165627a7a72305820590a6f017a33167efb8da57169ffcc6f7016b96ad71d815aeaa2d1167cc7769e0029"
+}

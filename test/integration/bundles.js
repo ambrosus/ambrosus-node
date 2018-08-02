@@ -24,7 +24,7 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-describe('Bundles - Integrations', () => {
+describe.skip('Bundles - Integrations', () => {
   const url = 'node.ambrosus.com';
   let apparatus;
   let scenario;

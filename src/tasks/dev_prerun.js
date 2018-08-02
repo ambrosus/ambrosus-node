@@ -24,13 +24,14 @@ async function registerAdminAccount(dataModelEngine, logger) {
   }
 }
 
-async function configureRegistryContract(dataModelEngine, logger) {
+async function configureKycContract(dataModelEngine, logger) {
   logger.info(`Whitelist node address with registry`);
   const address = dataModelEngine.identityManager.nodeAddress();
-  const {registryContract} = dataModelEngine.proofRepository;
-  await registryContract
+  const kycContract = await dataModelEngine.contractManager.kycWhitelistContract();
+  const HERMES_ROLE_INDEX = 2;
+  await kycContract
     .methods
-    .addToWhitelist(address, 'whatever')
+    .add(address, HERMES_ROLE_INDEX)
     .send({
       from: address,
       gas: 2000000
@@ -39,7 +40,7 @@ async function configureRegistryContract(dataModelEngine, logger) {
 
 async function setupDevelopment(dataModelEngine, logger) {
   await registerAdminAccount(dataModelEngine, logger);
-  await configureRegistryContract(dataModelEngine, logger);
+  await configureKycContract(dataModelEngine, logger);
 }
 
 const builder = new Builder();
