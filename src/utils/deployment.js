@@ -73,4 +73,4 @@ const deployContracts = async (contractsJsons, web3, head) => {
   return contextConstructorParams.map((key) => contractToAddress(deployedContracts[key]));
 };
 
-export {deployAll};
+export default deployAll;
