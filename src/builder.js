@@ -34,7 +34,7 @@ class Builder {
     if (role.index === 0) {
       throw new Error('You must be onboarded in order to start a node');
     }
-    if (role.name !== 'ATLAS' || role.name !== 'HERMES') {
+    if (role.name !== 'ATLAS' && role.name !== 'HERMES') {
       throw new Error(`You must be onboarded as an ATLAS or HERMES while being ${role.name}`);
     }
   }
