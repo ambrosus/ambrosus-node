@@ -9,13 +9,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
-import chaiAsPromised from 'chai-as-promised';
-
 import PeriodicWorker from '../../src/workers/periodic_worker';
 
-chai.use(sinonChai);
-chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Periodic Worker', () => {
