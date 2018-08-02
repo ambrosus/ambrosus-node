@@ -37,14 +37,16 @@ describe('Roles repository', () => {
   });
 
   it('calls contract method with correct arguments', async () => {
-    getRoleCallStub.resolves('0');
+    getRoleCallStub.resolves('1');
     const role = await rolesRepository.onboardedRole(address);
     expect(getRoleStub).to.be.calledWith(address);
     expect(getRoleCallStub).to.be.calledOnce;
-    expect(role.name).to.equal('NONE');
+    expect(role.name).to.equal('ATLAS');
   });
 
   it('correctly decodes roles names', async () => {
+    getRoleCallStub.resolves('0');
+    expect((await rolesRepository.onboardedRole(address)).name).to.equal('NONE');
     getRoleCallStub.resolves('1');
     expect((await rolesRepository.onboardedRole(address)).name).to.equal('ATLAS');
     getRoleCallStub.resolves('2');

@@ -24,7 +24,7 @@ async function registerAdminAccount(dataModelEngine, logger) {
   }
 }
 
-async function configureKycContract(dataModelEngine, logger) {
+async function addToKycWhitelist(dataModelEngine, logger) {
   logger.info(`Whitelist node address with registry`);
   const address = dataModelEngine.identityManager.nodeAddress();
   const kycContract = await dataModelEngine.contractManager.kycWhitelistContract();
@@ -38,9 +38,24 @@ async function configureKycContract(dataModelEngine, logger) {
     });
 }
 
+async function onboardAsHermes(dataModelEngine, logger) {
+  logger.info(`Onboarding node as HERMES`);
+  const address = dataModelEngine.identityManager.nodeAddress();
+  const rolesContract = await dataModelEngine.contractManager.rolesContract();
+  const url = `localhost:${config.serverPort}`;
+  await rolesContract
+    .methods
+    .onboardAsHermes(url)
+    .send({
+      from: address,
+      gas: 2000000
+    });
+}
+
 async function setupDevelopment(dataModelEngine, logger) {
   await registerAdminAccount(dataModelEngine, logger);
-  await configureKycContract(dataModelEngine, logger);
+  await addToKycWhitelist(dataModelEngine, logger);
+  await onboardAsHermes(dataModelEngine, logger);
 }
 
 const builder = new Builder();

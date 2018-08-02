@@ -29,13 +29,13 @@ class Builder {
     await this.dataModelEngine.addAdminAccount();
   }
 
-  async ensureAccountIsOnboarded() {
+  async ensureAccountIsOnboarded(allowedRoles) {
     const role = await this.rolesRepository.onboardedRole(getDefaultAddress(this.web3));
-    if (role.index === 0) {
+    if (role.name === 'NONE') {
       throw new Error('You must be onboarded in order to start a node');
     }
-    if (role.name !== 'ATLAS' && role.name !== 'HERMES') {
-      throw new Error(`You must be onboarded as an ATLAS or HERMES while being ${role.name}`);
+    if (!allowedRoles.includes(role.name)) {
+      throw new Error(`You must be onboarded as one of the following roles: ${allowedRoles.toString()}. Instead onboarded as ${role.name}`);
     }
   }
 
