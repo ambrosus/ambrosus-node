@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/ambrosus/ambrosus-sdk.svg?token=xjj4U84eSFwEsYLTc5Qe&branch=master)](https://travis-ci.com/ambrosus/ambrosus-sdk)
+[![Build Status](https://travis-ci.com/ambrosus/ambrosus-node.svg?branch=master)](https://travis-ci.com/ambrosus/ambrosus-node)
 
 # The Ambrosus Node
 The repository for Ambrosus Node. 
