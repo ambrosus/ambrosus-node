@@ -11,15 +11,17 @@ import {WinstonExpressLogger} from './utils/loggers';
 import config from '../config/config';
 import Builder from './builder';
 import ServerWorker from './workers/server_worker';
+import {Role} from './services/roles_repository';
 
 async function start(logger) {
   const builder = new Builder();
   await builder.build(config);
   await builder.ensureAdminAccountExist();
-  await builder.ensureAccountIsOnboarded(['ATLAS', 'HERMES']);
+  await builder.ensureAccountIsOnboarded([Role.ATLAS, Role.HERMES]);
   const worker = new ServerWorker(
     builder.dataModelEngine,
     builder.web3,
+    builder.role,
     config,
     logger
   );

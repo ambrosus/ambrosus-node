@@ -19,17 +19,37 @@ export default class RolesRepository {
   }
 }
 
-class Role {
+export class Role {
   constructor(roleIndex) {
     this.roleIndex = parseInt(roleIndex, 10);
   }
 
-  get index() {
-    return this.roleIndex;
-  }
-
   get name() {
     const roleNames = ['NONE', 'ATLAS', 'HERMES', 'APOLLO'];
-    return roleNames[this.index];
+    return roleNames[this.roleIndex];
+  }
+
+  static get NONE() {
+    return new Role(0);
+  }
+
+  static get ATLAS() {
+    return new Role(1);
+  }
+
+  static get HERMES() {
+    return new Role(2);
+  }
+
+  static get APOLLO() {
+    return new Role(3);
+  }
+
+  is(role) {
+    return this.roleIndex === role.roleIndex;
+  }
+
+  toString() {
+    return this.name;
   }
 }

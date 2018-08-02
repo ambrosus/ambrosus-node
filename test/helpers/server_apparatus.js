@@ -18,6 +18,7 @@ import config from '../../config/config';
 import Builder from '../../src/builder';
 import ServerWorker from '../../src/workers/server_worker';
 import deployAll from '../../src/utils/deployment';
+import {Role} from '../../src/services/roles_repository';
 
 chai.use(chaiHttp);
 
@@ -47,6 +48,7 @@ export default class ServerApparatus extends Builder {
     this.worker = new ServerWorker(
       this.dataModelEngine,
       web3,
+      Role.HERMES,
       this.config,
       this.logger
     );

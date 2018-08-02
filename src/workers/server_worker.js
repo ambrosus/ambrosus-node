@@ -24,11 +24,13 @@ import nodeInfoRouter from '../routes/nodeinfo';
 import healthCheckHandler from '../routes/health_check';
 import prometheusMetricsHandler from '../routes/prometheus_metrics.js';
 import asyncMiddleware from '../middlewares/async_middleware';
+import {Role} from '../services/roles_repository';
 
 export default class ServerWorker extends Worker {
-  constructor(modelEngine, web3, config, logger) {
+  constructor(modelEngine, web3, role, config, logger) {
     super(logger);
     this.modelEngine = modelEngine;
+    this.role = role;
     this.web3 = web3;
     this.config = config;
   }
@@ -49,13 +51,16 @@ export default class ServerWorker extends Worker {
     app.use(cachePreventionMiddleware);
 
     app.use('/nodeinfo', nodeInfoRouter(this.modelEngine.identityManager, this.config.gitCommit));
-    app.use('/accounts', accountsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine));
-    app.use('/assets', assetsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine, this.config));
-    app.use('/events', eventsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine));
-    app.use('/token', tokenRouter(this.modelEngine.tokenAuthenticator, this.config));
     app.use('/bundle', bundlesRouter(this.modelEngine));
     app.get('/health', asyncMiddleware(healthCheckHandler(this.modelEngine.mongoClient, this.web3)));
     app.get('/metrics', prometheusMetricsHandler(promClient));
+
+    if (this.role.is(Role.HERMES)) {
+      app.use('/accounts', accountsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine));
+      app.use('/assets', assetsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine, this.config));
+      app.use('/events', eventsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine));
+      app.use('/token', tokenRouter(this.modelEngine.tokenAuthenticator, this.config));
+    }
 
     // Should always be last
     app.use(errorHandling(this.logger));

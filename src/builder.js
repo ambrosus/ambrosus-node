@@ -30,12 +30,12 @@ class Builder {
   }
 
   async ensureAccountIsOnboarded(allowedRoles) {
-    const role = await this.rolesRepository.onboardedRole(getDefaultAddress(this.web3));
-    if (role.name === 'NONE') {
+    this.role = await this.rolesRepository.onboardedRole(getDefaultAddress(this.web3));
+    if (this.role.name === 'NONE') {
       throw new Error('You must be onboarded in order to start a node');
     }
-    if (!allowedRoles.includes(role.name)) {
-      throw new Error(`You must be onboarded as one of the following roles: ${allowedRoles.toString()}. Instead onboarded as ${role.name}`);
+    if (!allowedRoles.some((allowedRole) => this.role.is(allowedRole))) {
+      throw new Error(`You must be onboarded as one of the following roles: ${allowedRoles.toString()}. Instead onboarded as ${this.role.name}`);
     }
   }
 
