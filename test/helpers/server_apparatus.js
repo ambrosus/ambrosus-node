@@ -17,7 +17,7 @@ import EmptyLogger from './empty_logger';
 import config from '../../config/config';
 import Builder from '../../src/builder';
 import ServerWorker from '../../src/workers/server_worker';
-import {deployAll} from '../../src/utils/deployment';
+import deployAll from '../../src/utils/deployment';
 
 chai.use(chaiHttp);
 
