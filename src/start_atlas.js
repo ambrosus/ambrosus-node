@@ -9,9 +9,13 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {WinstonConsoleLogger} from './utils/loggers';
 import AtlasWorker from './workers/atlas_worker';
+import config from '../config/config';
+import Builder from './builder';
 
 async function start(logger) {
-  const worker = new AtlasWorker(logger);
+  const builder = new Builder();
+  await builder.build(config);
+  const worker = new AtlasWorker(builder.web3, builder.dataModelEngine, builder.rolesRepository, builder.challengesRepository, logger);
   await worker.start();
 }
 

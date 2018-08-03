@@ -49,6 +49,33 @@ describe('Roles Wrapper', () => {
     });
   });
 
+  describe('nodeUrl', () => {
+    const nodeUrl = 'url';
+    const getUrlStub = sinon.stub();
+    const getUrlCallStub = sinon.stub();
+
+    before(async () => {
+      contractManagerMock = {
+        rolesContract: async () => ({
+          methods: {
+            getUrl: getUrlStub
+          }
+        })
+      };
+      getUrlStub.returns({
+        call: getUrlCallStub.resolves(nodeUrl)
+      });
+      rolesWrapper = new RolesWrapper(contractManagerMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      const url = await rolesWrapper.nodeUrl(address);
+      expect(getUrlStub).to.be.calledWith(address);
+      expect(getUrlCallStub).to.be.calledOnce;
+      expect(url).to.equal(nodeUrl);
+    });
+  });
+
   describe('onboardAsAtlas', () => {
     const onboardAsAtlasStub = sinon.stub();
     const onboardAsAtlasSendStub = sinon.stub();

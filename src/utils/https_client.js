@@ -10,8 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import https from 'https';
 import http from 'http';
 import URL from 'url';
-
 import {NotFoundError, PermissionError, ValidationError, AuthenticationError} from '../errors/errors';
+
 export default class HttpsClient {
   async performHTTPSGet(uri, path) {
     const {protocol, hostname, port} = URL.parse(uri);

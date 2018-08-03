@@ -26,6 +26,10 @@ export default class RolesRepository {
   async onboardAsHermes(address, url) {
     await this.rolesWrapper.onboardAsHermes(address, url);
   }
+
+  async nodeUrl(address) {
+    return this.rolesWrapper.nodeUrl(address);
+  }
 }
 
 export class Role {

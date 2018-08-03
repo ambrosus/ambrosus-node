@@ -46,4 +46,30 @@ describe('Config Wrapper', () => {
       expect(atlasStake1CallStub).to.be.calledOnce;
     });
   });
+
+  describe('CHALLENGE_DURATION', () => {
+    const challengeDurationStub = sinon.stub();
+    const challengeDurationCallStub = sinon.stub();
+    const challengeDuration = '100';
+
+    beforeEach(async () => {
+      contractManagerMock = {
+        configContract: async () => ({
+          methods: {
+            CHALLENGE_DURATION: challengeDurationStub
+          }
+        })
+      };
+      challengeDurationStub.returns({
+        call: challengeDurationCallStub.resolves(challengeDuration)
+      });
+      configWrapper = new ConfigWrapper(contractManagerMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      expect(await configWrapper.challengeDuration()).to.equal(challengeDuration);
+      expect(challengeDurationStub).to.be.calledOnce;
+      expect(challengeDurationCallStub).to.be.calledOnce;
+    });
+  });
 });

@@ -194,17 +194,14 @@ export default class DataModelEngine {
     return newBundle;
   }
 
-  async downloadBundle(bundleId/* , vendorId */) {
-    const processedBundle = await this.entityRepository.getBundle(bundleId);
-    if (processedBundle) {
-      return processedBundle;
+  async downloadBundle(bundleId, sheltererId) {
+    const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
+    const bundle = await this.entityDownloader.downloadBundle(nodeUrl, bundleId);
+    if (!bundle) {
+      throw new Error('Could not fetch the bundle from the shelterer');
     }
-
-    // TODO in another ticket
-    throw new Error(`Proof Repository can not be used yet.`);
-
-    // const bundle = await this.entityDownloader.downloadBundle(vendorUrl, bundleId);
-    // await this.entityRepository.storeBundle(bundle);
-    // return bundle;
+    await this.entityBuilder.validateBundle(bundle);
+    await this.entityRepository.storeBundle(bundle);
+    return bundle;
   }
 }

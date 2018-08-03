@@ -24,6 +24,7 @@ import TokenAuthenticator from './utils/token_authenticator';
 import {createWeb3, getDefaultAddress} from './utils/web3_tools';
 import RolesRepository, {Role} from './services/roles_repository';
 import UploadRepository from './services/upload_repository';
+import ChallengesRepository from './services/challenges_repository';
 
 class Builder {
   async ensureAdminAccountExist() {
@@ -53,6 +54,7 @@ class Builder {
     this.contractManager = new ContractManager(this.web3, headContractAddress);
     this.rolesRepository = new RolesRepository(this.contractManager.rolesWrapper, this.contractManager.configWrapper);
     this.uploadRepository = new UploadRepository(this.contractManager.uploadsWrapper, this.contractManager.feesWrapper);
+    this.challengesRepository = new ChallengesRepository(this.contractManager.challengesWrapper, this.contractManager.configWrapper);
     this.identityManager = new IdentityManager(this.web3);
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
     const {maximumEntityTimestampOvertake} = this.config;

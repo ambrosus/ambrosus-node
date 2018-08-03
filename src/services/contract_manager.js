@@ -14,6 +14,7 @@ import RolesWrapper from './contract_wrappers/roles_wrapper';
 import ConfigWrapper from './contract_wrappers/config_wrapper';
 import UploadsWrapper from './contract_wrappers/uploads_wrapper';
 import FeesWrapper from './contract_wrappers/fees_wrapper';
+import ChallengesWrapper from './contract_wrappers/challenges_wrapper';
 
 export default class ContractManager {
   constructor(web3, headContractAddress) {
@@ -27,6 +28,7 @@ export default class ContractManager {
     this.configWrapper = new ConfigWrapper(this);
     this.uploadsWrapper = new UploadsWrapper(this);
     this.feesWrapper = new FeesWrapper(this);
+    this.challengesWrapper = new ChallengesWrapper(this);
   }
 
   async contractByKey(contractName) {

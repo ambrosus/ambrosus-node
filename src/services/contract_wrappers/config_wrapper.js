@@ -19,4 +19,9 @@ export default class ConfigWrapper extends ContractWrapper {
     const contract = await this.contract();
     return contract.methods.ATLAS1_STAKE().call();
   }
+
+  async challengeDuration() {
+    const contract = await this.contract();
+    return contract.methods.CHALLENGE_DURATION().call();
+  }
 }
