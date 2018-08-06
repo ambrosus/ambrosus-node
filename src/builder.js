@@ -65,21 +65,21 @@ class Builder {
     this.accountRepository = new AccountRepository(this.db);
     this.findAccountQueryObjectFactory = new FindAccountQueryObjectFactory(this.db);
     this.accountAccessDefinitions = new AccountAccessDefinitions(this.identityManager, this.accountRepository);
-    this.dataModelEngine = new DataModelEngine(
-      this.identityManager,
-      this.tokenAuthenticator,
-      this.entityBuilder,
-      this.entityRepository,
-      this.entityDownloader,
-      this.accountRepository,
-      this.findEventQueryObjectFactory,
-      this.findAccountQueryObjectFactory,
-      this.findAssetQueryObjectFactory,
-      this.accountAccessDefinitions,
-      this.client,
-      this.contractManager,
-      this.uploadRepository
-    );
+    this.dataModelEngine = new DataModelEngine({
+      identityManager: this.identityManager,
+      tokenAuthenticator: this.tokenAuthenticator,
+      entityBuilder: this.entityBuilder,
+      entityRepository: this.entityRepository,
+      entityDownloader: this.entityDownloader,
+      accountRepository: this.accountRepository,
+      findEventQueryObjectFactory: this.findEventQueryObjectFactory,
+      findAccountQueryObjectFactory: this.findAccountQueryObjectFactory,
+      findAssetQueryObjectFactory: this.findAssetQueryObjectFactory,
+      accountAccessDefinitions: this.accountAccessDefinitions,
+      mongoClient: this.client,
+      contractManager: this.contractManager,
+      uploadRepository: this.uploadRepository
+    });
     return {dataModelEngine: this.dataModelEngine, client: this.client};
   }
 }
