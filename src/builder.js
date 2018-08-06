@@ -22,7 +22,7 @@ import {connectToMongo} from './utils/db_utils';
 import HttpsClient from './utils/https_client';
 import TokenAuthenticator from './utils/token_authenticator';
 import {createWeb3, getDefaultAddress} from './utils/web3_tools';
-import RolesRepository from './services/roles_repository';
+import RolesRepository, {Role} from './services/roles_repository';
 
 class Builder {
   async ensureAdminAccountExist() {
@@ -30,13 +30,14 @@ class Builder {
   }
 
   async ensureAccountIsOnboarded(allowedRoles) {
-    this.role = await this.rolesRepository.onboardedRole(getDefaultAddress(this.web3));
-    if (this.role.name === 'NONE') {
+    const role = await this.rolesRepository.onboardedRole(getDefaultAddress(this.web3));
+    if (role.is(Role.NONE)) {
       throw new Error('You must be onboarded in order to start a node');
     }
-    if (!allowedRoles.some((allowedRole) => this.role.is(allowedRole))) {
-      throw new Error(`You must be onboarded as one of the following roles: ${allowedRoles.toString()}. Instead onboarded as ${this.role.name}`);
+    if (!allowedRoles.some((allowedRole) => role.is(allowedRole))) {
+      throw new Error(`You must be onboarded as one of the following roles: ${allowedRoles.toString()}. Instead onboarded as ${role.name}`);
     }
+    return role;
   }
 
   async build(config, dependencies = {}) {

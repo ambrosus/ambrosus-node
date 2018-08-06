@@ -17,11 +17,11 @@ async function start(logger) {
   const builder = new Builder();
   await builder.build(config);
   await builder.ensureAdminAccountExist();
-  await builder.ensureAccountIsOnboarded([Role.ATLAS, Role.HERMES]);
+  const role = await builder.ensureAccountIsOnboarded([Role.ATLAS, Role.HERMES]);
   const worker = new ServerWorker(
     builder.dataModelEngine,
     builder.web3,
-    builder.role,
+    role,
     config,
     logger
   );
