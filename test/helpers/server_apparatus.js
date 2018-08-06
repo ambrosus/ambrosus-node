@@ -18,15 +18,17 @@ import config from '../../config/config';
 import Builder from '../../src/builder';
 import ServerWorker from '../../src/workers/server_worker';
 import deployAll from '../../src/utils/deployment';
+import {Role} from '../../src/services/roles_repository';
 
 chai.use(chaiHttp);
 
 export default class ServerApparatus extends Builder {
   DEFAULT_TOKEN_EXPIRATION = 60 * 60 * 24 * 28;
 
-  constructor(customConfig) {
+  constructor(customConfig, role = Role.HERMES) {
     super();
     this.logger = new EmptyLogger();
+    this.role = role;
     // Read defaults from global config, but allow the options to be customized
     // for each test.
     this.config = Object.freeze({...config, ...customConfig});
@@ -47,6 +49,7 @@ export default class ServerApparatus extends Builder {
     this.worker = new ServerWorker(
       this.dataModelEngine,
       web3,
+      this.role,
       this.config,
       this.logger
     );
