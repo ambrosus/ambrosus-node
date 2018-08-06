@@ -17,6 +17,7 @@ module.exports = Object.freeze({
 
   headContractAddress: process.env.HEAD_CONTRACT_ADDRESS,
   bundleSizeLimit: parseInt(process.env.BUNDLE_SIZE_LIMIT, 10) || 10000,
+  storagePeriods: parseInt(process.env.STORAGE_PERIODS, 10) || 1,
 
   maximumEntityTimestampOvertake:
     parseInt(process.env.MAXIMUM_ENTITY_TIMESTAMP_OVERTAKE, 10) || 86400,
