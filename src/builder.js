@@ -23,6 +23,7 @@ import HttpsClient from './utils/https_client';
 import TokenAuthenticator from './utils/token_authenticator';
 import {createWeb3, getDefaultAddress} from './utils/web3_tools';
 import RolesRepository, {Role} from './services/roles_repository';
+import UploadRepository from './services/upload_repository';
 
 class Builder {
   async ensureAdminAccountExist() {
@@ -50,6 +51,7 @@ class Builder {
     const {headContractAddress} = this.config;
     this.contractManager = new ContractManager(this.web3, headContractAddress);
     this.rolesRepository = new RolesRepository(this.contractManager);
+    this.uploadRepository = new UploadRepository(this.contractManager);
     this.identityManager = new IdentityManager(this.web3);
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
     const {maximumEntityTimestampOvertake} = this.config;
@@ -75,7 +77,8 @@ class Builder {
       this.findAssetQueryObjectFactory,
       this.accountAccessDefinitions,
       this.client,
-      this.contractManager
+      this.contractManager,
+      this.uploadRepository
     );
     return {dataModelEngine: this.dataModelEngine, client: this.client};
   }

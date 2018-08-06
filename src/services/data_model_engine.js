@@ -12,7 +12,7 @@ import {getTimestamp} from '../utils/time_utils';
 import {pick, put} from '../utils/dict_utils';
 
 export default class DataModelEngine {
-  constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, contractManager) {
+  constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, contractManager, uploadRepository) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
@@ -25,6 +25,7 @@ export default class DataModelEngine {
     this.accountAccessDefinitions = accountAccessDefinitions;
     this.mongoClient = mongoClient;
     this.contractManager = contractManager;
+    this.uploadRepository = uploadRepository;
   }
 
   async addAdminAccount(address = this.identityManager.nodeAddress()) {
@@ -171,7 +172,7 @@ export default class DataModelEngine {
     return bundle;
   }
 
-  async finaliseBundle(bundleStubId, bundleSizeLimit) {
+  async finaliseBundle(bundleStubId, bundleSizeLimit, storagePeriods) {
     const notBundled = await this.entityRepository.beginBundle(bundleStubId);
 
     const nodeSecret = await this.identityManager.nodePrivateKey();
@@ -185,12 +186,11 @@ export default class DataModelEngine {
 
     await this.entityRepository.endBundle(bundleStubId, newBundle.bundleId, bundleSizeLimit);
 
-    // TODO in another ticket
-    throw new Error(`Proof Repository can not be used yet.`);
+    const {blockNumber, transactionHash} = await this.uploadRepository.uploadBundle(newBundle.bundleId, storagePeriods);
 
-    // await this.entityRepository.storeBundleProofMetadata(newBundle.bundleId, blockNumber, transactionHash);
+    await this.entityRepository.storeBundleProofMetadata(newBundle.bundleId, blockNumber, transactionHash);
 
-    // return newBundle;
+    return newBundle;
   }
 
   async downloadBundle(bundleId/* , vendorId */) {

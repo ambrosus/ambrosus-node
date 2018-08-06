@@ -15,7 +15,6 @@ import chaiHttp from 'chai-http';
 import {adminAccountWithSecret} from '../fixtures/account';
 import ServerApparatus, {apparatusScenarioProcessor} from '../helpers/server_apparatus';
 import ScenarioBuilder from '../fixtures/scenario_builder';
-import {getDefaultAddress, createWeb3} from '../../src/utils/web3_tools';
 import {properTxHash} from '../helpers/web3chai';
 
 chai.use(properTxHash);
@@ -24,7 +23,7 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-describe.skip('Bundles - Integrations', () => {
+describe('Bundles - Integrations', () => {
   const url = 'node.ambrosus.com';
   let apparatus;
   let scenario;
@@ -47,9 +46,27 @@ describe.skip('Bundles - Integrations', () => {
 
     scenario = new ScenarioBuilder(apparatus.identityManager, apparatusScenarioProcessor(apparatus));
     await scenario.addAdminAccount(adminAccountWithSecret);
+    const nodeAddress = apparatus.identityManager.nodeAddress();
 
-    const from = getDefaultAddress(await createWeb3());
-    await apparatus.bundleProofRegistryContract.methods.addToWhitelist(from, url).send({from});
+    const kycContract = await apparatus.contractManager.kycWhitelistContract();
+    const HERMES_ROLE_INDEX = 2;
+    await kycContract
+      .methods
+      .add(nodeAddress, HERMES_ROLE_INDEX)
+      .send({
+        from: nodeAddress,
+        gas: 2000000
+      });
+
+
+    const rolesContract = await apparatus.contractManager.rolesContract();
+    await rolesContract
+      .methods
+      .onboardAsHermes(url)
+      .send({
+        from: nodeAddress,
+        gas: 2000000
+      });
 
     // this 2 assets and 3 events will go into the bundle
     entitiesIds = [
@@ -60,7 +77,7 @@ describe.skip('Bundles - Integrations', () => {
       await scenario.addEvent(0, 1, {timestamp: 2}, [{type: 'e'}])
     ].map(mapEntitiesToIds);
 
-    res = await apparatus.dataModelEngine.finaliseBundle(1);
+    res = await apparatus.dataModelEngine.finaliseBundle(1, 16384, 1);
 
     // this additional event should not go into the bundle
     await scenario.addEvent(0, 1, {timestamp: 3}, [{type: '4'}]);
@@ -79,9 +96,11 @@ describe.skip('Bundles - Integrations', () => {
     });
 
     it('should upload the proof to ethereum, and emit a event', async () => {
-      const emittedEvents = await apparatus
-        .bundleProofRegistryContract
-        .getPastEvents('BundleAdded');
+      const uploadsContract = await apparatus
+        .contractManager
+        .uploadsContract();
+      const emittedEvents = await uploadsContract.getPastEvents('BundleUploaded');
+
       const expectedEvent = emittedEvents.filter((value) => value.returnValues.bundleId === res.bundleId);
       expect(expectedEvent).to.have.length(1);
     });

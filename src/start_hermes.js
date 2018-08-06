@@ -8,10 +8,16 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {WinstonConsoleLogger} from './utils/loggers';
+import config from '../config/config';
+import Builder from './builder';
 import HermesWorker from './workers/hermes_worker';
+import {Role} from './services/roles_repository';
 
 async function start(logger) {
-  const worker = new HermesWorker(logger);
+  const builder = new Builder();
+  await builder.build(config);
+  await builder.ensureAccountIsOnboarded([Role.HERMES]);
+  const worker = new HermesWorker(builder.dataModelEngine, config, logger);
   await worker.start();
 }
 
