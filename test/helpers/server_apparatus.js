@@ -19,6 +19,7 @@ import Builder from '../../src/builder';
 import ServerWorker from '../../src/workers/server_worker';
 import deployAll from '../../src/utils/deployment';
 import {Role} from '../../src/services/roles_repository';
+import {addToKycWhitelist} from '../../src/utils/prerun';
 
 chai.use(chaiHttp);
 
@@ -55,6 +56,16 @@ export default class ServerApparatus extends Builder {
       this.logger
     );
     await this.worker.start();
+  }
+
+  async onboardAsHermes(url) {
+    await addToKycWhitelist(Role.HERMES, this.dataModelEngine, new EmptyLogger());
+    await this.rolesRepository.onboardAsHermes(this.identityManager.nodeAddress(), url);
+  }
+
+  async onboardAsAtlas(url) {
+    await addToKycWhitelist(Role.ATLAS, this.dataModelEngine, new EmptyLogger());
+    await this.rolesRepository.onboardAsAtlas(this.identityManager.nodeAddress(), url);
   }
 
   generateToken(secret = adminAccountWithSecret.secret, validUntil = this.defaultValidUntil()) {

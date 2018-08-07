@@ -16,9 +16,6 @@ import {adminAccountWithSecret} from '../fixtures/account';
 import ServerApparatus, {apparatusScenarioProcessor} from '../helpers/server_apparatus';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {properTxHash} from '../helpers/web3chai';
-import {Role} from '../../src/services/roles_repository';
-import EmptyLogger from '../helpers/empty_logger';
-import {addToKycWhitelist} from '../../src/utils/prerun';
 
 chai.use(properTxHash);
 chai.use(chaiHttp);
@@ -49,10 +46,7 @@ describe('Bundles - Integrations', () => {
 
     scenario = new ScenarioBuilder(apparatus.identityManager, apparatusScenarioProcessor(apparatus));
     await scenario.addAdminAccount(adminAccountWithSecret);
-    const nodeAddress = apparatus.identityManager.nodeAddress();
-
-    await addToKycWhitelist(Role.HERMES, apparatus.dataModelEngine, new EmptyLogger());
-    await apparatus.rolesRepository.onboardAsHermes(nodeAddress, url);
+    await apparatus.onboardAsHermes(url);
 
     // this 2 assets and 3 events will go into the bundle
     entitiesIds = [

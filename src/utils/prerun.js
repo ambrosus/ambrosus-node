@@ -14,8 +14,7 @@ export async function onboardAsAtlas(web3, rolesRepository, logger) {
   logger.info(`Onboarding node as ATLAS with stake of 10000 AMB`);
   const address = getDefaultAddress(web3);
   const url = `localhost:${config.serverPort}`;
-  const stake = web3.utils.toWei('10000', 'ether');
-  await rolesRepository.onboardAsAtlas(address, stake, url);
+  await rolesRepository.onboardAsAtlas(address, url);
 }
 
 export async function onboardAsHermes(web3, rolesRepository, logger) {

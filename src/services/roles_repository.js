@@ -18,7 +18,10 @@ export default class RolesRepository {
     return new Role(roleIndex);
   }
 
-  async onboardAsAtlas(address, stake, url) {
+  async onboardAsAtlas(address, url) {
+    const configContract = await this.contractManager.configContract();
+    // eslint-disable-next-line new-cap
+    const stake = await configContract.methods.ATLAS1_STAKE().call();
     const rolesContract = await this.contractManager.rolesContract();
     await rolesContract
       .methods

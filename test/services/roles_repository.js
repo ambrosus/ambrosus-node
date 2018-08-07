@@ -59,9 +59,11 @@ describe('Roles repository', () => {
   });
 
   describe('onboardAsAtlas', () => {
+    const atlasStake1Stub = sinon.stub();
+    const atlasStake1CallStub = sinon.stub();
     const onboardAsAtlasStub = sinon.stub();
     const onboardAsAtlasSendStub = sinon.stub();
-    const stake = 100;
+    const stake = '100';
     const url = 'url';
 
     beforeEach(async () => {
@@ -70,16 +72,27 @@ describe('Roles repository', () => {
           methods: {
             onboardAsAtlas: onboardAsAtlasStub
           }
+        }),
+        configContract: async () => ({
+          methods: {
+            ATLAS1_STAKE: atlasStake1Stub
+          }
         })
       };
       onboardAsAtlasStub.returns({
         send: onboardAsAtlasSendStub
       });
+      atlasStake1Stub.returns({
+        call: atlasStake1CallStub.resolves(stake)
+      });
       rolesRepository = new RolesRepository(contractManagerMock);
     });
 
     it('calls contract method with correct arguments', async () => {
-      await rolesRepository.onboardAsAtlas(address, stake, url);
+      await rolesRepository.onboardAsAtlas(address, url);
+
+      expect(atlasStake1Stub).to.be.calledOnce;
+      expect(atlasStake1CallStub).to.be.calledOnce;
       expect(onboardAsAtlasStub).to.be.calledWith(url);
       expect(onboardAsAtlasSendStub).to.be.calledWith({
         from: address,

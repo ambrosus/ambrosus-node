@@ -84,5 +84,9 @@ describe('Contract Manager', () => {
     it('uploads', async () => {
       expect((await contractManager.uploadsContract()).options.address).to.equal(deployedMockContracts.uploads);
     });
+
+    it('config', async () => {
+      expect((await contractManager.configContract()).options.address).to.equal(deployedMockContracts.config);
+    });
   });
 });
