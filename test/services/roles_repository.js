@@ -17,41 +17,115 @@ const {expect} = chai;
 
 describe('Roles repository', () => {
   const address = '0xc0ffee';
-  const getRoleStub = sinon.stub();
-  const getRoleCallStub = sinon.stub();
   let rolesRepository;
   let contractManagerMock;
 
-  beforeEach(async () => {
-    contractManagerMock = {
-      rolesContract: async () => ({
-        methods: {
-          getOnboardedRole: getRoleStub
-        }
-      })
-    };
-    getRoleStub.returns({
-      call: getRoleCallStub
+  describe('onboardedRole', () => {
+    const getRoleStub = sinon.stub();
+    const getRoleCallStub = sinon.stub();
+
+    beforeEach(async () => {
+      contractManagerMock = {
+        rolesContract: async () => ({
+          methods: {
+            getOnboardedRole: getRoleStub
+          }
+        })
+      };
+      getRoleStub.returns({
+        call: getRoleCallStub
+      });
+      rolesRepository = new RolesRepository(contractManagerMock);
     });
-    rolesRepository = new RolesRepository(contractManagerMock);
+
+    it('calls contract method with correct arguments', async () => {
+      getRoleCallStub.resolves('1');
+      const role = await rolesRepository.onboardedRole(address);
+      expect(getRoleStub).to.be.calledWith(address);
+      expect(getRoleCallStub).to.be.calledOnce;
+      expect(role.name).to.equal('ATLAS');
+    });
+
+    it('correctly decodes roles names', async () => {
+      getRoleCallStub.resolves('0');
+      expect((await rolesRepository.onboardedRole(address)).name).to.equal('NONE');
+      getRoleCallStub.resolves('1');
+      expect((await rolesRepository.onboardedRole(address)).name).to.equal('ATLAS');
+      getRoleCallStub.resolves('2');
+      expect((await rolesRepository.onboardedRole(address)).name).to.equal('HERMES');
+      getRoleCallStub.resolves('3');
+      expect((await rolesRepository.onboardedRole(address)).name).to.equal('APOLLO');
+    });
   });
 
-  it('calls contract method with correct arguments', async () => {
-    getRoleCallStub.resolves('1');
-    const role = await rolesRepository.onboardedRole(address);
-    expect(getRoleStub).to.be.calledWith(address);
-    expect(getRoleCallStub).to.be.calledOnce;
-    expect(role.name).to.equal('ATLAS');
+  describe('onboardAsAtlas', () => {
+    const atlasStake1Stub = sinon.stub();
+    const atlasStake1CallStub = sinon.stub();
+    const onboardAsAtlasStub = sinon.stub();
+    const onboardAsAtlasSendStub = sinon.stub();
+    const stake = '100';
+    const url = 'url';
+
+    beforeEach(async () => {
+      contractManagerMock = {
+        rolesContract: async () => ({
+          methods: {
+            onboardAsAtlas: onboardAsAtlasStub
+          }
+        }),
+        configContract: async () => ({
+          methods: {
+            ATLAS1_STAKE: atlasStake1Stub
+          }
+        })
+      };
+      onboardAsAtlasStub.returns({
+        send: onboardAsAtlasSendStub
+      });
+      atlasStake1Stub.returns({
+        call: atlasStake1CallStub.resolves(stake)
+      });
+      rolesRepository = new RolesRepository(contractManagerMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      await rolesRepository.onboardAsAtlas(address, url);
+
+      expect(atlasStake1Stub).to.be.calledOnce;
+      expect(atlasStake1CallStub).to.be.calledOnce;
+      expect(onboardAsAtlasStub).to.be.calledWith(url);
+      expect(onboardAsAtlasSendStub).to.be.calledWith({
+        from: address,
+        value: stake
+      });
+    });
   });
 
-  it('correctly decodes roles names', async () => {
-    getRoleCallStub.resolves('0');
-    expect((await rolesRepository.onboardedRole(address)).name).to.equal('NONE');
-    getRoleCallStub.resolves('1');
-    expect((await rolesRepository.onboardedRole(address)).name).to.equal('ATLAS');
-    getRoleCallStub.resolves('2');
-    expect((await rolesRepository.onboardedRole(address)).name).to.equal('HERMES');
-    getRoleCallStub.resolves('3');
-    expect((await rolesRepository.onboardedRole(address)).name).to.equal('APOLLO');
+  describe('onboardAsHermes', () => {
+    const onboardAsHermesStub = sinon.stub();
+    const onboardAsHermesSendStub = sinon.stub();
+    const url = 'url';
+
+    beforeEach(async () => {
+      contractManagerMock = {
+        rolesContract: async () => ({
+          methods: {
+            onboardAsHermes: onboardAsHermesStub
+          }
+        })
+      };
+      onboardAsHermesStub.returns({
+        send: onboardAsHermesSendStub
+      });
+      rolesRepository = new RolesRepository(contractManagerMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      await rolesRepository.onboardAsHermes(address, url);
+      expect(onboardAsHermesStub).to.be.calledWith(url);
+      expect(onboardAsHermesSendStub).to.be.calledWith({
+        from: address
+      });
+    });
   });
 });

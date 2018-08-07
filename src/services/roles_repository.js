@@ -17,6 +17,30 @@ export default class RolesRepository {
     const roleIndex = await rolesContract.methods.getOnboardedRole(address).call();
     return new Role(roleIndex);
   }
+
+  async onboardAsAtlas(address, url) {
+    const configContract = await this.contractManager.configContract();
+    // eslint-disable-next-line new-cap
+    const stake = await configContract.methods.ATLAS1_STAKE().call();
+    const rolesContract = await this.contractManager.rolesContract();
+    await rolesContract
+      .methods
+      .onboardAsAtlas(url)
+      .send({
+        from: address,
+        value: stake
+      });
+  }
+
+  async onboardAsHermes(address, url) {
+    const rolesContract = await this.contractManager.rolesContract();
+    await rolesContract
+      .methods
+      .onboardAsHermes(url)
+      .send({
+        from: address
+      });
+  }
 }
 
 export class Role {
