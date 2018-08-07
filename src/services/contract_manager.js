@@ -34,7 +34,8 @@ export default class ContractManager {
       'challenges',
       'payouts',
       'shelteringTransfers',
-      'uploads'
+      'uploads',
+      'config'
     ];
 
     if (!availableContracts.includes(contractName)) {
@@ -81,5 +82,9 @@ export default class ContractManager {
 
   async uploadsContract() {
     return this.contractByKey('uploads');
+  }
+
+  async configContract() {
+    return this.contractByKey('config');
   }
 }

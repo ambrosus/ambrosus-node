@@ -46,27 +46,7 @@ describe('Bundles - Integrations', () => {
 
     scenario = new ScenarioBuilder(apparatus.identityManager, apparatusScenarioProcessor(apparatus));
     await scenario.addAdminAccount(adminAccountWithSecret);
-    const nodeAddress = apparatus.identityManager.nodeAddress();
-
-    const kycContract = await apparatus.contractManager.kycWhitelistContract();
-    const HERMES_ROLE_INDEX = 2;
-    await kycContract
-      .methods
-      .add(nodeAddress, HERMES_ROLE_INDEX)
-      .send({
-        from: nodeAddress,
-        gas: 2000000
-      });
-
-
-    const rolesContract = await apparatus.contractManager.rolesContract();
-    await rolesContract
-      .methods
-      .onboardAsHermes(url)
-      .send({
-        from: nodeAddress,
-        gas: 2000000
-      });
+    await apparatus.onboardAsHermes(url);
 
     // this 2 assets and 3 events will go into the bundle
     entitiesIds = [
