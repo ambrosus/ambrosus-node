@@ -8,38 +8,23 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 export default class RolesRepository {
-  constructor(contractManager) {
-    this.contractManager = contractManager;
+  constructor(rolesWrapper, configWrapper) {
+    this.rolesWrapper = rolesWrapper;
+    this.configWrapper = configWrapper;
   }
 
   async onboardedRole(address) {
-    const rolesContract = await this.contractManager.rolesContract();
-    const roleIndex = await rolesContract.methods.getOnboardedRole(address).call();
+    const roleIndex = await this.rolesWrapper.onboardedRole(address);
     return new Role(roleIndex);
   }
 
   async onboardAsAtlas(address, url) {
-    const configContract = await this.contractManager.configContract();
-    // eslint-disable-next-line new-cap
-    const stake = await configContract.methods.ATLAS1_STAKE().call();
-    const rolesContract = await this.contractManager.rolesContract();
-    await rolesContract
-      .methods
-      .onboardAsAtlas(url)
-      .send({
-        from: address,
-        value: stake
-      });
+    const stake = await this.configWrapper.atlas1Stake();
+    await this.rolesWrapper.onboardAsAtlas(address, stake, url);
   }
 
   async onboardAsHermes(address, url) {
-    const rolesContract = await this.contractManager.rolesContract();
-    await rolesContract
-      .methods
-      .onboardAsHermes(url)
-      .send({
-        from: address
-      });
+    await this.rolesWrapper.onboardAsHermes(address, url);
   }
 }
 
