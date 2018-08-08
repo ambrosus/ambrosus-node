@@ -10,6 +10,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {getDefaultAddress, loadContract} from '../utils/web3_tools';
 
 import {contractsJsons, serviceContractsJsons} from '../utils/contracts_consts';
+import RolesWrapper from './contract_wrappers/roles_wrapper';
+import ConfigWrapper from './contract_wrappers/config_wrapper';
+import UploadsWrapper from './contract_wrappers/uploads_wrapper';
+import FeesWrapper from './contract_wrappers/fees_wrapper';
 
 export default class ContractManager {
   constructor(web3, headContractAddress) {
@@ -19,6 +23,10 @@ export default class ContractManager {
     } else {
       throw new Error('Head contract address is not configured');
     }
+    this.rolesWrapper = new RolesWrapper(this);
+    this.configWrapper = new ConfigWrapper(this);
+    this.uploadsWrapper = new UploadsWrapper(this);
+    this.feesWrapper = new FeesWrapper(this);
   }
 
   async contractByKey(contractName) {

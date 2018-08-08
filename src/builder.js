@@ -36,7 +36,8 @@ class Builder {
       throw new Error('You must be onboarded in order to start a node');
     }
     if (!allowedRoles.some((allowedRole) => role.is(allowedRole))) {
-      throw new Error(`You must be onboarded as one of the following roles: ${allowedRoles.toString()}. Instead onboarded as ${role.name}`);
+      throw new Error(
+        `You must be onboarded as one of the following roles: ${allowedRoles.toString()}. Instead onboarded as ${role.name}`);
     }
     return role;
   }
@@ -50,8 +51,8 @@ class Builder {
     this.web3 = web3 || await createWeb3(this.config);
     const {headContractAddress} = this.config;
     this.contractManager = new ContractManager(this.web3, headContractAddress);
-    this.rolesRepository = new RolesRepository(this.contractManager);
-    this.uploadRepository = new UploadRepository(this.contractManager);
+    this.rolesRepository = new RolesRepository(this.contractManager.rolesWrapper, this.contractManager.configWrapper);
+    this.uploadRepository = new UploadRepository(this.contractManager.uploadsWrapper, this.contractManager.feesWrapper);
     this.identityManager = new IdentityManager(this.web3);
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
     const {maximumEntityTimestampOvertake} = this.config;
@@ -78,7 +79,8 @@ class Builder {
       accountAccessDefinitions: this.accountAccessDefinitions,
       mongoClient: this.client,
       contractManager: this.contractManager,
-      uploadRepository: this.uploadRepository
+      uploadRepository: this.uploadRepository,
+      rolesRepository: this.rolesRepository
     });
     return {dataModelEngine: this.dataModelEngine, client: this.client};
   }

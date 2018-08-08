@@ -7,14 +7,15 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-export default class UploadRepository {
-  constructor(uploadsWrapper, feesWrapper) {
-    this.uploadsWrapper = uploadsWrapper;
-    this.feesWrapper = feesWrapper;
+import ContractWrapper from './contract_wrapper';
+
+export default class FeesWrapper extends ContractWrapper {
+  async contract() {
+    return this.contractManager.feesContract();
   }
 
-  async uploadBundle(bundleId, storagePeriods) {
-    const fee = await this.feesWrapper.feeForUpload(storagePeriods);
-    return this.uploadsWrapper.registerBundle(bundleId, fee, storagePeriods);
+  async feeForUpload(storagePeriods) {
+    const contract = await this.contract();
+    return contract.methods.getFeeForUpload(storagePeriods).call();
   }
 }

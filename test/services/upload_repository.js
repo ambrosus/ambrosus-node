@@ -10,63 +10,35 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import sinon from 'sinon';
 import UploadRepository from '../../src/services/upload_repository';
-import {getDefaultAddress} from '../../src/utils/web3_tools';
+import sinonChai from 'sinon-chai';
 
+chai.use(sinonChai);
 const {expect} = chai;
 
 describe('Upload repository', () => {
-  const bundleId = '0xc0ffee';
-  const storagePeriods = 1;
-  const getFeeForUploadStub = sinon.stub();
-  const getFeeForUploadCallStub = sinon.stub();
-  const registerBundleStub = sinon.stub();
-  const registerBundleSendStub = sinon.stub();
+  let feesWrapperMock;
+  let uploadsWrapperMock;
   let uploadRepository;
-  let contractManagerMock;
-  const mockWeb3 = {eth: {defaultAccount: '0xc0ffee'}};
-
-  beforeEach(async () => {
-    contractManagerMock = {
-      feesContract: async () => ({
-        methods: {
-          getFeeForUpload: getFeeForUploadStub
-        }
-      }),
-      uploadsContract: async () => ({
-        methods: {
-          registerBundle: registerBundleStub
-        }
-      }),
-      web3: mockWeb3
-    };
-    getFeeForUploadStub.returns({
-      call: getFeeForUploadCallStub
-    });
-    registerBundleStub.returns({
-      send: registerBundleSendStub
-    });
-    uploadRepository = new UploadRepository(contractManagerMock);
-  });
 
   describe('Upload bundle', async () => {
-    it('correctly gets the fee', async () => {
-      await uploadRepository.uploadBundle(bundleId, storagePeriods);
-      expect(getFeeForUploadStub).to.be.calledWith(storagePeriods);
+    const bundleId = '0xc0ffee';
+    const storagePeriods = 1;
+    const fee = '100';
+
+    beforeEach(async () => {
+      uploadsWrapperMock = {
+        registerBundle: sinon.stub()
+      };
+      feesWrapperMock = {
+        feeForUpload: sinon.stub().resolves(fee)
+      };
+      uploadRepository = new UploadRepository(uploadsWrapperMock, feesWrapperMock);
     });
 
-    it('correctly uploads bundle', async () => {
-      const fee = 100;
-      getFeeForUploadCallStub.resolves(fee);
+    it('calls wrappers methods with correct arguments', async () => {
       await uploadRepository.uploadBundle(bundleId, storagePeriods);
-      expect(registerBundleStub).to.be.calledWith(bundleId, storagePeriods);
-      expect(registerBundleSendStub).to.be.calledWith({from: getDefaultAddress(mockWeb3), value: fee});
-    });
-
-    it('returns upload transaction', async () => {
-      const tx = {foo: 'bar'};
-      registerBundleSendStub.resolves(tx);
-      const result = await uploadRepository.uploadBundle(bundleId, storagePeriods);
-      expect(result).to.equal(tx);
+      expect(feesWrapperMock.feeForUpload).to.be.calledOnceWith(storagePeriods);
+      expect(uploadsWrapperMock.registerBundle).to.be.calledOnceWith(bundleId, fee, storagePeriods);
     });
   });
 });
