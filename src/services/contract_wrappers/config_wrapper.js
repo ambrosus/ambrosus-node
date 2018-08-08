@@ -6,15 +6,17 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
+/* eslint-disable new-cap */
 
-export default class UploadRepository {
-  constructor(uploadsWrapper, feesWrapper) {
-    this.uploadsWrapper = uploadsWrapper;
-    this.feesWrapper = feesWrapper;
+import ContractWrapper from './contract_wrapper';
+
+export default class ConfigWrapper extends ContractWrapper {
+  async contract() {
+    return this.contractManager.configContract();
   }
 
-  async uploadBundle(bundleId, storagePeriods) {
-    const fee = await this.feesWrapper.feeForUpload(storagePeriods);
-    return this.uploadsWrapper.registerBundle(bundleId, fee, storagePeriods);
+  async atlas1Stake() {
+    const contract = await this.contract();
+    return contract.methods.ATLAS1_STAKE().call();
   }
 }
