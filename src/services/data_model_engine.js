@@ -12,19 +12,20 @@ import {getTimestamp} from '../utils/time_utils';
 import {pick, put} from '../utils/dict_utils';
 
 export default class DataModelEngine {
-  constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, proofRepository, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient) {
+  constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, contractManager, uploadRepository}) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
     this.entityRepository = entityRepository;
     this.entityDownloader = entityDownloader;
-    this.proofRepository = proofRepository;
     this.accountRepository = accountRepository;
     this.findEventQueryObjectFactory = findEventQueryObjectFactory;
     this.findAccountQueryObjectFactory = findAccountQueryObjectFactory;
     this.findAssetQueryObjectFactory = findAssetQueryObjectFactory;
     this.accountAccessDefinitions = accountAccessDefinitions;
     this.mongoClient = mongoClient;
+    this.contractManager = contractManager;
+    this.uploadRepository = uploadRepository;
   }
 
   async addAdminAccount(address = this.identityManager.nodeAddress()) {
@@ -171,7 +172,7 @@ export default class DataModelEngine {
     return bundle;
   }
 
-  async finaliseBundle(bundleStubId, bundleSizeLimit) {
+  async finaliseBundle(bundleStubId, bundleSizeLimit, storagePeriods) {
     const notBundled = await this.entityRepository.beginBundle(bundleStubId);
 
     const nodeSecret = await this.identityManager.nodePrivateKey();
@@ -185,21 +186,24 @@ export default class DataModelEngine {
 
     await this.entityRepository.endBundle(bundleStubId, newBundle.bundleId, bundleSizeLimit);
 
-    const {blockNumber, transactionHash} = await this.proofRepository.uploadProof(newBundle.bundleId);
+    const {blockNumber, transactionHash} = await this.uploadRepository.uploadBundle(newBundle.bundleId, storagePeriods);
 
     await this.entityRepository.storeBundleProofMetadata(newBundle.bundleId, blockNumber, transactionHash);
 
     return newBundle;
   }
 
-  async downloadBundle(bundleId, vendorId) {
+  async downloadBundle(bundleId/* , vendorId */) {
     const processedBundle = await this.entityRepository.getBundle(bundleId);
     if (processedBundle) {
       return processedBundle;
     }
-    const vendorUrl = await this.proofRepository.getVendorUrl(vendorId);
-    const bundle = await this.entityDownloader.downloadBundle(vendorUrl, bundleId);
-    await this.entityRepository.storeBundle(bundle);
-    return bundle;
+
+    // TODO in another ticket
+    throw new Error(`Proof Repository can not be used yet.`);
+
+    // const bundle = await this.entityDownloader.downloadBundle(vendorUrl, bundleId);
+    // await this.entityRepository.storeBundle(bundle);
+    // return bundle;
   }
 }

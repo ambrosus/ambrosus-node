@@ -9,38 +9,63 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiHttp from 'chai-http';
-import Application from '../../src/application';
-import ContractManager from '../../src/services/contract_manager';
 import {cleanDatabase} from '../../src/utils/db_utils';
 import {getTimestamp} from '../../src/utils/time_utils';
 import {createWeb3} from '../../src/utils/web3_tools';
 import {adminAccountWithSecret} from '../fixtures/account';
 import EmptyLogger from './empty_logger';
 import config from '../../config/config';
+import Builder from '../../src/builder';
+import ServerWorker from '../../src/workers/server_worker';
+import deployAll from '../../src/utils/deployment';
+import {Role} from '../../src/services/roles_repository';
+import {addToKycWhitelist} from '../../src/utils/prerun';
 
 chai.use(chaiHttp);
 
-export default class Apparatus extends Application {
+export default class ServerApparatus extends Builder {
   DEFAULT_TOKEN_EXPIRATION = 60 * 60 * 24 * 28;
 
-  constructor(customConfig) {
-    super(new EmptyLogger());
+  constructor(customConfig, role = Role.HERMES) {
+    super();
+    this.logger = new EmptyLogger();
+    this.role = role;
     // Read defaults from global config, but allow the options to be customized
     // for each test.
     this.config = Object.freeze({...config, ...customConfig});
+    this.worker = null;
   }
 
   async start(_web3) {
     const web3 = _web3 || await createWeb3(this.config);
 
-    if (!config.bundleRegistryContractAddress) {
-      const bundleRegistryContractAddress = await ContractManager.deploy(web3);
-      this.config = Object.freeze({...this.config, bundleRegistryContractAddress});
+    if (!config.headContractAddress) {
+      const headContract = await deployAll(web3, this.logger);
+      const headContractAddress = headContract.options.address;
+      this.config = Object.freeze({...this.config, headContractAddress});
     }
 
     await this.build(this.config, {web3});
     await this.cleanDB();
-    await this.startServer();
+    await this.ensureAdminAccountExist();
+    this.worker = new ServerWorker(
+      this.dataModelEngine,
+      web3,
+      this.role,
+      this.config,
+      this.logger
+    );
+    await this.worker.start();
+  }
+
+  async onboardAsHermes(url) {
+    await addToKycWhitelist(Role.HERMES, this.dataModelEngine, new EmptyLogger());
+    await this.rolesRepository.onboardAsHermes(this.identityManager.nodeAddress(), url);
+  }
+
+  async onboardAsAtlas(url) {
+    await addToKycWhitelist(Role.ATLAS, this.dataModelEngine, new EmptyLogger());
+    await this.rolesRepository.onboardAsAtlas(this.identityManager.nodeAddress(), url);
   }
 
   generateToken(secret = adminAccountWithSecret.secret, validUntil = this.defaultValidUntil()) {
@@ -52,7 +77,7 @@ export default class Apparatus extends Application {
   }
 
   request() {
-    return chai.request(this.server.server);
+    return chai.request(this.worker.apiServer);
   }
 
   async cleanDB() {
@@ -64,7 +89,8 @@ export default class Apparatus extends Application {
   }
 
   async stop() {
-    await this.server.stop();
+    await this.worker.stop();
+    this.worker = null;
     await this.client.close();
   }
 }

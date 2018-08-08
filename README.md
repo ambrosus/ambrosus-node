@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/ambrosus/ambrosus-sdk.svg?token=xjj4U84eSFwEsYLTc5Qe&branch=master)](https://travis-ci.com/ambrosus/ambrosus-sdk)
+[![Build Status](https://travis-ci.com/ambrosus/ambrosus-node.svg?branch=master)](https://travis-ci.com/ambrosus/ambrosus-node)
 
 # The Ambrosus Node
 The repository for Ambrosus Node. 
@@ -14,63 +14,101 @@ Read below to learn about ambrosus node development.
 
 ## Running tests and linting
 
-Start the MongoDB and Parity containers
-
-```
-yarn dev:docker
+Start the MongoDB container
+```sh
+yarn dev:docker:db
 ```
 
 Install the dependencies
-```
+```sh
 yarn install
 ```
 
 Run the tests
-```
+```sh
 yarn test
 ```
 
-To run linter:
-```
+Run linter:
+```sh
 yarn dev:lint
 ```
 
 ## Building an clean-up
-Building consists of compiling the Smart Contracts and transpiling the source code. It is performed by running:
-```
+Building consists of transpiling the source code. It is performed by running:
+```sh
 yarn build
 ```
 
 If for some reason you want to perform a clean-up:
-```
+```sh
 yarn dev:clean
 ```
 
-To run node on production use:
+## Running in development mode
+
+Start the MongoDB container
+
+```sh
+yarn dev:docker:db
 ```
-yarn start
+
+Start a ethereum client of your choice. For example the provided parity (in dev mode) container.
+```sh
+yarn dev:docker:parity
+```
+
+Set `WEB3_NODEPRIVATEKEY` in `dev.env` to a private key with a positive balance. 
+
+Run the contract deployment task:
+```sh
+yarn dev:deploy
+```
+
+Update `HEAD_CONTRACT_ADDRESS` in `dev.env` to match the address given from `yarn dev:deploy`.
+
+Run the system pre-run task:
+```sh
+yarn dev:prerun
+```
+
+Finaly run on of the workers you are interested in:
+```sh
+yarn dev:start:server
+```
+or 
+```sh
+yarn dev:start:hermes
+```
+or
+```sh
+yarn dev:start:atlas
 ```
 
 ## Running in production mode
+
+Currently we only allow a selected few external nodes to run and connect to the various networks.
+
+In order to run in production mode you will need access to a ethereum client instance, and a mongoDB instance. 
 
 Build the whole suit:
 ```sh
 yarn build
 ```
 
-Generate a private key for the node:
-```sh
-yarn ops:generate_private_key
-```
-Note: you can also place a previously generated one into the `config/nodePrivateKey.json` file
-
-Place the contract deployment address into `config/registryContractAddress.json`. You should have received this value from the Ambrosus development team.
-
-Configure the mongoDB access data inside of `config/production.js`
+Configure environment variables for `WEB3_RPC`, `WEB3_NODEPRIVATEKEY`, `MONGODB_URI`, `HEAD_CONTRACT_ADDRESS` (provided by the Ambrosus developer team).
 
 Finally, start the server:
 ```sh
 yarn start
+```
+
+## Updating contracts
+
+After updating the contents of the contracts directory, you should strip away unnecessary fields from the contract files. 
+
+```sh
+yarn strip_contracts
 ```
 
 ## Postman collections
