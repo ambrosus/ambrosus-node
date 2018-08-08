@@ -12,7 +12,7 @@ import {getTimestamp} from '../utils/time_utils';
 import {pick, put} from '../utils/dict_utils';
 
 export default class DataModelEngine {
-  constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, contractManager, uploadRepository}) {
+  constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, contractManager, uploadRepository, rolesRepository}) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
@@ -26,6 +26,7 @@ export default class DataModelEngine {
     this.mongoClient = mongoClient;
     this.contractManager = contractManager;
     this.uploadRepository = uploadRepository;
+    this.rolesRepository = rolesRepository;
   }
 
   async addAdminAccount(address = this.identityManager.nodeAddress()) {

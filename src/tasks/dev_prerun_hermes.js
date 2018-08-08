@@ -11,12 +11,12 @@ import {WinstonConsoleLogger} from '../utils/loggers';
 import Builder from '../builder';
 import config from '../../config/config';
 import {addToKycWhitelist, onboardAsHermes, registerAdminAccount} from '../utils/prerun';
-import RolesRepository, {Role} from '../services/roles_repository';
+import {Role} from '../services/roles_repository';
 
 async function setupDevelopment(dataModelEngine, logger) {
   await registerAdminAccount(dataModelEngine, logger);
   await addToKycWhitelist(Role.HERMES, dataModelEngine, logger);
-  await onboardAsHermes(dataModelEngine.contractManager.web3, new RolesRepository(dataModelEngine.contractManager), logger);
+  await onboardAsHermes(dataModelEngine.contractManager.web3, dataModelEngine.rolesRepository, logger);
 }
 
 const builder = new Builder();

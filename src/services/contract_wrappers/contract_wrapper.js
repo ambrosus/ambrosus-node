@@ -7,14 +7,13 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-export default class UploadRepository {
-  constructor(uploadsWrapper, feesWrapper) {
-    this.uploadsWrapper = uploadsWrapper;
-    this.feesWrapper = feesWrapper;
+export default class ContractWrapper {
+  constructor(contractManager) {
+    this.contractManager = contractManager;
+    this.web3 = contractManager.web3;
   }
 
-  async uploadBundle(bundleId, storagePeriods) {
-    const fee = await this.feesWrapper.feeForUpload(storagePeriods);
-    return this.uploadsWrapper.registerBundle(bundleId, fee, storagePeriods);
+  async contract() {
+    throw new Error('Abstract method getContract needs to be overridden');
   }
 }
