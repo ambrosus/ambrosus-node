@@ -37,7 +37,7 @@ export default class AtlasWorker extends PeriodicWorker {
   }
 
   async periodicWork() {
-    const challenges = await this.challengesRepository.resolvableChallenges();
+    const challenges = await this.challengesRepository.ongoingChallenges();
     for (const challenge of challenges) {
       await this.tryToResolve(challenge).catch((err) => this.logger.error({
         message: `Failed to resolve challenge: ${err.message}`,

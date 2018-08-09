@@ -34,4 +34,9 @@ export default class ChallengesWrapper extends ContractWrapper {
     const contract = await this.contract();
     return contract.methods.canResolve(getDefaultAddress(this.web3), challengeId).call();
   }
+
+  async isInProgress(challengeId) {
+    const contract = await this.contract();
+    return contract.methods.challengeIsInProgress(challengeId).call();
+  }
 }

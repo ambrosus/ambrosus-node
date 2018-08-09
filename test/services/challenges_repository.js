@@ -20,7 +20,7 @@ describe('Challenges repository', () => {
   let configWrapperMock;
   let challengesRepository;
 
-  describe('resolvableChallenges', () => {
+  describe('ongoingChallenges', () => {
     const sheltererId = 1;
     const bundleId = 2;
     const challengeId = 3;
@@ -53,24 +53,24 @@ describe('Challenges repository', () => {
       challengeWrapperMock = {
         previousChallenges: sinon.stub().resolves(events),
         earliestMeaningfulBlock: sinon.stub().resolves(fromBlock),
-        canResolve: sinon.stub()
+        isInProgress: sinon.stub()
       };
 
       configWrapperMock = {
         challengeDuration: sinon.stub().resolves(challengeDuration)
       };
 
-      challengeWrapperMock.canResolve.resolves(new Promise((resolve) => resolve(false)));
-      challengeWrapperMock.canResolve.withArgs(challengeId).resolves(new Promise((resolve) => resolve(true)));
+      challengeWrapperMock.isInProgress.resolves(new Promise((resolve) => resolve(false)));
+      challengeWrapperMock.isInProgress.withArgs(challengeId).resolves(new Promise((resolve) => resolve(true)));
       challengesRepository = new ChallengesRepository(challengeWrapperMock, configWrapperMock);
     });
 
     it('calls wrappers with correct parameters', async () => {
-      const result = await challengesRepository.resolvableChallenges();
+      const result = await challengesRepository.ongoingChallenges();
       expect(configWrapperMock.challengeDuration).to.be.calledOnce;
       expect(challengeWrapperMock.earliestMeaningfulBlock).to.be.calledWith(challengeDuration);
       expect(challengeWrapperMock.previousChallenges).to.be.calledWith(fromBlock);
-      expect(challengeWrapperMock.canResolve).to.be.calledThrice;
+      expect(challengeWrapperMock.isInProgress).to.be.calledThrice;
       expect(result).to.deep.equal(Array(2).fill({sheltererId, bundleId, challengeId}));
     });
   });
@@ -80,7 +80,8 @@ describe('Challenges repository', () => {
 
     beforeEach(() => {
       challengeWrapperMock = {
-        resolve: sinon.stub()
+        resolve: sinon.stub(),
+        canResolve: sinon.stub().resolves(true)
       };
       challengesRepository = new ChallengesRepository(challengeWrapperMock);
     });
@@ -88,6 +89,12 @@ describe('Challenges repository', () => {
     it('calls contract method with correct arguments', async () => {
       await challengesRepository.resolveChallenge(challengeId);
       expect(challengeWrapperMock.resolve).to.be.calledOnceWith(challengeId);
+    });
+
+    it('throws error if cannot resolve challenge', async () => {
+      challengeWrapperMock.canResolve.resolves(false);
+      await expect(challengesRepository.resolveChallenge(challengeId)).to.be.eventually.rejected;
+      expect(challengeWrapperMock.resolve).to.be.not.called;
     });
   });
 });

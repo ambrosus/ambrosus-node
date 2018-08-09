@@ -34,7 +34,7 @@ describe('Atlas Worker', () => {
       }
     };
     challengesRepositoryMock = {
-      resolvableChallenges: sinon.stub(),
+      ongoingChallenges: sinon.stub(),
       resolveChallenge: sinon.stub()
     };
     rolesRepositoryMock = {
@@ -72,7 +72,7 @@ describe('Atlas Worker', () => {
     const previousChallenges =  Array(4).fill({sheltererId, bundleId, challengeId});
 
     beforeEach(() => {
-      challengesRepositoryMock.resolvableChallenges.resolves(previousChallenges);
+      challengesRepositoryMock.ongoingChallenges.resolves(previousChallenges);
     });
 
     it('tryToResolve downloads the bundle and resolves a challenge', async () => {

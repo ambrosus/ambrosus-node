@@ -13,16 +13,19 @@ export default class ChallengesRepository {
     this.configWrapper = configWrapper;
   }
 
-  async resolvableChallenges() {
+  async ongoingChallenges() {
     const challengeDuration = await this.configWrapper.challengeDuration();
     const fromBlock = await this.challengesWrapper.earliestMeaningfulBlock(challengeDuration);
     const events = await this.challengesWrapper.previousChallenges(fromBlock);
     const challenges = events.map(({returnValues: {sheltererId, bundleId, challengeId}}) => ({sheltererId, bundleId, challengeId}));
-    const canResolve = await Promise.all(challenges.map(({challengeId}) => this.challengesWrapper.canResolve(challengeId)));
-    return challenges.filter((challenge, index) => canResolve[index]);
+    const isInProgress = await Promise.all(challenges.map(({challengeId}) => this.challengesWrapper.isInProgress(challengeId)));
+    return challenges.filter((challenge, index) => isInProgress[index]);
   }
 
   async resolveChallenge(challengeId) {
+    if (!await this.challengesWrapper.canResolve(challengeId)) {
+      throw new Error('Cannot resolve the challenge');
+    }
     return this.challengesWrapper.resolve(challengeId);
   }
 }

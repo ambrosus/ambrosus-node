@@ -131,4 +131,31 @@ describe('Challenges Wrapper', () => {
       expect(canResolveCallStub).to.be.called;
     });
   });
+
+  describe('isInProgress', () => {
+    const challengeId = '0x123';
+    const result = 'res';
+    const challengeIsInProgressStub = sinon.stub();
+    const challengeIsInProgressCallStub = sinon.stub().resolves(result);
+
+    beforeEach(async () => {
+      contractManagerMock = {
+        challengesContract: async () => ({
+          methods: {
+            challengeIsInProgress: challengeIsInProgressStub
+          }
+        })
+      };
+      challengeIsInProgressStub.returns({
+        call: challengeIsInProgressCallStub
+      });
+      challengesWrapper = new ChallengesWrapper(contractManagerMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      expect(await challengesWrapper.isInProgress(challengeId)).to.equal(result);
+      expect(challengeIsInProgressStub).to.be.calledWith(challengeId);
+      expect(challengeIsInProgressCallStub).to.be.called;
+    });
+  });
 });
