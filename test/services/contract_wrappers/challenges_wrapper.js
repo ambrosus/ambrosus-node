@@ -46,7 +46,7 @@ describe('Challenges Wrapper', () => {
     });
   });
 
-  describe('previousChallenges', () => {
+  describe('challenges', () => {
     const fromBlock = 4;
     const eventsStub = 'events';
     let getPastEventsStub;
@@ -62,7 +62,7 @@ describe('Challenges Wrapper', () => {
     });
 
     it('gets past events', async () => {
-      expect(await challengesWrapper.previousChallenges(fromBlock)).to.equal(eventsStub);
+      expect(await challengesWrapper.challenges(fromBlock)).to.equal(eventsStub);
       expect(getPastEventsStub).to.be.calledWith('ChallengeCreated', {fromBlock});
     });
   });
@@ -70,21 +70,19 @@ describe('Challenges Wrapper', () => {
   describe('resolve', () => {
     const challengeId = '0x123';
     const defaultAccount = '0x123';
-    const resolveChallengeStub = sinon.stub();
-    const resolveChallengeSendStub = sinon.stub();
+    let resolveChallengeStub;
+    let resolveChallengeSendStub;
 
     beforeEach(async () => {
+      resolveChallengeStub = sinon.stub();
+      resolveChallengeSendStub = sinon.stub();
       contractManagerMock = {
         challengesContract: async () => ({
           methods: {
             resolve: resolveChallengeStub
           }
         }),
-        web3: {
-          eth: {
-            defaultAccount
-          }
-        }
+        defaultAddress: () => defaultAccount
       };
       resolveChallengeStub.returns({
         send: resolveChallengeSendStub
@@ -103,21 +101,19 @@ describe('Challenges Wrapper', () => {
     const challengeId = '0x123';
     const defaultAccount = '0x123';
     const result = 'res';
-    const canResolveStub = sinon.stub();
-    const canResolveCallStub = sinon.stub().resolves(result);
+    let canResolveStub;
+    let canResolveCallStub;
 
     beforeEach(async () => {
+      canResolveStub = sinon.stub();
+      canResolveCallStub = sinon.stub().resolves(result);
       contractManagerMock = {
         challengesContract: async () => ({
           methods: {
             canResolve: canResolveStub
           }
         }),
-        web3: {
-          eth: {
-            defaultAccount
-          }
-        }
+        defaultAddress: () => defaultAccount
       };
       canResolveStub.returns({
         call: canResolveCallStub
@@ -135,10 +131,12 @@ describe('Challenges Wrapper', () => {
   describe('isInProgress', () => {
     const challengeId = '0x123';
     const result = 'res';
-    const challengeIsInProgressStub = sinon.stub();
-    const challengeIsInProgressCallStub = sinon.stub().resolves(result);
+    let challengeIsInProgressStub;
+    let challengeIsInProgressCallStub;
 
     beforeEach(async () => {
+      challengeIsInProgressStub = sinon.stub();
+      challengeIsInProgressCallStub = sinon.stub().resolves(result);
       contractManagerMock = {
         challengesContract: async () => ({
           methods: {

@@ -116,3 +116,4 @@ export function link(contract, name, library) {
   const pattern = new RegExp(`_+${name}_+`, 'g');
   contract.bytecode = contract.bytecode.replace(pattern, address);
 }
+

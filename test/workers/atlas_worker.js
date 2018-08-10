@@ -12,7 +12,6 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import AtlasWorker from '../../src/workers/atlas_worker';
-import {Role} from '../../src/services/roles_repository';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -22,7 +21,6 @@ describe('Atlas Worker', () => {
   const defaultAccount = '0x123';
   let atlasWorker;
   let challengesRepositoryMock;
-  let rolesRepositoryMock;
   let dataModelEngineMock;
   let loggerMock;
   let mockWeb3;
@@ -37,9 +35,6 @@ describe('Atlas Worker', () => {
       ongoingChallenges: sinon.stub(),
       resolveChallenge: sinon.stub()
     };
-    rolesRepositoryMock = {
-      onboardedRole: sinon.stub()
-    };
     dataModelEngineMock = {
       downloadBundle: sinon.stub()
     };
@@ -47,21 +42,7 @@ describe('Atlas Worker', () => {
       info: sinon.spy(),
       error: sinon.spy()
     };
-    atlasWorker = new AtlasWorker(mockWeb3, dataModelEngineMock, rolesRepositoryMock, challengesRepositoryMock, loggerMock);
-  });
-
-  describe('Before work loop', () => {
-    it('fulfills if role is atlas', async () => {
-      rolesRepositoryMock.onboardedRole.resolves(Role.ATLAS);
-      await expect(atlasWorker.beforeWorkLoop()).to.be.eventually.fulfilled;
-    });
-
-    it('throws if account is not an atlas', async () => {
-      rolesRepositoryMock.onboardedRole.resolves(Role.HERMES);
-      await expect(atlasWorker.beforeWorkLoop()).to.be.eventually.rejectedWith(Error);
-      expect(rolesRepositoryMock.onboardedRole).to.be.calledWith(defaultAccount);
-      expect(loggerMock.error).to.be.calledWith('Cannot start atlas worker until being onboarded as ATLAS');
-    });
+    atlasWorker = new AtlasWorker(mockWeb3, dataModelEngineMock, challengesRepositoryMock, loggerMock);
   });
 
   describe('challenge resolution strategy', () => {
@@ -69,10 +50,10 @@ describe('Atlas Worker', () => {
     const bundleId = 'bundle';
     const challengeId = 'challenge';
 
-    const previousChallenges =  Array(4).fill({sheltererId, bundleId, challengeId});
+    const challenges =  Array(4).fill({sheltererId, bundleId, challengeId});
 
     beforeEach(() => {
-      challengesRepositoryMock.ongoingChallenges.resolves(previousChallenges);
+      challengesRepositoryMock.ongoingChallenges.resolves(challenges);
     });
 
     it('tryToResolve downloads the bundle and resolves a challenge', async () => {

@@ -11,10 +11,12 @@ import {WinstonConsoleLogger} from './utils/loggers';
 import AtlasWorker from './workers/atlas_worker';
 import config from '../config/config';
 import Builder from './builder';
+import {Role} from './services/roles_repository';
 
 async function start(logger) {
   const builder = new Builder();
   await builder.build(config);
+  await builder.ensureAccountIsOnboarded([Role.ATLAS]);
   const worker = new AtlasWorker(builder.web3, builder.dataModelEngine, builder.rolesRepository, builder.challengesRepository, logger);
   await worker.start();
 }

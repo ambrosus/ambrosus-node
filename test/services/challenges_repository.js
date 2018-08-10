@@ -51,7 +51,7 @@ describe('Challenges repository', () => {
 
     beforeEach(() => {
       challengeWrapperMock = {
-        previousChallenges: sinon.stub().resolves(events),
+        challenges: sinon.stub().resolves(events),
         earliestMeaningfulBlock: sinon.stub().resolves(fromBlock),
         isInProgress: sinon.stub()
       };
@@ -60,8 +60,8 @@ describe('Challenges repository', () => {
         challengeDuration: sinon.stub().resolves(challengeDuration)
       };
 
-      challengeWrapperMock.isInProgress.resolves(new Promise((resolve) => resolve(false)));
-      challengeWrapperMock.isInProgress.withArgs(challengeId).resolves(new Promise((resolve) => resolve(true)));
+      challengeWrapperMock.isInProgress.resolves(false);
+      challengeWrapperMock.isInProgress.withArgs(challengeId).resolves(true);
       challengesRepository = new ChallengesRepository(challengeWrapperMock, configWrapperMock);
     });
 
@@ -69,7 +69,7 @@ describe('Challenges repository', () => {
       const result = await challengesRepository.ongoingChallenges();
       expect(configWrapperMock.challengeDuration).to.be.calledOnce;
       expect(challengeWrapperMock.earliestMeaningfulBlock).to.be.calledWith(challengeDuration);
-      expect(challengeWrapperMock.previousChallenges).to.be.calledWith(fromBlock);
+      expect(challengeWrapperMock.challenges).to.be.calledWith(fromBlock);
       expect(challengeWrapperMock.isInProgress).to.be.calledThrice;
       expect(result).to.deep.equal(Array(2).fill({sheltererId, bundleId, challengeId}));
     });

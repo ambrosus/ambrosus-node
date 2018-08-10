@@ -22,11 +22,13 @@ describe('Config Wrapper', () => {
   let configWrapper;
 
   describe('ATLAS1_STAKE', () => {
-    const atlasStake1Stub = sinon.stub();
-    const atlasStake1CallStub = sinon.stub();
+    let atlasStake1Stub;
+    let atlasStake1CallStub;
     const stake = '100';
 
     beforeEach(async () => {
+      atlasStake1Stub = sinon.stub();
+      atlasStake1CallStub = sinon.stub();
       contractManagerMock = {
         configContract: async () => ({
           methods: {
@@ -48,11 +50,13 @@ describe('Config Wrapper', () => {
   });
 
   describe('CHALLENGE_DURATION', () => {
-    const challengeDurationStub = sinon.stub();
-    const challengeDurationCallStub = sinon.stub();
+    let challengeDurationStub;
+    let challengeDurationCallStub;
     const challengeDuration = '100';
 
     beforeEach(async () => {
+      challengeDurationStub = sinon.stub();
+      challengeDurationCallStub = sinon.stub();
       contractManagerMock = {
         configContract: async () => ({
           methods: {

@@ -8,25 +8,13 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import PeriodicWorker from './periodic_worker';
-import {getDefaultAddress} from '../utils/web3_tools';
-import {Role} from '../services/roles_repository';
 
 export default class AtlasWorker extends PeriodicWorker {
-  constructor(web3, dataModelEngine, rolesRepository, challengesRepository, logger) {
+  constructor(web3, dataModelEngine, challengesRepository, logger) {
     super(5000, logger);
     this.web3 = web3;
     this.dataModelEngine = dataModelEngine;
-    this.rolesRepository = rolesRepository;
     this.challengesRepository = challengesRepository;
-  }
-
-  async beforeWorkLoop() {
-    this.logger.info('Atlas worker starting');
-    const role = await this.rolesRepository.onboardedRole(getDefaultAddress(this.web3));
-    if (!role.is(Role.ATLAS)) {
-      this.logger.error('Cannot start atlas worker until being onboarded as ATLAS');
-      throw new Error('Not onboarded as ATLAS');
-    }
   }
 
   async tryToResolve({sheltererId, bundleId, challengeId}) {
@@ -39,10 +27,14 @@ export default class AtlasWorker extends PeriodicWorker {
   async periodicWork() {
     const challenges = await this.challengesRepository.ongoingChallenges();
     for (const challenge of challenges) {
-      await this.tryToResolve(challenge).catch((err) => this.logger.error({
-        message: `Failed to resolve challenge: ${err.message}`,
-        ...challenge
-      }));
+      try {
+        await this.tryToResolve(challenge);
+      } catch (err) {
+        this.logger.error({
+          message: `Failed to resolve challenge: ${err.message}`,
+          ...challenge
+        });
+      }
     }
   }
 }

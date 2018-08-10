@@ -16,7 +16,7 @@ export default class ChallengesRepository {
   async ongoingChallenges() {
     const challengeDuration = await this.configWrapper.challengeDuration();
     const fromBlock = await this.challengesWrapper.earliestMeaningfulBlock(challengeDuration);
-    const events = await this.challengesWrapper.previousChallenges(fromBlock);
+    const events = await this.challengesWrapper.challenges(fromBlock);
     const challenges = events.map(({returnValues: {sheltererId, bundleId, challengeId}}) => ({sheltererId, bundleId, challengeId}));
     const isInProgress = await Promise.all(challenges.map(({challengeId}) => this.challengesWrapper.isInProgress(challengeId)));
     return challenges.filter((challenge, index) => isInProgress[index]);

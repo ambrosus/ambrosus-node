@@ -8,7 +8,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import ContractWrapper from './contract_wrapper';
-import {getDefaultAddress} from '../../utils/web3_tools';
 import {MIN_BLOCK_TIME} from '../../utils/contracts_consts';
 
 export default class ChallengesWrapper extends ContractWrapper {
@@ -20,19 +19,19 @@ export default class ChallengesWrapper extends ContractWrapper {
     return Math.max(0, await this.web3.eth.getBlockNumber() - Math.ceil(challengeDuration / MIN_BLOCK_TIME));
   }
 
-  async previousChallenges(fromBlock) {
+  async challenges(fromBlock) {
     const contract = await this.contract();
     return contract.getPastEvents('ChallengeCreated', {fromBlock});
   }
 
   async resolve(challengeId) {
     const contract = await this.contract();
-    return contract.methods.resolve(challengeId).send({from: getDefaultAddress(this.contractManager.web3)});
+    return contract.methods.resolve(challengeId).send({from: this.contractManager.defaultAddress()});
   }
 
   async canResolve(challengeId) {
     const contract = await this.contract();
-    return contract.methods.canResolve(getDefaultAddress(this.web3), challengeId).call();
+    return contract.methods.canResolve(this.contractManager.defaultAddress(), challengeId).call();
   }
 
   async isInProgress(challengeId) {

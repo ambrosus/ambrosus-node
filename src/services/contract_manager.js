@@ -31,6 +31,10 @@ export default class ContractManager {
     this.challengesWrapper = new ChallengesWrapper(this);
   }
 
+  defaultAddress() {
+    return getDefaultAddress(this.web3);
+  }
+
   async contractByKey(contractName) {
     const contractAddress = await this.contractAddressFromContext(contractName);
     return loadContract(this.web3, contractsJsons[contractName].abi, contractAddress);
@@ -53,7 +57,7 @@ export default class ContractManager {
     }
 
     const context = await this.context();
-    const from  = getDefaultAddress(this.web3);
+    const from  = this.defaultAddress();
     return context.methods[`${contractName}()`]().call({from});
   }
 

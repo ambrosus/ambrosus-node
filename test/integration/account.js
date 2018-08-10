@@ -255,8 +255,7 @@ describe('Accounts - Integrations', async () => {
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send();
       expect(response.body.resultCount).to.equal(4);
-      expect([response.body.results[0].address, response.body.results[1].address].sort())
-        .to.deep.equal([scenario.accounts[2].address, scenario.accounts[3].address].sort());
+      expect(response.body.results).to.have.length(2);
     });
   });
 
