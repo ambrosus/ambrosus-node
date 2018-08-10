@@ -21,7 +21,7 @@ export default class TokenAuthenticator {
       throw new ValidationError('Unix timestamp was not provided or has an invalid format');
     }
     if (timestamp <= getTimestamp()) {
-      throw new ValidationError('Timestamp should be in the future');
+      throw new ValidationError('The token has expired.');
     }
     const address = this.identityManager.addressFromSecret(secret);
     const idData = {
