@@ -22,11 +22,13 @@ describe('Config Wrapper', () => {
   let configWrapper;
 
   describe('ATLAS1_STAKE', () => {
-    const atlasStake1Stub = sinon.stub();
-    const atlasStake1CallStub = sinon.stub();
+    let atlasStake1Stub;
+    let atlasStake1CallStub;
     const stake = '100';
 
     beforeEach(async () => {
+      atlasStake1Stub = sinon.stub();
+      atlasStake1CallStub = sinon.stub();
       contractManagerMock = {
         configContract: async () => ({
           methods: {
@@ -44,6 +46,34 @@ describe('Config Wrapper', () => {
       expect(await configWrapper.atlas1Stake()).to.equal(stake);
       expect(atlasStake1Stub).to.be.calledOnce;
       expect(atlasStake1CallStub).to.be.calledOnce;
+    });
+  });
+
+  describe('CHALLENGE_DURATION', () => {
+    let challengeDurationStub;
+    let challengeDurationCallStub;
+    const challengeDuration = '100';
+
+    beforeEach(async () => {
+      challengeDurationStub = sinon.stub();
+      challengeDurationCallStub = sinon.stub();
+      contractManagerMock = {
+        configContract: async () => ({
+          methods: {
+            CHALLENGE_DURATION: challengeDurationStub
+          }
+        })
+      };
+      challengeDurationStub.returns({
+        call: challengeDurationCallStub.resolves(challengeDuration)
+      });
+      configWrapper = new ConfigWrapper(contractManagerMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      expect(await configWrapper.challengeDuration()).to.equal(challengeDuration);
+      expect(challengeDurationStub).to.be.calledOnce;
+      expect(challengeDurationCallStub).to.be.calledOnce;
     });
   });
 });

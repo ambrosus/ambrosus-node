@@ -24,10 +24,12 @@ describe('Fees Wrapper', () => {
   describe('feeForUpload', () => {
     const storagePeriods = 23;
     const fee = '100';
-    const getFeeForUploadStub = sinon.stub();
-    const getFeeForUploadCallStub = sinon.stub();
+    let getFeeForUploadStub;
+    let getFeeForUploadCallStub;
 
     beforeEach(async () => {
+      getFeeForUploadStub = sinon.stub();
+      getFeeForUploadCallStub = sinon.stub();
       contractManagerMock = {
         feesContract: async () => ({
           methods: {

@@ -50,4 +50,6 @@ const serviceContractsJsons = {
   safeMathExtensions: SafeMathExtensionsJson
 };
 
-export {contractsJsons, serviceContractsJsons};
+const MIN_BLOCK_TIME = 5; // seconds
+
+export {contractsJsons, serviceContractsJsons, MIN_BLOCK_TIME};

@@ -26,21 +26,19 @@ describe('Uploads Wrapper', () => {
     const storagePeriods = 23;
     const defaultAccount = '0x123';
     const fee = '100';
-    const registerBundleStub = sinon.stub();
-    const registerBundleSendStub = sinon.stub();
+    let registerBundleStub;
+    let registerBundleSendStub;
 
     beforeEach(async () => {
+      registerBundleStub = sinon.stub();
+      registerBundleSendStub = sinon.stub();
       contractManagerMock = {
         uploadsContract: async () => ({
           methods: {
             registerBundle: registerBundleStub
           }
         }),
-        web3: {
-          eth: {
-            defaultAccount
-          }
-        }
+        defaultAddress: () => defaultAccount
       };
       registerBundleStub.returns({
         send: registerBundleSendStub
