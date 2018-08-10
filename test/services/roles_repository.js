@@ -48,6 +48,24 @@ describe('Roles repository', () => {
     });
   });
 
+  describe('nodeUrl', () => {
+    const nodeUrl = 'url';
+
+    beforeEach(async () => {
+      rolesWrapperMock = {
+        nodeUrl: sinon.stub()
+      };
+      rolesRepository = new RolesRepository(rolesWrapperMock);
+    });
+
+    it('calls wrappers methods with correct arguments', async () => {
+      rolesWrapperMock.nodeUrl.resolves(nodeUrl);
+      const url = await rolesRepository.nodeUrl(address);
+      expect(rolesWrapperMock.nodeUrl).to.be.calledWith(address);
+      expect(url).to.equal(nodeUrl);
+    });
+  });
+
   describe('onboardAsAtlas', () => {
     const stake = '100';
     const url = 'url';

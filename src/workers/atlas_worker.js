@@ -10,11 +10,31 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import PeriodicWorker from './periodic_worker';
 
 export default class AtlasWorker extends PeriodicWorker {
-  constructor(logger) {
+  constructor(web3, dataModelEngine, challengesRepository, logger) {
     super(5000, logger);
+    this.web3 = web3;
+    this.dataModelEngine = dataModelEngine;
+    this.challengesRepository = challengesRepository;
+  }
+
+  async tryToResolve({sheltererId, bundleId, challengeId}) {
+    this.logger.info({message: `Trying to fetch the bundle`, sheltererId, bundleId, challengeId});
+    await this.dataModelEngine.downloadBundle(bundleId, sheltererId);
+    await this.challengesRepository.resolveChallenge(challengeId);
+    this.logger.info({message: '🍾 Yahoo! The bundle is ours.', bundleId});
   }
 
   async periodicWork() {
-    this.logger.info('Atlas tick');
+    const challenges = await this.challengesRepository.ongoingChallenges();
+    for (const challenge of challenges) {
+      try {
+        await this.tryToResolve(challenge);
+      } catch (err) {
+        this.logger.error({
+          message: `Failed to resolve challenge: ${err.message}`,
+          ...challenge
+        });
+      }
+    }
   }
 }

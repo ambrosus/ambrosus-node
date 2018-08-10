@@ -1056,80 +1056,60 @@ describe('Data Model Engine', () => {
     });
   });
 
-  describe.skip('Downloading a bundle', async () => {
+  describe('Downloading a bundle', async () => {
     const bundleId = '0x123';
-    const vendorId = '0x987';
-    const vendorUrl = '0.0.0.0';
+    const sheltererId = '0x789';
+    const nodeUrl = '0.0.0.0';
     const downloadedBundle = createBundle();
     let mockEntityRepository;
     let mockEntityDownloader;
-    let mockProofRepository;
+    let mockEntityBuilder;
+    let mockRolesRepository;
     let modelEngine;
-    let result;
 
-    before(async () => {
+    beforeEach(() => {
       mockEntityRepository = {
-        storeBundle: sinon.stub(),
-        getBundle: sinon.stub()
+        storeBundle: sinon.stub()
       };
 
-      mockProofRepository = {
-        getVendorUrl: sinon.stub()
+      mockRolesRepository = {
+        nodeUrl: sinon.stub().resolves(nodeUrl)
       };
 
       mockEntityDownloader = {
-        downloadBundle: sinon.stub()
+        downloadBundle: sinon.stub().resolves(downloadedBundle)
+      };
+
+      mockEntityBuilder = {
+        validateBundle: sinon.stub()
       };
 
       modelEngine = new DataModelEngine({
         entityRepository: mockEntityRepository,
         entityDownloader: mockEntityDownloader,
-        proofRepository: mockProofRepository
+        entityBuilder: mockEntityBuilder,
+        rolesRepository: mockRolesRepository
       });
     });
 
-    describe('new bundle', async () => {
-      before(async () => {
-        resetHistory(mockProofRepository, mockEntityDownloader, mockEntityRepository);
-        mockEntityRepository.getBundle.resolves(null);
-        mockEntityRepository.storeBundle.resolves();
-        mockProofRepository.getVendorUrl.resolves(vendorUrl);
-        mockEntityDownloader.downloadBundle.resolves(downloadedBundle);
-
-        result = await expect(modelEngine.downloadBundle(bundleId, vendorId)).to.be.fulfilled;
-      });
-      it('asks the entity repository for the bundle', async () => {
-        expect(mockEntityRepository.getBundle).to.have.been.calledWith(bundleId);
-      });
-      it(`asks proof repository for vendor's url`, async() => {
-        expect(mockProofRepository.getVendorUrl).to.have.been.calledWith(vendorId);
-      });
-      it(`delegates entity downloader to download bundle from given url`, async() => {
-        expect(mockEntityDownloader.downloadBundle).to.have.been.calledWith(vendorUrl, bundleId);
-      });
-      it(`saves downloaded bundle to entity repository`, async() => {
-        expect(mockEntityRepository.storeBundle).to.have.been.calledWith(downloadedBundle);
-      });
-      it(`returns downloaded bundle`, async() => {
-        expect(result).to.deep.equal(downloadedBundle);
-      });
+    it('validates and returns the downloaded bundle', async () => {
+      expect(await modelEngine.downloadBundle(bundleId, sheltererId)).to.equal(downloadedBundle);
+      expect(mockRolesRepository.nodeUrl).to.be.calledWith(sheltererId);
+      expect(mockEntityDownloader.downloadBundle).to.be.calledWith(nodeUrl, bundleId);
+      expect(mockEntityBuilder.validateBundle).to.be.calledWith(downloadedBundle);
+      expect(mockEntityRepository.storeBundle).to.be.calledWith(downloadedBundle);
     });
-    describe('already existing bundle', async () => {
-      let alreadyExistingBundle;
-      before(async () => {
-        resetHistory(mockProofRepository, mockEntityDownloader, mockEntityRepository);
-        alreadyExistingBundle = createBundle();
-        mockEntityRepository.getBundle.resolves(alreadyExistingBundle);
 
-        result = await expect(modelEngine.downloadBundle(bundleId, vendorId)).to.be.fulfilled;
-      });
-      it(`returns bundle from repository if requested bundle already stored`, async() => {
-        result = await expect(modelEngine.downloadBundle(bundleId, vendorId)).to.be.fulfilled;
-        expect(mockProofRepository.getVendorUrl).to.be.not.called;
-        expect(mockEntityDownloader.downloadBundle).to.be.not.called;
-        expect(mockEntityRepository.storeBundle).to.be.not.called;
-        expect(result).to.deep.equal(alreadyExistingBundle);
-      });
+    it('throws if downloaded empty bundle', async () => {
+      mockEntityDownloader.downloadBundle.resolves(null);
+      await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejectedWith(Error, 'Could not fetch the bundle from the shelterer');
+      expect(mockEntityRepository.storeBundle).to.be.not.called;
+    });
+
+    it('does not store bundle if validation failed', async () => {
+      mockEntityBuilder.validateBundle.rejects();
+      await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejected;
+      expect(mockEntityRepository.storeBundle).to.be.not.called;
     });
   });
 });

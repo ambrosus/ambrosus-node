@@ -23,10 +23,12 @@ describe('Roles Wrapper', () => {
   let rolesWrapper;
 
   describe('onboardedRole', () => {
-    const getRoleStub = sinon.stub();
-    const getRoleCallStub = sinon.stub();
+    let getRoleStub;
+    let getRoleCallStub;
 
     before(async () => {
+      getRoleStub = sinon.stub();
+      getRoleCallStub = sinon.stub();
       contractManagerMock = {
         rolesContract: async () => ({
           methods: {
@@ -49,13 +51,44 @@ describe('Roles Wrapper', () => {
     });
   });
 
+  describe('nodeUrl', () => {
+    const nodeUrl = 'url';
+    let getUrlStub;
+    let getUrlCallStub;
+
+    before(async () => {
+      getUrlStub = sinon.stub();
+      getUrlCallStub = sinon.stub();
+      contractManagerMock = {
+        rolesContract: async () => ({
+          methods: {
+            getUrl: getUrlStub
+          }
+        })
+      };
+      getUrlStub.returns({
+        call: getUrlCallStub.resolves(nodeUrl)
+      });
+      rolesWrapper = new RolesWrapper(contractManagerMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      const url = await rolesWrapper.nodeUrl(address);
+      expect(getUrlStub).to.be.calledWith(address);
+      expect(getUrlCallStub).to.be.calledOnce;
+      expect(url).to.equal(nodeUrl);
+    });
+  });
+
   describe('onboardAsAtlas', () => {
-    const onboardAsAtlasStub = sinon.stub();
-    const onboardAsAtlasSendStub = sinon.stub();
+    let onboardAsAtlasStub;
+    let onboardAsAtlasSendStub;
     const stake = '100';
     const url = 'url';
 
     beforeEach(async () => {
+      onboardAsAtlasStub = sinon.stub();
+      onboardAsAtlasSendStub = sinon.stub();
       contractManagerMock = {
         rolesContract: async () => ({
           methods: {
@@ -80,11 +113,13 @@ describe('Roles Wrapper', () => {
   });
 
   describe('onboardAsHermes', () => {
-    const onboardAsHermesStub = sinon.stub();
-    const onboardAsHermesSendStub = sinon.stub();
+    let onboardAsHermesStub;
+    let onboardAsHermesSendStub;
     const url = 'url';
 
     beforeEach(async () => {
+      onboardAsHermesStub = sinon.stub();
+      onboardAsHermesSendStub = sinon.stub();
       contractManagerMock = {
         rolesContract: async () => ({
           methods: {

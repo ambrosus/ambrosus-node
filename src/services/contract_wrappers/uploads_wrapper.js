@@ -8,7 +8,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import ContractWrapper from './contract_wrapper';
-import {getDefaultAddress} from '../../utils/web3_tools';
 
 export default class UploadsWrapper extends ContractWrapper {
   async contract() {
@@ -20,6 +19,6 @@ export default class UploadsWrapper extends ContractWrapper {
     return contract
       .methods
       .registerBundle(bundleId, storagePeriods)
-      .send({from: getDefaultAddress(this.web3), value: fee});
+      .send({from: this.contractManager.defaultAddress(), value: fee});
   }
 }
