@@ -22,8 +22,8 @@ export default class ChallengesRepository {
     return allChallenges.filter(({challengeId}) => unresolvedCount[challengeId] > 0 && !timedOutSet.has(challengeId));
   }
 
-  extractChallengeFromEvent(challengeEvents) {
-    return challengeEvents.map(({returnValues: {sheltererId, bundleId, challengeId, count}}) => ({sheltererId, bundleId, challengeId, count}));
+  extractChallengeFromEvent(challengeEvents, outputFields) {
+    return challengeEvents.map(({returnValues}) => outputFields.reduce((acc, fieldName) => put(acc, fieldName, returnValues[fieldName]), {}));
   }
 
   async ongoingChallenges() {
@@ -32,13 +32,11 @@ export default class ChallengesRepository {
     const allChallengeEvents = await this.challengesWrapper.challenges(fromBlock);
     const resolvedChallengeEvents = await this.challengesWrapper.resolvedChallenges(fromBlock);
     const timedOutChallengeEvents = await this.challengesWrapper.timedOutChallenges(fromBlock);
-    const notFinishedChallenges = this.filterOutFinished(
-      this.extractChallengeFromEvent(allChallengeEvents),
-      this.extractChallengeFromEvent(resolvedChallengeEvents),
-      this.extractChallengeFromEvent(timedOutChallengeEvents)
+    return this.filterOutFinished(
+      this.extractChallengeFromEvent(allChallengeEvents, ['challengeId', 'sheltererId', 'bundleId', 'count']),
+      this.extractChallengeFromEvent(resolvedChallengeEvents, ['challengeId']),
+      this.extractChallengeFromEvent(timedOutChallengeEvents, ['challengeId'])
     );
-    const isInProgress = await Promise.all(notFinishedChallenges.map(({challengeId}) => this.challengesWrapper.isInProgress(challengeId)));
-    return notFinishedChallenges.filter((challenge, index) => isInProgress[index]);
   }
 
   async resolveChallenge(challengeId) {

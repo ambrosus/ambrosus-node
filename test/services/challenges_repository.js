@@ -132,8 +132,9 @@ describe('Challenges repository', () => {
       challengesRepository = new ChallengesRepository();
     });
 
-    it('extracts challengeId, sheltererId, bundleId from events list', async () => {
-      expect(challengesRepository.extractChallengeFromEvent(events)).to.deep.equal(challenges);
+    it('extracts fields specified in selector from events list', async () => {
+      expect(challengesRepository.extractChallengeFromEvent(events, ['challengeId', 'sheltererId', 'bundleId', 'count'])).to.deep.equal(challenges);
+      expect(challengesRepository.extractChallengeFromEvent(events, ['challengeId'])).to.deep.equal([{challengeId}, {challengeId: 100}, {challengeId}]);
     });
   });
 
@@ -160,50 +161,23 @@ describe('Challenges repository', () => {
           challengeId: 100,
           count
         }
-      },
-      {
-        returnValues: {
-          sheltererId,
-          bundleId,
-          challengeId,
-          count
-        }
       }];
     const resolvedEvents = [{returnValues: {bundleId, sheltererId, challengeId: 'resolved'}}];
     const timedOutEvents = [{returnValues: {bundleId, sheltererId, challengeId: 'timedOut'}}];
-    const notFinishedEvents = [
-      {
-        sheltererId,
-        bundleId,
-        challengeId,
-        count
-      },
-      {
-        sheltererId,
-        bundleId,
-        challengeId,
-        count
-      },
-      {
-        challengeId: 'notFinished'
-      }
-    ];
+    const notFinishedEvents = 'notFinishedEvents';
 
     beforeEach(() => {
       challengeWrapperMock = {
         challenges: sinon.stub().resolves(events),
         resolvedChallenges: sinon.stub().resolves(resolvedEvents),
         timedOutChallenges: sinon.stub().resolves(timedOutEvents),
-        earliestMeaningfulBlock: sinon.stub().resolves(fromBlock),
-        isInProgress: sinon.stub()
+        earliestMeaningfulBlock: sinon.stub().resolves(fromBlock)
       };
 
       configWrapperMock = {
         challengeDuration: sinon.stub().resolves(challengeDuration)
       };
 
-      challengeWrapperMock.isInProgress.resolves(false);
-      challengeWrapperMock.isInProgress.withArgs(challengeId).resolves(true);
       challengesRepository = new ChallengesRepository(challengeWrapperMock, configWrapperMock);
       sinon.spy(challengesRepository, 'extractChallengeFromEvent');
       sinon.stub(challengesRepository, 'filterOutFinished').returns(notFinishedEvents);
@@ -216,8 +190,7 @@ describe('Challenges repository', () => {
       expect(challengeWrapperMock.challenges).to.be.calledWith(fromBlock);
       expect(challengeWrapperMock.resolvedChallenges).to.be.calledWith(fromBlock);
       expect(challengeWrapperMock.timedOutChallenges).to.be.calledWith(fromBlock);
-      expect(challengeWrapperMock.isInProgress).to.be.calledThrice;
-      expect(result).to.deep.equal(Array(2).fill({sheltererId, bundleId, challengeId, count}));
+      expect(result).to.deep.equal(notFinishedEvents);
     });
 
     it('calls own methods with correct params', async () => {
@@ -228,12 +201,9 @@ describe('Challenges repository', () => {
       expect(challengesRepository.extractChallengeFromEvent).to.be.calledWith(timedOutEvents);
       expect(challengesRepository.filterOutFinished).to.be.calledOnceWith(
         [{sheltererId, bundleId, challengeId, count},
-          {sheltererId, bundleId, challengeId: 100, count},
-          {sheltererId, bundleId, challengeId, count}],
-        [{bundleId, sheltererId, challengeId: 'resolved', count: undefined}],
-        [{bundleId, sheltererId, challengeId: 'timedOut', count: undefined}]);
-      expect(challengeWrapperMock.isInProgress).to.be.calledWith('notFinished');
-      expect(challengeWrapperMock.isInProgress).to.be.calledWith(challengeId);
+          {sheltererId, bundleId, challengeId: 100, count}],
+        [{challengeId: 'resolved'}],
+        [{challengeId: 'timedOut'}]);
     });
   });
 
