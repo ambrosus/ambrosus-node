@@ -14,7 +14,6 @@ module.exports = Object.freeze({
   nodePrivateKey: process.env.WEB3_NODEPRIVATEKEY,
 
   mongoUri: process.env.MONGODB_URI,
-  
   sentryDSN: process.env.SENTRY_DSN,
 
   bundleRegistryContractAddress: process.env.BUNDLE_REGISTRY_CONTRACT_ADDRESS,

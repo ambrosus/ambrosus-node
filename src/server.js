@@ -37,6 +37,7 @@ export default class Server {
 
     Raven.config(this.config.sentryDSN).install();
     app.use(Raven.requestHandler());
+
     app.use(prometheusMiddleware(promClient));
     app.use(cors({
       origin : true,
@@ -53,7 +54,7 @@ export default class Server {
     app.use('/bundle', bundlesRouter(this.modelEngine));
     app.get('/health', asyncMiddleware(healthCheckHandler(this.modelEngine.mongoClient, this.modelEngine.proofRepository.web3)));
     app.get('/metrics', prometheusMetricsHandler(promClient));
-    
+
     app.use(Raven.errorHandler());
 
     // Should always be last
