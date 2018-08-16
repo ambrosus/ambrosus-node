@@ -56,6 +56,18 @@ export default class EntityRepository {
     await this.db.collection('events').insertOne({...event});
   }
 
+  hideEventDataIfNecessary(event, accessLevel) {
+    if (!event) {
+      return null;
+    }
+    return event.content.idData.accessLevel <= accessLevel ? event : pick(event, 'content.data');
+  }
+
+  async getEvent(eventId, accessLevel = 0) {
+    const event = await this.db.collection('events').findOne({eventId}, {fields: this.blacklistedFields});
+    return this.hideEventDataIfNecessary(event, accessLevel);
+  }
+
   assetsAndEventsToEntityIds(assets, events) {
     return [
       ...assets.map((asset) => ({type: 'asset', id: asset.assetId, timestamp: asset.content.idData.timestamp})),
@@ -73,16 +85,16 @@ export default class EntityRepository {
   async updateEntities(entities, updateQuery) {
     const assetIds = entities.filter((ent) => ent.type === 'asset').map((asset) => asset.id);
     const eventIds = entities.filter((ent) => ent.type === 'event').map((event) => event.id);
-    await this.db.collection('assets').update({
+    await this.db.collection('assets').updateMany({
       assetId: {
         $in: assetIds
       }
-    }, updateQuery, {multi: true});
-    await this.db.collection('events').update({
+    }, updateQuery);
+    await this.db.collection('events').updateMany({
       eventId: {
         $in: eventIds
       }
-    }, updateQuery, {multi: true});
+    }, updateQuery);
   }
 
   async setEntitiesBundles(entities, bundleId) {
@@ -118,8 +130,8 @@ export default class EntityRepository {
       }
     };
 
-    await this.db.collection('assets').update(notBundledQuery, setBundleStubIdUpdate, {multi: true});
-    await this.db.collection('events').update(notBundledQuery, setBundleStubIdUpdate, {multi: true});
+    await this.db.collection('assets').updateMany(notBundledQuery, setBundleStubIdUpdate);
+    await this.db.collection('events').updateMany(notBundledQuery, setBundleStubIdUpdate);
 
     const thisBundleStubQuery = {
       'repository.bundleStubId': bundleStubId
@@ -182,7 +194,7 @@ export default class EntityRepository {
   async storeBundleProofMetadata(bundleId, proofBlock, txHash) {
     const currentTimestamp = getTimestamp();
 
-    await this.db.collection('bundles').update({bundleId}, {
+    await this.db.collection('bundles').updateOne({bundleId}, {
       $set: {
         'metadata.bundleTransactionHash': txHash,
         'metadata.proofBlock': proofBlock,
@@ -201,23 +213,35 @@ export default class EntityRepository {
       }
     };
 
-    await this.db.collection('assets').update(thisBundleQuery, update, {multi: true});
-    await this.db.collection('events').update(thisBundleQuery, update, {multi: true});
+    await this.db.collection('assets').updateMany(thisBundleQuery, update);
+    await this.db.collection('events').updateMany(thisBundleQuery, update);
+  }
+
+  async storeBundleShelteringExpirationDate(bundleId, expirationDate) {
+    await this.db.collection('bundles').updateOne({bundleId}, {
+      $set: {
+        'metadata.holdUntil': expirationDate
+      }
+    });
+  }
+
+  async getExpiredBundleIds() {
+    const now = getTimestamp();
+    return this.db.collection('bundles').find({
+      $or: [
+        {'metadata.holdUntil': {$not: {$type: 'int'}}},
+        {'metadata.holdUntil': {$lt: now}}
+      ]
+    }, {projection: {bundleId: 1}})
+      .map(({bundleId}) => bundleId)
+      .toArray();
   }
 
   async getBundle(bundleId) {
     return await this.db.collection('bundles').findOne({bundleId}, {fields: this.blacklistedFields});
   }
 
-  hideEventDataIfNecessary(event, accessLevel) {
-    if (!event) {
-      return null;
-    }
-    return event.content.idData.accessLevel <= accessLevel ? event : pick(event, 'content.data');
-  }
-
-  async getEvent(eventId, accessLevel = 0) {
-    const event = await this.db.collection('events').findOne({eventId}, {fields: this.blacklistedFields});
-    return this.hideEventDataIfNecessary(event, accessLevel);
+  async deleteBundles(bundleIds) {
+    return this.db.collection('bundles').deleteMany({bundleId: {$in: bundleIds}});
   }
 }
