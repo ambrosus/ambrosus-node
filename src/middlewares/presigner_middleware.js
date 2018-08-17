@@ -11,6 +11,12 @@ import {ValidationError} from '../errors/errors';
 import {get, put} from '../utils/dict_utils';
 
 const presignerMiddleware = (identityManager, toSignPath = 'content.idData', signaturePath = 'content.signature') => ((req, res, next) => {
+  const existingSignature = get(req.body, signaturePath);
+  if (existingSignature !== undefined) {
+    next();
+    return;
+  }
+
   const {ambSecret} = req;
   if (!ambSecret) {
     next();
