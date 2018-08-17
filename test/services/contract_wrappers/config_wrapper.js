@@ -32,13 +32,12 @@ describe('Config Wrapper', () => {
       contractManagerMock = {
         configContract: async () => ({
           methods: {
-            ATLAS1_STAKE: atlasStake1Stub
+            ATLAS1_STAKE: atlasStake1Stub.returns({
+              call: atlasStake1CallStub.resolves(stake)
+            })
           }
         })
       };
-      atlasStake1Stub.returns({
-        call: atlasStake1CallStub.resolves(stake)
-      });
       configWrapper = new ConfigWrapper(contractManagerMock);
     });
 
@@ -60,13 +59,12 @@ describe('Config Wrapper', () => {
       contractManagerMock = {
         configContract: async () => ({
           methods: {
-            CHALLENGE_DURATION: challengeDurationStub
+            CHALLENGE_DURATION: challengeDurationStub.returns({
+              call: challengeDurationCallStub.resolves(challengeDuration)
+            })
           }
         })
       };
-      challengeDurationStub.returns({
-        call: challengeDurationCallStub.resolves(challengeDuration)
-      });
       configWrapper = new ConfigWrapper(contractManagerMock);
     });
 
@@ -74,6 +72,33 @@ describe('Config Wrapper', () => {
       expect(await configWrapper.challengeDuration()).to.equal(challengeDuration);
       expect(challengeDurationStub).to.be.calledOnce;
       expect(challengeDurationCallStub).to.be.calledOnce;
+    });
+  });
+
+  describe('BUNDLE_SIZE_LIMIT', () => {
+    let bundleSizeLimitStub;
+    let bundleSizeLimitCallStub;
+    const bundleSizeLimit = '100';
+
+    beforeEach(async () => {
+      bundleSizeLimitStub = sinon.stub();
+      bundleSizeLimitCallStub = sinon.stub();
+      contractManagerMock = {
+        configContract: async () => ({
+          methods: {
+            BUNDLE_SIZE_LIMIT: bundleSizeLimitStub.returns({
+              call: bundleSizeLimitCallStub.resolves(bundleSizeLimit)
+            })
+          }
+        })
+      };
+      configWrapper = new ConfigWrapper(contractManagerMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      expect(await configWrapper.bundleSizeLimit()).to.equal(bundleSizeLimit);
+      expect(bundleSizeLimitStub).to.be.calledOnce;
+      expect(bundleSizeLimitCallStub).to.be.calledOnce;
     });
   });
 });

@@ -18,7 +18,7 @@ describe('Hermes Worker', () => {
   const bundleSizeLimit = 10;
   const storagePeriods = 1;
   let mockDataModelEngine;
-  let mockConfig;
+  let mockConfigContract;
   let mockLogger;
   let mockStrategy;
   let mockResult;
@@ -34,8 +34,8 @@ describe('Hermes Worker', () => {
       cancelBundling: sinon.stub(),
       finaliseBundling: sinon.stub()
     };
-    mockConfig = {
-      bundleSizeLimit
+    mockConfigContract = {
+      bundleSizeLimit: sinon.stub()
     };
     mockLogger = {
       info: sinon.stub()
@@ -49,8 +49,9 @@ describe('Hermes Worker', () => {
     shouldBundleStub = sinon.stub(mockStrategy, 'shouldBundle');
     bundlingSucceededStub = sinon.stub(mockStrategy, 'bundlingSucceeded');
 
-    hermesWorker = new HermesWorker(mockDataModelEngine, mockConfig, mockStrategy, mockLogger);
+    hermesWorker = new HermesWorker(mockDataModelEngine, mockConfigContract, mockStrategy, mockLogger);
     mockDataModelEngine.initialiseBundling.resolves(mockResult);
+    mockConfigContract.bundleSizeLimit.resolves(bundleSizeLimit);
     await hermesWorker.beforeWorkLoop();
   });
 
@@ -60,6 +61,11 @@ describe('Hermes Worker', () => {
     storagePeriodsStub.restore();
     shouldBundleStub.restore();
     bundlingSucceededStub.restore();
+  });
+
+  it('asks config contract for bundle size limit', async () => {
+    await hermesWorker.periodicWork();
+    expect(mockConfigContract.bundleSizeLimit).to.have.been.calledOnce;
   });
 
   it('asks data model engine for bundle candidate', async () => {
