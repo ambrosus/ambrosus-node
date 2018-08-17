@@ -8,18 +8,21 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 /** @abstract */
-export default class ChallengeResolutionStrategy {
-  get challengePullingInterval() {
+export default class AtlasChallengeParticipationStrategy {
+  get workerInterval() {
     return 5000;
   }
 
-  async shouldFetchBundle() {
+  // eslint-disable-next-line no-unused-vars
+  async shouldFetchBundle(challenge) {
     throw new Error('Should be implemented');
   }
 
-  async shouldResolveChallenge() {
+  // eslint-disable-next-line no-unused-vars
+  async shouldResolveChallenge(bundle) {
     throw new Error('Should be implemented');
   }
 
-  async afterChallengeResolution() { }
+  // eslint-disable-next-line no-unused-vars
+  async afterChallengeResolution(bundle) { }
 }

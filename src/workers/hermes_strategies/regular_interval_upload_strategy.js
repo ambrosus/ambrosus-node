@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import HermesUploadStrategy from './upload_strategy';
 
 export default class RegularIntervalUploadStrategy extends HermesUploadStrategy {
-  workerInterval() {
+  get workerInterval() {
     return 300000; // 5 minutes
   }
 

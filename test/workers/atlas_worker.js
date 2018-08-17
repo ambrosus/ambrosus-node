@@ -12,7 +12,7 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import AtlasWorker from '../../src/workers/atlas_worker';
-import ChallengeResolutionStrategy from '../../src/workers/atlas_strategies/challenge_resolution_strategy';
+import AtlasChallengeParticipationStrategy from '../../src/workers/atlas_strategies/atlas_challenge_resolution_strategy';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -21,12 +21,14 @@ const {expect} = chai;
 describe('Atlas Worker', () => {
   const defaultAccount = '0x123';
   const fetchedBundle = 'fetchedBundle';
-  const challengePullingInterval = 10;
+  const workerInterval = 10;
   let atlasWorker;
   let challengesRepositoryMock;
   let dataModelEngineMock;
   let strategyMock;
   let loggerMock;
+  let shouldFetchBundleStub;
+  let shouldResolveChallengeStub;
   let mockWeb3;
 
   beforeEach(() => {
@@ -42,10 +44,10 @@ describe('Atlas Worker', () => {
     dataModelEngineMock = {
       downloadBundle: sinon.stub().resolves(fetchedBundle)
     };
-    strategyMock = new ChallengeResolutionStrategy();
-    sinon.stub(strategyMock, 'challengePullingInterval').get(() => challengePullingInterval);
-    sinon.stub(strategyMock, 'shouldFetchBundle').resolves(true);
-    sinon.stub(strategyMock, 'shouldResolveChallenge').resolves(true);
+    strategyMock = new AtlasChallengeParticipationStrategy();
+    sinon.stub(strategyMock, 'workerInterval').get(() => workerInterval);
+    shouldFetchBundleStub = sinon.stub(strategyMock, 'shouldFetchBundle').resolves(true);
+    shouldResolveChallengeStub = sinon.stub(strategyMock, 'shouldResolveChallenge').resolves(true);
     sinon.stub(strategyMock, 'afterChallengeResolution');
     loggerMock = {
       info: sinon.spy(),
@@ -58,30 +60,45 @@ describe('Atlas Worker', () => {
     const sheltererId = 'shelterer';
     const bundleId = 'bundle';
     const challengeId = 'challenge';
-
-    const challenges =  Array(4).fill({sheltererId, bundleId, challengeId});
+    const challenge = {sheltererId, bundleId, challengeId};
+    const challenges =  Array(4).fill(challenge);
 
     beforeEach(() => {
       challengesRepositoryMock.ongoingChallenges.resolves(challenges);
     });
 
-    it('tryToResolve downloads the bundle and resolves a challenge', async () => {
-      await atlasWorker.tryToResolve({sheltererId, bundleId, challengeId});
+    it('tryToDownload downloads the bundle', async () => {
+      expect(await atlasWorker.tryToDownload(challenge)).to.equal(fetchedBundle);
       expect(dataModelEngineMock.downloadBundle).to.be.calledWith(bundleId, sheltererId);
+    });
+
+    it('tryToResolve resolves a challenge', async () => {
+      await atlasWorker.tryToResolve(fetchedBundle, challenge);
       expect(challengesRepositoryMock.resolveChallenge).to.be.calledWith(challengeId);
     });
 
-    it('tryToResolve calls strategy methods with fetched bundle', async () => {
-      await atlasWorker.tryToResolve({sheltererId, bundleId, challengeId});
-      expect(atlasWorker.interval).to.equal(challengePullingInterval);
-      expect(strategyMock.shouldFetchBundle).to.be.calledWith({sheltererId, bundleId, challengeId});
+    it('periodicWork calls strategy methods for each challenge', async () => {
+      await atlasWorker.periodicWork();
+      expect(atlasWorker.interval).to.equal(workerInterval);
+      expect(strategyMock.shouldFetchBundle).to.be.calledWith(challenge);
       expect(strategyMock.shouldResolveChallenge).to.be.calledWith(fetchedBundle);
       expect(strategyMock.afterChallengeResolution).to.be.calledWith(fetchedBundle);
+      expect(strategyMock.shouldFetchBundle).to.callCount(4);
+      expect(strategyMock.shouldResolveChallenge).to.callCount(4);
+      expect(strategyMock.afterChallengeResolution).to.callCount(4);
     });
 
-    it('calls tryToResolve for each challenge', async () => {
+    it('periodic work does not download if shouldFetchBundle is false', async () => {
+      shouldFetchBundleStub.resolves(false);
       await atlasWorker.periodicWork();
-      expect(dataModelEngineMock.downloadBundle).to.callCount(4);
+      expect(dataModelEngineMock.downloadBundle).to.be.not.called;
+    });
+
+    it('periodic work does not resolve if shouldFetchBundle is false', async () => {
+      shouldResolveChallengeStub.resolves(false);
+      await atlasWorker.periodicWork();
+      expect(dataModelEngineMock.downloadBundle).to.be.called;
+      expect(challengesRepositoryMock.resolveChallenge).to.be.not.called;
     });
 
     it('periodicWork does not throw when tryToResolve fails', async () => {

@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 export default class HermesUploadStrategy {
-  workerInterval() {
+  get workerInterval() {
     return 1000;
   }
 
@@ -16,7 +16,8 @@ export default class HermesUploadStrategy {
     return 1;
   }
 
-  async shouldBundle() {
+  // eslint-disable-next-line no-unused-vars
+  async shouldBundle(bundle) {
     throw new Error('Should be implemented');
   }
 

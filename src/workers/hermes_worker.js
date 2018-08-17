@@ -12,7 +12,7 @@ import HermesUploadStrategy from './hermes_strategies/upload_strategy';
 
 export default class HermesWorker extends PeriodicWorker {
   constructor(dataModelEngine, configContract, strategy, logger) {
-    super(strategy.workerInterval(), logger);
+    super(strategy.workerInterval, logger);
     this.dataModelEngine = dataModelEngine;
     this.bundleSequenceNumber = 0;
     this.strategy = strategy;
