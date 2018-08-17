@@ -24,4 +24,9 @@ export default class ConfigWrapper extends ContractWrapper {
     const contract = await this.contract();
     return contract.methods.CHALLENGE_DURATION().call();
   }
+
+  async bundleSizeLimit() {
+    const contract = await this.contract();
+    return contract.methods.BUNDLE_SIZE_LIMIT().call();
+  }
 }
