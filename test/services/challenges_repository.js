@@ -9,10 +9,12 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
+import chaiAsPromissed from 'chai-as-promised';
 import ChallengesRepository from '../../src/services/challenges_repository';
 import sinon from 'sinon';
 
 chai.use(sinonChai);
+chai.use(chaiAsPromissed);
 const {expect} = chai;
 
 describe('Challenges repository', () => {
@@ -20,49 +22,165 @@ describe('Challenges repository', () => {
   let configWrapperMock;
   let challengesRepository;
 
+  describe('filterOutFinished', () => {
+    beforeEach(() => {
+      challengesRepository = new ChallengesRepository();
+    });
+
+    describe('Single challenges', () => {
+      const allChallenges = [
+        {challengeId: '1', count: 1},
+        {challengeId: '2', count: 1},
+        {challengeId: '3', count: 1},
+        {challengeId: '4', count: 1},
+        {challengeId: '5', count: 1},
+        {challengeId: '6', count: 1},
+        {challengeId: '7', count: 1}
+      ];
+      const resolvedChallenges = [
+        {challengeId: '1'},
+        {challengeId: '100'},
+        {challengeId: '6'}
+      ];
+      const timedOutChallenges = [
+        {challengeId: '0'},
+        {challengeId: '2'},
+        {challengeId: '3'},
+        {challengeId: '-1'},
+        {challengeId: '7'},
+        {challengeId: '7'}
+      ];
+
+      it('should remove single challenges that are resolved or timed out', async () => {
+        expect(challengesRepository.filterOutFinished(allChallenges, resolvedChallenges, timedOutChallenges)).to.deep.equal([
+          {challengeId: '4', count: 1},
+          {challengeId: '5', count: 1}
+        ]);
+      });
+    });
+
+    describe('Multiple challenges', () => {
+      const allChallenges = [
+        {challengeId: '1', count: 2},
+        {challengeId: '2', count: 1},
+        {challengeId: '3', count: 4}
+      ];
+      const resolvedChallenges = [
+        {challengeId: '1'},
+        {challengeId: '1'},
+        {challengeId: '2'},
+        {challengeId: '3'},
+        {challengeId: '3'}
+      ];
+      const timedOutChallenges = [{challengeId: '3'}];
+
+      it('should remove challenges only if resolution count is not less then creation count', async () => {
+        expect(challengesRepository.filterOutFinished(allChallenges, resolvedChallenges, [])).to.deep.equal([
+          {challengeId: '3', count: 4}
+        ]);
+      });
+
+      it('should remove challenge when timed out', async () => {
+        expect(challengesRepository.filterOutFinished(allChallenges, [], timedOutChallenges)).to.deep.equal([
+          {challengeId: '1', count: 2},
+          {challengeId: '2', count: 1}
+        ]);
+      });
+
+      it('timed out and resolved work together', async () => {
+        expect(challengesRepository.filterOutFinished(allChallenges, resolvedChallenges, timedOutChallenges)).to.deep.equal([]);
+      });
+    });
+  });
+
+  describe('extractChallengeFromEvent', () => {
+    const sheltererId = 1;
+    const bundleId = 2;
+    const challengeId = 3;
+    const count = 1;
+    const events = [
+      {
+        returnValues: {
+          sheltererId,
+          bundleId,
+          challengeId,
+          count
+        }
+      },
+      {
+        returnValues: {
+          sheltererId,
+          bundleId,
+          challengeId: 100,
+          count
+        }
+      },
+      {
+        returnValues: {
+          sheltererId,
+          bundleId,
+          challengeId,
+          count
+        }
+      }];
+    const challenges = [
+      {sheltererId, bundleId, challengeId, count},
+      {sheltererId, bundleId, challengeId: 100, count},
+      {sheltererId, bundleId, challengeId, count}];
+
+    beforeEach(() => {
+      challengesRepository = new ChallengesRepository();
+    });
+
+    it('extracts fields specified in selector from events list', async () => {
+      expect(challengesRepository.extractChallengeFromEvent(events, ['challengeId', 'sheltererId', 'bundleId', 'count'])).to.deep.equal(challenges);
+      expect(challengesRepository.extractChallengeFromEvent(events, ['challengeId'])).to.deep.equal([{challengeId}, {challengeId: 100}, {challengeId}]);
+    });
+  });
+
   describe('ongoingChallenges', () => {
     const sheltererId = 1;
     const bundleId = 2;
     const challengeId = 3;
     const fromBlock = 4;
+    const count = 1;
     const challengeDuration = 5;
     const events = [
       {
         returnValues: {
           sheltererId,
           bundleId,
-          challengeId
+          challengeId,
+          count
         }
       },
       {
         returnValues: {
           sheltererId,
           bundleId,
-          challengeId: 100
-        }
-      },
-      {
-        returnValues: {
-          sheltererId,
-          bundleId,
-          challengeId
+          challengeId: 100,
+          count
         }
       }];
+    const resolvedEvents = [{returnValues: {bundleId, sheltererId, challengeId: 'resolved'}}];
+    const timedOutEvents = [{returnValues: {bundleId, sheltererId, challengeId: 'timedOut'}}];
+    const notFinishedEvents = 'notFinishedEvents';
 
     beforeEach(() => {
       challengeWrapperMock = {
         challenges: sinon.stub().resolves(events),
-        earliestMeaningfulBlock: sinon.stub().resolves(fromBlock),
-        isInProgress: sinon.stub()
+        resolvedChallenges: sinon.stub().resolves(resolvedEvents),
+        timedOutChallenges: sinon.stub().resolves(timedOutEvents),
+        earliestMeaningfulBlock: sinon.stub().resolves(fromBlock)
       };
 
       configWrapperMock = {
         challengeDuration: sinon.stub().resolves(challengeDuration)
       };
 
-      challengeWrapperMock.isInProgress.resolves(false);
-      challengeWrapperMock.isInProgress.withArgs(challengeId).resolves(true);
       challengesRepository = new ChallengesRepository(challengeWrapperMock, configWrapperMock);
+      sinon.spy(challengesRepository, 'extractChallengeFromEvent');
+      sinon.stub(challengesRepository, 'filterOutFinished').returns(notFinishedEvents);
     });
 
     it('calls wrappers with correct parameters', async () => {
@@ -70,8 +188,22 @@ describe('Challenges repository', () => {
       expect(configWrapperMock.challengeDuration).to.be.calledOnce;
       expect(challengeWrapperMock.earliestMeaningfulBlock).to.be.calledWith(challengeDuration);
       expect(challengeWrapperMock.challenges).to.be.calledWith(fromBlock);
-      expect(challengeWrapperMock.isInProgress).to.be.calledThrice;
-      expect(result).to.deep.equal(Array(2).fill({sheltererId, bundleId, challengeId}));
+      expect(challengeWrapperMock.resolvedChallenges).to.be.calledWith(fromBlock);
+      expect(challengeWrapperMock.timedOutChallenges).to.be.calledWith(fromBlock);
+      expect(result).to.deep.equal(notFinishedEvents);
+    });
+
+    it('calls own methods with correct params', async () => {
+      await challengesRepository.ongoingChallenges();
+      expect(challengesRepository.extractChallengeFromEvent).to.be.calledThrice;
+      expect(challengesRepository.extractChallengeFromEvent).to.be.calledWith(events);
+      expect(challengesRepository.extractChallengeFromEvent).to.be.calledWith(resolvedEvents);
+      expect(challengesRepository.extractChallengeFromEvent).to.be.calledWith(timedOutEvents);
+      expect(challengesRepository.filterOutFinished).to.be.calledOnceWith(
+        [{sheltererId, bundleId, challengeId, count},
+          {sheltererId, bundleId, challengeId: 100, count}],
+        [{challengeId: 'resolved'}],
+        [{challengeId: 'timedOut'}]);
     });
   });
 
