@@ -17,8 +17,14 @@ async function start(logger) {
   const builder = new Builder();
   await builder.build(config);
   await builder.ensureAccountIsOnboarded([Role.HERMES]);
-  const worker = new HermesWorker(builder.dataModelEngine, config, logger);
+  const strategy = loadStrategy(config.uploadStrategy);
+  const worker = new HermesWorker(builder.dataModelEngine, config, strategy, logger);
   await worker.start();
+}
+
+function loadStrategy(uploadStrategy) {
+  const HermesUploadStrategy = require(`./workers/hermes_strategies/${uploadStrategy}`).default;
+  return new HermesUploadStrategy();
 }
 
 const logger = new WinstonConsoleLogger();

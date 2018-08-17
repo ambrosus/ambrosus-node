@@ -10,6 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import sinon from 'sinon';
 import HermesWorker from '../../src/workers/hermes_worker';
+import HermesUploadStrategy from '../../src/workers/hermes_strategies/regular_interval_upload_strategy';
 
 const {expect} = chai;
 
@@ -19,16 +20,22 @@ describe('Hermes Worker', () => {
   let mockDataModelEngine;
   let mockConfig;
   let mockLogger;
+  let mockStrategy;
   let mockResult;
   let hermesWorker;
+  let workerIntervalStub;
+  let storagePeriodsStub;
+  let shouldBundleStub;
+  let bundlingSucceededStub;
 
   beforeEach(async () => {
     mockDataModelEngine = {
-      finaliseBundle: sinon.stub()
+      initialiseBundling: sinon.stub(),
+      cancelBundling: sinon.stub(),
+      finaliseBundling: sinon.stub()
     };
     mockConfig = {
-      bundleSizeLimit,
-      storagePeriods
+      bundleSizeLimit
     };
     mockLogger = {
       info: sinon.stub()
@@ -36,37 +43,73 @@ describe('Hermes Worker', () => {
     mockResult = {
       bundleId: '0xc0ffee'
     };
-    hermesWorker = new HermesWorker(mockDataModelEngine, mockConfig, mockLogger);
+    mockStrategy = new HermesUploadStrategy();
+    workerIntervalStub = sinon.stub(mockStrategy, 'workerInterval');
+    storagePeriodsStub = sinon.stub(mockStrategy, 'storagePeriods');
+    shouldBundleStub = sinon.stub(mockStrategy, 'shouldBundle');
+    bundlingSucceededStub = sinon.stub(mockStrategy, 'bundlingSucceeded');
+
+    hermesWorker = new HermesWorker(mockDataModelEngine, mockConfig, mockStrategy, mockLogger);
+    mockDataModelEngine.initialiseBundling.resolves(mockResult);
     await hermesWorker.beforeWorkLoop();
   });
 
   afterEach(async () => {
     await hermesWorker.afterWorkLoop();
+    workerIntervalStub.restore();
+    storagePeriodsStub.restore();
+    shouldBundleStub.restore();
+    bundlingSucceededStub.restore();
   });
 
-  it('executes bundle finalisation correctly', async () => {
-    mockDataModelEngine.finaliseBundle.resolves(null);
+  it('asks data model engine for bundle candidate', async () => {
+    const {bundleSequenceNumber} = hermesWorker;
     await hermesWorker.periodicWork();
-    expect(mockDataModelEngine.finaliseBundle).to.have.been.calledWith(hermesWorker.bundleSequenceNumber - 1, bundleSizeLimit, storagePeriods);
+    expect(mockDataModelEngine.initialiseBundling).to.have.been.calledWith(bundleSequenceNumber, bundleSizeLimit);
   });
 
-  it('increments bundleSequenceNumber', async () => {
-    mockDataModelEngine.finaliseBundle.resolves(null);
-    const bundleSequenceNumberBefore = hermesWorker.bundleSequenceNumber;
+  it('asks strategy if the bundle should be uploaded', async () => {
     await hermesWorker.periodicWork();
-    const bundleSequenceNumberAfter = hermesWorker.bundleSequenceNumber;
-    expect(bundleSequenceNumberAfter - bundleSequenceNumberBefore).to.equal(1);
+    expect(shouldBundleStub).to.have.been.calledOnceWith(mockResult);
   });
 
-  it('uses logger once if nothing was uploaded', async () => {
-    mockDataModelEngine.finaliseBundle.resolves(null);
-    await hermesWorker.periodicWork();
-    expect(mockLogger.info).to.have.been.calledOnce;
+  describe('Bundle aborted', async () => {
+    beforeEach(async () => {
+      shouldBundleStub.resolves(false);
+      await hermesWorker.periodicWork();
+    });
+
+    it('cancels bundling', async () => {
+      expect(mockDataModelEngine.cancelBundling).to.have.been.calledOnceWith(hermesWorker.bundleSequenceNumber);
+    });
   });
 
-  it('uses logger twice if bundle was uploaded', async () => {
-    mockDataModelEngine.finaliseBundle.resolves(mockResult);
-    await hermesWorker.periodicWork();
-    expect(mockLogger.info).to.have.been.calledTwice;
+  describe('Bundle completed', async () => {
+    let bundleSequenceNumber;
+
+    beforeEach(async () => {
+      shouldBundleStub.resolves(true);
+      mockDataModelEngine.finaliseBundling.resolves(mockResult);
+      storagePeriodsStub.returns(storagePeriods);
+      ({bundleSequenceNumber} = hermesWorker);
+      await hermesWorker.periodicWork();
+    });
+
+    it('asks strategy for storage periods', async () => {
+      expect(storagePeriodsStub).to.have.been.calledOnce;
+    });
+
+    it('finalises bundling', async () => {
+      expect(mockDataModelEngine.finaliseBundling).to.have.been.calledOnceWith(mockResult, bundleSequenceNumber, storagePeriods);
+    });
+
+    it('increments bundleSequenceNumber', async () => {
+      const bundleSequenceNumberAfter = hermesWorker.bundleSequenceNumber;
+      expect(bundleSequenceNumberAfter - bundleSequenceNumber).to.equal(1);
+    });
+
+    it('informs strategy', async () => {
+      expect(bundlingSucceededStub).to.have.been.calledOnce;
+    });
   });
 });

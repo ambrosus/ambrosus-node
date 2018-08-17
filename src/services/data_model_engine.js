@@ -173,25 +173,29 @@ export default class DataModelEngine {
     return bundle;
   }
 
-  async finaliseBundle(bundleStubId, bundleSizeLimit, storagePeriods) {
-    const notBundled = await this.entityRepository.beginBundle(bundleStubId);
+  async initialiseBundling(bundleStubId, bundleSizeLimit) {
+    const notBundled = await this.entityRepository.fetchEntitiesForBundling(bundleStubId, bundleSizeLimit);
 
     const nodeSecret = await this.identityManager.nodePrivateKey();
     const newBundle = this.entityBuilder.assembleBundle(notBundled.assets, notBundled.events, getTimestamp(), nodeSecret);
 
-    if (newBundle.content.entries.length === 0) {
-      return null;
-    }
+    return newBundle;
+  }
 
+  async finaliseBundling(newBundle, bundleStubId, storagePeriods) {
     await this.entityRepository.storeBundle(newBundle);
 
-    await this.entityRepository.endBundle(bundleStubId, newBundle.bundleId, bundleSizeLimit);
+    await this.entityRepository.markEntitiesAsBundled(bundleStubId, newBundle.bundleId);
 
     const {blockNumber, transactionHash} = await this.uploadRepository.uploadBundle(newBundle.bundleId, storagePeriods);
 
     await this.entityRepository.storeBundleProofMetadata(newBundle.bundleId, blockNumber, transactionHash);
 
     return newBundle;
+  }
+
+  async cancelBundling(bundleStubId) {
+    await this.entityRepository.discardBundling(bundleStubId);
   }
 
   async downloadBundle(bundleId, sheltererId) {

@@ -57,7 +57,8 @@ describe('Bundles - Integrations', () => {
       await scenario.addEvent(0, 1, {timestamp: 2}, [{type: 'e'}])
     ].map(mapEntitiesToIds);
 
-    res = await apparatus.dataModelEngine.finaliseBundle(1, 16384, 1);
+    const newBundle = await apparatus.dataModelEngine.initialiseBundling(1, 16384);
+    res = await apparatus.dataModelEngine.finaliseBundling(newBundle, 1, 1);
 
     // this additional event should not go into the bundle
     await scenario.addEvent(0, 1, {timestamp: 3}, [{type: '4'}]);
