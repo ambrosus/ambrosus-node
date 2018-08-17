@@ -23,25 +23,23 @@ describe('Nodeinfo - Integrations', async () => {
   const gitCommit = 'aaaaaaa';
   let apparatus;
 
-  describe('Check if it works', async () => {
-    before(async () => {
-      apparatus = new ServerApparatus({gitCommit});
-      await apparatus.start(null);
-    });
+  before(async () => {
+    apparatus = new ServerApparatus({gitCommit});
+    await apparatus.start(null);
+  });
 
-    beforeEach(async () => {
-      await apparatus.cleanDB();
-    });
+  beforeEach(async () => {
+    await apparatus.cleanDB();
+  });
 
-    it('should return npm version, git commit and address', async () => {
-      const nodeinfo = await apparatus.request().get('/nodeinfo');
-      expect(nodeinfo.body.commit).to.eql(gitCommit);
-      expect(nodeinfo.body.version).to.match(/^\d+\.\d+\.\d+$/);
-      expect(nodeinfo.body.nodeAddress).to.be.properAddress;
-    });
+  it('should return npm version, git commit and address', async () => {
+    const nodeinfo = await apparatus.request().get('/nodeinfo');
+    expect(nodeinfo.body.commit).to.eql(gitCommit);
+    expect(nodeinfo.body.version).to.match(/^\d+\.\d+\.\d+$/);
+    expect(nodeinfo.body.nodeAddress).to.be.properAddress;
+  });
 
-    after(async () => {
-      await apparatus.stop();
-    });
+  after(async () => {
+    await apparatus.stop();
   });
 });

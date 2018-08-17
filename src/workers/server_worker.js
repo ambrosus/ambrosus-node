@@ -25,6 +25,7 @@ import healthCheckHandler from '../routes/health_check';
 import prometheusMetricsHandler from '../routes/prometheus_metrics.js';
 import asyncMiddleware from '../middlewares/async_middleware';
 import {Role} from '../services/roles_repository';
+import fallbackRouter from '../routes/fallback';
 
 export default class ServerWorker extends Worker {
   constructor(modelEngine, web3, role, config, logger) {
@@ -61,6 +62,8 @@ export default class ServerWorker extends Worker {
       app.use('/events', eventsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine));
       app.use('/token', tokenRouter(this.modelEngine.tokenAuthenticator, this.config));
     }
+
+    app.use('*', fallbackRouter(this.config));
 
     // Should always be last
     app.use(errorHandling(this.logger));

@@ -69,7 +69,7 @@ describe('Atlas node endpoints availability - Integrations', async () => {
         .get('/bundle/0x123')
         .send();
       await expect(pendingRequest)
-        .to.eventually.be.rejected.and.have.property('response').that.has.deep.property('body', {reason: 'Entity not found: No bundle with id = 0x123 found'});
+        .to.eventually.be.rejected.and.have.property('response').that.has.deep.property('body', {reason: 'Not found: No bundle with id = 0x123 found'});
     });
   });
 

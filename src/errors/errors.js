@@ -35,7 +35,7 @@ export class PermissionError extends AmbrosusError {
 
 export class NotFoundError extends AmbrosusError {
   constructor(message) {
-    super(`Entity not found: ${message}`);
+    super(`Not found: ${message}`);
   }
 }
 
