@@ -24,6 +24,16 @@ export default class ChallengesWrapper extends ContractWrapper {
     return contract.getPastEvents('ChallengeCreated', {fromBlock});
   }
 
+  async resolvedChallenges(fromBlock) {
+    const contract = await this.contract();
+    return contract.getPastEvents('ChallengeResolved', {fromBlock});
+  }
+
+  async timedOutChallenges(fromBlock) {
+    const contract = await this.contract();
+    return contract.getPastEvents('ChallengeTimeout', {fromBlock});
+  }
+
   async resolve(challengeId) {
     const contract = await this.contract();
     return contract.methods.resolve(challengeId).send({from: this.contractManager.defaultAddress()});

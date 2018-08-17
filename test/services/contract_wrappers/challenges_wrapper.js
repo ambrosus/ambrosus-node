@@ -67,6 +67,50 @@ describe('Challenges Wrapper', () => {
     });
   });
 
+  describe('resolvedChallenges', () => {
+    const fromBlock = 4;
+    const eventsStub = 'events';
+    let getPastEventsStub;
+
+    beforeEach(async () => {
+      contractManagerMock = {
+        challengesContract: async () => ({
+          getPastEvents: getPastEventsStub
+        })
+      };
+      getPastEventsStub = sinon.stub().resolves(eventsStub);
+      challengesWrapper = new ChallengesWrapper(contractManagerMock);
+    });
+
+    it('gets past events', async () => {
+      expect(await challengesWrapper.resolvedChallenges(fromBlock)).to.equal(eventsStub);
+      expect(getPastEventsStub).to.be.calledWith('ChallengeResolved', {fromBlock});
+    });
+  });
+
+  describe('timedOutChallenges', () => {
+    const fromBlock = 4;
+    const eventsStub = 'events';
+    let getPastEventsStub;
+
+    beforeEach(async () => {
+      contractManagerMock = {
+        challengesContract: async () => ({
+          getPastEvents: getPastEventsStub
+        })
+      };
+      getPastEventsStub = sinon.stub().resolves(eventsStub);
+      challengesWrapper = new ChallengesWrapper(contractManagerMock);
+    });
+
+    it('gets past events', async () => {
+      expect(await challengesWrapper.timedOutChallenges(fromBlock)).to.equal(eventsStub);
+      expect(getPastEventsStub).to.be.calledWith('ChallengeTimeout', {fromBlock});
+    });
+  });
+
+
+
   describe('resolve', () => {
     const challengeId = '0x123';
     const defaultAccount = '0x123';
