@@ -197,6 +197,8 @@ export default class EntityBuilder {
       .castNumber(['fromTimestamp', 'toTimestamp', 'page', 'perPage'])
       .isNonNegativeInteger(['fromTimestamp', 'toTimestamp', 'page', 'perPage'])
       .isAddress(['createdBy'])
+      .validate(['perPage'], (perPage) => perPage <= 1000, 'pageSize should not be higher than 1000')
+      .validate(['perPage'], (perPage) => 0 < perPage, 'pageSize should be positive')
       .getCastedParams();
 
     this.ensureGeoLocationParamsCorrectlyPlaced(params);
@@ -211,6 +213,8 @@ export default class EntityBuilder {
       .castNumber(['page', 'perPage', 'fromTimestamp', 'toTimestamp'])
       .isNonNegativeInteger(['page', 'perPage', 'fromTimestamp', 'toTimestamp'])
       .isAddress(['createdBy'])
+      .validate(['perPage'], (perPage) => perPage <= 1000, 'pageSize should not be higher than 1000')
+      .validate(['perPage'], (perPage) => 0 < perPage, 'pageSize should be positive')
       .getCastedParams();
   }
 
