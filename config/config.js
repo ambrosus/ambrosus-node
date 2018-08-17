@@ -27,5 +27,7 @@ module.exports = Object.freeze({
 
   defaultGasPrice: parseInt(process.env.DEFAULT_GAS_PRICE, 10) || 5, // in ambits
 
-  gitCommit: process.env.GIT_COMMIT
+  gitCommit: process.env.GIT_COMMIT,
+
+  docsLink: process.env.DOCS_LINK || 'https://dev.ambrosus.com/'
 });
