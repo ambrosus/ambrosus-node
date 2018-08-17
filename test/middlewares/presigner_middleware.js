@@ -28,6 +28,15 @@ describe('Presigner middleware', () => {
       }
     }
   };
+  const exampleDataWithSignature = {
+    content: {
+      signature: '0x12345678',
+      idData: {
+        foo: 1,
+        bar: 2
+      }
+    }
+  };
 
   let mockIdentityManager;
   let request;
@@ -56,6 +65,18 @@ describe('Presigner middleware', () => {
     expect(request.body.content.signature).to.equal(exampleSignature);
     expect(next).to.be.calledOnce;
     expect(mockIdentityManager.sign).to.have.been.calledWith(pkPair.secret, request.body.content.idData);
+  });
+
+  it('doesn\'t do anything if given path has value already assigned', () => {
+    const configuredMiddleware = presignerMiddleware(mockIdentityManager, 'content.idData', 'content.signature');
+    request = httpMocks.createRequest({
+      ambSecret: pkPair.secret,
+      body: exampleDataWithSignature
+    });
+    configuredMiddleware(request, response, next);
+
+    expect(mockIdentityManager.sign).to.be.not.called;
+    expect(next).to.be.calledOnce;
   });
 
   it('doesn\'t do anything if no AMB secret in request', () => {
