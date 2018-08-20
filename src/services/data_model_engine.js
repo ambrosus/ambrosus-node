@@ -204,8 +204,17 @@ export default class DataModelEngine {
     if (!bundle) {
       throw new Error('Could not fetch the bundle from the shelterer');
     }
-    await this.entityBuilder.validateBundle(bundle);
+    this.entityBuilder.validateBundle(bundle);
+    await this.verifyBundle(bundle);
     await this.entityRepository.storeBundle(bundle);
     return bundle;
+  }
+
+  async verifyBundle(bundle) {
+    const bundleSizeLimit = await this.contractManager.configWrapper.bundleSizeLimit();
+    if (bundle.content.entries.length > bundleSizeLimit) {
+      throw new Error('Bundle size surpasses the limit');
+    }
+    // TODO another on-chain verifications
   }
 }
