@@ -12,6 +12,7 @@ module.exports = Object.freeze({
 
   web3Rpc: process.env.WEB3_RPC,
   nodePrivateKey: process.env.WEB3_NODEPRIVATEKEY,
+  sentryDSN: process.env.SENTRY_DSN,
 
   // Required, one or more hosts delimited with comma, e.g
   // 'mongo1:27107,mongo2:27017'
