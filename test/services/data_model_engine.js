@@ -1110,8 +1110,8 @@ describe('Data Model Engine', () => {
     let mockEntityDownloader;
     let mockEntityBuilder;
     let mockRolesRepository;
+    let mockUploadRepository;
     let modelEngine;
-    let verifyBundleStub;
 
     beforeEach(() => {
       mockEntityRepository = {
@@ -1120,6 +1120,10 @@ describe('Data Model Engine', () => {
 
       mockRolesRepository = {
         nodeUrl: sinon.stub().resolves(nodeUrl)
+      };
+
+      mockUploadRepository = {
+        verifyBundle: sinon.stub().resolves()
       };
 
       mockEntityDownloader = {
@@ -1134,14 +1138,9 @@ describe('Data Model Engine', () => {
         entityRepository: mockEntityRepository,
         entityDownloader: mockEntityDownloader,
         entityBuilder: mockEntityBuilder,
-        rolesRepository: mockRolesRepository
+        rolesRepository: mockRolesRepository,
+        uploadRepository: mockUploadRepository
       });
-
-      verifyBundleStub = sinon.stub(modelEngine, 'verifyBundle').resolves();
-    });
-
-    afterEach(() => {
-      verifyBundleStub.restore();
     });
 
     it('validates and returns the downloaded bundle', async () => {
@@ -1165,37 +1164,9 @@ describe('Data Model Engine', () => {
     });
 
     it('does not store bundle if on-chain verification failed', async () => {
-      verifyBundleStub.rejects();
+      mockUploadRepository.verifyBundle.rejects();
       await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejected;
       expect(mockEntityRepository.storeBundle).to.be.not.called;
-    });
-  });
-
-  describe('Verifying a bundle', async () => {
-    const downloadedBundle = createBundle({},['first', 'second', 'third']);
-    let mockContractManager;
-    let modelEngine;
-
-    beforeEach(() => {
-      mockContractManager = {
-        configWrapper: {
-          bundleSizeLimit: sinon.stub()
-        }
-      };
-
-      modelEngine = new DataModelEngine({
-        contractManager: mockContractManager
-      });
-    });
-
-    it('passes for proper bundle', async () => {
-      mockContractManager.configWrapper.bundleSizeLimit.resolves(5);
-      await expect(modelEngine.verifyBundle(downloadedBundle)).to.be.fulfilled;
-    });
-
-    it('throws if downloaded bundle is to big', async () => {
-      mockContractManager.configWrapper.bundleSizeLimit.resolves(2);
-      await expect(modelEngine.verifyBundle(downloadedBundle)).to.be.rejectedWith(Error, 'Bundle size surpasses the limit');
     });
   });
 });
