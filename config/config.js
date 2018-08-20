@@ -17,6 +17,7 @@ module.exports = Object.freeze({
   sentryDSN: process.env.SENTRY_DSN,
 
   headContractAddress: process.env.HEAD_CONTRACT_ADDRESS,
+  challengeResolutionStrategy: process.env.CHALLENGE_RESOLUTION_STRATEGY || 'resolve_all_strategy',
   uploadStrategy: process.env.UPLOAD_STRATEGY || 'regular_interval_upload_strategy',
 
   maximumEntityTimestampOvertake:
