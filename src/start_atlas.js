@@ -17,8 +17,14 @@ async function start(logger) {
   const builder = new Builder();
   await builder.build(config);
   await builder.ensureAccountIsOnboarded([Role.ATLAS]);
-  const worker = new AtlasWorker(builder.web3, builder.dataModelEngine, builder.rolesRepository, builder.challengesRepository, logger);
+  const strategy = loadStrategy(config.challengeResolutionStrategy);
+  const worker = new AtlasWorker(builder.web3, builder.dataModelEngine, builder.challengesRepository, strategy, logger);
   await worker.start();
+}
+
+function loadStrategy(strategyName) {
+  const ChallengeResolutionStrategy = require(`./workers/atlas_strategies/${strategyName}`).default;
+  return new ChallengeResolutionStrategy();
 }
 
 const logger = new WinstonConsoleLogger();

@@ -7,21 +7,22 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-export default class HermesUploadStrategy {
+/** @abstract */
+export default class AtlasChallengeParticipationStrategy {
   get workerInterval() {
-    return 1000;
-  }
-
-  storagePeriods() {
-    return 1;
+    return 5000;
   }
 
   // eslint-disable-next-line no-unused-vars
-  async shouldBundle(bundle) {
+  async shouldFetchBundle(challenge) {
     throw new Error('Should be implemented');
   }
 
-  async bundlingSucceeded() {
+  // eslint-disable-next-line no-unused-vars
+  async shouldResolveChallenge(bundle) {
     throw new Error('Should be implemented');
   }
+
+  // eslint-disable-next-line no-unused-vars
+  async afterChallengeResolution(bundle) { }
 }

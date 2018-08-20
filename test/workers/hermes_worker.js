@@ -11,7 +11,9 @@ import chai from 'chai';
 import sinon from 'sinon';
 import HermesWorker from '../../src/workers/hermes_worker';
 import HermesUploadStrategy from '../../src/workers/hermes_strategies/regular_interval_upload_strategy';
+import sinonChai from 'sinon-chai';
 
+chai.use(sinonChai);
 const {expect} = chai;
 
 describe('Hermes Worker', () => {
