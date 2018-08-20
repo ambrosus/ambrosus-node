@@ -10,6 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import cors from 'cors';
 import express from 'express';
 import promClient from 'prom-client';
+import Raven from 'raven';
 import cachePreventionMiddleware from './middlewares/cache_prevention_middleware';
 import errorHandling from './middlewares/error_handling';
 import prometheusMiddleware from './middlewares/prometheus_middleware.js';
@@ -34,6 +35,9 @@ export default class Server {
     this.collectMetricsInterval = promClient.collectDefaultMetrics({timeout: 10000});
     const app = express();
 
+    Raven.config(this.config.sentryDSN).install();
+    app.use(Raven.requestHandler());
+
     app.use(prometheusMiddleware(promClient));
     app.use(cors({
       origin : true,
@@ -50,6 +54,8 @@ export default class Server {
     app.use('/bundle', bundlesRouter(this.modelEngine));
     app.get('/health', asyncMiddleware(healthCheckHandler(this.modelEngine.mongoClient, this.modelEngine.proofRepository.web3)));
     app.get('/metrics', prometheusMetricsHandler(promClient));
+
+    app.use(Raven.errorHandler());
 
     // Should always be last
     app.use(errorHandling(this.logger));
