@@ -33,7 +33,7 @@ export class FindEventQueryObject extends FindQueryObject {
     this.queryBuilder.add({'content.data.geoJson': {$near: {
       $geometry: {
         type: 'Point',
-        coordinates: [value.locationLongitude , value.locationLatitude]
+        coordinates: [value.locationLongitude, value.locationLatitude]
       },
       $maxDistance: value.locationMaxDistance
     }}});

@@ -86,7 +86,7 @@ describe('Find Event Query Object', () => {
         {'content.data.geoJson': {$near: {
           $geometry: {
             type: 'Point',
-            coordinates: [10 , 20]
+            coordinates: [10, 20]
           },
           $maxDistance: 30
         }}},
