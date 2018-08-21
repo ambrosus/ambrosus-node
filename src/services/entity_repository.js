@@ -220,7 +220,7 @@ export default class EntityRepository {
   async storeBundleShelteringExpirationDate(bundleId, expirationDate) {
     await this.db.collection('bundles').updateOne({bundleId}, {
       $set: {
-        'metadata.holdUntil': expirationDate
+        'repository.holdUntil': expirationDate
       }
     });
   }
@@ -229,8 +229,8 @@ export default class EntityRepository {
     const now = getTimestamp();
     return this.db.collection('bundles').find({
       $or: [
-        {'metadata.holdUntil': {$not: {$type: 'int'}}},
-        {'metadata.holdUntil': {$lt: now}}
+        {'repository.holdUntil': {$not: {$type: 'int'}}},
+        {'repository.holdUntil': {$lt: now}}
       ]
     }, {projection: {bundleId: 1}})
       .map(({bundleId}) => bundleId)

@@ -216,10 +216,10 @@ export default class DataModelEngine {
   }
 
   async cleanupBundles() {
-    const allBundleIds = await this.entityRepository.getExpiredBundleIds();
-    const isSheltering = await Promise.all(allBundleIds.map((bundleId) => this.uploadRepository.isSheltering(bundleId)));
-    const toBeRemoved = allBundleIds.filter((bundleId, ind) => !isSheltering[ind]);
-    const toBeUpdated = allBundleIds.filter((bundleId, ind) => isSheltering[ind]);
+    const expiredBundleIds = await this.entityRepository.getExpiredBundleIds();
+    const isSheltering = await Promise.all(expiredBundleIds.map((bundleId) => this.uploadRepository.isSheltering(bundleId)));
+    const toBeRemoved = expiredBundleIds.filter((bundleId, ind) => !isSheltering[ind]);
+    const toBeUpdated = expiredBundleIds.filter((bundleId, ind) => isSheltering[ind]);
     await this.entityRepository.deleteBundles(toBeRemoved);
     await Promise.all(toBeUpdated.map((bundleId) => this.updateShelteringExpirationDate(bundleId)));
     return toBeRemoved;

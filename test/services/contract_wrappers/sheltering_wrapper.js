@@ -33,14 +33,13 @@ describe('Sheltering Wrapper', () => {
       contractManagerMock = {
         shelteringContract: async () => ({
           methods: {
-            isSheltering: isShelteringStub
+            isSheltering: isShelteringStub.returns({
+              call: isShelteringCallStub.resolves(true)
+            })
           }
         }),
         defaultAddress: () => defaultAddress
       };
-      isShelteringStub.returns({
-        call: isShelteringCallStub.resolves(true)
-      });
       shelteringWrapper = new ShelteringWrapper(contractManagerMock);
     });
 
@@ -64,14 +63,13 @@ describe('Sheltering Wrapper', () => {
       contractManagerMock = {
         shelteringContract: async () => ({
           methods: {
-            getShelteringExpirationDate: shelteringExpirationDateStub
+            getShelteringExpirationDate: shelteringExpirationDateStub.returns({
+              call: shelteringExpirationDateCallStub.resolves(expirationDate)
+            })
           }
         }),
         defaultAddress: () => defaultAddress
       };
-      shelteringExpirationDateStub.returns({
-        call: shelteringExpirationDateCallStub.resolves(expirationDate)
-      });
       shelteringWrapper = new ShelteringWrapper(contractManagerMock);
     });
 

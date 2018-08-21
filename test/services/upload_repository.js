@@ -17,7 +17,7 @@ import {ValidationError} from '../../src/errors/errors';
 chai.use(sinonChai);
 const {expect} = chai;
 
-describe('Sheltering repository', () => {
+describe('Upload repository', () => {
   let feesWrapperMock;
   let uploadsWrapperMock;
   let shelteringWrapperMock;

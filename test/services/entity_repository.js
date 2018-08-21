@@ -319,10 +319,10 @@ describe('Entity Repository', () => {
         await cleanDatabase(db);
       });
 
-      it('updateShelteringExpirationDate sets holdUntil field in metadata', async () => {
+      it('storeBundleShelteringExpirationDate sets holdUntil field in metadata', async () => {
         await storage.storeBundleShelteringExpirationDate(bundleId, expirationDate);
-        const bundle = await storage.getBundle(bundleId);
-        expect(bundle.metadata.holdUntil).to.equal(expirationDate);
+        const bundle = await storage.db.collection('bundles').findOne({bundleId});
+        expect(bundle.repository.holdUntil).to.equal(expirationDate);
       });
     });
 
@@ -335,9 +335,9 @@ describe('Entity Repository', () => {
         clock = sinon.useFakeTimers(now);
 
         for (let ind = 0; ind < 10; ind++) {
-          await storage.storeBundle(put({...createBundle(), metadata: {holdUntil: getTimestamp() + ind - 5}}, 'bundleId', `bundle${ind}`));
+          await storage.storeBundle(put({...createBundle(), repository: {holdUntil: getTimestamp() + ind - 5}}, 'bundleId', `bundle${ind}`));
         }
-        await storage.storeBundle(put({...createBundle(), metadata: {holdUntil: null}}, 'bundleId', `noHoldUntil`));
+        await storage.storeBundle(put({...createBundle(), repository: {holdUntil: null}}, 'bundleId', `noHoldUntil`));
         await storage.storeBundle(put({...createBundle()}, 'bundleId', `noMetadata`));
         expiredBundles = await storage.getExpiredBundleIds();
       });
