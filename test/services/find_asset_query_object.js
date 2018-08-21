@@ -80,7 +80,7 @@ describe('Find Asset Query Object', () => {
     const found = await findAssetQueryObject.execute();
     expect(found.results).have.lengthOf(2);
     expect(found.resultCount).to.equal(2);
-    expect(found.results).to.deep.equal([assets[2],assets[0]]);
+    expect(found.results).to.deep.equal([assets[2], assets[0]]);
     found.results.forEach((element) => expect(element.content.idData.createdBy).to.equal('0x123'));
   });
 
