@@ -11,24 +11,19 @@ import {ValidationError, AuthenticationError} from '../errors/errors';
 import {getTimestamp} from '../utils/time_utils';
 
 const accessTokenMiddleware = (tokenAuthenticator, required = true) => ((req, res, next) => {
+  if (!required) {
+    next();
+    return;
+  }
+
   const authorizationHeader = req.headers.authorization;
   if (!authorizationHeader) {
-    if (required) {
-      throw new AuthenticationError('Authorization AMB_TOKEN header not found');
-    } else {
-      next();
-      return;
-    }
+    throw new AuthenticationError('Authorization AMB_TOKEN header not found');
   }
 
   const [type, token] = authorizationHeader.split(' ');
   if (type !== 'AMB_TOKEN') {
-    if (required) {
-      throw new ValidationError(`Expected Authorization type AMB_TOKEN`);
-    } else {
-      next();
-      return;
-    }
+    throw new ValidationError(`Expected Authorization type AMB_TOKEN`);
   }
 
   const {idData} = tokenAuthenticator.decodeToken(token, getTimestamp());
