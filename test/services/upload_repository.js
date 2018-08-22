@@ -62,7 +62,7 @@ describe('Upload repository', () => {
       await expect(uploadRepository.verifyBundle(downloadedBundle)).to.be.fulfilled;
     });
 
-    it('throws if downloaded bundle is to big', async () => {
+    it('throws if downloaded bundle is too big', async () => {
       mockConfigWrapper.bundleSizeLimit.resolves(2);
       await expect(uploadRepository.verifyBundle(downloadedBundle)).to.be.rejectedWith(ValidationError, 'Bundle size surpasses the limit');
     });

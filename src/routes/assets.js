@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import express from 'express';
 import asyncMiddleware from '../middlewares/async_middleware';
-import bodyParser from 'body-parser';
+import bodyParser from '../middlewares/body_parser';
 import presignerMiddleware from '../middlewares/presigner_middleware';
 import prehasherMiddleware from '../middlewares/prehasher_middleware';
 
@@ -70,7 +70,7 @@ const assetRouter = (tokenAuthenticator, identityManager, modelEngine, config) =
 
   router.post('/',
     ensureJsonMime,
-    bodyParser.json(),
+    bodyParser(config),
     ambAuthorizationHeaderMiddleware(config),
     presignerMiddleware(identityManager),
     prehasherMiddleware(identityManager, 'content', 'assetId'),
@@ -83,7 +83,7 @@ const assetRouter = (tokenAuthenticator, identityManager, modelEngine, config) =
 
   router.post('/:assetId/events',
     ensureJsonMime,
-    bodyParser.json(),
+    bodyParser(config),
     ambAuthorizationHeaderMiddleware(config),
     prehasherMiddleware(identityManager, 'content.data', 'content.idData.dataHash'),
     presignerMiddleware(identityManager),
