@@ -13,7 +13,17 @@ module.exports = Object.freeze({
   web3Rpc: process.env.WEB3_RPC,
   nodePrivateKey: process.env.WEB3_NODEPRIVATEKEY,
 
-  mongoUri: process.env.MONGODB_URI,
+  // Required, one or more hosts delimited with comma, e.g
+  // 'mongo1:27107,mongo2:27017'
+  mongoHosts: process.env.MONGO_HOSTS,
+  mongoDBName: process.env.MONGO_DB_NAME,
+
+  // Optionally connect to a replica set
+  mongoReplicaSet: process.env.MONGO_REPLICA_SET,
+
+  // Optionally enable authentication
+  mongoUser: process.env.MONGO_USER,
+  mongoPassword: process.env.MONGO_PASSWORD,
 
   headContractAddress: process.env.HEAD_CONTRACT_ADDRESS,
   challengeResolutionStrategy: process.env.CHALLENGE_RESOLUTION_STRATEGY || 'resolve_all_strategy',
