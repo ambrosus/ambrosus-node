@@ -1163,7 +1163,7 @@ describe('Data Model Engine', () => {
       expect(mockEntityRepository.storeBundle).to.be.not.called;
     });
 
-    it('does not store bundle if on-chain verification failed', async () => {
+    it('does not store bundle if verification against chain failed', async () => {
       mockUploadRepository.verifyBundle.rejects();
       await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejected;
       expect(mockEntityRepository.storeBundle).to.be.not.called;
