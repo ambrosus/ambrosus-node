@@ -204,7 +204,8 @@ export default class DataModelEngine {
     if (!bundle) {
       throw new Error('Could not fetch the bundle from the shelterer');
     }
-    await this.entityBuilder.validateBundle(bundle);
+    this.entityBuilder.validateBundle(bundle);
+    await this.uploadRepository.verifyBundle(bundle);
     await this.entityRepository.storeBundle(bundle);
     return bundle;
   }

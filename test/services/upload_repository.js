@@ -11,6 +11,8 @@ import chai from 'chai';
 import sinon from 'sinon';
 import UploadRepository from '../../src/services/upload_repository';
 import sinonChai from 'sinon-chai';
+import {createBundle} from '../fixtures/assets_events';
+import {ValidationError} from '../../src/errors/errors';
 
 chai.use(sinonChai);
 const {expect} = chai;
@@ -32,13 +34,37 @@ describe('Upload repository', () => {
       feesWrapperMock = {
         feeForUpload: sinon.stub().resolves(fee)
       };
-      uploadRepository = new UploadRepository(uploadsWrapperMock, feesWrapperMock);
+      uploadRepository = new UploadRepository(uploadsWrapperMock, feesWrapperMock, {});
     });
 
     it('calls wrappers methods with correct arguments', async () => {
       await uploadRepository.uploadBundle(bundleId, storagePeriods);
       expect(feesWrapperMock.feeForUpload).to.be.calledOnceWith(storagePeriods);
       expect(uploadsWrapperMock.registerBundle).to.be.calledOnceWith(bundleId, fee, storagePeriods);
+    });
+  });
+
+  describe('Verifying a bundle', async () => {
+    const downloadedBundle = createBundle({}, ['first', 'second', 'third']);
+    let mockConfigWrapper;
+    let uploadRepository;
+
+    beforeEach(() => {
+      mockConfigWrapper = {
+        bundleSizeLimit: sinon.stub()
+      };
+
+      uploadRepository = new UploadRepository({}, {}, mockConfigWrapper);
+    });
+
+    it('passes for proper bundle', async () => {
+      mockConfigWrapper.bundleSizeLimit.resolves(5);
+      await expect(uploadRepository.verifyBundle(downloadedBundle)).to.be.fulfilled;
+    });
+
+    it('throws if downloaded bundle is to big', async () => {
+      mockConfigWrapper.bundleSizeLimit.resolves(2);
+      await expect(uploadRepository.verifyBundle(downloadedBundle)).to.be.rejectedWith(ValidationError, 'Bundle size surpasses the limit');
     });
   });
 });
