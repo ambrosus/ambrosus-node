@@ -1110,6 +1110,7 @@ describe('Data Model Engine', () => {
     let mockEntityDownloader;
     let mockEntityBuilder;
     let mockRolesRepository;
+    let mockUploadRepository;
     let modelEngine;
 
     beforeEach(() => {
@@ -1119,6 +1120,10 @@ describe('Data Model Engine', () => {
 
       mockRolesRepository = {
         nodeUrl: sinon.stub().resolves(nodeUrl)
+      };
+
+      mockUploadRepository = {
+        verifyBundle: sinon.stub().resolves()
       };
 
       mockEntityDownloader = {
@@ -1133,7 +1138,8 @@ describe('Data Model Engine', () => {
         entityRepository: mockEntityRepository,
         entityDownloader: mockEntityDownloader,
         entityBuilder: mockEntityBuilder,
-        rolesRepository: mockRolesRepository
+        rolesRepository: mockRolesRepository,
+        uploadRepository: mockUploadRepository
       });
     });
 
@@ -1152,7 +1158,13 @@ describe('Data Model Engine', () => {
     });
 
     it('does not store bundle if validation failed', async () => {
-      mockEntityBuilder.validateBundle.rejects();
+      mockEntityBuilder.validateBundle.throws();
+      await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejected;
+      expect(mockEntityRepository.storeBundle).to.be.not.called;
+    });
+
+    it('does not store bundle if verification against chain failed', async () => {
+      mockUploadRepository.verifyBundle.rejects();
       await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejected;
       expect(mockEntityRepository.storeBundle).to.be.not.called;
     });
