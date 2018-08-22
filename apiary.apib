@@ -12,6 +12,24 @@ Each state-modifying call needs to have the `content.idData.createdBy` field wit
 * A body field `content.signature`. It is generated with ethereum sign function from the serialized `content.idData` object. Serialisation algorithm will be described in separate section.
 * A http authorization header `AMB ...`: You can supply your secret to API and gateway will calculate the signature for you. __Warning__: This is only allowed in development and testing environment. We strongly recommend against using it in a production environment.
 
+### Rate limiting
+The API is rate limited with 120 requests per minute. That means a client that
+is rate limited "replenishes" 2 requests per second according to the token
+bucket algorithm. A client is allowed to burst up to 60 requests at once.
+
+For any client that uses batch uploads we recommend implementing a throttling
+system where there is incremental back-off as soon as the rate limits are
+reached. For example, if the client sees rate limited requests it may back-off
+by a random number of seconds before trying again. If the rate limits are hit
+once again after backing off it is recommended to wait for a longer time
+interval. Here is a longer post on back-off strategies:
+https://developerblog.intercom.com/be-prepared-3-ways-to-handle-rate-limits-baeb9215c1bc
+
+The status code for a rate limited request is 429 Too Many Requests.
+
+For more details on the rate limiting algorithm, see:
+https://medium.freecodecamp.org/nginx-rate-limiting-in-a-nutshell-128fe9e0126c
+
 ### Immutability
 
 __Note:__ All data is immutable, therefore, you will not find update or delete calls.
