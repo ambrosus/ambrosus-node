@@ -15,6 +15,7 @@ import ConfigWrapper from './contract_wrappers/config_wrapper';
 import UploadsWrapper from './contract_wrappers/uploads_wrapper';
 import FeesWrapper from './contract_wrappers/fees_wrapper';
 import ChallengesWrapper from './contract_wrappers/challenges_wrapper';
+import ShelteringWrapper from './contract_wrappers/sheltering_wrapper';
 
 export default class ContractManager {
   constructor(web3, headContractAddress) {
@@ -29,6 +30,7 @@ export default class ContractManager {
     this.uploadsWrapper = new UploadsWrapper(this);
     this.feesWrapper = new FeesWrapper(this);
     this.challengesWrapper = new ChallengesWrapper(this);
+    this.shelteringWrapper = new ShelteringWrapper(this);
   }
 
   defaultAddress() {
@@ -48,6 +50,7 @@ export default class ContractManager {
       'challenges',
       'payouts',
       'shelteringTransfers',
+      'sheltering',
       'uploads',
       'config'
     ];
@@ -92,6 +95,10 @@ export default class ContractManager {
 
   async shelteringTransfersContract() {
     return this.contractByKey('shelteringTransfers');
+  }
+
+  async shelteringContract() {
+    return this.contractByKey('sheltering');
   }
 
   async uploadsContract() {

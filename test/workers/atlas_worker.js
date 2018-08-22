@@ -20,7 +20,7 @@ const {expect} = chai;
 
 describe('Atlas Worker', () => {
   const defaultAccount = '0x123';
-  const fetchedBundle = 'fetchedBundle';
+  const fetchedBundle = {bundleId: 'fetchedBundle'};
   const workerInterval = 10;
   let atlasWorker;
   let challengesRepositoryMock;
@@ -42,7 +42,9 @@ describe('Atlas Worker', () => {
       resolveChallenge: sinon.stub()
     };
     dataModelEngineMock = {
-      downloadBundle: sinon.stub().resolves(fetchedBundle)
+      downloadBundle: sinon.stub().resolves(fetchedBundle),
+      cleanupBundles: sinon.spy(),
+      updateShelteringExpirationDate: sinon.stub()
     };
     strategyMock = new AtlasChallengeParticipationStrategy();
     sinon.stub(strategyMock, 'workerInterval').get(() => workerInterval);
@@ -72,9 +74,10 @@ describe('Atlas Worker', () => {
       expect(dataModelEngineMock.downloadBundle).to.be.calledWith(bundleId, sheltererId);
     });
 
-    it('tryToResolve resolves a challenge', async () => {
+    it('tryToResolve resolves a challenge and sets expiration date', async () => {
       await atlasWorker.tryToResolve(fetchedBundle, challenge);
       expect(challengesRepositoryMock.resolveChallenge).to.be.calledWith(challengeId);
+      expect(dataModelEngineMock.updateShelteringExpirationDate).to.be.calledWith(fetchedBundle.bundleId);
     });
 
     it('periodicWork calls strategy methods for each challenge', async () => {
@@ -86,6 +89,7 @@ describe('Atlas Worker', () => {
       expect(strategyMock.shouldFetchBundle).to.callCount(4);
       expect(strategyMock.shouldResolveChallenge).to.callCount(4);
       expect(strategyMock.afterChallengeResolution).to.callCount(4);
+      expect(dataModelEngineMock.cleanupBundles).to.be.calledOnce;
     });
 
     it('periodic work does not download if shouldFetchBundle is false', async () => {

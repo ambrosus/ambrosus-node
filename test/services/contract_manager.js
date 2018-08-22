@@ -81,6 +81,10 @@ describe('Contract Manager', () => {
       expect((await contractManager.shelteringTransfersContract()).options.address).to.equal(deployedMockContracts.shelteringTransfers);
     });
 
+    it('sheltering', async () => {
+      expect((await contractManager.shelteringContract()).options.address).to.equal(deployedMockContracts.sheltering);
+    });
+
     it('uploads', async () => {
       expect((await contractManager.uploadsContract()).options.address).to.equal(deployedMockContracts.uploads);
     });

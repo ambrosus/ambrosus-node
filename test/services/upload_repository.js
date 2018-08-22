@@ -20,6 +20,7 @@ const {expect} = chai;
 describe('Upload repository', () => {
   let feesWrapperMock;
   let uploadsWrapperMock;
+  let shelteringWrapperMock;
   let uploadRepository;
 
   describe('Upload bundle', async () => {
@@ -34,13 +35,46 @@ describe('Upload repository', () => {
       feesWrapperMock = {
         feeForUpload: sinon.stub().resolves(fee)
       };
-      uploadRepository = new UploadRepository(uploadsWrapperMock, feesWrapperMock, {});
+      uploadRepository = new UploadRepository(uploadsWrapperMock, {}, feesWrapperMock);
     });
 
     it('calls wrappers methods with correct arguments', async () => {
       await uploadRepository.uploadBundle(bundleId, storagePeriods);
       expect(feesWrapperMock.feeForUpload).to.be.calledOnceWith(storagePeriods);
       expect(uploadsWrapperMock.registerBundle).to.be.calledOnceWith(bundleId, fee, storagePeriods);
+    });
+  });
+
+  describe('isSheltering', async () => {
+    const bundleId = '0xc0ffee';
+
+    beforeEach(async () => {
+      shelteringWrapperMock = {
+        isSheltering: sinon.stub().resolves(true)
+      };
+      uploadRepository = new UploadRepository({}, shelteringWrapperMock);
+    });
+
+    it('calls wrappers methods with correct arguments', async () => {
+      expect(await uploadRepository.isSheltering(bundleId)).to.equal(true);
+      expect(shelteringWrapperMock.isSheltering).to.be.calledOnceWith(bundleId);
+    });
+  });
+
+  describe('expirationDate', async () => {
+    const bundleId = '0xc0ffee';
+    const exoirationDate = 123;
+
+    beforeEach(async () => {
+      shelteringWrapperMock = {
+        shelteringExpirationDate: sinon.stub().resolves(123)
+      };
+      uploadRepository = new UploadRepository({}, shelteringWrapperMock);
+    });
+
+    it('calls wrappers methods with correct arguments', async () => {
+      expect(await uploadRepository.expirationDate(bundleId)).to.equal(exoirationDate);
+      expect(shelteringWrapperMock.shelteringExpirationDate).to.be.calledOnceWith(bundleId);
     });
   });
 
@@ -54,7 +88,7 @@ describe('Upload repository', () => {
         bundleSizeLimit: sinon.stub()
       };
 
-      uploadRepository = new UploadRepository({}, {}, mockConfigWrapper);
+      uploadRepository = new UploadRepository({}, {}, {}, mockConfigWrapper);
     });
 
     it('passes for proper bundle', async () => {

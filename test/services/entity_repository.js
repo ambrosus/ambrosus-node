@@ -20,6 +20,7 @@ import {adminAccountWithSecret} from '../fixtures/account';
 import config from '../../config/config';
 
 import EntityRepository from '../../src/services/entity_repository';
+import {getTimestamp} from '../../src/utils/time_utils';
 
 const {expect} = chai;
 chai.use(chaiAsPromised);
@@ -107,7 +108,7 @@ describe('Entity Repository', () => {
       });
       await storage.storeBundle(exampleBundle);
       await storage.storeBundleProofMetadata(exampleBundleId, 10, txHash);
-      await expect(storage.getBundle(exampleBundleId)).to.eventually.be.deep.equal(exampleBundleWithMetadata);
+      await expect(storage.getBundle(exampleBundleId)).to.eventually.deep.equal(exampleBundleWithMetadata);
     });
 
     it('returns null for non-existing bundle', async () => {
@@ -302,6 +303,78 @@ describe('Entity Repository', () => {
 
     it('should return to state from before bundling initialisation', async () => {
       expect(await storage.fetchEntitiesForBundling(bundleStubId, bundleSizeLimit)).to.be.deep.equal(ret);
+    });
+  });
+
+  describe('Bundle cleanup process', () => {
+    describe('Set bundle expiration date', () => {
+      const bundleId = 'bundle';
+      const expirationDate = 10;
+
+      beforeEach(async () => {
+        await storage.storeBundle(put(createBundle(), 'bundleId', bundleId));
+      });
+
+      afterEach(async () => {
+        await cleanDatabase(db);
+      });
+
+      it('storeBundleShelteringExpirationDate sets holdUntil field in repository dict', async () => {
+        await storage.storeBundleShelteringExpirationDate(bundleId, expirationDate);
+        const bundle = await storage.db.collection('bundles').findOne({bundleId});
+        expect(bundle.repository.holdUntil).to.equal(expirationDate);
+      });
+    });
+
+    describe('Get expired bundles ', () => {
+      const now = 10;
+      let clock;
+      let expiredBundles;
+
+      before(async () => {
+        clock = sinon.useFakeTimers(now);
+
+        for (let ind = 0; ind < 10; ind++) {
+          await storage.storeBundle(put({...createBundle(), repository: {holdUntil: getTimestamp() + ind - 5}}, 'bundleId', `bundle${ind}`));
+        }
+        await storage.storeBundle(put({...createBundle(), repository: {holdUntil: null}}, 'bundleId', `noHoldUntil`));
+        await storage.storeBundle(put({...createBundle()}, 'bundleId', `noMetadata`));
+        expiredBundles = await storage.getExpiredBundleIds();
+      });
+
+      it('getExpiredBundleIds returns all bundles with holdUntil < now', async () => {
+        expect(expiredBundles).to.include.members(['bundle0', 'bundle1', 'bundle2', 'bundle3', 'bundle4']);
+      });
+
+      it('getExpiredBundleIds returns bundles with no holdUntil set', async () => {
+        expect(expiredBundles).to.include.members(['noHoldUntil', 'noMetadata']);
+      });
+
+
+      after(async () => {
+        await cleanDatabase(db);
+        clock.restore();
+      });
+    });
+
+    describe('Deleting bundles', () => {
+      const bundleIds = ['bundle1', 'bundle2', 'bundle3'];
+
+      beforeEach(async () => {
+        await storage.storeBundle(put(createBundle(), 'bundleId', bundleIds[0]));
+        await storage.storeBundle(put(createBundle(), 'bundleId', bundleIds[1]));
+        await storage.storeBundle(put(createBundle(), 'bundleId', bundleIds[2]));
+      });
+
+      afterEach(async () => {
+        await cleanDatabase(db);
+      });
+
+      it('deletes all bundles with given ids from db', async () => {
+        await storage.deleteBundles(['bundle1', 'bundle3']);
+        expect(await storage.getBundle('bundle1')).to.be.null;
+        expect(await storage.getBundle('bundle3')).to.be.null;
+      });
     });
   });
 });
