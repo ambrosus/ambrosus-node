@@ -11,15 +11,24 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {ValidationError} from '../errors/errors';
 
 export default class UploadRepository {
-  constructor(uploadsWrapper, feesWrapper, configWrapper) {
+  constructor(uploadsWrapper, shelteringWrapper, feesWrapper, configWrapper) {
     this.uploadsWrapper = uploadsWrapper;
     this.feesWrapper = feesWrapper;
+    this.shelteringWrapper = shelteringWrapper;
     this.configWrapper = configWrapper;
   }
 
   async uploadBundle(bundleId, storagePeriods) {
     const fee = await this.feesWrapper.feeForUpload(storagePeriods);
     return this.uploadsWrapper.registerBundle(bundleId, fee, storagePeriods);
+  }
+
+  async isSheltering(bundleId) {
+    return this.shelteringWrapper.isSheltering(bundleId);
+  }
+
+  async expirationDate(bundleId) {
+    return this.shelteringWrapper.shelteringExpirationDate(bundleId);
   }
 
   async verifyBundle(bundle) {

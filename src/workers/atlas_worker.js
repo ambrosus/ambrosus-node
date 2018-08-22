@@ -24,6 +24,7 @@ export default class AtlasWorker extends PeriodicWorker {
 
   async tryToResolve(bundle, {challengeId}) {
     await this.challengesRepository.resolveChallenge(challengeId);
+    await this.dataModelEngine.updateShelteringExpirationDate(bundle.bundleId);
     this.logger.info({message: '🍾 Yahoo! The bundle is ours.', bundleId: bundle.bundleId});
   }
 
@@ -54,5 +55,6 @@ export default class AtlasWorker extends PeriodicWorker {
         });
       }
     }
+    await this.dataModelEngine.cleanupBundles();
   }
 }
