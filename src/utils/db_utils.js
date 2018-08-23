@@ -8,13 +8,32 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {MongoClient} from 'mongodb';
-import url from 'url';
+import querystring from 'querystring';
+
+const createMongoUrl = (config) => {
+  const query = {};
+  let credentials = '';
+
+  if (config.mongoReplicaSet) {
+    query.replicaSet = config.mongoReplicaSet;
+  }
+
+  if (config.mongoUser) {
+    const user = encodeURIComponent(config.mongoUser);
+    const password = encodeURIComponent(config.mongoPassword);
+    credentials = `${user}:${password}@`;
+
+    query.authSource = 'admin';
+  }
+
+  const queryStr = `?${querystring.stringify(query)}`;
+  return `mongodb://${credentials}${config.mongoHosts}/${queryStr}`;
+};
 
 const connectToMongo = async (config) => {
-  const uri = config.mongoUri;
-  const database = url.parse(uri).pathname.substr(1);
-  const client = await MongoClient.connect(uri);
-  const db = await client.db(database);
+  const url = createMongoUrl(config);
+  const client = await MongoClient.connect(url);
+  const db = await client.db(config.mongoDBName);
   return {client, db};
 };
 
@@ -25,4 +44,4 @@ const cleanDatabase = async (db) => {
   }
 };
 
-export {connectToMongo, cleanDatabase};
+export {connectToMongo, cleanDatabase, createMongoUrl};
