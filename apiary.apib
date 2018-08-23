@@ -113,9 +113,16 @@ An account represents an actor in the supply chain. This can be a person, a comp
 
 It consists of a pair - a public identifer `address` (compatible with ethereum address) and a `secret` (compatible with ethereum private key). Additionally an account has a list of permissions, which specify what actions user can perform and an access levels, which specifies what data is user able to view.
 
+Account can hold any number of following permissions:
+
+* create_entity - allows account to create assets and events
+* register_account - allows account to add new accounts and manage already existing ones
+
 ### /accounts
 
 #### Add account [POST]
+
+__Warning__ Message sender needs to have "register_account" permission
 
 + Request (application/json)
 
@@ -205,7 +212,6 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 #### Find accounts [GET]
 
 Finds accounts satisfying provided criteria.
-
 
 + Parameters
 
@@ -355,6 +361,8 @@ Finds accounts satisfying provided criteria.
 
 #### Modify account [PUT]
 
+__Warning__ Message sender needs to have "register_account" permission
+
 + Parameters
     + accountAddress (string) - An address of the account
 
@@ -452,6 +460,8 @@ Assets are identified by an `assetId` field which is a sha3 hash calculated from
 #### Create an asset [POST]
 
 Places (after intensive validations) the provided asset object into the system.
+
+__Warning__ Message sender needs to have "create_entity" permission
 
 + Request (application/json)
 
@@ -702,6 +712,8 @@ Following event types are predefined:
 #### Create an event [POST]
 
 Places (after intensive validations) the provided event object into the system.
+
+__Warning__ Message sender needs to have "create_entity" permission
 
 + Parameters
 
