@@ -103,14 +103,6 @@ Finally, start the server:
 yarn start
 ```
 
-## Updating contracts
-
-After updating the contents of the contracts directory, you should strip away unnecessary fields from the contract files. 
-
-```sh
-yarn strip_contracts
-```
-
 ## Postman collections
 
 Additionally we provide the postman collection to make it easier to test REST queries. To use them you need to run the server, create the admin account and:
