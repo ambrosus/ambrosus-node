@@ -22,15 +22,10 @@ export class Logger {
 export class WinstonConsoleLogger extends Logger {
   constructor() {
     super();
-    const logFormat = format.printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`);
     this.logger = createLogger({
       format: format.combine(
-        format.colorize(),
-        format.timestamp({
-          format: 'YYYY-MM-DD HH:mm:ss ZZ'
-        }),
-        format.align(),
-        logFormat,
+        format.timestamp(),
+        format.json(),
       ),
       transports: [
         new transports.Console()
@@ -42,7 +37,32 @@ export class WinstonConsoleLogger extends Logger {
     this.logger.info(message);
   }
 
-  error(message) {
-    this.logger.error(message);
+  error(error) {
+    this.logger.error(error.stack || error);
+  }
+}
+
+export class WinstonExpressLogger extends Logger {
+  constructor() {
+    super();
+    const logFormat = format.printf((info) => info.message);
+    this.logger = createLogger({
+      format: logFormat,
+      transports: [
+        new transports.Console()
+      ]
+    });
+  }
+
+  info(message) {
+    this.logger.info(message);
+  }
+
+  error(err) {
+    this.logger.error(JSON.stringify({
+      type: 'error',
+      message: err.message,
+      stackTrace: err.stack
+    }, null, 4));
   }
 }

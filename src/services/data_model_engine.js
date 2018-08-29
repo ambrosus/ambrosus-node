@@ -12,19 +12,21 @@ import {getTimestamp} from '../utils/time_utils';
 import {pick, put} from '../utils/dict_utils';
 
 export default class DataModelEngine {
-  constructor(identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, proofRepository, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient) {
+  constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, contractManager, uploadRepository, rolesRepository}) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
     this.entityRepository = entityRepository;
     this.entityDownloader = entityDownloader;
-    this.proofRepository = proofRepository;
     this.accountRepository = accountRepository;
     this.findEventQueryObjectFactory = findEventQueryObjectFactory;
     this.findAccountQueryObjectFactory = findAccountQueryObjectFactory;
     this.findAssetQueryObjectFactory = findAssetQueryObjectFactory;
     this.accountAccessDefinitions = accountAccessDefinitions;
     this.mongoClient = mongoClient;
+    this.contractManager = contractManager;
+    this.uploadRepository = uploadRepository;
+    this.rolesRepository = rolesRepository;
   }
 
   async addAdminAccount(address = this.identityManager.nodeAddress()) {
@@ -171,35 +173,55 @@ export default class DataModelEngine {
     return bundle;
   }
 
-  async finaliseBundle(bundleStubId, bundleSizeLimit) {
-    const notBundled = await this.entityRepository.beginBundle(bundleStubId);
+  async initialiseBundling(bundleStubId, bundleSizeLimit) {
+    const notBundled = await this.entityRepository.fetchEntitiesForBundling(bundleStubId, bundleSizeLimit);
 
     const nodeSecret = await this.identityManager.nodePrivateKey();
     const newBundle = this.entityBuilder.assembleBundle(notBundled.assets, notBundled.events, getTimestamp(), nodeSecret);
 
-    if (newBundle.content.entries.length === 0) {
-      return null;
-    }
+    return newBundle;
+  }
 
+  async finaliseBundling(newBundle, bundleStubId, storagePeriods) {
     await this.entityRepository.storeBundle(newBundle);
 
-    await this.entityRepository.endBundle(bundleStubId, newBundle.bundleId, bundleSizeLimit);
+    await this.entityRepository.markEntitiesAsBundled(bundleStubId, newBundle.bundleId);
 
-    const {blockNumber, transactionHash} = await this.proofRepository.uploadProof(newBundle.bundleId);
+    const {blockNumber, transactionHash} = await this.uploadRepository.uploadBundle(newBundle.bundleId, storagePeriods);
 
     await this.entityRepository.storeBundleProofMetadata(newBundle.bundleId, blockNumber, transactionHash);
 
     return newBundle;
   }
 
-  async downloadBundle(bundleId, vendorId) {
-    const processedBundle = await this.entityRepository.getBundle(bundleId);
-    if (processedBundle) {
-      return processedBundle;
+  async cancelBundling(bundleStubId) {
+    await this.entityRepository.discardBundling(bundleStubId);
+  }
+
+  async downloadBundle(bundleId, sheltererId) {
+    const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
+    const bundle = await this.entityDownloader.downloadBundle(nodeUrl, bundleId);
+    if (!bundle) {
+      throw new Error('Could not fetch the bundle from the shelterer');
     }
-    const vendorUrl = await this.proofRepository.getVendorUrl(vendorId);
-    const bundle = await this.entityDownloader.downloadBundle(vendorUrl, bundleId);
+    this.entityBuilder.validateBundle(bundle);
+    await this.uploadRepository.verifyBundle(bundle);
     await this.entityRepository.storeBundle(bundle);
     return bundle;
+  }
+
+  async updateShelteringExpirationDate(bundleId) {
+    const expirationDate = await this.uploadRepository.expirationDate(bundleId);
+    await this.entityRepository.storeBundleShelteringExpirationDate(bundleId, expirationDate);
+  }
+
+  async cleanupBundles() {
+    const expiredBundleIds = await this.entityRepository.getExpiredBundleIds();
+    const isSheltering = await Promise.all(expiredBundleIds.map((bundleId) => this.uploadRepository.isSheltering(bundleId)));
+    const toBeRemoved = expiredBundleIds.filter((bundleId, ind) => !isSheltering[ind]);
+    const toBeUpdated = expiredBundleIds.filter((bundleId, ind) => isSheltering[ind]);
+    await this.entityRepository.deleteBundles(toBeRemoved);
+    await Promise.all(toBeUpdated.map((bundleId) => this.updateShelteringExpirationDate(bundleId)));
+    return toBeRemoved;
   }
 }

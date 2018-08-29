@@ -7,22 +7,18 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import Application from './application';
-import {WinstonConsoleLogger} from './utils/loggers';
-import config from '../config/config';
-
-async function start(logger) {
-  const application = new Application(logger);
-  await application.build(config);
-  await application.ensureAdminAccountExist();
-  await application.startServer();
-  await application.startBackground();
-}
+import {WinstonConsoleLogger} from '../utils/loggers';
+import {createWeb3} from '../../src/utils/web3_tools';
+import config from '../../config/config';
+import deployAll from '../utils/deployment';
 
 const logger = new WinstonConsoleLogger();
 
-start(logger)
-  .catch((err) => {
-    logger.error(`${err}`);
+createWeb3(config)
+  .then(async (web3) => {
+    await deployAll(web3, logger);
+  })
+  .catch((exception) => {
+    logger.error(exception);
     process.exit(1);
   });

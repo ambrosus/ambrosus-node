@@ -11,6 +11,12 @@ import {ValidationError} from '../errors/errors';
 import {get, put} from '../utils/dict_utils';
 
 const prehasherMiddleware = (identityManager, toHashPath = 'content', hashPath = 'id') => ((req, res, next) => {
+  const existingHash = get(req.body, hashPath);
+  if (existingHash !== undefined) {
+    next();
+    return;
+  }
+
   const toHash = get(req.body, toHashPath);
   if (toHash === undefined) {
     throw new ValidationError(`No content found at ${toHashPath}`);

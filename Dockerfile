@@ -9,7 +9,6 @@ RUN yarn install
 COPY . ./
 
 RUN yarn build
-RUN yarn ops:generate_private_key
 
 ARG GIT_COMMIT
 RUN test -n "$GIT_COMMIT"

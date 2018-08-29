@@ -85,6 +85,7 @@
     "object-curly-spacing": 2,
     "comma-style": 2,
     "comma-dangle": 2,
+    "comma-spacing": ["error", { "before": false, "after": true }],
     "radix": 2,
     "no-new-wrappers": 2,
     "id-length": 2,

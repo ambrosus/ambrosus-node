@@ -23,7 +23,7 @@ install:
   - npx yarn install
 
 script:
-  - docker-compose up -d db
+  - npx yarn dev:docker:db
   - npx yarn dev:lint
   - npx yarn test
 
