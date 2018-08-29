@@ -16,6 +16,24 @@ For other operations (modifying accounts and querying entities) a token should b
 
 There is a special third option where you provide a http authorization header `AMB ...` with your account private key. When doing so the gateway will calculate the signature for you. This mechanism can be enabled using a config parameter. __Warning__: Sharing your private key is a security risk. This mechanism should therefore only be used in development and testing environments.  
 
+### Rate limiting
+The API is rate limited with 120 requests per minute. That means a client that
+is rate limited "replenishes" 2 requests per second according to the token
+bucket algorithm. A client is allowed to burst up to 60 requests at once.
+
+For any client that uses batch uploads we recommend implementing a throttling
+system where there is incremental back-off as soon as the rate limits are
+reached. For example, if the client sees rate limited requests it may back-off
+by a random number of seconds before trying again. If the rate limits are hit
+once again after backing off it is recommended to wait for a longer time
+interval. Here is a longer post on back-off strategies:
+https://developerblog.intercom.com/be-prepared-3-ways-to-handle-rate-limits-baeb9215c1bc
+
+The status code for a rate limited request is 429 Too Many Requests.
+
+For more details on the rate limiting algorithm, see:
+https://medium.freecodecamp.org/nginx-rate-limiting-in-a-nutshell-128fe9e0126c
+
 ### Immutability
 
 __Note:__ All data is immutable, therefore, you will not find update or delete calls.
@@ -95,9 +113,16 @@ An account represents an actor in the supply chain. This can be a person, a comp
 
 It consists of a pair - a public identifer `address` (compatible with ethereum address) and a `secret` (compatible with ethereum private key). Additionally an account has a list of permissions, which specify what actions user can perform and an access levels, which specifies what data is user able to view.
 
+Account can hold any number of following permissions:
+
+* create_entity - allows account to create assets and events
+* register_account - allows account to add new accounts and manage already existing ones
+
 ### /accounts
 
 #### Add account [POST]
+
+__Warning__ Message sender needs to have "register_account" permission
 
 + Request (application/json)
 
@@ -187,7 +212,6 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 #### Find accounts [GET]
 
 Finds accounts satisfying provided criteria.
-
 
 + Parameters
 
@@ -337,6 +361,8 @@ Finds accounts satisfying provided criteria.
 
 #### Modify account [PUT]
 
+__Warning__ Message sender needs to have "register_account" permission
+
 + Parameters
     + accountAddress (string) - An address of the account
 
@@ -434,6 +460,8 @@ Assets are identified by an `assetId` field which is a sha3 hash calculated from
 #### Create an asset [POST]
 
 Places (after intensive validations) the provided asset object into the system.
+
+__Warning__ Message sender needs to have "create_entity" permission
 
 + Request (application/json)
 
@@ -684,6 +712,8 @@ Following event types are predefined:
 #### Create an event [POST]
 
 Places (after intensive validations) the provided event object into the system.
+
+__Warning__ Message sender needs to have "create_entity" permission
 
 + Parameters
 
