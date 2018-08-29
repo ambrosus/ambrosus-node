@@ -7,7 +7,6 @@
   "private": true,
   "license": "MPL-2.0-no-copyleft-exception",
   "scripts": {
-    "strip_contracts": "babel-node src/tasks/strip_contracts.js contracts",
     "build": "babel ./src -d ./dist --copy-files",
     "start:atlas": "node dist/start_atlas.js",
     "start:hermes": "node dist/start_hermes.js",
