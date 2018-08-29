@@ -16,8 +16,7 @@ import {
 
 export default (logger) => (err, req, res, next) => {
   let status;
-
-  if (err instanceof ValidationError) {
+  if (err instanceof ValidationError || err.type === 'entity.parse.failed') {
     status = 400;
   } else if (err instanceof AuthenticationError) {
     status = 401;
@@ -25,6 +24,8 @@ export default (logger) => (err, req, res, next) => {
     status = 403;
   } else if (err instanceof NotFoundError) {
     status = 404;
+  } else if (err.type === 'entity.too.large') {
+    status = 413;
   } else {
     logger.error(err);
     status = 500;

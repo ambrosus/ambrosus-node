@@ -9,8 +9,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import express from 'express';
 import asyncMiddleware from '../middlewares/async_middleware';
-import bodyParser from 'body-parser';
 import accessTokenMiddleware from '../middlewares/access_token_middleware';
+import bodyParser from '../middlewares/body_parser';
 import ensureJsonMime from '../middlewares/mime_middleware';
 
 export const addAccountHandler = (dataModelEngine) => async (req, res) => {
@@ -41,12 +41,12 @@ export const modifyAccountHandler = (dataModelEngine) => async (req, res) => {
     .send(JSON.stringify(content));
 };
 
-export default (tokenAuthenticator, dataModelEngine) => {
+export default (tokenAuthenticator, dataModelEngine, config) => {
   const router = new express.Router();
 
   router.post('/',
     ensureJsonMime,
-    bodyParser.json(),
+    bodyParser(config),
     accessTokenMiddleware(tokenAuthenticator),
     asyncMiddleware(addAccountHandler(dataModelEngine)));
 
@@ -60,7 +60,7 @@ export default (tokenAuthenticator, dataModelEngine) => {
 
   router.put('/:id',
     ensureJsonMime,
-    bodyParser.json(),
+    bodyParser(config),
     accessTokenMiddleware(tokenAuthenticator),
     asyncMiddleware(modifyAccountHandler(dataModelEngine)));
 

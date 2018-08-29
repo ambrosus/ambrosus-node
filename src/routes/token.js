@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import express from 'express';
-import bodyParser from 'body-parser';
+import bodyParser from '../middlewares/body_parser';
 import ambAuthorizationHeaderMiddleware from '../middlewares/amb_authorization_header_middleware';
 import ensureJsonMime from '../middlewares/mime_middleware';
 
@@ -21,7 +21,7 @@ const tokenRouter = (tokenAuthenticator, config) => {
   const router = new express.Router();
   router.post('/',
     ensureJsonMime,
-    bodyParser.json(),
+    bodyParser(config),
     ambAuthorizationHeaderMiddleware(config),
     createTokenHandler(tokenAuthenticator)
   );

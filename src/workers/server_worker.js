@@ -57,7 +57,7 @@ export default class ServerWorker extends Worker {
     app.get('/metrics', prometheusMetricsHandler(promClient));
 
     if (this.role.is(Role.HERMES)) {
-      app.use('/accounts', accountsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine));
+      app.use('/accounts', accountsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine, this.config));
       app.use('/assets', assetsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine, this.config));
       app.use('/events', eventsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine));
       app.use('/token', tokenRouter(this.modelEngine.tokenAuthenticator, this.config));

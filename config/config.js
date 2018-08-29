@@ -39,5 +39,7 @@ module.exports = Object.freeze({
 
   gitCommit: process.env.GIT_COMMIT,
 
-  docsLink: process.env.DOCS_LINK || 'https://dev.ambrosus.com/'
+  docsLink: process.env.DOCS_LINK || 'https://dev.ambrosus.com/',
+
+  requestSizeLimit: process.env.REQUEST_SIZE_LIMIT || '1mb'
 });
