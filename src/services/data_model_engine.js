@@ -183,7 +183,7 @@ export default class DataModelEngine {
   }
 
   async finaliseBundling(newBundle, bundleStubId, storagePeriods) {
-    await this.entityRepository.storeBundle(newBundle);
+    await this.entityRepository.storeBundle(newBundle, storagePeriods);
 
     await this.entityRepository.markEntitiesAsBundled(bundleStubId, newBundle.bundleId);
 
@@ -213,6 +213,14 @@ export default class DataModelEngine {
   async updateShelteringExpirationDate(bundleId) {
     const expirationDate = await this.uploadRepository.expirationDate(bundleId);
     await this.entityRepository.storeBundleShelteringExpirationDate(bundleId, expirationDate);
+  }
+
+  async uploadNotRegisteredBundles() {
+    const notRegisteredBundles = await this.entityRepository.findNotRegisteredBundles();
+    for (const bundle of notRegisteredBundles) {
+      await this.uploadRepository.uploadBundle(bundle.bundleId, bundle.metadata.storagePeriods);
+    }
+    return notRegisteredBundles;
   }
 
   async cleanupBundles() {

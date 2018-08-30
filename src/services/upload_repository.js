@@ -9,13 +9,15 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 
 import {ValidationError} from '../errors/errors';
+import {Role} from './roles_repository';
 
 export default class UploadRepository {
-  constructor(uploadsWrapper, shelteringWrapper, feesWrapper, configWrapper) {
+  constructor(uploadsWrapper, shelteringWrapper, rolesWrapper, feesWrapper, configWrapper) {
     this.uploadsWrapper = uploadsWrapper;
     this.feesWrapper = feesWrapper;
     this.shelteringWrapper = shelteringWrapper;
     this.configWrapper = configWrapper;
+    this.rolesWrapper = rolesWrapper;
   }
 
   async uploadBundle(bundleId, storagePeriods) {
@@ -23,6 +25,12 @@ export default class UploadRepository {
     if (!await this.feesWrapper.checkIfEnoughFunds(fee)) {
       throw new Error(`Insufficient funds: need at least ${fee} to upload the bundle`);
     }
+
+    const uploaderRole = new Role(await this.rolesWrapper.selfOnboardedRole());
+    if (!uploaderRole.is(Role.HERMES)) {
+      throw new Error('Default address is not onboarded as the HERMES');
+    }
+
     return this.uploadsWrapper.registerBundle(bundleId, fee, storagePeriods);
   }
 

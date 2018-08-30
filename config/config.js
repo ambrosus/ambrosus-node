@@ -29,6 +29,7 @@ module.exports = Object.freeze({
   headContractAddress: process.env.HEAD_CONTRACT_ADDRESS,
   challengeResolutionStrategy: process.env.CHALLENGE_RESOLUTION_STRATEGY || 'resolve_all_strategy',
   uploadStrategy: process.env.UPLOAD_STRATEGY || 'regular_interval_upload_strategy',
+  uploadRetryPeriod: process.env.UPLOAD_RETRY_PERIOD || 10,
 
   maximumEntityTimestampOvertake:
     parseInt(process.env.MAXIMUM_ENTITY_TIMESTAMP_OVERTAKE, 10) || 86400,

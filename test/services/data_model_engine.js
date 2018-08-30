@@ -1076,7 +1076,7 @@ describe('Data Model Engine', () => {
     });
   });
 
-  describe('Cancelling bundle', async () => {
+  describe('Cancelling bundle', () => {
     let mockEntityRepository;
     let modelEngine;
 
@@ -1101,7 +1101,7 @@ describe('Data Model Engine', () => {
     });
   });
 
-  describe('Downloading a bundle', async () => {
+  describe('Downloading a bundle', () => {
     const bundleId = '0x123';
     const sheltererId = '0x789';
     const nodeUrl = '0.0.0.0';
@@ -1244,6 +1244,46 @@ describe('Data Model Engine', () => {
       expect(modelEngine.updateShelteringExpirationDate).to.be.calledTwice;
       expect(modelEngine.updateShelteringExpirationDate).to.be.calledWith('bundle2');
       expect(modelEngine.updateShelteringExpirationDate).to.be.calledWith('bundle1');
+    });
+  });
+
+  describe('Uploading not registered bundles', () => {
+    const allBundles = [{
+      bundleId: 'bundle1',
+      metadata: {storagePeriods: 1}
+    }, {
+      bundleId: 'bundle2',
+      metadata: {storagePeriods: 2}
+    }, {
+      bundleId: 'bundle3',
+      metadata: {storagePeriods: 3}
+    }];
+    let mockEntityRepository;
+    let mockUploadRepository;
+    let modelEngine;
+
+    beforeEach(() => {
+      mockEntityRepository = {
+        findNotRegisteredBundles: sinon.stub().resolves(allBundles)
+      };
+
+      mockUploadRepository = {
+        uploadBundle: sinon.stub().resolves()
+      };
+
+      modelEngine = new DataModelEngine({
+        entityRepository: mockEntityRepository,
+        uploadRepository: mockUploadRepository
+      });
+    });
+
+    it('uploads all found bundles', async () => {
+      expect(await modelEngine.uploadNotRegisteredBundles()).to.equal(allBundles);
+      expect(mockEntityRepository.findNotRegisteredBundles).to.be.calledOnce;
+      expect(mockUploadRepository.uploadBundle).to.be.calledThrice;
+      expect(mockUploadRepository.uploadBundle).to.be.calledWith('bundle1', 1);
+      expect(mockUploadRepository.uploadBundle).to.be.calledWith('bundle2', 2);
+      expect(mockUploadRepository.uploadBundle).to.be.calledWith('bundle3', 3);
     });
   });
 });

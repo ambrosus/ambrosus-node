@@ -19,6 +19,7 @@ const {expect} = chai;
 describe('Hermes Worker', () => {
   const bundleSizeLimit = 10;
   const storagePeriods = 1;
+  const retryPeriod = 7;
   let mockDataModelEngine;
   let mockUploadRepository;
   let mockLogger;
@@ -34,7 +35,8 @@ describe('Hermes Worker', () => {
     mockDataModelEngine = {
       initialiseBundling: sinon.stub(),
       cancelBundling: sinon.stub(),
-      finaliseBundling: sinon.stub()
+      finaliseBundling: sinon.stub(),
+      uploadNotRegisteredBundles: sinon.stub().resolves([])
     };
     mockUploadRepository = {
       bundleSizeLimit: sinon.stub()
@@ -51,7 +53,7 @@ describe('Hermes Worker', () => {
     shouldBundleStub = sinon.stub(mockStrategy, 'shouldBundle');
     bundlingSucceededStub = sinon.stub(mockStrategy, 'bundlingSucceeded');
 
-    hermesWorker = new HermesWorker(mockDataModelEngine, mockUploadRepository, mockStrategy, mockLogger);
+    hermesWorker = new HermesWorker(mockDataModelEngine, mockUploadRepository, mockStrategy, retryPeriod, mockLogger);
     mockDataModelEngine.initialiseBundling.resolves(mockResult);
     mockUploadRepository.bundleSizeLimit.resolves(bundleSizeLimit);
     await hermesWorker.beforeWorkLoop();
@@ -79,6 +81,17 @@ describe('Hermes Worker', () => {
   it('asks strategy if the bundle should be uploaded', async () => {
     await hermesWorker.periodicWork();
     expect(shouldBundleStub).to.have.been.calledOnceWith(mockResult);
+  });
+
+  it('uploads not register bundles every `retryPeriod` iterations', async () => {
+    await hermesWorker.periodicWork();
+    expect(mockDataModelEngine.uploadNotRegisteredBundles).to.be.calledOnce;
+    for (let ind = 0; ind < retryPeriod - 1; ind++) {
+      await hermesWorker.periodicWork();
+    }
+    expect(mockDataModelEngine.uploadNotRegisteredBundles).to.be.calledOnce;
+    await hermesWorker.periodicWork();
+    expect(mockDataModelEngine.uploadNotRegisteredBundles).to.be.calledTwice;
   });
 
   describe('Bundle aborted', async () => {

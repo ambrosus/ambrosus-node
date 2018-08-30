@@ -23,6 +23,7 @@ describe('Upload repository', () => {
   let feesWrapperMock;
   let uploadsWrapperMock;
   let shelteringWrapperMock;
+  let rolesWrapperMock;
   let configWrapperMock;
   let uploadRepository;
 
@@ -35,22 +36,31 @@ describe('Upload repository', () => {
       uploadsWrapperMock = {
         registerBundle: sinon.stub()
       };
+      rolesWrapperMock = {
+        selfOnboardedRole: sinon.stub().resolves('2')
+      };
       feesWrapperMock = {
         feeForUpload: sinon.stub().resolves(fee),
         checkIfEnoughFunds: sinon.stub().resolves(true)
       };
-      uploadRepository = new UploadRepository(uploadsWrapperMock, {}, feesWrapperMock);
+      uploadRepository = new UploadRepository(uploadsWrapperMock, {}, rolesWrapperMock, feesWrapperMock);
     });
 
     it('calls wrappers methods with correct arguments', async () => {
       await uploadRepository.uploadBundle(bundleId, storagePeriods);
       expect(feesWrapperMock.feeForUpload).to.be.calledOnceWith(storagePeriods);
       expect(feesWrapperMock.checkIfEnoughFunds).to.be.calledOnceWith(fee);
+      expect(rolesWrapperMock.selfOnboardedRole).to.be.calledOnceWith();
       expect(uploadsWrapperMock.registerBundle).to.be.calledOnceWith(bundleId, fee, storagePeriods);
     });
 
     it('throws if not enough funds', async () => {
       feesWrapperMock.checkIfEnoughFunds.resolves(false);
+      await expect(uploadRepository.uploadBundle(bundleId, storagePeriods)).to.be.eventually.rejected;
+    });
+
+    it('throws if not onboarded as hermes', async () => {
+      rolesWrapperMock.selfOnboardedRole.resolves('1');
       await expect(uploadRepository.uploadBundle(bundleId, storagePeriods)).to.be.eventually.rejected;
     });
   });
@@ -95,7 +105,7 @@ describe('Upload repository', () => {
       configWrapperMock = {
         bundleSizeLimit: sinon.stub().resolves(42)
       };
-      uploadRepository = new UploadRepository({}, {}, {}, configWrapperMock);
+      uploadRepository = new UploadRepository({}, {}, {}, {}, configWrapperMock);
     });
 
     it('calls wrappers methods with correct arguments', async () => {
@@ -113,7 +123,7 @@ describe('Upload repository', () => {
         bundleSizeLimit: sinon.stub()
       };
 
-      uploadRepository = new UploadRepository({}, {}, {}, configWrapperMock);
+      uploadRepository = new UploadRepository({}, {}, {}, {}, configWrapperMock);
     });
 
     it('passes for proper bundle', async () => {

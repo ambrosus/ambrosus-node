@@ -19,6 +19,7 @@ const {expect} = chai;
 
 describe('Roles Wrapper', () => {
   const address = '0xc0ffee';
+  const defaultAccount = '0xdefAcc';
   let contractManagerMock;
   let rolesWrapper;
 
@@ -48,6 +49,21 @@ describe('Roles Wrapper', () => {
       expect(getRoleStub).to.be.calledWith(address);
       expect(getRoleCallStub).to.be.calledOnce;
       expect(role).to.equal('1');
+    });
+  });
+
+  describe('selfOnboardedRole', () => {
+    beforeEach(() => {
+      contractManagerMock = {
+        defaultAddress: () => defaultAccount
+      };
+      rolesWrapper = new RolesWrapper(contractManagerMock);
+      sinon.stub(rolesWrapper, 'onboardedRole').resolves('1');
+    });
+
+    it('calls onboardedRole with defaulAddress', async () => {
+      expect(await rolesWrapper.selfOnboardedRole()).to.equal('1');
+      expect(rolesWrapper.onboardedRole).to.be.calledOnceWith(defaultAccount);
     });
   });
 
