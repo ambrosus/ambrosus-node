@@ -27,6 +27,16 @@ describe('Prehasher middleware', () => {
       }
     }
   };
+  const exampleDataWithHash = {
+    id: '0x66666',
+    content: {
+      idData: {
+        foo: 1,
+        bar: 2
+      }
+    }
+  };
+
 
   let mockIdentityManager;
   let request;
@@ -54,6 +64,17 @@ describe('Prehasher middleware', () => {
     expect(request.body.id).to.equal(exampleHash);
     expect(next).to.be.calledOnce;
     expect(mockIdentityManager.calculateHash).to.have.been.called;
+  });
+
+  it('does nothing if given path has value already assigned', () => {
+    const configuredMiddleware = prehasherMiddleware(mockIdentityManager, 'content.idData', 'id');
+    request = httpMocks.createRequest({
+      body: exampleDataWithHash
+    });
+    configuredMiddleware(request, response, next);
+
+    expect(request.body).to.deep.equal(exampleDataWithHash);
+    expect(next).to.be.calledOnce;
   });
 
   it('throws exception when path not accessible', () => {

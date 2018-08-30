@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 import chai from 'chai';
-import Apparatus from '../helpers/apparatus';
+import ServerApparatus from '../helpers/server_apparatus';
 
 const {expect} = chai;
 
@@ -15,7 +15,7 @@ describe('Prometheus middleware tests', () => {
   let apparatus;
 
   beforeEach(async () => {
-    apparatus = new Apparatus();
+    apparatus = new ServerApparatus();
     await apparatus.start();
   });
 
@@ -32,14 +32,27 @@ describe('Prometheus middleware tests', () => {
     expect(response.status).to.eql(200);
 
     // Built in library metrics
-    expect(response.text.indexOf('process_cpu_user_seconds_total') > -1)
+    expect(response.text.includes('process_cpu_user_seconds_total'))
       .to.eql(true);
 
     // Custom metrics
-    expect(response.text.indexOf('http_request_duration_seconds_count 1') > -1)
+    expect(response.text.includes('http_request_duration_seconds_count 1'))
       .to.eql(true);
 
-    expect(response.text.indexOf('http_requests_total{status="200"} 1') > -1)
+    expect(response.text.includes('http_requests_total{status="200"} 1'))
       .to.eql(true);
+  });
+
+  it('does not record health check requests', async () => {
+    await apparatus.request().get('/health');
+
+    const response = await apparatus.request().get('/metrics');
+    expect(response.status).to.eql(200);
+
+    expect(response.text.includes('http_request_duration_seconds_count 0'))
+      .to.eql(true);
+
+    expect(response.text.includes('http_requests_total{status="200"} 1'))
+      .to.eql(false);
   });
 });

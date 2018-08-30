@@ -11,7 +11,7 @@ import chai from 'chai';
 import chaiHttp from 'chai-http';
 import chaiAsPromised from 'chai-as-promised';
 import {properAddress, properSecret} from '../helpers/web3chai';
-import Apparatus, {apparatusScenarioProcessor} from '../helpers/apparatus';
+import ServerApparatus, {apparatusScenarioProcessor} from '../helpers/server_apparatus';
 import {addAccountRequest, adminAccountWithSecret, accountWithSecret, account} from '../fixtures/account';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {put} from '../../src/utils/dict_utils';
@@ -29,7 +29,7 @@ describe('Accounts - Integrations', async () => {
   let scenario;
 
   before(async () => {
-    apparatus = new Apparatus();
+    apparatus = new ServerApparatus();
     await apparatus.start();
     scenario = new ScenarioBuilder(apparatus.identityManager, apparatusScenarioProcessor(apparatus));
   });
@@ -255,8 +255,7 @@ describe('Accounts - Integrations', async () => {
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send();
       expect(response.body.resultCount).to.equal(4);
-      expect([response.body.results[0].address, response.body.results[1].address].sort())
-        .to.deep.equal([scenario.accounts[2].address, scenario.accounts[3].address].sort());
+      expect(response.body.results).to.have.length(2);
     });
   });
 

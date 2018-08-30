@@ -20,6 +20,7 @@ import {adminAccountWithSecret} from '../fixtures/account';
 import config from '../../config/config';
 
 import EntityRepository from '../../src/services/entity_repository';
+import {getTimestamp} from '../../src/utils/time_utils';
 
 const {expect} = chai;
 chai.use(chaiAsPromised);
@@ -107,7 +108,7 @@ describe('Entity Repository', () => {
       });
       await storage.storeBundle(exampleBundle);
       await storage.storeBundleProofMetadata(exampleBundleId, 10, txHash);
-      await expect(storage.getBundle(exampleBundleId)).to.eventually.be.deep.equal(exampleBundleWithMetadata);
+      await expect(storage.getBundle(exampleBundleId)).to.eventually.deep.equal(exampleBundleWithMetadata);
     });
 
     it('returns null for non-existing bundle', async () => {
@@ -116,7 +117,7 @@ describe('Entity Repository', () => {
     });
   });
 
-  describe('Bundle process', () => {
+  describe('Bundle process (successful)', () => {
     let scenario;
 
     const bundleStubId = '123';
@@ -160,8 +161,8 @@ describe('Entity Repository', () => {
 
       clock = sinon.useFakeTimers(5000);
 
-      ret = await expect(storage.beginBundle(bundleStubId)).to.be.fulfilled;
-      await expect(storage.endBundle(bundleStubId, bundleId, bundleSizeLimit)).to.be.fulfilled;
+      ret = await expect(storage.fetchEntitiesForBundling(bundleStubId, bundleSizeLimit)).to.be.fulfilled;
+      await expect(storage.markEntitiesAsBundled(bundleStubId, bundleId)).to.be.fulfilled;
       await expect(storage.storeBundleProofMetadata(bundleId, 10, bundleTxHash)).to.be.fulfilled;
     });
 
@@ -177,7 +178,35 @@ describe('Entity Repository', () => {
       expect(ret.events).to.have.lengthOf(nonBundledEvents.length);
     });
 
-    it('both assets and earliest event included in the bundle should have the metadata.bundleId set after the call to endBundle', async () => {
+    it('other assets and events that are not included in the bundle should be left untouched', async () => {
+      for (const asset of alreadyBundledAssets) {
+        const storedAsset = await storage.getAsset(asset.assetId);
+        expect(storedAsset).to.deep.equal(asset);
+      }
+
+      for (const event of alreadyBundledEvents) {
+        const storedEvent = await storage.getEvent(event.eventId);
+        expect(storedEvent).to.deep.equal(event);
+      }
+    });
+
+    it('orderEntityIds sorts correctly (by timestamp, then by type)', () => {
+      const assetStubs = [
+        {assetId: 'asset1', content: {idData: {timestamp: 4}}},
+        {assetId: 'asset2', content: {idData: {timestamp: 1}}}];
+      const eventStubs = [
+        {eventId: 'event1', content: {idData: {timestamp: 4}}},
+        {eventId: 'event2', content: {idData: {timestamp: 1}}},
+        {eventId: 'event3', content: {idData: {timestamp: 10}}}];
+      const entities = storage.assetsAndEventsToEntityIds(assetStubs, eventStubs);
+      const orderedEntities = storage.orderEntityIds(entities);
+
+      expect(orderedEntities.map((ent) => ent.id))
+        .to.deep.equal(['asset2', 'event2', 'asset1', 'event1', 'event3']);
+    });
+
+
+    it('both assets and earliest event included in the bundle should have the metadata.bundleId set after the call to markEntitiesAsBundled', async () => {
       for (const asset of nonBundledAssets) {
         const storedAsset = await storage.getAsset(asset.assetId);
         expect(storedAsset.metadata.bundleId).to.equal(bundleId);
@@ -214,35 +243,138 @@ describe('Entity Repository', () => {
       }
     });
 
-    it('other assets and events that are not included in the bundle should be left untouched', async () => {
-      for (const asset of alreadyBundledAssets) {
-        const storedAsset = await storage.getAsset(asset.assetId);
-        expect(storedAsset).to.deep.equal(asset);
-      }
-
-      for (const event of alreadyBundledEvents) {
-        const storedEvent = await storage.getEvent(event.eventId);
-        expect(storedEvent).to.deep.equal(event);
-      }
-    });
-
-    it('second call to beginBundle should include latest events and the leftovers from the previous bundling', async () => {
-      const ret2 = await expect(storage.beginBundle('otherId')).to.be.fulfilled;
+    it('second call to fetchEntitiesForBundling should include latest events and the leftovers from the previous bundling', async () => {
+      const ret2 = await expect(storage.fetchEntitiesForBundling('otherId')).to.be.fulfilled;
       expect(ret2.assets).to.be.empty;
       expect(ret2.events).to.deep.equal([nonBundledEvents[0]]);
     });
+  });
 
-    it('orderedEntityIds sorts correctly (by timestamp, then by type)', () => {
-      const assetStubs = [
-        {assetId: 'asset1', content: {idData: {timestamp: 4}}},
-        {assetId: 'asset2', content: {idData: {timestamp: 1}}}];
-      const eventStubs = [
-        {eventId: 'event1', content: {idData: {timestamp: 4}}},
-        {eventId: 'event2', content: {idData: {timestamp: 1}}},
-        {eventId: 'event3', content: {idData: {timestamp: 10}}}];
-      const entities = storage.orderedEntityIds(assetStubs, eventStubs);
-      expect(entities.map((ent) => ent.id))
-        .to.deep.equal(['asset2', 'event2', 'asset1', 'event1', 'event3']);
+  describe('Bundle process (aborted)', () => {
+    let scenario;
+
+    const bundleStubId = '123';
+    const bundleSizeLimit = 3;
+    let alreadyBundledAssets;
+    let alreadyBundledEvents;
+    let nonBundledAssets;
+    let nonBundledEvents;
+    let clock;
+
+    let ret;
+
+    before(async () => {
+      scenario = new ScenarioBuilder(new IdentityManager(await createWeb3()));
+      await scenario.addAdminAccount(adminAccountWithSecret);
+
+      alreadyBundledAssets = [
+        await scenario.addAsset(0),
+        await scenario.addAsset(0)
+      ].map((asset) => put(asset, {'metadata.bundleId': 1, 'metadata.bundleTransactionHash': '0x1', 'metadata.bundleUploadTimestamp': 5}));
+
+      alreadyBundledEvents = [
+        await scenario.addEvent(0, 0),
+        await scenario.addEvent(0, 1)
+      ].map((event) => put(event, {'metadata.bundleId': 1, 'metadata.bundleTransactionHash': '0x1', 'metadata.bundleUploadTimestamp': 5}));
+
+      nonBundledAssets = [
+        await scenario.addAsset(0, {timestamp: 0}),
+        await scenario.addAsset(0, {timestamp: 1})
+      ].map((asset) => put(asset, 'metadata.bundleId', null));
+
+      nonBundledEvents = [
+        await scenario.addEvent(0, 2, {timestamp: 2}),
+        await scenario.addEvent(0, 3, {timestamp: 1})
+      ].map((event) => put(event, 'metadata.bundleId', null));
+
+      await Promise.all([...alreadyBundledAssets, ...nonBundledAssets].map((asset) => storage.storeAsset(asset)));
+      await Promise.all([...alreadyBundledEvents, ...nonBundledEvents].map((event) => storage.storeEvent(event)));
+
+      clock = sinon.useFakeTimers(5000);
+
+      ret = await expect(storage.fetchEntitiesForBundling(bundleStubId, bundleSizeLimit)).to.be.fulfilled;
+      await expect(storage.discardBundling(bundleStubId)).to.be.fulfilled;
+    });
+
+    after(async () => {
+      await cleanDatabase(db);
+      clock.restore();
+    });
+
+    it('should return to state from before bundling initialisation', async () => {
+      expect(await storage.fetchEntitiesForBundling(bundleStubId, bundleSizeLimit)).to.be.deep.equal(ret);
+    });
+  });
+
+  describe('Bundle cleanup process', () => {
+    describe('Set bundle expiration date', () => {
+      const bundleId = 'bundle';
+      const expirationDate = 10;
+
+      beforeEach(async () => {
+        await storage.storeBundle(put(createBundle(), 'bundleId', bundleId));
+      });
+
+      afterEach(async () => {
+        await cleanDatabase(db);
+      });
+
+      it('storeBundleShelteringExpirationDate sets holdUntil field in repository dict', async () => {
+        await storage.storeBundleShelteringExpirationDate(bundleId, expirationDate);
+        const bundle = await storage.db.collection('bundles').findOne({bundleId});
+        expect(bundle.repository.holdUntil).to.equal(expirationDate);
+      });
+    });
+
+    describe('Get expired bundles ', () => {
+      const now = 10;
+      let clock;
+      let expiredBundles;
+
+      before(async () => {
+        clock = sinon.useFakeTimers(now);
+
+        for (let ind = 0; ind < 10; ind++) {
+          await storage.storeBundle(put({...createBundle(), repository: {holdUntil: getTimestamp() + ind - 5}}, 'bundleId', `bundle${ind}`));
+        }
+        await storage.storeBundle(put({...createBundle(), repository: {holdUntil: null}}, 'bundleId', `noHoldUntil`));
+        await storage.storeBundle(put({...createBundle()}, 'bundleId', `noMetadata`));
+        expiredBundles = await storage.getExpiredBundleIds();
+      });
+
+      it('getExpiredBundleIds returns all bundles with holdUntil < now', async () => {
+        expect(expiredBundles).to.include.members(['bundle0', 'bundle1', 'bundle2', 'bundle3', 'bundle4']);
+      });
+
+      it('getExpiredBundleIds returns bundles with no holdUntil set', async () => {
+        expect(expiredBundles).to.include.members(['noHoldUntil', 'noMetadata']);
+      });
+
+
+      after(async () => {
+        await cleanDatabase(db);
+        clock.restore();
+      });
+    });
+
+    describe('Deleting bundles', () => {
+      const bundleIds = ['bundle1', 'bundle2', 'bundle3'];
+
+      beforeEach(async () => {
+        await storage.storeBundle(put(createBundle(), 'bundleId', bundleIds[0]));
+        await storage.storeBundle(put(createBundle(), 'bundleId', bundleIds[1]));
+        await storage.storeBundle(put(createBundle(), 'bundleId', bundleIds[2]));
+      });
+
+      afterEach(async () => {
+        await cleanDatabase(db);
+      });
+
+      it('deletes all bundles with given ids from db', async () => {
+        await storage.deleteBundles(['bundle1', 'bundle3']);
+        expect(await storage.getBundle('bundle1')).to.be.null;
+        expect(await storage.getBundle('bundle3')).to.be.null;
+      });
     });
   });
 });

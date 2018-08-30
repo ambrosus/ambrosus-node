@@ -63,7 +63,11 @@ describe('Data Model Engine', () => {
       mockAccountAccessDefinitions = {
         defaultAdminAccount: sinon.stub()
       };
-      modelEngine = new DataModelEngine(mockIdentityManager, {}, {}, {}, {}, {}, mockAccountRepository, {}, {}, {}, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({
+        identityManager: mockIdentityManager,
+        accountRepository: mockAccountRepository,
+        accountAccessDefinitions: mockAccountAccessDefinitions
+      });
     });
 
     beforeEach(() => {
@@ -128,7 +132,11 @@ describe('Data Model Engine', () => {
         ensureCanRegisterAccount: sinon.stub(),
         validateAddAccountRequest: sinon.stub()
       };
-      modelEngine = new DataModelEngine(mockIdentityManager, {}, {}, {}, {}, {}, mockAccountRepository, {}, {}, {}, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({
+        identityManager: mockIdentityManager,
+        accountRepository: mockAccountRepository,
+        accountAccessDefinitions: mockAccountAccessDefinitions
+      });
     });
 
     beforeEach(() => {
@@ -199,7 +207,10 @@ describe('Data Model Engine', () => {
       mockAccountAccessDefinitions = {
         validateAddAccountRequest: sinon.stub()
       };
-      modelEngine = new DataModelEngine({}, {}, {}, {}, {}, {}, mockAccountRepository, {}, {}, {}, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({
+        accountRepository: mockAccountRepository,
+        accountAccessDefinitions: mockAccountAccessDefinitions
+      });
       account = put(accountWithSecret, {registeredBy : adminAccount.address, permissions : ['perm1', 'perm2']});
       accountWithoutSecret = pick(account, 'secret');
     });
@@ -246,7 +257,10 @@ describe('Data Model Engine', () => {
         ensureCanRegisterAccount: sinon.stub(),
         validateAndCastFindAccountParams: sinon.stub()
       };
-      modelEngine = new DataModelEngine({}, {}, {}, {}, {}, {}, {}, {}, mockFindAccountQueryObjectFactory, {}, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({
+        findAccountQueryObjectFactory: mockFindAccountQueryObjectFactory,
+        accountAccessDefinitions: mockAccountAccessDefinitions
+      });
       account = put(accountWithSecret, {registeredBy: adminAccount.address, permissions : ['perm1', 'perm2']});
       accountWithoutSecret = pick(account, 'secret');
     });
@@ -295,7 +309,10 @@ describe('Data Model Engine', () => {
         ensureCanRegisterAccount: sinon.stub(),
         validateModifyAccountRequest: sinon.stub()
       };
-      modelEngine = new DataModelEngine({}, {}, {}, {}, {}, {}, mockAccountRepository, {}, {}, {}, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({
+        accountRepository: mockAccountRepository,
+        accountAccessDefinitions: mockAccountAccessDefinitions
+      });
     });
 
     beforeEach(() => {
@@ -345,7 +362,11 @@ describe('Data Model Engine', () => {
         ensureCanCreateEntity: sinon.stub()
       };
 
-      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository, {}, {}, {}, {}, {}, {}, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({
+        entityBuilder: mockEntityBuilder,
+        entityRepository: mockEntityRepository,
+        accountAccessDefinitions: mockAccountAccessDefinitions
+      });
     });
 
     const restoreDefaultBehaviour = () => {
@@ -424,7 +445,7 @@ describe('Data Model Engine', () => {
         getAsset: sinon.stub()
       };
 
-      modelEngine = new DataModelEngine({}, {}, {}, mockEntityRepository, {}, {}, {}, {}, {}, {}, {});
+      modelEngine = new DataModelEngine({entityRepository: mockEntityRepository});
     });
 
     beforeEach(() => {
@@ -481,8 +502,10 @@ describe('Data Model Engine', () => {
       mockEntityBuilder.validateAndCastFindAssetsParams.returns(validatedParams);
       mockFindAssetQueryObject.execute.returns({results: assetSet, resultCount: 165});
 
-      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, {},
-        {}, {}, {}, {}, {}, mockFindAssetQueryObjectFactory, {});
+      modelEngine = new DataModelEngine({
+        entityBuilder: mockEntityBuilder,
+        findAssetQueryObjectFactory: mockFindAssetQueryObjectFactory
+      });
 
       ret = await expect(modelEngine.findAssets(params)).to.fulfilled;
     });
@@ -539,8 +562,12 @@ describe('Data Model Engine', () => {
         });
         mockAccountAccessDefinitions.getTokenCreatorAccessLevel.resolves(accessLevel);
 
-        modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, {},
-          {}, {}, {}, mockFindEventQueryObjectFactory, {}, mockFindAssetQueryObjectFactory, mockAccountAccessDefinitions);
+        modelEngine = new DataModelEngine({
+          entityBuilder: mockEntityBuilder,
+          findEventQueryObjectFactory: mockFindEventQueryObjectFactory,
+          findAssetQueryObjectFactory: mockFindAssetQueryObjectFactory,
+          accountAccessDefinitions: mockAccountAccessDefinitions
+        });
       });
 
       describe('selectAssetsIdsByIdentifier', () => {
@@ -618,7 +645,11 @@ describe('Data Model Engine', () => {
         ensureCanCreateEntity: sinon.stub()
       };
 
-      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository,{}, {}, {}, {}, {}, {}, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({
+        entityBuilder: mockEntityBuilder,
+        entityRepository: mockEntityRepository,
+        accountAccessDefinitions: mockAccountAccessDefinitions
+      });
     });
 
     const restoreDefaultBehaviour = () => {
@@ -713,7 +744,10 @@ describe('Data Model Engine', () => {
       mockAccountAccessDefinitions = {
         getTokenCreatorAccessLevel: sinon.stub()
       };
-      modelEngine = new DataModelEngine({}, {}, {}, mockEntityRepository, {}, {}, {}, {}, {}, {}, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({
+        entityRepository: mockEntityRepository,
+        accountAccessDefinitions: mockAccountAccessDefinitions
+      });
     });
 
     beforeEach(() => {
@@ -780,8 +814,11 @@ describe('Data Model Engine', () => {
       mockEntityBuilder.validateAndCastFindEventsParams.returns(mockParams2);
       mockAccountAccessDefinitions.getTokenCreatorAccessLevel.resolves(accessLevel);
 
-      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, {},
-        {}, {}, {}, mockFindEventQueryObjectFactory, {}, {}, mockAccountAccessDefinitions);
+      modelEngine = new DataModelEngine({
+        entityBuilder: mockEntityBuilder,
+        findEventQueryObjectFactory: mockFindEventQueryObjectFactory,
+        accountAccessDefinitions: mockAccountAccessDefinitions
+      });
 
       ret = await expect(modelEngine.findEvents(mockParams, mockTokenData)).to.fulfilled;
     });
@@ -835,7 +872,10 @@ describe('Data Model Engine', () => {
 
       mockEntityRepository.getBundle.resolves(exampleBundle);
 
-      modelEngine = new DataModelEngine({}, {}, mockEntityBuilder, mockEntityRepository, {}, {}, {}, {}, {}, {}, {});
+      modelEngine = new DataModelEngine({
+        entityBuilder: mockEntityBuilder,
+        entityRepository: mockEntityRepository
+      });
 
       ret = await expect(modelEngine.getBundle(exampleBundleId)).to.fulfilled;
     });
@@ -854,11 +894,10 @@ describe('Data Model Engine', () => {
     });
   });
 
-  describe('Finalising a bundle', () => {
+  describe('Initialising bundle', () => {
     let mockEntityRepository;
     let mockEntityBuilder;
     let mockIdentityManager;
-    let mockProofRepository;
     let modelEngine;
 
     let clock;
@@ -866,8 +905,97 @@ describe('Data Model Engine', () => {
 
     const bundleStubId = 'abc';
     const nodeSecret = 'nodeSecret';
+    const bundleSizeLimit = 100;
+    let unbundledAssets;
+    let unbundledEvents;
+    let assembledBundle;
+
+    let ret;
+
+    before(async () => {
+      clock = sinon.useFakeTimers();
+
+      scenario = new ScenarioBuilder(identityManager);
+      await scenario.addAdminAccount(adminAccountWithSecret);
+      unbundledAssets = [
+        await scenario.addAsset(0, {timestamp: 0}),
+        await scenario.addAsset(0, {timestamp: 1})
+      ];
+      unbundledEvents = [
+        await scenario.addEvent(0, 0, {timestamp: 0}),
+        await scenario.addEvent(0, 0, {timestamp: 1}),
+        await scenario.addEvent(0, 1, {timestamp: 2})
+      ];
+
+      assembledBundle = {
+        bundleId: 'a mock bundle',
+        content: {
+          entries: [
+            ...unbundledAssets,
+            ...unbundledEvents
+          ]
+        }
+      };
+
+      mockEntityRepository = {
+        fetchEntitiesForBundling: sinon.stub()
+      };
+
+      mockIdentityManager = {
+        nodePrivateKey: sinon.stub()
+      };
+
+      mockEntityBuilder = {
+        assembleBundle: sinon.stub()
+      };
+
+      mockEntityRepository.fetchEntitiesForBundling.resolves({assets: unbundledAssets, events: unbundledEvents});
+      mockIdentityManager.nodePrivateKey.resolves(nodeSecret);
+      mockEntityBuilder.assembleBundle.resolves(assembledBundle);
+
+      modelEngine = new DataModelEngine({
+        entityRepository: mockEntityRepository,
+        identityManager: mockIdentityManager,
+        entityBuilder: mockEntityBuilder
+      });
+
+      ret = await expect(modelEngine.initialiseBundling(bundleStubId, bundleSizeLimit)).to.be.fulfilled;
+    });
+
+    after(() => {
+      clock.restore();
+    });
+
+    it('fetches entities to bundle from the repository', () => {
+      expect(mockEntityRepository.fetchEntitiesForBundling).to.have.been.calledWith(bundleStubId, bundleSizeLimit);
+    });
+
+    it('asks the identity manager for the node private key', () => {
+      expect(mockIdentityManager.nodePrivateKey).to.have.been.called;
+    });
+
+    it('orders the entity builder to assemble the bundle JSON', () => {
+      const expectedTimestamp = Math.floor(Date.now() / 1000);
+      expect(mockEntityBuilder.assembleBundle).to.have.been.calledWith(unbundledAssets, unbundledEvents,
+        expectedTimestamp, nodeSecret);
+    });
+
+    it('returns the bundle', () => {
+      expect(ret).to.be.deep.eq(assembledBundle);
+    });
+  });
+
+  describe('Finalising bundle', () => {
+    let mockEntityRepository;
+    let mockUploadRepository;
+    let modelEngine;
+
+    let clock;
+    let scenario;
+
+    const bundleStubId = 'abc';
     const blockNumber = 10;
-    const bundleSizeLimit = 15;
+    const storagePeriods = 2;
     const txHash = '0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009';
     let unbundledAssets;
     let unbundledEvents;
@@ -900,56 +1028,31 @@ describe('Data Model Engine', () => {
         }
       };
 
-      mockEntityBuilder = {
-        assembleBundle: sinon.stub()
-      };
-
       mockEntityRepository = {
-        beginBundle: sinon.stub(),
-        endBundle: sinon.stub(),
+        markEntitiesAsBundled: sinon.stub(),
         storeBundle: sinon.stub(),
         storeBundleProofMetadata: sinon.stub()
       };
 
-      mockIdentityManager = {
-        nodePrivateKey: sinon.stub()
+      mockUploadRepository = {
+        uploadBundle: sinon.stub()
       };
 
-      mockProofRepository = {
-        uploadProof: sinon.stub()
-      };
-
-      mockIdentityManager.nodePrivateKey.resolves(nodeSecret);
-      mockEntityBuilder.assembleBundle.returns(assembledBundle);
-      mockEntityRepository.beginBundle.resolves({
-        assets: unbundledAssets,
-        events: unbundledEvents
-      });
-      mockEntityRepository.endBundle.resolves();
+      mockEntityRepository.markEntitiesAsBundled.resolves();
       mockEntityRepository.storeBundle.resolves();
-      mockProofRepository.uploadProof.resolves({blockNumber, transactionHash: txHash});
+      mockEntityRepository.storeBundleProofMetadata.resolves();
+      mockUploadRepository.uploadBundle.resolves({blockNumber, transactionHash: txHash});
 
-      modelEngine = new DataModelEngine(mockIdentityManager, {}, mockEntityBuilder, mockEntityRepository, {}, mockProofRepository, {}, {}, {}, {}, {});
+      modelEngine = new DataModelEngine({
+        entityRepository: mockEntityRepository,
+        uploadRepository: mockUploadRepository
+      });
 
-      ret = await expect(modelEngine.finaliseBundle(bundleStubId, bundleSizeLimit)).to.be.fulfilled;
+      ret = await expect(modelEngine.finaliseBundling(assembledBundle, bundleStubId, storagePeriods)).to.be.fulfilled;
     });
 
     after(() => {
       clock.restore();
-    });
-
-    it('begins a new bundling procedure in the repository', () => {
-      expect(mockEntityRepository.beginBundle).to.have.been.calledWith(bundleStubId);
-    });
-
-    it('asks the identity manager for the node private key', () => {
-      expect(mockIdentityManager.nodePrivateKey).to.have.been.called;
-    });
-
-    it('orders the entity builder to assemble the bundle JSON', () => {
-      const expectedTimestamp = Math.floor(Date.now() / 1000);
-      expect(mockEntityBuilder.assembleBundle).to.have.been.calledWith(unbundledAssets, unbundledEvents,
-        expectedTimestamp, nodeSecret);
     });
 
     it('stores the bundle it in the repository', () => {
@@ -957,128 +1060,190 @@ describe('Data Model Engine', () => {
     });
 
     it('ends the bundling procedure in the repository', () => {
-      expect(mockEntityRepository.endBundle).to.have.been.calledWith(bundleStubId, assembledBundle.bundleId, bundleSizeLimit);
+      expect(mockEntityRepository.markEntitiesAsBundled).to.have.been.calledWith(bundleStubId, assembledBundle.bundleId);
     });
 
-    it('uploads the proof to the registry contract', () => {
-      expect(mockProofRepository.uploadProof).to.have.been.calledWith(assembledBundle.bundleId);
+    it('uploads the proof to the uploads contract', () => {
+      expect(mockUploadRepository.uploadBundle).to.have.been.calledWith(assembledBundle.bundleId, storagePeriods);
+    });
+
+    it('stores block number and tx hash in metadata', async () => {
+      expect(mockEntityRepository.storeBundleProofMetadata).to.have.been.calledWith(assembledBundle.bundleId, blockNumber, txHash);
     });
 
     it('returns the bundle', () => {
       expect(ret).to.be.deep.eq(assembledBundle);
     });
+  });
 
-    it('stores block number in metadata', async () => {
-      expect(mockEntityRepository.storeBundleProofMetadata).to.have.been.calledWith(assembledBundle.bundleId, blockNumber, txHash);
+  describe('Cancelling bundle', async () => {
+    let mockEntityRepository;
+    let modelEngine;
+
+    const bundleStubId = 'bundleStubId';
+
+    before(async () => {
+      mockEntityRepository = {
+        discardBundling: sinon.stub()
+      };
+
+      mockEntityRepository.discardBundling.resolves();
+
+      modelEngine = new DataModelEngine({
+        entityRepository: mockEntityRepository
+      });
+
+      await expect(modelEngine.cancelBundling(bundleStubId)).to.be.fulfilled;
     });
 
-    describe('Empty bundle', async () => {
-      before(async () => {
-        const emptyBundle = {
-          bundleId: 'a mock bundle',
-          content: {
-            entries: []
-          }
-        };
-
-        mockProofRepository = {
-          uploadProof: sinon.stub()
-        };
-
-        mockEntityRepository = {
-          storeBundle: sinon.stub(),
-          beginBundle: sinon.stub()
-        };
-
-        mockEntityBuilder.assembleBundle.returns(emptyBundle);
-        mockEntityRepository.beginBundle.resolves({});
-
-        ret = await expect(modelEngine.finaliseBundle(bundleStubId)).to.be.fulfilled;
-      });
-
-      it('returns null', () => {
-        expect(ret).to.be.deep.eq(null);
-      });
-
-      it('does not store empty bundle', () => {
-        expect(mockProofRepository.uploadProof).to.have.not.been.called;
-      });
-
-      it('does not upload empty bundle', () => {
-        expect(mockEntityRepository.storeBundle).to.have.not.been.called;
-      });
+    it('revokes entities from being bundled', async () => {
+      expect(mockEntityRepository.discardBundling).to.have.been.calledWith(bundleStubId);
     });
   });
 
   describe('Downloading a bundle', async () => {
     const bundleId = '0x123';
-    const vendorId = '0x987';
-    const vendorUrl = '0.0.0.0';
+    const sheltererId = '0x789';
+    const nodeUrl = '0.0.0.0';
     const downloadedBundle = createBundle();
     let mockEntityRepository;
     let mockEntityDownloader;
-    let mockProofRepository;
+    let mockEntityBuilder;
+    let mockRolesRepository;
+    let mockUploadRepository;
     let modelEngine;
-    let result;
 
-    before(async () => {
+    beforeEach(() => {
       mockEntityRepository = {
-        storeBundle: sinon.stub(),
-        getBundle: sinon.stub()
+        storeBundle: sinon.stub()
       };
 
-      mockProofRepository = {
-        getVendorUrl: sinon.stub()
+      mockRolesRepository = {
+        nodeUrl: sinon.stub().resolves(nodeUrl)
+      };
+
+      mockUploadRepository = {
+        verifyBundle: sinon.stub().resolves()
       };
 
       mockEntityDownloader = {
-        downloadBundle: sinon.stub()
+        downloadBundle: sinon.stub().resolves(downloadedBundle)
       };
 
-      modelEngine = new DataModelEngine({}, {}, {}, mockEntityRepository, mockEntityDownloader, mockProofRepository, {}, {}, {}, {}, {}, {});
-    });
-    describe('new bundle', async () => {
-      before(async () => {
-        resetHistory(mockProofRepository, mockEntityDownloader, mockEntityRepository);
-        mockEntityRepository.getBundle.resolves(null);
-        mockEntityRepository.storeBundle.resolves();
-        mockProofRepository.getVendorUrl.resolves(vendorUrl);
-        mockEntityDownloader.downloadBundle.resolves(downloadedBundle);
+      mockEntityBuilder = {
+        validateBundle: sinon.stub()
+      };
 
-        result = await expect(modelEngine.downloadBundle(bundleId, vendorId)).to.be.fulfilled;
-      });
-      it('asks the entity repository for the bundle', async () => {
-        expect(mockEntityRepository.getBundle).to.have.been.calledWith(bundleId);
-      });
-      it(`asks proof repository for vendor's url`, async() => {
-        expect(mockProofRepository.getVendorUrl).to.have.been.calledWith(vendorId);
-      });
-      it(`delegates entity downloader to download bundle from given url`, async() => {
-        expect(mockEntityDownloader.downloadBundle).to.have.been.calledWith(vendorUrl, bundleId);
-      });
-      it(`saves downloaded bundle to entity repository`, async() => {
-        expect(mockEntityRepository.storeBundle).to.have.been.calledWith(downloadedBundle);
-      });
-      it(`returns downloaded bundle`, async() => {
-        expect(result).to.deep.equal(downloadedBundle);
+      modelEngine = new DataModelEngine({
+        entityRepository: mockEntityRepository,
+        entityDownloader: mockEntityDownloader,
+        entityBuilder: mockEntityBuilder,
+        rolesRepository: mockRolesRepository,
+        uploadRepository: mockUploadRepository
       });
     });
-    describe('already existing bundle', async () => {
-      let alreadyExistingBundle;
-      before(async () => {
-        resetHistory(mockProofRepository, mockEntityDownloader, mockEntityRepository);
-        alreadyExistingBundle = createBundle();
-        mockEntityRepository.getBundle.resolves(alreadyExistingBundle);
 
-        result = await expect(modelEngine.downloadBundle(bundleId, vendorId)).to.be.fulfilled;
+    it('validates and returns the downloaded bundle', async () => {
+      expect(await modelEngine.downloadBundle(bundleId, sheltererId)).to.equal(downloadedBundle);
+      expect(mockRolesRepository.nodeUrl).to.be.calledWith(sheltererId);
+      expect(mockEntityDownloader.downloadBundle).to.be.calledWith(nodeUrl, bundleId);
+      expect(mockEntityBuilder.validateBundle).to.be.calledWith(downloadedBundle);
+      expect(mockEntityRepository.storeBundle).to.be.calledWith(downloadedBundle);
+    });
+
+    it('throws if downloaded empty bundle', async () => {
+      mockEntityDownloader.downloadBundle.resolves(null);
+      await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejectedWith(Error, 'Could not fetch the bundle from the shelterer');
+      expect(mockEntityRepository.storeBundle).to.be.not.called;
+    });
+
+    it('does not store bundle if validation failed', async () => {
+      mockEntityBuilder.validateBundle.throws();
+      await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejected;
+      expect(mockEntityRepository.storeBundle).to.be.not.called;
+    });
+
+    it('does not store bundle if verification against chain failed', async () => {
+      mockUploadRepository.verifyBundle.rejects();
+      await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejected;
+      expect(mockEntityRepository.storeBundle).to.be.not.called;
+    });
+  });
+
+  describe('Update sheltering expiration date', () => {
+    const bundleId = '0x123';
+    const expirationDate = 10;
+    let mockEntityRepository;
+    let mockUploadRepository;
+    let modelEngine;
+
+    beforeEach(() => {
+      mockEntityRepository = {
+        storeBundleShelteringExpirationDate: sinon.stub()
+      };
+
+      mockUploadRepository = {
+        expirationDate: sinon.stub().resolves(expirationDate)
+      };
+
+      modelEngine = new DataModelEngine({
+        entityRepository: mockEntityRepository,
+        uploadRepository: mockUploadRepository
       });
-      it(`returns bundle from repository if requested bundle already stored`, async() => {
-        result = await expect(modelEngine.downloadBundle(bundleId, vendorId)).to.be.fulfilled;
-        expect(mockProofRepository.getVendorUrl).to.be.not.called;
-        expect(mockEntityDownloader.downloadBundle).to.be.not.called;
-        expect(mockEntityRepository.storeBundle).to.be.not.called;
-        expect(result).to.deep.equal(alreadyExistingBundle);
+    });
+
+    it('updates expiration date', async () => {
+      await modelEngine.updateShelteringExpirationDate(bundleId);
+      expect(mockUploadRepository.expirationDate).to.be.calledOnceWith(bundleId);
+      expect(mockEntityRepository.storeBundleShelteringExpirationDate).to.be.calledOnceWith(bundleId, expirationDate);
+    });
+  });
+
+  describe('Cleanup unnecessary bundles', () => {
+    const allBundles = ['bundle1', 'bundle2', 'bundle3'];
+    let mockEntityRepository;
+    let mockUploadRepository;
+    let modelEngine;
+
+    beforeEach(() => {
+      mockEntityRepository = {
+        getExpiredBundleIds: sinon.stub().resolves(allBundles),
+        deleteBundles: sinon.stub()
+      };
+
+      mockUploadRepository = {
+        isSheltering: sinon.stub().resolves(true)
+      };
+
+      modelEngine = new DataModelEngine({
+        entityRepository: mockEntityRepository,
+        uploadRepository: mockUploadRepository
       });
+
+      sinon.stub(modelEngine, 'updateShelteringExpirationDate');
+    });
+
+    it('checks if is still sheltering for all bundles', async () => {
+      await modelEngine.cleanupBundles();
+      expect(mockEntityRepository.getExpiredBundleIds).to.be.calledOnce;
+      expect(mockUploadRepository.isSheltering).to.be.calledThrice;
+      expect(mockUploadRepository.isSheltering).to.be.calledWith('bundle1');
+      expect(mockUploadRepository.isSheltering).to.be.calledWith('bundle2');
+      expect(mockUploadRepository.isSheltering).to.be.calledWith('bundle3');
+    });
+
+    it('deletes not sheltered bundles and returns their ids', async () => {
+      mockUploadRepository.isSheltering.withArgs('bundle3').resolves(false);
+      expect(await modelEngine.cleanupBundles()).to.deep.equal(['bundle3']);
+      expect(mockEntityRepository.deleteBundles).to.be.calledOnceWith(['bundle3']);
+    });
+
+    it('updates expiration date on all bundles marked as expired but still sheltered', async () => {
+      mockUploadRepository.isSheltering.withArgs('bundle3').resolves(false);
+      await modelEngine.cleanupBundles();
+      expect(modelEngine.updateShelteringExpirationDate).to.be.calledTwice;
+      expect(modelEngine.updateShelteringExpirationDate).to.be.calledWith('bundle2');
+      expect(modelEngine.updateShelteringExpirationDate).to.be.calledWith('bundle1');
     });
   });
 });
