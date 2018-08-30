@@ -11,19 +11,19 @@ import PeriodicWorker from './periodic_worker';
 import HermesUploadStrategy from './hermes_strategies/upload_strategy';
 
 export default class HermesWorker extends PeriodicWorker {
-  constructor(dataModelEngine, configContract, strategy, logger) {
+  constructor(dataModelEngine, uploadRepository, strategy, logger) {
     super(strategy.workerInterval, logger);
     this.dataModelEngine = dataModelEngine;
     this.bundleSequenceNumber = 0;
     this.strategy = strategy;
-    this.configContract = configContract;
+    this.uploadRepository = uploadRepository;
     if (!(this.strategy instanceof HermesUploadStrategy)) {
       throw new Error('A valid strategy must be provided');
     }
   }
 
   async periodicWork() {
-    const bundleSizeLimit = await this.configContract.bundleSizeLimit();
+    const bundleSizeLimit = await this.uploadRepository.bundleSizeLimit();
     const bundle = await this.dataModelEngine.initialiseBundling(this.bundleSequenceNumber, bundleSizeLimit);
 
     if (await this.strategy.shouldBundle(bundle)) {
