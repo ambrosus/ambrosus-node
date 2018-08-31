@@ -26,6 +26,7 @@ import prometheusMetricsHandler from '../routes/prometheus_metrics.js';
 import asyncMiddleware from '../middlewares/async_middleware';
 import {Role} from '../services/roles_repository';
 import fallbackRouter from '../routes/fallback';
+import Raven from 'raven';
 
 export default class ServerWorker extends Worker {
   constructor(modelEngine, web3, role, config, logger) {
@@ -41,6 +42,9 @@ export default class ServerWorker extends Worker {
 
     this.collectMetricsInterval = promClient.collectDefaultMetrics({timeout: 10000});
     const app = express();
+
+    Raven.config(this.config.sentryDSN).install();
+    app.use(Raven.requestHandler());
 
     app.use(loggerMiddleware(this.logger));
     app.use(prometheusMiddleware(promClient));
@@ -65,6 +69,8 @@ export default class ServerWorker extends Worker {
 
     app.use('*', fallbackRouter(this.config));
 
+    app.use(Raven.errorHandler());
+    
     // Should always be last
     app.use(errorHandling(this.logger));
 
