@@ -20,6 +20,9 @@ export default class UploadRepository {
 
   async uploadBundle(bundleId, storagePeriods) {
     const fee = await this.feesWrapper.feeForUpload(storagePeriods);
+    if (!await this.feesWrapper.checkIfEnoughFunds(fee)) {
+      throw new Error(`Insufficient funds: need at least ${fee} to upload the bundle`);
+    }
     return this.uploadsWrapper.registerBundle(bundleId, fee, storagePeriods);
   }
 
@@ -31,8 +34,12 @@ export default class UploadRepository {
     return this.shelteringWrapper.shelteringExpirationDate(bundleId);
   }
 
+  async bundleSizeLimit() {
+    return this.configWrapper.bundleSizeLimit();
+  }
+
   async verifyBundle(bundle) {
-    const bundleSizeLimit = await this.configWrapper.bundleSizeLimit();
+    const bundleSizeLimit = await this.bundleSizeLimit();
     if (bundle.content.entries.length > bundleSizeLimit) {
       throw new ValidationError('Bundle size surpasses the limit');
     }

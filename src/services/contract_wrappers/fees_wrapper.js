@@ -8,6 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import ContractWrapper from './contract_wrapper';
+import BN from 'bn.js';
 
 export default class FeesWrapper extends ContractWrapper {
   async contract() {
@@ -17,5 +18,10 @@ export default class FeesWrapper extends ContractWrapper {
   async feeForUpload(storagePeriods) {
     const contract = await this.contract();
     return contract.methods.getFeeForUpload(storagePeriods).call();
+  }
+
+  async checkIfEnoughFunds(fee) {
+    const balance = new BN(await this.web3.eth.getBalance(this.contractManager.defaultAddress()));
+    return balance.gte(new BN(fee));
   }
 }

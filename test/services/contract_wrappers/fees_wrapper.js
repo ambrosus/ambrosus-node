@@ -49,4 +49,35 @@ describe('Fees Wrapper', () => {
       expect(getFeeForUploadCallStub).to.be.calledOnce;
     });
   });
+
+  describe('checkIfEnoughFunds', () => {
+    const balance = '100';
+    const defaultAddress = '0xbeef';
+
+    beforeEach(async () => {
+      contractManagerMock = {
+        web3: {
+          eth: {
+            getBalance: sinon.stub().resolves(balance)
+          }
+        },
+        defaultAddress: () => defaultAddress
+      };
+      feesWrapper = new FeesWrapper(contractManagerMock);
+    });
+
+    it('calls getBalance with default address', async () => {
+      await feesWrapper.checkIfEnoughFunds('99');
+      expect(contractManagerMock.web3.eth.getBalance).to.be.calledOnceWith(defaultAddress);
+    });
+
+    it('returns true if fee ≤ balance', async () => {
+      expect(await feesWrapper.checkIfEnoughFunds('99')).to.be.true;
+      expect(await feesWrapper.checkIfEnoughFunds('100')).to.be.true;
+    });
+
+    it('returns false fee > balance', async () => {
+      expect(await feesWrapper.checkIfEnoughFunds('101')).to.be.false;
+    });
+  });
 });
