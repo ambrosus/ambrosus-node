@@ -111,6 +111,7 @@ describe('Data Model Engine', () => {
   });
 
   describe('Add account', () => {
+    const now = 22;
     let mockIdentityManager;
     let mockAccountRepository;
     let mockAccountAccessDefinitions;
@@ -118,7 +119,7 @@ describe('Data Model Engine', () => {
     let clock;
 
     before(() => {
-      clock = sinon.useFakeTimers(22000);
+      clock = sinon.useFakeTimers(now * 1000);
 
       mockIdentityManager = {
         createKeyPair: sinon.stub()
@@ -150,11 +151,9 @@ describe('Data Model Engine', () => {
     it('validates with mockIdentityManager and delegates to accountRepository', async () => {
       const request = addAccountRequest();
       const registrationResponse = {
-        address: account.address,
-        permissions: ['permission1', 'permission2'],
+        ...request,
         registeredBy: adminAccount.address,
-        registeredOn: 22,
-        accessLevel: 7
+        registeredOn: now
       };
       expect(await modelEngine.addAccount(request, createTokenFor(adminAccount.address)))
         .to.deep.equal(registrationResponse);

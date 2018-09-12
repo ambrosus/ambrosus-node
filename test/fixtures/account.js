@@ -11,6 +11,7 @@ const addAccountRequest = (fields) => ({
   address: account.address,
   permissions: ['permission1', 'permission2'],
   accessLevel: 7,
+  organization: 2,
   ...fields
 });
 
