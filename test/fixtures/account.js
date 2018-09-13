@@ -11,7 +11,7 @@ import allPermissions from '../../src/utils/all_permissions';
 
 const addAccountRequest = (fields) => ({
   address: account.address,
-  permissions: [allPermissions.registerAccount],
+  permissions: [allPermissions.registerAccounts],
   accessLevel: 7,
   organization: 2,
   ...fields
@@ -19,7 +19,7 @@ const addAccountRequest = (fields) => ({
 
 const account = {
   address: '0x742E62CC7A19Ef7D9c44306C07FAd54B5bF6d4bE',
-  permissions: [allPermissions.registerAccount],
+  permissions: [allPermissions.registerAccounts],
   accessLevel: 7
 };
 
