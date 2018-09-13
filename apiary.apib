@@ -116,13 +116,14 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 Account can hold any number of following permissions:
 
 * create_entity - allows account to create assets and events
-* register_accounts - allows account to add new accounts and manage already existing ones
+* register_accounts - allows account to add new accounts
+* manage_accounts - allows account to view and manage existing accounts
 
 ### /accounts
 
 #### Add account [POST]
 
-__Warning__ Message sender needs to have "register_accounts" permission
+__Warning__ Request sender needs to have "register_accounts" permission
 
 + Request (application/json)
 
@@ -135,13 +136,15 @@ __Warning__ Message sender needs to have "register_accounts" permission
         + address (string) - An address of the new account
         + permissions (array) - A list of permissions granted to this account
         + accessLevel (number) - Access level of the account. Should be a non-negative integer.
+        + organization (number, optional) - Identifier of the organization the account belongs to.
 
     + Body
 
             {
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
                 "permissions" : ["register_accounts","create_entity"],
-                "accessLevel" : 0
+                "accessLevel" : 0,
+                "organization": 12623
             }
 
 
@@ -157,7 +160,8 @@ __Warning__ Message sender needs to have "register_accounts" permission
                 "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
                 "registeredOn": 32141243,
                 "permissions": ["register_accounts", "create_entity"],
-                "accessLevel": 0
+                "accessLevel": 0,
+                "organization": 12623
             }
 
     + Schema
@@ -185,6 +189,9 @@ __Warning__ Message sender needs to have "register_accounts" permission
                   "type" : "string"
                   }
                   "example": ["register_accounts", "create_entity"]
+                },
+                "organization": {
+                  "type": "integer"
                 }
               }
             }
@@ -211,6 +218,8 @@ __Warning__ Message sender needs to have "register_accounts" permission
 
 #### Find accounts [GET]
 
+__Warning__ Request sender needs to have "manage_accounts" permission
+
 Finds accounts satisfying provided criteria.
 
 + Parameters
@@ -235,6 +244,7 @@ Finds accounts satisfying provided criteria.
               + registeredOn (number) -  - UNIX timestamp of account registration.
               + permissions (array) - A list of permissions granted to this account
               + accessLevel (number) - Access level of the account. Should be a non-negative integer.
+              + organization (number) - Identifier of the organization the account belongs to.
         + resultCount (number) - Total number of accounts matching provided criteria.
 
 
@@ -246,7 +256,8 @@ Finds accounts satisfying provided criteria.
                         "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd"
                         "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
                         "permissions": ["register_accounts", "create_entity"],
-                        "accessLevel": 4
+                        "accessLevel": 4,
+                        "organization": 12351
                     }
                 ],
                 "resultCount": 322
@@ -281,6 +292,8 @@ Finds accounts satisfying provided criteria.
 
 #### Get account [GET]
 
+__Warning__ Request sender needs to have "manage_accounts" permission
+
 + Parameters
     + accountAddress (string) - An address of the account
 
@@ -299,6 +312,7 @@ Finds accounts satisfying provided criteria.
         + registeredOn (number) -  - UNIX timestamp of account registration.
         + permissions (array) - A list of permissions granted to this account
         + accessLevel (number) - Access level of the account. Should be a non-negative integer.
+        + organization (number) - Identifier of the organization the account belongs to
 
     + Body
 
@@ -361,7 +375,7 @@ Finds accounts satisfying provided criteria.
 
 #### Modify account [PUT]
 
-__Warning__ Message sender needs to have "register_accounts" permission
+__Warning__ Request sender needs to have "manage_accounts" permission
 
 + Parameters
     + accountAddress (string) - An address of the account
@@ -375,8 +389,9 @@ __Warning__ Message sender needs to have "register_accounts" permission
             Authorization: AMB_TOKEN ...
 
     + Attributes (object)
-        + permissions (array) - A list of permissions granted to this account
-        + accessLevel (number) - Access level of the account. Should be a non-negative integer.
+        + permissions (array, optional) - A list of permissions granted to this account
+        + accessLevel (number, optional) - Access level of the account. Should be a non-negative integer.
+        + organization (number, optional) - Identifier of the organization the account belongs to
 
     + Body
 
