@@ -8,8 +8,9 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import validateAndCast from '../utils/validations';
-import {PermissionError} from '../errors/errors';
+import {PermissionError, ValidationError} from '../errors/errors';
 import {getTimestamp} from '../utils/time_utils';
+import allPermissions from '../utils/all_permissions';
 
 export default class AccountAccessDefinitions {
   constructor(identityManager, accountRepository) {
@@ -28,11 +29,11 @@ export default class AccountAccessDefinitions {
   }
 
   async ensureCanRegisterAccount(address) {
-    return this.ensureHasPermission(address, 'register_account');
+    return this.ensureHasPermission(address, allPermissions.registerAccount);
   }
 
   async ensureCanCreateEntity(address) {
-    return this.ensureHasPermission(address, 'create_entity');
+    return this.ensureHasPermission(address, allPermissions.createEntity);
   }
 
   async getTokenCreatorAccessLevel(tokenData) {
@@ -53,10 +54,16 @@ export default class AccountAccessDefinitions {
   defaultAdminAccount(address) {
     return {
       address,
-      permissions: ['register_account', 'create_entity'],
+      permissions: [allPermissions.registerAccount, allPermissions.createEntity],
       registeredOn: getTimestamp(),
       accessLevel: 1000
     };
+  }
+
+  validateCorrectPermission(permissionName) {
+    if (!Object.values(allPermissions).includes(permissionName)) {
+      throw new ValidationError(`${permissionName} is not a valid permission. Only permissions allowed are:\n${Object.values(allPermissions)}`);
+    }
   }
 
   validateAndCastFindAccountParams(params) {
@@ -83,6 +90,8 @@ export default class AccountAccessDefinitions {
       .fieldsConstrainedToSet(allowedFields)
       .isNonNegativeInteger(['accessLevel', 'organization'])
       .isAddress(['address']);
+
+    account.permissions.forEach(this.validateCorrectPermission);
   }
 
   validateModifyAccountRequest(params) {
@@ -92,5 +101,9 @@ export default class AccountAccessDefinitions {
       .fieldsConstrainedToSet(allowedParametersList)
       .isNonNegativeInteger(['accessLevel', 'organization'])
       .validate(['permissions'], (permissions) => Array.isArray(permissions), 'Permissions should be an array');
+
+    if (params.permissions) {
+      params.permissions.forEach(this.validateCorrectPermission);
+    }
   }
 }

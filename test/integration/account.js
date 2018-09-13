@@ -12,9 +12,14 @@ import chaiHttp from 'chai-http';
 import chaiAsPromised from 'chai-as-promised';
 import {properAddress, properSecret} from '../helpers/web3chai';
 import ServerApparatus, {apparatusScenarioProcessor} from '../helpers/server_apparatus';
-import {addAccountRequest, adminAccountWithSecret, accountWithSecret, account} from '../fixtures/account';
+import {
+  addAccountRequest,
+  adminAccountWithSecret,
+  notRegisteredAccount
+} from '../fixtures/account';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {put} from '../../src/utils/dict_utils';
+import allPermissions from '../../src/utils/all_permissions';
 
 
 chai.use(chaiHttp);
@@ -27,6 +32,7 @@ const {expect} = chai;
 describe('Accounts - Integrations', async () => {
   let apparatus;
   let scenario;
+  const newAccount = addAccountRequest();
 
   before(async () => {
     apparatus = new ServerApparatus();
@@ -45,29 +51,28 @@ describe('Accounts - Integrations', async () => {
       const result = await apparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
-        .send(addAccountRequest());
-      expect(result.body.address).to.be.equal(account.address);
-      expect(result.body.permissions).to.be.deep.equal(['permission1', 'permission2']);
-      expect(result.body.accessLevel).to.be.equal(7);
+        .send(newAccount);
+      expect(result.body.address).to.be.equal(newAccount.address);
+      expect(result.body.permissions).to.be.deep.equal(newAccount.permissions);
+      expect(result.body.accessLevel).to.be.equal(newAccount.accessLevel);
       expect(result.body.registeredBy).to.be.equal(adminAccountWithSecret.address);
       expect(result.body).to.have.property('registeredOn');
       expect(result.status).to.eq(201);
     });
 
-    it('should fail to create if no token', async () => {
+    it('should fail to create if no token given', async () => {
       const pendingRequest = apparatus.request()
         .post('/accounts')
-        .send(addAccountRequest());
+        .send(newAccount);
       await expect(pendingRequest)
         .to.eventually.be.rejected
         .and.have.property('status', 401);
     });
 
     it('should fail to create account if non-existing user', async () => {
-      const nonExistingUser = accountWithSecret;
       const pendingRequest = apparatus.request()
         .post('/accounts')
-        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(nonExistingUser.secret)}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(notRegisteredAccount.secret)}`)
         .send(addAccountRequest());
       await expect(pendingRequest)
         .to.eventually.be.rejected
@@ -80,15 +85,15 @@ describe('Accounts - Integrations', async () => {
       const registeredAccount = await apparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
-        .send(addAccountRequest());
+        .send(newAccount);
       const response = await apparatus.request()
         .get(`/accounts/${registeredAccount.body.address}`)
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send({});
-      expect(response.body.address).to.equal(registeredAccount.body.address);
+      expect(response.body.address).to.equal(newAccount.address);
       expect(response.body.secret).to.be.undefined;
-      expect(registeredAccount.body.permissions).to.be.deep.equal(['permission1', 'permission2']);
-      expect(response.body.accessLevel).to.be.equal(7);
+      expect(response.body.permissions).to.be.deep.equal(newAccount.permissions);
+      expect(response.body.accessLevel).to.be.equal(newAccount.accessLevel);
       expect(registeredAccount.body.registeredBy).to.be.equal(adminAccountWithSecret.address);
       expect(response.body).to.have.property('registeredOn');
     });
@@ -106,7 +111,7 @@ describe('Accounts - Integrations', async () => {
 
   describe('Modify an account', () => {
     let storedAccount;
-    const changedPermissions = ['perm1', 'perm2', 'perm3'];
+    const changedPermissions = [allPermissions.createAsset];
     const accessLevel = 4;
     const organization = 5;
     let modifyRequest;
@@ -115,7 +120,7 @@ describe('Accounts - Integrations', async () => {
       storedAccount = await apparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
-        .send(addAccountRequest());
+        .send(newAccount);
       modifyRequest = {permissions : changedPermissions, accessLevel, organization};
     });
 
@@ -142,10 +147,9 @@ describe('Accounts - Integrations', async () => {
     });
 
     it('should fail to modify account if non-existing requester user', async () => {
-      const nonExistingUser = accountWithSecret;
       const pendingRequest = apparatus.request()
         .put(`/accounts/${storedAccount.body.address}`)
-        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(nonExistingUser.secret)}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(notRegisteredAccount.secret)}`)
         .send(modifyRequest);
       await expect(pendingRequest)
         .to.eventually.be.rejected
@@ -186,10 +190,10 @@ describe('Accounts - Integrations', async () => {
   describe('Find accounts', () => {
     beforeEach(async () => {
       await scenario.addAccount(0, null,
-        {permissions: ['register_account', 'perm2'], accessLevel: 1});
+        {permissions: [allPermissions.registerAccount, allPermissions.createEvent], accessLevel: 1});
       await scenario.addAccount(1, null,
-        {permissions: ['perm1', 'perm2'], accessLevel: 2});
-      await scenario.addAccount(0, null, {permissions: ['perm1'], accessLevel: 3});
+        {permissions: [allPermissions.createEntity, allPermissions.manageAccounts], accessLevel: 2});
+      await scenario.addAccount(0, null, {permissions: [allPermissions.createAsset], accessLevel: 3});
     });
 
     it('finding accounts returns all accounts if no parameters', async () => {
@@ -222,10 +226,9 @@ describe('Accounts - Integrations', async () => {
     });
 
     it('should fail if non-existing requester user', async () => {
-      const nonExistingUser = accountWithSecret;
       const pendingRequest = apparatus.request()
         .get(`/accounts`)
-        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(nonExistingUser.secret)}`)
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(notRegisteredAccount.secret)}`)
         .send();
       await expect(pendingRequest)
         .to.eventually.be.rejected
