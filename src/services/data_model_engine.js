@@ -60,6 +60,7 @@ export default class DataModelEngine {
     if (!sender) {
       throw new PermissionError(`Sender account ${tokenData.createdBy} not found.`);
     }
+    await this.accountAccessDefinitions.ensureCanManageAccounts(tokenData.createdBy);
     const result = await this.accountRepository.get(address);
     if (!result) {
       throw new NotFoundError(`Account ${address} not found.`);
@@ -69,13 +70,13 @@ export default class DataModelEngine {
 
   async findAccounts(params, tokenData) {
     const validatedParams = this.accountAccessDefinitions.validateAndCastFindAccountParams(params);
-    await this.accountAccessDefinitions.ensureCanRegisterAccount(tokenData.createdBy);
+    await this.accountAccessDefinitions.ensureCanManageAccounts(tokenData.createdBy);
     const findAccountQueryObject = this.findAccountQueryObjectFactory.create(validatedParams);
     return await findAccountQueryObject.execute();
   }
 
   async modifyAccount(accountToChange, accountRequest, tokenData) {
-    await this.accountAccessDefinitions.ensureCanRegisterAccount(tokenData.createdBy);
+    await this.accountAccessDefinitions.ensureCanManageAccounts(tokenData.createdBy);
     this.accountAccessDefinitions.validateModifyAccountRequest(accountRequest);
     await this.getAccount(accountToChange, tokenData);
     return await this.accountRepository.update(accountToChange, accountRequest);
