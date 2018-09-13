@@ -174,6 +174,10 @@ describe('Account Access Definitions', () => {
       account = addAccountRequest();
     });
 
+    it('does not throw if account is valid', async () => {
+      accountAccessDefinitions.validateAddAccountRequest(account);
+    });
+
     for (const field of ['address', 'permissions', 'accessLevel']) {
       // eslint-disable-next-line no-loop-func
       it(`throws if the ${field} field is missing`, () => {
@@ -184,6 +188,26 @@ describe('Account Access Definitions', () => {
 
     it(`throws if surplus fields are passed`, () => {
       const brokenData = put(account, 'extraField', 'extraValue');
+      expect(() => accountAccessDefinitions.validateAddAccountRequest(brokenData)).to.throw(ValidationError);
+    });
+
+    it('throws if organization is not a number', async () => {
+      const brokenData = put(account, 'organization', 'abc');
+      expect(() => accountAccessDefinitions.validateAddAccountRequest(brokenData)).to.throw(ValidationError);
+    });
+
+    it('throws if organization is negative', async () => {
+      const brokenData = put(account, 'organization', -10);
+      expect(() => accountAccessDefinitions.validateAddAccountRequest(brokenData)).to.throw(ValidationError);
+    });
+
+    it('throws if organization is not an integer', async () => {
+      const brokenData = put(account, 'organization', 3.14);
+      expect(() => accountAccessDefinitions.validateAddAccountRequest(brokenData)).to.throw(ValidationError);
+    });
+
+    it('throws if accessLevel is not a number', async () => {
+      const brokenData = put(account, 'accessLevel', 'abc');
       expect(() => accountAccessDefinitions.validateAddAccountRequest(brokenData)).to.throw(ValidationError);
     });
 
@@ -204,15 +228,38 @@ describe('Account Access Definitions', () => {
   });
 
   describe('validating account modification', () => {
+    it('does not throw when all possible fields are valid', async () => {
+      const validParams = {permissions: ['permission1'], accessLevel: 3, organization: 3};
+      expect(() => accountAccessDefinitions.validateModifyAccountRequest(validParams)).to.not.throw();
+    });
+
     it(`throws if surplus parameters are passed`, () => {
       const notSupportedParams = {permissions : ['param1', 'param2'], extraParam : 'extraValue'};
       expect(() => accountAccessDefinitions.validateModifyAccountRequest(notSupportedParams)).to.throw(ValidationError);
     });
 
-    it(`throws if any parameters is invalid`, () => {
+    it('throws if permissions field is not valid', async () => {
       expect(() => accountAccessDefinitions.validateModifyAccountRequest({permissions : 'notArrayPermission'}))
         .to.throw(ValidationError);
+      expect(() => accountAccessDefinitions.validateModifyAccountRequest({permissions : 12}))
+        .to.throw(ValidationError);
+    });
+
+    it('throws if access level is not valid', async () => {
+      expect(() => accountAccessDefinitions.validateModifyAccountRequest({accessLevel: 'not a number'}))
+        .to.throw(ValidationError);
       expect(() => accountAccessDefinitions.validateModifyAccountRequest({accessLevel: -5}))
+        .to.throw(ValidationError);
+      expect(() => accountAccessDefinitions.validateModifyAccountRequest({accessLevel: 1.4}))
+        .to.throw(ValidationError);
+    });
+
+    it(`throws if organization is not valid`, () => {
+      expect(() => accountAccessDefinitions.validateModifyAccountRequest({organization: 'not a number'}))
+        .to.throw(ValidationError);
+      expect(() => accountAccessDefinitions.validateModifyAccountRequest({organization: -5}))
+        .to.throw(ValidationError);
+      expect(() => accountAccessDefinitions.validateModifyAccountRequest({organization: 1.4}))
         .to.throw(ValidationError);
     });
   });

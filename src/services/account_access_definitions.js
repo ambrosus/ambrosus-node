@@ -71,25 +71,26 @@ export default class AccountAccessDefinitions {
   }
 
   validateAddAccountRequest(account) {
-    const registrationFields = [
+    const requiredFields = [
       'address',
       'permissions',
       'accessLevel'
     ];
+    const allowedFields = [...requiredFields, 'organization'];
 
     validateAndCast(account)
-      .required(registrationFields)
-      .fieldsConstrainedToSet(registrationFields)
-      .isNonNegativeInteger(['accessLevel'])
+      .required(requiredFields)
+      .fieldsConstrainedToSet(allowedFields)
+      .isNonNegativeInteger(['accessLevel', 'organization'])
       .isAddress(['address']);
   }
 
   validateModifyAccountRequest(params) {
-    const allowedParametersList = ['permissions', 'accessLevel'];
+    const allowedParametersList = ['permissions', 'accessLevel', 'organization'];
 
     validateAndCast(params)
       .fieldsConstrainedToSet(allowedParametersList)
-      .isNonNegativeInteger(['accessLevel'])
+      .isNonNegativeInteger(['accessLevel', 'organization'])
       .validate(['permissions'], (permissions) => Array.isArray(permissions), 'Permissions should be an array');
   }
 }

@@ -43,13 +43,13 @@ export default class DataModelEngine {
   async addAccount(accountRequest, tokenData) {
     await this.accountAccessDefinitions.ensureCanRegisterAccount(tokenData.createdBy);
     this.accountAccessDefinitions.validateAddAccountRequest(accountRequest);
-
     const accountToStore = {
       address: accountRequest.address,
       permissions: accountRequest.permissions,
       registeredBy: tokenData.createdBy,
       registeredOn: getTimestamp(),
-      accessLevel: accountRequest.accessLevel
+      accessLevel: accountRequest.accessLevel,
+      organization: accountRequest.organization
     };
     await this.accountRepository.store(accountToStore);
     return accountToStore;
