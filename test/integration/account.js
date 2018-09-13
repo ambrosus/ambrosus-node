@@ -190,7 +190,7 @@ describe('Accounts - Integrations', async () => {
   describe('Find accounts', () => {
     beforeEach(async () => {
       await scenario.addAccount(0, null,
-        {permissions: [allPermissions.registerAccount, allPermissions.createEvent], accessLevel: 1});
+        {permissions: [allPermissions.registerAccounts, allPermissions.createEvent], accessLevel: 1});
       await scenario.addAccount(1, null,
         {permissions: [allPermissions.createEntity, allPermissions.manageAccounts], accessLevel: 2});
       await scenario.addAccount(0, null, {permissions: [allPermissions.createAsset], accessLevel: 3});

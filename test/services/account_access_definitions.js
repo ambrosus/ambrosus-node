@@ -86,7 +86,7 @@ describe('Account Access Definitions', () => {
 
     it('ensureCanRegisterAccount calls ensurePermission with `register_account`', async () => {
       await accountAccessDefinitions.ensureCanRegisterAccount(mockAccount.address);
-      expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, allPermissions.registerAccount);
+      expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, allPermissions.registerAccounts);
     });
 
     it('ensureCanCreateEntity calls ensurePermission with `create_entity`', async () => {
@@ -108,7 +108,7 @@ describe('Account Access Definitions', () => {
     expect(accountAccessDefinitions.defaultAdminAccount('0x1234')).to.deep.include(
       {
         address: '0x1234',
-        permissions: [allPermissions.registerAccount, allPermissions.createEntity],
+        permissions: [allPermissions.registerAccounts, allPermissions.createEntity],
         accessLevel: 1000,
         registeredOn: 15
       });

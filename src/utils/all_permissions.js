@@ -10,12 +10,11 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 const allPermissions = Object.freeze({
   superAccount: 'super_account',
   protectedAccount: 'protected_account',
-  registerAccounts: 'register_accounts',
   manageAccounts: 'manage_accounts',
+  registerAccounts: 'register_accounts',
   createAsset: 'create_asset',
   createEvent: 'create_event',
-  createEntity: 'create_entity',
-  registerAccount: 'register_account'
+  createEntity: 'create_entity'
 });
 
 export default allPermissions;
