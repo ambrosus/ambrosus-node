@@ -77,7 +77,7 @@ describe('Account Access Definitions', () => {
     });
   });
 
-  describe('ensureCanRegisterAccount & ensureCanCreateEntity', () => {
+  describe('ensureCan...', () => {
     let ensureHasPermissionStub;
 
     before(() => {
@@ -87,6 +87,11 @@ describe('Account Access Definitions', () => {
     it('ensureCanRegisterAccount calls ensurePermission with `register_account`', async () => {
       await accountAccessDefinitions.ensureCanRegisterAccount(mockAccount.address);
       expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, allPermissions.registerAccounts);
+    });
+
+    it('ensureCanManageAccounts calls ensurePermission with `manage_accounts`', async () => {
+      await accountAccessDefinitions.ensureCanManageAccounts(mockAccount.address);
+      expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, allPermissions.manageAccounts);
     });
 
     it('ensureCanCreateEntity calls ensurePermission with `create_entity`', async () => {
@@ -108,7 +113,7 @@ describe('Account Access Definitions', () => {
     expect(accountAccessDefinitions.defaultAdminAccount('0x1234')).to.deep.include(
       {
         address: '0x1234',
-        permissions: [allPermissions.registerAccounts, allPermissions.createEntity],
+        permissions: [allPermissions.manageAccounts, allPermissions.registerAccounts, allPermissions.createEntity],
         accessLevel: 1000,
         registeredOn: 15
       });

@@ -32,6 +32,10 @@ export default class AccountAccessDefinitions {
     return this.ensureHasPermission(address, allPermissions.registerAccounts);
   }
 
+  async ensureCanManageAccounts(address) {
+    return this.ensureHasPermission(address, allPermissions.manageAccounts);
+  }
+
   async ensureCanCreateEntity(address) {
     return this.ensureHasPermission(address, allPermissions.createEntity);
   }
@@ -54,7 +58,7 @@ export default class AccountAccessDefinitions {
   defaultAdminAccount(address) {
     return {
       address,
-      permissions: [allPermissions.registerAccounts, allPermissions.createEntity],
+      permissions: [allPermissions.manageAccounts, allPermissions.registerAccounts, allPermissions.createEntity],
       registeredOn: getTimestamp(),
       accessLevel: 1000
     };
