@@ -13,8 +13,7 @@ const allPermissions = Object.freeze({
   manageAccounts: 'manage_accounts',
   registerAccounts: 'register_accounts',
   createAsset: 'create_asset',
-  createEvent: 'create_event',
-  createEntity: 'create_entity'
+  createEvent: 'create_event'
 });
 
 export default allPermissions;

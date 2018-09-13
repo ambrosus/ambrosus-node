@@ -174,7 +174,7 @@ describe('Find Event Query Object', () => {
       before(async () => {
         scenario = new ScenarioBuilder(identityManager);
         await scenario.addAdminAccount(adminAccountWithSecret);
-        await scenario.addAccount(0, accountWithSecret, {permissions: [allPermissions.createEntity]});
+        await scenario.addAccount(0, accountWithSecret, {permissions: [allPermissions.createEvent]});
         await scenario.addAsset(0, {timestamp: 0});
         await scenario.addAsset(0, {timestamp: 1});
 

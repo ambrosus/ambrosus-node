@@ -367,7 +367,7 @@ describe('Data Model Engine', () => {
         getAsset: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        ensureCanCreateEntity: sinon.stub()
+        ensureCanCreateAsset: sinon.stub()
       };
 
       modelEngine = new DataModelEngine({
@@ -385,7 +385,7 @@ describe('Data Model Engine', () => {
       mockEntityBuilder.setEntityUploadTimestamp.returns(mockAsset);
       mockEntityRepository.storeAsset.resolves();
       mockEntityRepository.getAsset.resolves(null);
-      mockAccountAccessDefinitions.ensureCanCreateEntity.resolves();
+      mockAccountAccessDefinitions.ensureCanCreateAsset.resolves();
     };
 
     describe('positive case', () => {
@@ -398,8 +398,8 @@ describe('Data Model Engine', () => {
         expect(mockEntityBuilder.validateAsset).to.have.been.calledWith(mockAsset);
       });
 
-      it('checks if creator has required permission', async () => {
-        expect(mockAccountAccessDefinitions.ensureCanCreateEntity)
+      it('checks if creator has `create_asset` permission', async () => {
+        expect(mockAccountAccessDefinitions.ensureCanCreateAsset)
           .to.have.been.calledWith(mockAsset.content.idData.createdBy);
       });
 
@@ -426,7 +426,7 @@ describe('Data Model Engine', () => {
       });
 
       it('throws if creator has no permission for adding assets', async () => {
-        mockAccountAccessDefinitions.ensureCanCreateEntity.throws(new PermissionError());
+        mockAccountAccessDefinitions.ensureCanCreateAsset.throws(new PermissionError());
         await expect(modelEngine.createAsset(mockAsset)).to.be.rejectedWith(PermissionError);
         expect(mockEntityRepository.storeAsset).to.have.been.not.called;
       });
@@ -650,7 +650,7 @@ describe('Data Model Engine', () => {
         getEvent: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        ensureCanCreateEntity: sinon.stub()
+        ensureCanCreateEvent: sinon.stub()
       };
 
       modelEngine = new DataModelEngine({
@@ -669,7 +669,7 @@ describe('Data Model Engine', () => {
       mockEntityRepository.storeEvent.resolves();
       mockEntityRepository.getAsset.resolves(mockAsset);
       mockEntityRepository.getEvent.resolves(null);
-      mockAccountAccessDefinitions.ensureCanCreateEntity.resolves();
+      mockAccountAccessDefinitions.ensureCanCreateEvent.resolves();
     };
 
     describe('positive case', () => {
@@ -682,8 +682,8 @@ describe('Data Model Engine', () => {
         expect(mockEntityBuilder.validateEvent).to.have.been.calledWith(mockEvent);
       });
 
-      it('checks if creator has required permission', async () => {
-        expect(mockAccountAccessDefinitions.ensureCanCreateEntity)
+      it('checks if creator has `create_event` permission', async () => {
+        expect(mockAccountAccessDefinitions.ensureCanCreateEvent)
           .to.have.been.calledWith(mockEvent.content.idData.createdBy);
       });
 
@@ -714,7 +714,7 @@ describe('Data Model Engine', () => {
       });
 
       it('throws if creator has no required permission', async () => {
-        mockAccountAccessDefinitions.ensureCanCreateEntity.throws(new PermissionError());
+        mockAccountAccessDefinitions.ensureCanCreateEvent.throws(new PermissionError());
         await expect(modelEngine.createEvent(mockAsset)).to.be.rejectedWith(PermissionError);
         expect(mockEntityRepository.storeEvent).to.have.been.not.called;
       });

@@ -192,7 +192,7 @@ describe('Accounts - Integrations', async () => {
       await scenario.addAccount(0, null,
         {permissions: [allPermissions.registerAccounts, allPermissions.createEvent], accessLevel: 1});
       await scenario.addAccount(1, null,
-        {permissions: [allPermissions.createEntity, allPermissions.manageAccounts], accessLevel: 2});
+        {permissions: [allPermissions.createEvent, allPermissions.manageAccounts], accessLevel: 2});
       await scenario.addAccount(0, null, {permissions: [allPermissions.createAsset], accessLevel: 3});
     });
 

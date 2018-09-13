@@ -35,7 +35,7 @@ describe('Events Integrations: Find by data entries', () => {
 
   beforeEach(async () => {
     await scenario.addAdminAccount(adminAccountWithSecret);
-    await scenario.addAccount(0, accountWithSecret, {permissions: [allPermissions.createEntity], accessLevel});
+    await scenario.addAccount(0, accountWithSecret, {permissions: [allPermissions.createEvent], accessLevel});
     await scenario.addAsset(0, {sequenceNumber: 0});
     await scenario.addAsset(0, {sequenceNumber: 1});
 
