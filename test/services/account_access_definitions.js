@@ -94,9 +94,14 @@ describe('Account Access Definitions', () => {
       expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, allPermissions.manageAccounts);
     });
 
-    it('ensureCanCreateEntity calls ensurePermission with `create_entity`', async () => {
-      await accountAccessDefinitions.ensureCanCreateEntity(mockAccount.address);
-      expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, allPermissions.createEntity);
+    it('ensureCanCreateAsset calls ensurePermission with `create_asset`', async () => {
+      await accountAccessDefinitions.ensureCanCreateAsset(mockAccount.address);
+      expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, allPermissions.createAsset);
+    });
+
+    it('ensureCanCreateEvent calls ensurePermission with `create_event`', async () => {
+      await accountAccessDefinitions.ensureCanCreateEvent(mockAccount.address);
+      expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, allPermissions.createEvent);
     });
 
     afterEach(() => {
@@ -113,7 +118,7 @@ describe('Account Access Definitions', () => {
     expect(accountAccessDefinitions.defaultAdminAccount('0x1234')).to.deep.include(
       {
         address: '0x1234',
-        permissions: [allPermissions.manageAccounts, allPermissions.registerAccounts, allPermissions.createEntity],
+        permissions: [allPermissions.manageAccounts, allPermissions.registerAccounts, allPermissions.createAsset, allPermissions.createEvent],
         accessLevel: 1000,
         registeredOn: 15
       });

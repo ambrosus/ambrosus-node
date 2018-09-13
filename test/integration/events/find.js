@@ -35,7 +35,7 @@ describe('Events Integrations: Find', () => {
 
   before(async () => {
     await scenario.addAdminAccount(adminAccountWithSecret);
-    await scenario.addAccount(0, accountWithSecret, {permissions: [allPermissions.createEntity], accessLevel});
+    await scenario.addAccount(0, accountWithSecret, {permissions: [allPermissions.createEvent], accessLevel});
     await scenario.addAsset(0, {timestamp: 0});
     await scenario.addAsset(0, {timestamp: 1});
     await scenario.generateEvents(

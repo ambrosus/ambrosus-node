@@ -104,7 +104,7 @@ describe('Events Integrations: Create', () => {
       .and.have.property('status', 403);
   });
 
-  it('returns 403 for permission error (no `create_entity` permission)', async () => {
+  it('returns 403 for permission error (no `create_event` permission)', async () => {
     const notPermittedAsset = createFullEvent(apparatus.identityManager,
       {
         createdBy: otherAccount.address,

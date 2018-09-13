@@ -115,7 +115,8 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 
 Account can hold any number of following permissions:
 
-* create_entity - allows account to create assets and events
+* create_asset - allows account to create assets
+* create_event - allows account to create events
 * register_accounts - allows account to add new accounts
 * manage_accounts - allows account to view and manage existing accounts
 
@@ -142,7 +143,7 @@ __Warning__ Request sender needs to have "register_accounts" permission
 
             {
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
-                "permissions" : ["register_accounts","create_entity"],
+                "permissions" : ["register_accounts","create_asset"],
                 "accessLevel" : 0,
                 "organization": 12623
             }
@@ -159,7 +160,7 @@ __Warning__ Request sender needs to have "register_accounts" permission
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
                 "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
                 "registeredOn": 32141243,
-                "permissions": ["register_accounts", "create_entity"],
+                "permissions": ["register_accounts", "create_asset"],
                 "accessLevel": 0,
                 "organization": 12623
             }
@@ -188,7 +189,7 @@ __Warning__ Request sender needs to have "register_accounts" permission
                   "items" : {
                   "type" : "string"
                   }
-                  "example": ["register_accounts", "create_entity"]
+                  "example": ["register_accounts", "create_asset"]
                 },
                 "organization": {
                   "type": "integer"
@@ -255,7 +256,7 @@ Finds accounts satisfying provided criteria.
                     {
                         "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd"
                         "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
-                        "permissions": ["register_accounts", "create_entity"],
+                        "permissions": ["register_accounts", "create_asset"],
                         "accessLevel": 4,
                         "organization": 12351
                     }
@@ -320,7 +321,7 @@ __Warning__ Request sender needs to have "manage_accounts" permission
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
                 "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
                 "registeredOn": 32141243,
-                "permissions": ["register_accounts", "create_entity"],
+                "permissions": ["register_accounts", "create_asset"],
                 "accessLevel": 4
             }
 
@@ -345,7 +346,7 @@ __Warning__ Request sender needs to have "manage_accounts" permission
                   "items" : {
                   "type" : "string"
                   }
-                  "example": ["register_accounts", "create_entity"]
+                  "example": ["register_accounts", "create_asset"]
                 },
                 "accessLevel": {
                   "type": "integer"
@@ -396,7 +397,7 @@ __Warning__ Request sender needs to have "manage_accounts" permission
     + Body
 
             {
-                "permissions" : ["register_accounts","create_entity"],
+                "permissions" : ["register_accounts","create_asset"],
                 "accessLevel" : 0
             }
 
@@ -410,7 +411,7 @@ __Warning__ Request sender needs to have "manage_accounts" permission
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
                 "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
                 "registeredOn": 32141243,
-                "permissions": ["register_accounts", "create_entity"],
+                "permissions": ["register_accounts", "create_asset"],
                 "accessLevel": 4
             }
 
@@ -438,7 +439,7 @@ __Warning__ Request sender needs to have "manage_accounts" permission
                   "items" : {
                   "type" : "string"
                   }
-                  "example": ["register_accounts", "create_entity"]
+                  "example": ["register_accounts", "create_asset"]
                 }
               }
             }
@@ -476,7 +477,7 @@ Assets are identified by an `assetId` field which is a sha3 hash calculated from
 
 Places (after intensive validations) the provided asset object into the system.
 
-__Warning__ Message sender needs to have "create_entity" permission
+__Warning__ Request sender needs to have "create_asset" permission
 
 + Request (application/json)
 
@@ -578,7 +579,7 @@ __Warning__ Message sender needs to have "create_entity" permission
 
 + Response 403 (application/json)
 
-    The createdBy user is not registered or has no "create_entity" permission
+    The createdBy user is not registered or has no "create_asset" permission
 
     + Body
 
@@ -728,7 +729,7 @@ Following event types are predefined:
 
 Places (after intensive validations) the provided event object into the system.
 
-__Warning__ Message sender needs to have "create_entity" permission
+__Warning__ Message sender needs to have "create_event" permission
 
 + Parameters
 
@@ -866,7 +867,7 @@ __Warning__ Message sender needs to have "create_entity" permission
 
 + Response 403 (application/json)
 
-    The createdBy user is not registered or has no "create_entity" permission
+    The createdBy user is not registered or has no "create_event" permission
 
     + Body
 

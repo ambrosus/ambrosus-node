@@ -36,8 +36,12 @@ export default class AccountAccessDefinitions {
     return this.ensureHasPermission(address, allPermissions.manageAccounts);
   }
 
-  async ensureCanCreateEntity(address) {
-    return this.ensureHasPermission(address, allPermissions.createEntity);
+  async ensureCanCreateAsset(address) {
+    return this.ensureHasPermission(address, allPermissions.createAsset);
+  }
+
+  async ensureCanCreateEvent(address) {
+    return this.ensureHasPermission(address, allPermissions.createEvent);
   }
 
   async getTokenCreatorAccessLevel(tokenData) {
@@ -58,7 +62,7 @@ export default class AccountAccessDefinitions {
   defaultAdminAccount(address) {
     return {
       address,
-      permissions: [allPermissions.manageAccounts, allPermissions.registerAccounts, allPermissions.createEntity],
+      permissions: [allPermissions.manageAccounts, allPermissions.registerAccounts, allPermissions.createAsset, allPermissions.createEvent],
       registeredOn: getTimestamp(),
       accessLevel: 1000
     };
