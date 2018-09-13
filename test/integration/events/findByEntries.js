@@ -14,6 +14,7 @@ import ServerApparatus, {apparatusScenarioProcessor} from '../../helpers/server_
 import chaiHttp from 'chai-http';
 import {accountWithSecret, adminAccountWithSecret} from '../../fixtures/account';
 import ScenarioBuilder from '../../fixtures/scenario_builder';
+import allPermissions from '../../../src/utils/all_permissions';
 
 chai.use(chaiHttp);
 chai.use(sinonChai);
@@ -34,7 +35,7 @@ describe('Events Integrations: Find by data entries', () => {
 
   beforeEach(async () => {
     await scenario.addAdminAccount(adminAccountWithSecret);
-    await scenario.addAccount(0, accountWithSecret, {permissions: ['create_entity'], accessLevel});
+    await scenario.addAccount(0, accountWithSecret, {permissions: [allPermissions.createEntity], accessLevel});
     await scenario.addAsset(0, {sequenceNumber: 0});
     await scenario.addAsset(0, {sequenceNumber: 1});
 

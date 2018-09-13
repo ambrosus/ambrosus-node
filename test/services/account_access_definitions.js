@@ -18,17 +18,18 @@ import {account, addAccountRequest} from '../fixtures/account';
 import {pick, put} from '../../src/utils/dict_utils';
 import resetHistory from '../helpers/reset_history';
 import createTokenFor from '../fixtures/create_token_for';
+import allPermissions from '../../src/utils/all_permissions';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Account Access Definitions', () => {
-  const permissions = ['permission1', 'permission2'];
+  const mockPermissions = ['permission1', 'permission2'];
   const accessLevel = 4;
   const mockAccount = {
     ...account,
-    permissions,
+    permissions: mockPermissions,
     accessLevel
   };
   let mockIdentityManager = null;
@@ -52,14 +53,14 @@ describe('Account Access Definitions', () => {
   });
 
   it('hasPermission returns true only if an account has permission', () => {
-    expect(accountAccessDefinitions.hasPermission(mockAccount, permissions[0])).to.eq(true);
-    expect(accountAccessDefinitions.hasPermission(mockAccount, permissions[1])).to.eq(true);
+    expect(accountAccessDefinitions.hasPermission(mockAccount, mockPermissions[0])).to.eq(true);
+    expect(accountAccessDefinitions.hasPermission(mockAccount, mockPermissions[1])).to.eq(true);
     expect(accountAccessDefinitions.hasPermission(mockAccount, 'topsecret')).to.eq(false);
   });
 
   describe('ensurePermission', () => {
     it('asks accountRepository for account', async () => {
-      await expect(accountAccessDefinitions.ensureHasPermission(mockAccount.address, permissions[0]))
+      await expect(accountAccessDefinitions.ensureHasPermission(mockAccount.address, mockPermissions[0]))
         .to.be.fulfilled;
       expect(mockAccountRepository.get).to.be.calledWith(mockAccount.address);
     });
@@ -71,7 +72,7 @@ describe('Account Access Definitions', () => {
 
     it('throws PermissionError when account with this address not found', async () => {
       mockAccountRepository.get.resolves(null);
-      await expect(accountAccessDefinitions.ensureHasPermission(mockAccount.address, permissions[0]))
+      await expect(accountAccessDefinitions.ensureHasPermission(mockAccount.address, mockPermissions[0]))
         .to.be.rejectedWith(PermissionError);
     });
   });
@@ -85,12 +86,12 @@ describe('Account Access Definitions', () => {
 
     it('ensureCanRegisterAccount calls ensurePermission with `register_account`', async () => {
       await accountAccessDefinitions.ensureCanRegisterAccount(mockAccount.address);
-      expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, 'register_account');
+      expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, allPermissions.registerAccount);
     });
 
     it('ensureCanCreateEntity calls ensurePermission with `create_entity`', async () => {
       await accountAccessDefinitions.ensureCanCreateEntity(mockAccount.address);
-      expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, 'create_entity');
+      expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, allPermissions.createEntity);
     });
 
     afterEach(() => {
@@ -107,7 +108,7 @@ describe('Account Access Definitions', () => {
     expect(accountAccessDefinitions.defaultAdminAccount('0x1234')).to.deep.include(
       {
         address: '0x1234',
-        permissions: ['register_account', 'create_entity'],
+        permissions: [allPermissions.registerAccount, allPermissions.createEntity],
         accessLevel: 1000,
         registeredOn: 15
       });
@@ -225,16 +226,33 @@ describe('Account Access Definitions', () => {
       const brokenData = put(account, 'address', '0x123');
       expect(() => accountAccessDefinitions.validateAddAccountRequest(brokenData)).to.throw(ValidationError);
     });
+
+    describe('permissions', () => {
+      it('does not throw for all valid permissions', async () => {
+        accountAccessDefinitions.validateAddAccountRequest({...account, permissions: Object.values(allPermissions)});
+      });
+
+      it('throws if unknown permission provided', async () => {
+        const brokenData = put(account, 'permissions', [...Object.values(allPermissions), 'bad_permission']);
+        expect(() => accountAccessDefinitions.validateAddAccountRequest(brokenData)).to.throw(ValidationError);
+      });
+    });
   });
 
   describe('validating account modification', () => {
     it('does not throw when all possible fields are valid', async () => {
-      const validParams = {permissions: ['permission1'], accessLevel: 3, organization: 3};
+      const validParams = {permissions: [allPermissions.createAsset], accessLevel: 3, organization: 3};
       expect(() => accountAccessDefinitions.validateModifyAccountRequest(validParams)).to.not.throw();
     });
 
+    it('does not throw when some fields are omitted', async () => {
+      expect(() => accountAccessDefinitions.validateModifyAccountRequest({permissions: []})).to.not.throw();
+      expect(() => accountAccessDefinitions.validateModifyAccountRequest({accessLevel: 1})).to.not.throw();
+      expect(() => accountAccessDefinitions.validateModifyAccountRequest({organization: 2})).to.not.throw();
+    });
+
     it(`throws if surplus parameters are passed`, () => {
-      const notSupportedParams = {permissions : ['param1', 'param2'], extraParam : 'extraValue'};
+      const notSupportedParams = {permissions : [allPermissions.createAsset], extraParam : 'extraValue'};
       expect(() => accountAccessDefinitions.validateModifyAccountRequest(notSupportedParams)).to.throw(ValidationError);
     });
 
@@ -261,6 +279,17 @@ describe('Account Access Definitions', () => {
         .to.throw(ValidationError);
       expect(() => accountAccessDefinitions.validateModifyAccountRequest({organization: 1.4}))
         .to.throw(ValidationError);
+    });
+
+    describe('permissions', () => {
+      it('does not throw for all valid permissions', async () => {
+        accountAccessDefinitions.validateModifyAccountRequest({permissions: Object.values(allPermissions)});
+      });
+
+      it('throws if unknown permission provided', async () => {
+        const brokenData = {permissions: [...Object.values(allPermissions), 'bad_permission']};
+        expect(() => accountAccessDefinitions.validateModifyAccountRequest(brokenData)).to.throw(ValidationError);
+      });
     });
   });
 });
