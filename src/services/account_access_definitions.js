@@ -21,14 +21,14 @@ export default class AccountAccessDefinitions {
   async ensureHasPermission(address, permissionName) {
     const account = await this.accountRepository.get(address);
     if (account === null) {
-      throw new PermissionError(`Address ${address} doesn't exist`);
+      throw new PermissionError(`Account with address ${address} doesn't exist`);
     }
-    if (!this.hasPermission(account, permissionName)) {
+    if (!this.hasPermission(account, allPermissions.superAccount) && !this.hasPermission(account, permissionName)) {
       throw new PermissionError(`${account.address} has no '${permissionName}' permission`);
     }
   }
 
-  async ensureCanRegisterAccount(address) {
+  async ensureCanRegisterAccounts(address) {
     return this.ensureHasPermission(address, allPermissions.registerAccounts);
   }
 
@@ -42,6 +42,52 @@ export default class AccountAccessDefinitions {
 
   async ensureCanCreateEvent(address) {
     return this.ensureHasPermission(address, allPermissions.createEvent);
+  }
+
+  async ensureCanRegisterTheAccount(address, newAccount) {
+    const creator = await this.accountRepository.get(address);
+    if (creator === null) {
+      throw new PermissionError(`Account with address ${address} doesn't exist`);
+    }
+    if (this.hasPermission(creator, allPermissions.superAccount)) {
+      return;
+    }
+    this.ensureNoExceedingPermissions(creator, newAccount);
+    this.ensureSameOrganization(creator, newAccount);
+  }
+
+  async ensureCanModifyTheAccount(address, accountToChange, accountModificationRequest) {
+    const modifier = await this.accountRepository.get(address);
+    if (modifier === null) {
+      throw new PermissionError(`Account with address ${address} doesn't exist`);
+    }
+    if (this.hasPermission(modifier, allPermissions.superAccount)) {
+      return;
+    }
+    this.ensureNoExceedingPermissions(modifier, accountModificationRequest);
+    this.ensureSameOrganization(modifier, accountToChange);
+    if (this.hasPermission(accountToChange, allPermissions.protectedAccount)) {
+      throw new PermissionError('You cannot modify protected accounts');
+    }
+  }
+
+  ensureNoExceedingPermissions(managingAccount, managedAccount) {
+    if (managedAccount.permissions) {
+      const exceedingPermissions = managedAccount.permissions.filter(
+        (permission) => !managingAccount.permissions.includes(permission));
+      if (exceedingPermissions.length > 0) {
+        throw new PermissionError(`No permissions: ${exceedingPermissions}`);
+      }
+    }
+    if (managedAccount.accessLevel !== undefined && managedAccount.accessLevel > managingAccount.accessLevel) {
+      throw new PermissionError(`Minimal access level ${managedAccount.accessLevel} required`);
+    }
+  }
+
+  ensureSameOrganization(managingAccount, managedAccount) {
+    if (managedAccount.organization && managingAccount.organization !== managedAccount.organization) {
+      throw new PermissionError(`You belong to the different organization`);
+    }
   }
 
   async getTokenCreatorAccessLevel(tokenData) {
@@ -62,7 +108,7 @@ export default class AccountAccessDefinitions {
   defaultAdminAccount(address) {
     return {
       address,
-      permissions: [allPermissions.manageAccounts, allPermissions.registerAccounts, allPermissions.createAsset, allPermissions.createEvent],
+      permissions: [allPermissions.superAccount],
       registeredOn: getTimestamp(),
       accessLevel: 1000
     };
@@ -70,7 +116,8 @@ export default class AccountAccessDefinitions {
 
   validateCorrectPermission(permissionName) {
     if (!Object.values(allPermissions).includes(permissionName)) {
-      throw new ValidationError(`${permissionName} is not a valid permission. Only permissions allowed are:\n${Object.values(allPermissions)}`);
+      throw new ValidationError(
+        `${permissionName} is not a valid permission. Only permissions allowed are:\n${Object.values(allPermissions)}`);
     }
   }
 

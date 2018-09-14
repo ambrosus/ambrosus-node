@@ -41,8 +41,9 @@ export default class DataModelEngine {
   }
 
   async addAccount(accountRequest, tokenData) {
-    await this.accountAccessDefinitions.ensureCanRegisterAccount(tokenData.createdBy);
+    await this.accountAccessDefinitions.ensureCanRegisterAccounts(tokenData.createdBy);
     this.accountAccessDefinitions.validateAddAccountRequest(accountRequest);
+    await this.accountAccessDefinitions.ensureCanRegisterTheAccount(tokenData.createdBy, accountRequest);
     const accountToStore = {
       address: accountRequest.address,
       permissions: accountRequest.permissions,
@@ -72,14 +73,15 @@ export default class DataModelEngine {
     const validatedParams = this.accountAccessDefinitions.validateAndCastFindAccountParams(params);
     await this.accountAccessDefinitions.ensureCanManageAccounts(tokenData.createdBy);
     const findAccountQueryObject = this.findAccountQueryObjectFactory.create(validatedParams);
-    return await findAccountQueryObject.execute();
+    return findAccountQueryObject.execute();
   }
 
-  async modifyAccount(accountToChange, accountRequest, tokenData) {
+  async modifyAccount(accountToChangeAddress, accountModificationRequest, tokenData) {
     await this.accountAccessDefinitions.ensureCanManageAccounts(tokenData.createdBy);
-    this.accountAccessDefinitions.validateModifyAccountRequest(accountRequest);
-    await this.getAccount(accountToChange, tokenData);
-    return await this.accountRepository.update(accountToChange, accountRequest);
+    this.accountAccessDefinitions.validateModifyAccountRequest(accountModificationRequest);
+    const accountToChange = await this.getAccount(accountToChangeAddress, tokenData);
+    await this.accountAccessDefinitions.ensureCanModifyTheAccount(tokenData.createdBy, accountToChange, accountModificationRequest);
+    return this.accountRepository.update(accountToChangeAddress, accountModificationRequest);
   }
 
   async createAsset(asset) {
