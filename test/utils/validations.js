@@ -112,6 +112,9 @@ describe('validation', () => {
 
     it('throws if parameter not parsable', () => {
       expect(() => validator.castNumber(['nan'])).to.throw(ValidationError);
+      expect(() => validateAndCast({badParam: 'r1'}).castNumber(['badParam'])).to.throw(ValidationError);
+      expect(() => validateAndCast({badParam: '1r'}).castNumber(['badParam'])).to.throw(ValidationError);
+      expect(() => validateAndCast({badParam: '3e'}).castNumber(['badParam'])).to.throw(ValidationError);
     });
 
     it('does not modify original object', async () => {
