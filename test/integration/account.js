@@ -111,6 +111,13 @@ describe('Accounts - Integrations', async () => {
         .and.have.property('status', 403);
     });
 
+    it('should fail to create account with same address twice', async () => {
+      await createAccountRequest(newAccount, adminAccountWithSecret);
+      await expect(createAccountRequest(newAccount, adminAccountWithSecret))
+        .to.eventually.be.rejected
+        .and.have.property('status', 400);
+    });
+
     it('should fail to create when creator lacks register_accounts permission', async () => {
       const accountWithoutPermissions = await injectAccount([allPermissions.manageAccounts, allPermissions.createEvent]);
       await expect(createAccountRequest(newAccount, accountWithoutPermissions))
