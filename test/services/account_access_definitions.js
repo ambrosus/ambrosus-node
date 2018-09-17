@@ -84,8 +84,9 @@ describe('Account Access Definitions', () => {
     });
   });
 
-  describe('permission checkers', () => {
+  describe('upload permission checkers', () => {
     let ensureHasPermissionStub;
+    const {accessLevel} = mockAccount;
 
     before(() => {
       ensureHasPermissionStub = sinon.stub(accountAccessDefinitions, 'ensureHasPermission');
@@ -97,8 +98,12 @@ describe('Account Access Definitions', () => {
     });
 
     it('ensureCanCreateEvent calls ensurePermission with `create_event`', async () => {
-      await accountAccessDefinitions.ensureCanCreateEvent(mockAccount.address);
+      await accountAccessDefinitions.ensureCanCreateEvent(mockAccount.address, accessLevel);
       expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, allPermissions.createEvent);
+    });
+
+    it(`throws PermissionError if new event's access level is greater than own`, async () => {
+      expect(accountAccessDefinitions.ensureCanCreateEvent(mockAccount.address, 1000)).to.be.eventually.rejectedWith(PermissionError);
     });
 
     afterEach(() => {

@@ -32,8 +32,12 @@ export default class AccountAccessDefinitions {
     return this.ensureHasPermission(address, allPermissions.createAsset);
   }
 
-  async ensureCanCreateEvent(address) {
-    return this.ensureHasPermission(address, allPermissions.createEvent);
+  async ensureCanCreateEvent(address, accessLevel) {
+    await this.ensureHasPermission(address, allPermissions.createEvent);
+    const creator = await this.accountRepository.get(address);
+    if (accessLevel > creator.accessLevel) {
+      throw new PermissionError(`Your access level needs to be not smaller than the access level of the created event`);
+    }
   }
 
   async ensureCanAddAccount(address, newAccountRequest) {

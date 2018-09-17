@@ -105,7 +105,7 @@ describe('Events Integrations: Create', () => {
   });
 
   it('returns 403 for permission error (no `create_event` permission)', async () => {
-    const notPermittedAsset = createFullEvent(apparatus.identityManager,
+    const notPermittedEvent = createFullEvent(apparatus.identityManager,
       {
         createdBy: otherAccount.address,
         assetId: asset.assetId
@@ -113,7 +113,23 @@ describe('Events Integrations: Create', () => {
 
     const request = apparatus.request()
       .post(`/assets/${asset.assetId}/events`)
-      .send(notPermittedAsset);
+      .send(notPermittedEvent);
+
+    await expect(request)
+      .to.eventually.be.rejected
+      .and.have.property('status', 403);
+  });
+
+  it('returns 403 when trying to create level with access level hither than own access level', async () => {
+    const highAccessLevelEvent = createFullEvent(apparatus.identityManager, {
+      createdBy: adminAccount.address,
+      assetId: asset.assetId,
+      accessLevel: 9999
+    }, undefined, adminAccount.secret);
+
+    const request = apparatus.request()
+      .post(`/assets/${asset.assetId}/events`)
+      .send(highAccessLevelEvent);
 
     await expect(request)
       .to.eventually.be.rejected
