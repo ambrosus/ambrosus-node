@@ -25,6 +25,7 @@ import ScenarioBuilder from '../fixtures/scenario_builder';
 
 import createTokenFor from '../fixtures/create_token_for';
 import resetHistory from '../helpers/reset_history';
+import allPermissions from '../../src/utils/all_permissions';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -130,8 +131,7 @@ describe('Data Model Engine', () => {
         count: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        ensureCanRegisterAccount: sinon.stub(),
-        validateAddAccountRequest: sinon.stub()
+        ensureCanAddAccount: sinon.stub()
       };
       modelEngine = new DataModelEngine({
         identityManager: mockIdentityManager,
@@ -144,8 +144,7 @@ describe('Data Model Engine', () => {
       resetHistory(mockIdentityManager, mockAccountRepository, mockAccountAccessDefinitions);
 
       mockAccountRepository.get.returns(adminAccount);
-      mockAccountAccessDefinitions.validateAddAccountRequest.resolves();
-      mockAccountAccessDefinitions.ensureCanRegisterAccount.resolves();
+      mockAccountAccessDefinitions.ensureCanAddAccount.resolves();
     });
 
     it('validates with mockIdentityManager and delegates to accountRepository', async () => {
@@ -157,31 +156,22 @@ describe('Data Model Engine', () => {
       };
       expect(await modelEngine.addAccount(request, createTokenFor(adminAccount.address)))
         .to.deep.equal(registrationResponse);
-      expect(mockAccountAccessDefinitions.validateAddAccountRequest).to.have.been.called;
-      expect(mockAccountAccessDefinitions.ensureCanRegisterAccount)
-        .to.have.been.calledWith(adminAccount.address);
-      expect(mockAccountRepository.store).to.have.been.calledWith({
+      expect(mockAccountAccessDefinitions.ensureCanAddAccount).to.been.calledOnceWith(adminAccount.address, request);
+      expect(mockAccountRepository.store).to.have.been.calledOnceWith({
         registeredBy : adminAccount.address,
         ...registrationResponse
       });
     });
 
-    it('throws ValidationError if wrong request format', async () => {
-      mockAccountAccessDefinitions.validateAddAccountRequest.throws(new ValidationError('an error'));
+    it('throws ValidationError if invalid account request', async () => {
+      mockAccountAccessDefinitions.ensureCanAddAccount.rejects(new ValidationError('an error'));
 
       const request = addAccountRequest();
       await expect(modelEngine.addAccount(request, createTokenFor(adminAccount.address))).to.be.rejectedWith(ValidationError);
     });
 
-    it('throws PermissionError if account sender account does not exist', async () => {
-      mockAccountAccessDefinitions.ensureCanRegisterAccount.rejects(new PermissionError());
-
-      const request = addAccountRequest();
-      await expect(modelEngine.addAccount(request, createTokenFor(adminAccount.address))).to.be.rejectedWith(PermissionError);
-    });
-
     it('throws PermissionError if account misses required permissions', async () => {
-      mockAccountAccessDefinitions.ensureCanRegisterAccount.throws(new PermissionError());
+      mockAccountAccessDefinitions.ensureCanAddAccount.rejects(new PermissionError('an error'));
 
       const request = addAccountRequest();
       await expect(modelEngine.addAccount(request, createTokenFor(adminAccount.address))).to.be.rejectedWith(PermissionError);
@@ -204,7 +194,7 @@ describe('Data Model Engine', () => {
         get: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        ensureCanManageAccounts: sinon.stub().resolves()
+        ensureHasPermission: sinon.stub().resolves()
       };
       modelEngine = new DataModelEngine({
         accountRepository: mockAccountRepository,
@@ -217,7 +207,7 @@ describe('Data Model Engine', () => {
     beforeEach(() => {
       resetHistory(mockAccountRepository, mockAccountAccessDefinitions);
       mockAccountRepository.get.returns(accountWithoutSecret);
-      mockAccountAccessDefinitions.ensureCanManageAccounts.resolves();
+      mockAccountAccessDefinitions.ensureHasPermission.resolves();
     });
 
     it('delegates to accountRepository', async () => {
@@ -226,9 +216,9 @@ describe('Data Model Engine', () => {
     });
 
     it('throws PermissionError if the sender misses `manage_accounts` permission', async () => {
-      mockAccountAccessDefinitions.ensureCanManageAccounts.throws(new PermissionError());
+      mockAccountAccessDefinitions.ensureHasPermission.throws(new PermissionError());
       await expect(modelEngine.getAccount(account.address, {createdBy : adminAccount.address})).to.be.rejectedWith(PermissionError);
-      expect(mockAccountAccessDefinitions.ensureCanManageAccounts).to.be.calledOnceWith(adminAccount.address);
+      expect(mockAccountAccessDefinitions.ensureHasPermission).to.be.calledOnceWith(adminAccount.address, allPermissions.manageAccounts);
     });
 
     it('throws PermissionError if non-existing sender', async () => {
@@ -261,7 +251,7 @@ describe('Data Model Engine', () => {
         execute: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        ensureCanManageAccounts: sinon.stub(),
+        ensureHasPermission: sinon.stub(),
         validateAndCastFindAccountParams: sinon.stub()
       };
       modelEngine = new DataModelEngine({
@@ -276,7 +266,7 @@ describe('Data Model Engine', () => {
       resetHistory(mockFindAccountQueryObjectFactory, mockAccountAccessDefinitions, mockFindAccountQueryObject);
       mockFindAccountQueryObjectFactory.create.returns(mockFindAccountQueryObject);
       mockFindAccountQueryObject.execute.returns({result: [accountWithoutSecret], resultCount: 1});
-      mockAccountAccessDefinitions.ensureCanManageAccounts.resolves();
+      mockAccountAccessDefinitions.ensureHasPermission.resolves();
       mockAccountAccessDefinitions.validateAndCastFindAccountParams.returns(validatedParams);
     });
 
@@ -292,9 +282,9 @@ describe('Data Model Engine', () => {
     });
 
     it('throws PermissionError if the sender misses `manage_accounts` permission', async () => {
-      mockAccountAccessDefinitions.ensureCanManageAccounts.throws(new PermissionError());
+      mockAccountAccessDefinitions.ensureHasPermission.throws(new PermissionError());
       await expect(modelEngine.findAccounts(mockParams, {createdBy : adminAccount.address})).to.be.rejectedWith(PermissionError);
-      expect(mockAccountAccessDefinitions.ensureCanManageAccounts).to.be.calledOnceWith(adminAccount.address);
+      expect(mockAccountAccessDefinitions.ensureHasPermission).to.be.calledOnceWith(adminAccount.address, allPermissions.manageAccounts);
     });
   });
 
@@ -302,51 +292,55 @@ describe('Data Model Engine', () => {
     let mockAccountRepository;
     let modelEngine;
     let mockAccountAccessDefinitions;
+    let getAccountStub;
     const account = put(accountWithSecret, {registeredBy : adminAccount.address, permissions : ['perm1', 'perm2']});
     const accountWithoutSecret = pick(account, 'secret');
     const modifyRequest = {permissions : ['changedPerm1', 'changedPerm2']};
-    const accountToModify = accountWithoutSecret.address;
+    const accountToModify = accountWithoutSecret;
     const modifiedAccount = put(accountWithoutSecret, modifyRequest);
 
     before(() => {
       mockAccountRepository = {
-        update: sinon.stub(),
-        get: sinon.stub()
+        update: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        ensureCanManageAccounts: sinon.stub(),
-        validateModifyAccountRequest: sinon.stub()
+        ensureCanModifyAccount: sinon.stub()
       };
       modelEngine = new DataModelEngine({
         accountRepository: mockAccountRepository,
         accountAccessDefinitions: mockAccountAccessDefinitions
       });
+      getAccountStub = sinon.stub(modelEngine, 'getAccount');
     });
 
     beforeEach(() => {
-      resetHistory(mockAccountRepository, mockAccountAccessDefinitions);
-      mockAccountRepository.update.returns(modifiedAccount);
-      mockAccountRepository.get.withArgs(adminAccount.address).returns(adminAccount);
-      mockAccountRepository.get.withArgs(accountToModify).returns(accountWithoutSecret);
-      mockAccountAccessDefinitions.ensureCanManageAccounts.resolves();
-      mockAccountAccessDefinitions.validateModifyAccountRequest.resolves();
+      resetHistory(mockAccountRepository, mockAccountAccessDefinitions, {getAccountStub});
+      mockAccountRepository.update.resolves(modifiedAccount);
+      getAccountStub.withArgs(adminAccount.address).resolves(adminAccount);
+      getAccountStub.withArgs(accountToModify.address).resolves(accountToModify);
+      mockAccountAccessDefinitions.ensureCanModifyAccount.resolves();
     });
 
-    it('validates request and delegates to AccountRepository', async () => {
-      expect(await modelEngine.modifyAccount(accountToModify, modifyRequest, {createdBy : adminAccount.address})).to.deep.equal(modifiedAccount);
-      expect(mockAccountAccessDefinitions.validateModifyAccountRequest).to.have.been.calledWith(modifyRequest);
-      expect(mockAccountRepository.update).to.have.been.called;
+    it('gets modified account and delegates to AccountRepository', async () => {
+      expect(await modelEngine.modifyAccount(accountToModify.address, modifyRequest, {createdBy : adminAccount.address})).to.deep.equal(modifiedAccount);
+      expect(getAccountStub).to.be.calledOnceWith(accountToModify.address);
+      expect(mockAccountAccessDefinitions.ensureCanModifyAccount).to.be.calledOnceWith(adminAccount.address, accountToModify, modifyRequest);
+      expect(mockAccountRepository.update).to.have.been.calledOnceWith(accountToModify.address, modifyRequest);
     });
 
-    it('throws PermissionError if the sender misses `manage_accounts` permission', async () => {
-      mockAccountAccessDefinitions.ensureCanManageAccounts.throws(new PermissionError());
-      await expect(modelEngine.modifyAccount(accountToModify, modifyRequest, {createdBy : adminAccount.address})).to.rejectedWith(PermissionError);
-      expect(mockAccountAccessDefinitions.ensureCanManageAccounts).to.have.been.calledWith(adminAccount.address);
-    });
-
-    it('throws NotFoundError if modification of non-existing account requested', async () => {
-      mockAccountRepository.get.withArgs('0x1234').returns(null);
+    it('throws NotFoundError in case of modification of non-existing account requested', async () => {
+      getAccountStub.withArgs('0x1234').rejects(new NotFoundError());
       await expect(modelEngine.modifyAccount('0x1234', modifyRequest, {createdBy : adminAccount.address})).to.rejectedWith(NotFoundError);
+    });
+
+    it('throws PermissionError if the sender misses required permissions', async () => {
+      mockAccountAccessDefinitions.ensureCanModifyAccount.throws(new PermissionError());
+      await expect(modelEngine.modifyAccount(accountToModify.address, modifyRequest, {createdBy : adminAccount.address})).to.rejectedWith(PermissionError);
+    });
+
+    it('throws ValidationError when request is not valid', async () => {
+      mockAccountAccessDefinitions.ensureCanModifyAccount.throws(new ValidationError());
+      await expect(modelEngine.modifyAccount(accountToModify.address, modifyRequest, {createdBy : adminAccount.address})).to.rejectedWith(ValidationError);
     });
   });
 
