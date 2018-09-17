@@ -28,14 +28,6 @@ export default class AccountAccessDefinitions {
     }
   }
 
-  async ensureCanRegisterAccounts(address) {
-    return this.ensureHasPermission(address, allPermissions.registerAccounts);
-  }
-
-  async ensureCanManageAccounts(address) {
-    return this.ensureHasPermission(address, allPermissions.manageAccounts);
-  }
-
   async ensureCanCreateAsset(address) {
     return this.ensureHasPermission(address, allPermissions.createAsset);
   }
@@ -44,49 +36,47 @@ export default class AccountAccessDefinitions {
     return this.ensureHasPermission(address, allPermissions.createEvent);
   }
 
-  async ensureCanRegisterTheAccount(address, newAccount) {
+  async ensureCanAddAccount(address, newAccountRequest) {
+    await this.ensureHasPermission(address, allPermissions.registerAccounts);
+    this.validateAddAccountRequest(newAccountRequest);
     const creator = await this.accountRepository.get(address);
-    if (creator === null) {
-      throw new PermissionError(`Account with address ${address} doesn't exist`);
-    }
     if (this.hasPermission(creator, allPermissions.superAccount)) {
       return;
     }
-    this.ensureNoExceedingPermissions(creator, newAccount);
-    this.ensureSameOrganization(creator, newAccount);
+    this.ensureNoExceedingPermissions(creator, newAccountRequest);
+    this.ensureSameOrganization(creator, newAccountRequest);
   }
 
-  async ensureCanModifyTheAccount(address, accountToChange, accountModificationRequest) {
+  async ensureCanModifyAccount(address, accountToChange, accountModificationRequest) {
+    await this.ensureHasPermission(address, allPermissions.manageAccounts);
+    this.validateModifyAccountRequest(accountModificationRequest);
     const modifier = await this.accountRepository.get(address);
-    if (modifier === null) {
-      throw new PermissionError(`Account with address ${address} doesn't exist`);
-    }
     if (this.hasPermission(modifier, allPermissions.superAccount)) {
       return;
     }
     this.ensureNoExceedingPermissions(modifier, accountModificationRequest);
     this.ensureSameOrganization(modifier, accountToChange);
     if (this.hasPermission(accountToChange, allPermissions.protectedAccount)) {
-      throw new PermissionError('You cannot modify protected accounts');
+      throw new PermissionError('Protected accounts cannot be modified');
     }
   }
 
   ensureNoExceedingPermissions(managingAccount, managedAccount) {
     if (managedAccount.permissions) {
-      const exceedingPermissions = managedAccount.permissions.filter(
+      const hasExceedingPermissions = managedAccount.permissions.some(
         (permission) => !managingAccount.permissions.includes(permission));
-      if (exceedingPermissions.length > 0) {
-        throw new PermissionError(`No permissions: ${exceedingPermissions}`);
+      if (hasExceedingPermissions) {
+        throw new PermissionError(`You cannot assign other accounts the permissions you don't possess. Your permissions are: ${managingAccount.permissions}`);
       }
     }
     if (managedAccount.accessLevel !== undefined && managedAccount.accessLevel > managingAccount.accessLevel) {
-      throw new PermissionError(`Minimal access level ${managedAccount.accessLevel} required`);
+      throw new PermissionError(`Your access level needs to be not less than the one you want to set`);
     }
   }
 
   ensureSameOrganization(managingAccount, managedAccount) {
     if (managedAccount.organization && managingAccount.organization !== managedAccount.organization) {
-      throw new PermissionError(`You belong to the different organization`);
+      throw new PermissionError(`You need to belong to the same organization`);
     }
   }
 
@@ -117,7 +107,7 @@ export default class AccountAccessDefinitions {
   validateCorrectPermission(permissionName) {
     if (!Object.values(allPermissions).includes(permissionName)) {
       throw new ValidationError(
-        `${permissionName} is not a valid permission. Only permissions allowed are:\n${Object.values(allPermissions)}`);
+        `${permissionName} is not a valid permission. Allowed permissions are:\n${Object.values(allPermissions)}`);
     }
   }
 

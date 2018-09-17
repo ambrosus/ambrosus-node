@@ -10,6 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {NotFoundError, PermissionError, ValidationError} from '../errors/errors';
 import {getTimestamp} from '../utils/time_utils';
 import {pick, put} from '../utils/dict_utils';
+import allPermissions from '../utils/all_permissions';
 
 export default class DataModelEngine {
   constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, contractManager, uploadRepository, rolesRepository}) {
@@ -41,9 +42,7 @@ export default class DataModelEngine {
   }
 
   async addAccount(accountRequest, tokenData) {
-    await this.accountAccessDefinitions.ensureCanRegisterAccounts(tokenData.createdBy);
-    this.accountAccessDefinitions.validateAddAccountRequest(accountRequest);
-    await this.accountAccessDefinitions.ensureCanRegisterTheAccount(tokenData.createdBy, accountRequest);
+    await this.accountAccessDefinitions.ensureCanAddAccount(tokenData.createdBy, accountRequest);
     const accountToStore = {
       address: accountRequest.address,
       permissions: accountRequest.permissions,
@@ -61,7 +60,7 @@ export default class DataModelEngine {
     if (!sender) {
       throw new PermissionError(`Sender account ${tokenData.createdBy} not found.`);
     }
-    await this.accountAccessDefinitions.ensureCanManageAccounts(tokenData.createdBy);
+    await this.accountAccessDefinitions.ensureHasPermission(tokenData.createdBy, allPermissions.manageAccounts);
     const result = await this.accountRepository.get(address);
     if (!result) {
       throw new NotFoundError(`Account ${address} not found.`);
@@ -71,16 +70,14 @@ export default class DataModelEngine {
 
   async findAccounts(params, tokenData) {
     const validatedParams = this.accountAccessDefinitions.validateAndCastFindAccountParams(params);
-    await this.accountAccessDefinitions.ensureCanManageAccounts(tokenData.createdBy);
+    await this.accountAccessDefinitions.ensureHasPermission(tokenData.createdBy, allPermissions.manageAccounts);
     const findAccountQueryObject = this.findAccountQueryObjectFactory.create(validatedParams);
     return findAccountQueryObject.execute();
   }
 
   async modifyAccount(accountToChangeAddress, accountModificationRequest, tokenData) {
-    await this.accountAccessDefinitions.ensureCanManageAccounts(tokenData.createdBy);
-    this.accountAccessDefinitions.validateModifyAccountRequest(accountModificationRequest);
     const accountToChange = await this.getAccount(accountToChangeAddress, tokenData);
-    await this.accountAccessDefinitions.ensureCanModifyTheAccount(tokenData.createdBy, accountToChange, accountModificationRequest);
+    await this.accountAccessDefinitions.ensureCanModifyAccount(tokenData.createdBy, accountToChange, accountModificationRequest);
     return this.accountRepository.update(accountToChangeAddress, accountModificationRequest);
   }
 

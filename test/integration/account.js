@@ -182,7 +182,7 @@ describe('Accounts - Integrations', async () => {
     });
 
     it('should fail with 403 if no manage_account permission', async () => {
-      const accountWithoutPermissions = await injectAccount(Object.values(pick(allPermissions, 'manageAccounts')));
+      const accountWithoutPermissions = await injectAccount([]);
       const registeredAccount = await apparatus.request()
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
@@ -191,7 +191,7 @@ describe('Accounts - Integrations', async () => {
         .get(`/accounts/${registeredAccount.body.address}`)
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(accountWithoutPermissions.secret)}`)
         .send({});
-      expect(pendingRequest)
+      await expect(pendingRequest)
         .to.eventually.be.rejected
         .and.have.property('status', 403);
     });

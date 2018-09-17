@@ -91,16 +91,6 @@ describe('Account Access Definitions', () => {
       ensureHasPermissionStub = sinon.stub(accountAccessDefinitions, 'ensureHasPermission');
     });
 
-    it('ensureCanRegisterAccounts calls ensurePermission with `register_account`', async () => {
-      await accountAccessDefinitions.ensureCanRegisterAccounts(mockAccount.address);
-      expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, allPermissions.registerAccounts);
-    });
-
-    it('ensureCanManageAccounts calls ensurePermission with `manage_accounts`', async () => {
-      await accountAccessDefinitions.ensureCanManageAccounts(mockAccount.address);
-      expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, allPermissions.manageAccounts);
-    });
-
     it('ensureCanCreateAsset calls ensurePermission with `create_asset`', async () => {
       await accountAccessDefinitions.ensureCanCreateAsset(mockAccount.address);
       expect(ensureHasPermissionStub).to.be.calledWith(mockAccount.address, allPermissions.createAsset);
@@ -120,71 +110,95 @@ describe('Account Access Definitions', () => {
     });
   });
 
-  describe('ensureCanRegisterTheAccount', () => {
+  describe('ensureCanAddAccount', () => {
     const registeredAccount = {
       permissions: [allPermissions.createEvent, allPermissions.createAsset],
       accessLevel: 4,
       organization: 3
     };
     const creatorAddress = '0x123';
-    let ensurePermissionsStub;
+    let ensureNoExceedingPermissionsStub;
+    let ensureHasPermissionStub;
     let checkOrganizationStub;
     let hasPermissionStub;
+    let validateRequestStub;
 
     before(() => {
-      ensurePermissionsStub = sinon.stub(accountAccessDefinitions, 'ensureNoExceedingPermissions');
+      ensureHasPermissionStub = sinon.stub(accountAccessDefinitions, 'ensureHasPermission');
+      ensureNoExceedingPermissionsStub = sinon.stub(accountAccessDefinitions, 'ensureNoExceedingPermissions');
       hasPermissionStub = sinon.stub(accountAccessDefinitions, 'hasPermission');
       checkOrganizationStub = sinon.stub(accountAccessDefinitions, 'ensureSameOrganization');
+      validateRequestStub = sinon.stub(accountAccessDefinitions, 'validateAddAccountRequest');
     });
 
     beforeEach(() => {
-      ensurePermissionsStub.returns();
+      ensureHasPermissionStub.resolves();
+      ensureNoExceedingPermissionsStub.returns();
       checkOrganizationStub.returns();
       hasPermissionStub.returns(false);
+      validateRequestStub.returns();
     });
 
-    it('gets the creator account and passes it to other methods', async () => {
-      await accountAccessDefinitions.ensureCanRegisterTheAccount(creatorAddress, registeredAccount);
+    it('calls ensureHasPermission to check if the registrar exists and has register_accounts permission', async () => {
+      await accountAccessDefinitions.ensureCanAddAccount(creatorAddress, registeredAccount);
+      expect(ensureHasPermissionStub).to.be.calledOnceWith(creatorAddress, allPermissions.registerAccounts);
+    });
+
+    it('calls validateAddAccountRequest to validate the request', async () => {
+      await accountAccessDefinitions.ensureCanAddAccount(creatorAddress, registeredAccount);
+      expect(validateRequestStub).to.be.calledOnceWith(registeredAccount);
+    });
+
+    it('gets the creator account and checks if it is able to create the given account', async () => {
+      await accountAccessDefinitions.ensureCanAddAccount(creatorAddress, registeredAccount);
       expect(mockAccountRepository.get).to.be.calledOnceWith(creatorAddress);
       expect(hasPermissionStub).to.be.calledOnceWith(mockAccount, allPermissions.superAccount);
-      expect(ensurePermissionsStub).to.be.calledOnceWith(mockAccount, registeredAccount);
+      expect(ensureNoExceedingPermissionsStub).to.be.calledOnceWith(mockAccount, registeredAccount);
       expect(checkOrganizationStub).to.be.calledOnceWith(mockAccount, registeredAccount);
     });
 
-    it('when the creator is super user does not perform checks', async () => {
-      hasPermissionStub.returns(true);
-      await accountAccessDefinitions.ensureCanRegisterTheAccount(creatorAddress, registeredAccount);
-      expect(ensurePermissionsStub).to.be.not.called;
+    it('when the creator is super user no further checks are made', async () => {
+      hasPermissionStub.withArgs(mockAccount, allPermissions.superAccount).returns(true);
+      await accountAccessDefinitions.ensureCanAddAccount(creatorAddress, registeredAccount);
+      expect(ensureNoExceedingPermissionsStub).to.be.not.called;
       expect(checkOrganizationStub).to.be.not.called;
     });
 
-    it('throws if creator account does not exist', async () => {
-      mockAccountRepository.get.resolves(null);
-      await expect(accountAccessDefinitions.ensureCanRegisterTheAccount(creatorAddress, registeredAccount)).to.be.eventually.rejectedWith(PermissionError);
+    it('throws if ensureHasPermission throws', async () => {
+      ensureHasPermissionStub.rejects();
+      await expect(accountAccessDefinitions.ensureCanAddAccount(creatorAddress, registeredAccount)).to.be.eventually.rejected;
+    });
+
+    it('throws if validateAddAccountRequest throws', async () => {
+      validateRequestStub.throws();
+      await expect(accountAccessDefinitions.ensureCanAddAccount(creatorAddress, registeredAccount)).to.be.eventually.rejected;
     });
 
     it('throws if ensureNoExceedingPermissions throws', async () => {
-      ensurePermissionsStub.throws();
-      await expect(accountAccessDefinitions.ensureCanRegisterTheAccount(creatorAddress, registeredAccount)).to.be.eventually.rejected;
+      ensureNoExceedingPermissionsStub.throws();
+      await expect(accountAccessDefinitions.ensureCanAddAccount(creatorAddress, registeredAccount)).to.be.eventually.rejected;
     });
 
     it('throws if ensureSameOrganization throws', async () => {
       checkOrganizationStub.throws();
-      await expect(accountAccessDefinitions.ensureCanRegisterTheAccount(creatorAddress, registeredAccount)).to.be.eventually.rejected;
+      await expect(accountAccessDefinitions.ensureCanAddAccount(creatorAddress, registeredAccount)).to.be.eventually.rejected;
     });
 
     afterEach(() => {
-      resetHistory({checkPermissionsStub: ensurePermissionsStub, checkOrganizationStub, hasPermissionStub});
+      resetHistory({ensureNoExceedingPermissionsStub, checkOrganizationStub, hasPermissionStub, validateRequestStub, ensureCanRegisterStub: ensureHasPermissionStub});
+      hasPermissionStub.resetBehavior();
     });
 
     after(() => {
-      ensurePermissionsStub.restore();
+      ensureNoExceedingPermissionsStub.restore();
       checkOrganizationStub.restore();
       hasPermissionStub.restore();
+      validateRequestStub.restore();
+      ensureHasPermissionStub.restore();
     });
   });
 
-  describe('ensureCanModifyTheAccount', () => {
+  describe('ensureCanModifyAccount', () => {
     const originalAccount = {
       permissions: [allPermissions.createEvent, allPermissions.createAsset],
       accessLevel: 4,
@@ -194,90 +208,113 @@ describe('Account Access Definitions', () => {
       accessLevel: 3,
       organization: 321
     };
-    const creatorAddress = '0x123';
-    let ensurePermissionsStub;
+    const modifierAddress = '0x123';
+    let ensureNoExceedingPermissionsStub;
+    let ensureHasPermissionStub;
     let checkOrganizationStub;
     let hasPermissionStub;
+    let validateRequestStub;
 
     before(() => {
-      ensurePermissionsStub = sinon.stub(accountAccessDefinitions, 'ensureNoExceedingPermissions');
+      ensureHasPermissionStub = sinon.stub(accountAccessDefinitions, 'ensureHasPermission');
+      ensureNoExceedingPermissionsStub = sinon.stub(accountAccessDefinitions, 'ensureNoExceedingPermissions');
       hasPermissionStub = sinon.stub(accountAccessDefinitions, 'hasPermission');
       checkOrganizationStub = sinon.stub(accountAccessDefinitions, 'ensureSameOrganization');
+      validateRequestStub = sinon.stub(accountAccessDefinitions, 'validateModifyAccountRequest');
     });
 
     beforeEach(() => {
-      ensurePermissionsStub.returns();
+      ensureHasPermissionStub.resolves();
+      ensureNoExceedingPermissionsStub.returns();
       checkOrganizationStub.returns();
       hasPermissionStub.returns(false);
+      validateRequestStub.returns();
     });
 
-    it('gets the modifier account and checks if has enough permissions', async () => {
-      await accountAccessDefinitions.ensureCanModifyTheAccount(creatorAddress, originalAccount, modificationRequest);
-      expect(mockAccountRepository.get).to.be.calledOnceWith(creatorAddress);
+    it('calls ensureHasPermission to check if modifier exists and has manage_accounts permission', async () => {
+      await accountAccessDefinitions.ensureCanModifyAccount(modifierAddress, originalAccount, modificationRequest);
+      expect(ensureHasPermissionStub).to.be.calledOnceWith(modifierAddress, allPermissions.manageAccounts);
+    });
+
+    it('calls validateModifyAccountRequest to validate the request', async () => {
+      await accountAccessDefinitions.ensureCanModifyAccount(modifierAddress, originalAccount, modificationRequest);
+      expect(validateRequestStub).to.be.calledOnceWith(modificationRequest);
+    });
+
+    it('gets the modifier account and checks if has enough permissions to perform the modification', async () => {
+      await accountAccessDefinitions.ensureCanModifyAccount(modifierAddress, originalAccount, modificationRequest);
+      expect(mockAccountRepository.get).to.be.calledOnceWith(modifierAddress);
       expect(hasPermissionStub).to.be.calledWith(mockAccount, allPermissions.superAccount);
-      expect(ensurePermissionsStub).to.be.calledOnceWith(mockAccount, modificationRequest);
+      expect(ensureNoExceedingPermissionsStub).to.be.calledOnceWith(mockAccount, modificationRequest);
       expect(checkOrganizationStub).to.be.calledOnceWith(mockAccount, originalAccount);
       expect(hasPermissionStub).to.be.calledWith(originalAccount, allPermissions.protectedAccount);
     });
 
-    it('when the creator is super user does not perform any more checks', async () => {
+    it('when the modifier is super user no further checks are made', async () => {
       hasPermissionStub.withArgs(mockAccount, allPermissions.superAccount).returns(true);
-      await accountAccessDefinitions.ensureCanModifyTheAccount(creatorAddress, originalAccount, modificationRequest);
-      expect(ensurePermissionsStub).to.be.not.called;
+      await accountAccessDefinitions.ensureCanModifyAccount(modifierAddress, originalAccount, modificationRequest);
+      expect(ensureNoExceedingPermissionsStub).to.be.not.called;
       expect(checkOrganizationStub).to.be.not.called;
     });
 
-    it('throws if tying to modify the protected account', async () => {
-      hasPermissionStub.withArgs(originalAccount, allPermissions.protectedAccount).returns(true);
-      await expect(accountAccessDefinitions.ensureCanModifyTheAccount(creatorAddress, originalAccount, modificationRequest)).to.be.eventually.rejectedWith(PermissionError);
+    it('throws if ensureHasPermission throws', async () => {
+      ensureHasPermissionStub.rejects();
+      await expect(accountAccessDefinitions.ensureCanModifyAccount(modifierAddress, originalAccount, modificationRequest)).to.be.eventually.rejected;
     });
 
-    it('throws if modifier account does not exist', async () => {
-      mockAccountRepository.get.resolves(null);
-      await expect(accountAccessDefinitions.ensureCanModifyTheAccount(creatorAddress, originalAccount, modificationRequest)).to.be.eventually.rejectedWith(PermissionError);
+    it('throws if validateAddAccountRequest throws', async () => {
+      validateRequestStub.throws();
+      await expect(accountAccessDefinitions.ensureCanModifyAccount(modifierAddress, originalAccount, modificationRequest)).to.be.eventually.rejected;
+    });
+
+    it('throws if trying to modify the protected account', async () => {
+      hasPermissionStub.withArgs(originalAccount, allPermissions.protectedAccount).returns(true);
+      await expect(accountAccessDefinitions.ensureCanModifyAccount(modifierAddress, originalAccount, modificationRequest)).to.be.eventually.rejectedWith(PermissionError);
     });
 
     it('throws if ensureNoExceedingPermissions throws', async () => {
-      ensurePermissionsStub.throws();
-      await expect(accountAccessDefinitions.ensureCanModifyTheAccount(creatorAddress, originalAccount, modificationRequest)).to.be.eventually.rejected;
+      ensureNoExceedingPermissionsStub.throws();
+      await expect(accountAccessDefinitions.ensureCanModifyAccount(modifierAddress, originalAccount, modificationRequest)).to.be.eventually.rejected;
     });
 
     it('throws if ensureSameOrganization throws', async () => {
       checkOrganizationStub.throws();
-      await expect(accountAccessDefinitions.ensureCanModifyTheAccount(creatorAddress, originalAccount, modificationRequest)).to.be.eventually.rejected;
+      await expect(accountAccessDefinitions.ensureCanModifyAccount(modifierAddress, originalAccount, modificationRequest)).to.be.eventually.rejected;
     });
 
     afterEach(() => {
-      resetHistory({checkPermissionsStub: ensurePermissionsStub, checkOrganizationStub, hasPermissionStub});
+      resetHistory({ensureNoExceedingPermissionsStub, checkOrganizationStub, hasPermissionStub, validateRequestStub, ensureCanManageAccountsStub: ensureHasPermissionStub});
       hasPermissionStub.resetBehavior();
     });
 
     after(() => {
-      ensurePermissionsStub.restore();
+      ensureNoExceedingPermissionsStub.restore();
       checkOrganizationStub.restore();
       hasPermissionStub.restore();
+      validateRequestStub.restore();
+      ensureHasPermissionStub.restore();
     });
   });
 
   describe('ensureNoExceedingPermissions', () => {
     const account = {permissions: ['a', 'b'], accessLevel: 3};
     it('passes when same permissions and same access level', () => {
-      accountAccessDefinitions.ensureNoExceedingPermissions(account, account);
+      expect(() => accountAccessDefinitions.ensureNoExceedingPermissions(account, account)).to.not.throw();
     });
 
     it('passes when second account has subset of first accounts permissions', () => {
-      accountAccessDefinitions.ensureNoExceedingPermissions(account, {permissions: ['a']});
-      accountAccessDefinitions.ensureNoExceedingPermissions(account, {permissions: ['b']});
-      accountAccessDefinitions.ensureNoExceedingPermissions(account, {permissions: []});
+      expect(() => accountAccessDefinitions.ensureNoExceedingPermissions(account, {permissions: ['a']})).to.not.throw();
+      expect(() => accountAccessDefinitions.ensureNoExceedingPermissions(account, {permissions: ['b']})).to.not.throw();
+      expect(() => accountAccessDefinitions.ensureNoExceedingPermissions(account, {permissions: []})).to.not.throw();
     });
 
     it('passes when second account access level is not greater than access level of first account', async () => {
-      accountAccessDefinitions.ensureNoExceedingPermissions(account, {accessLevel: 3});
-      accountAccessDefinitions.ensureNoExceedingPermissions(account, {accessLevel: 0});
+      expect(() => accountAccessDefinitions.ensureNoExceedingPermissions(account, {accessLevel: 3})).to.not.throw();
+      expect(() => accountAccessDefinitions.ensureNoExceedingPermissions(account, {accessLevel: 0})).to.not.throw();
     });
 
     it('passes when second account is an empty object', async () => {
-      accountAccessDefinitions.ensureNoExceedingPermissions(account, {});
+      expect(() => accountAccessDefinitions.ensureNoExceedingPermissions(account, {})).to.not.throw();
     });
 
     it('throws if second account has exceeding permissions', () => {
@@ -291,11 +328,11 @@ describe('Account Access Definitions', () => {
 
   describe('ensureSameOrganization', () => {
     it('passes when accounts have same organization', () => {
-      accountAccessDefinitions.ensureSameOrganization({organization: 1}, {organization: 1});
+      expect(() => accountAccessDefinitions.ensureSameOrganization({organization: 1}, {organization: 1})).to.not.throw();
     });
 
     it('passes when second account has no organization', async () => {
-      accountAccessDefinitions.ensureSameOrganization({organization: 1}, {});
+      expect(() => accountAccessDefinitions.ensureSameOrganization({organization: 1}, {})).to.not.throw();
     });
 
     it('throws when accounts have different organizations', async () => {
@@ -483,7 +520,7 @@ describe('Account Access Definitions', () => {
 
     describe('permissions', () => {
       it('does not throw for all valid permissions', async () => {
-        accountAccessDefinitions.validateModifyAccountRequest({permissions: Object.values(allPermissions)});
+        expect(() => accountAccessDefinitions.validateModifyAccountRequest({permissions: Object.values(allPermissions)})).to.not.throw();
       });
 
       it('throws if unknown permission provided', async () => {

@@ -115,7 +115,7 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 
 Account can hold any number of following permissions:
 
-* super_account - Almighty administrator account. Is able to perform all kinds of calls. Can be created and modified only by other super users
+* super_account - Almighty administrator account. Is able to perform all kinds of calls.
 * protected_account - account protected from modification. Protected accounts can be created only by super accounts or other protected accounts. Only super accounts can modify the protected accounts. 
 * create_asset - allows account to create assets
 * create_event - allows account to create events
@@ -137,9 +137,9 @@ __Warning__ Request sender needs to have "register_accounts" permission
 
     + Attributes (object)
         + address (string) - An address of the new account
-        + permissions (array) - A list of permissions granted to this account. It is not possible to give permissions the registrar lacks. 
-        + accessLevel (number) - Access level of the account. Should be a non-negative integer. Cannot be higher than creator's accessLevel.
-        + organization (number, optional) - Identifier of the organization the account belongs to. Should be same as the creator's organization
+        + permissions (array) - A list of permissions granted to this account. It is not possible to give permissions the request sender lacks. 
+        + accessLevel (number) - Access level of the account. Should be a non-negative integer. Cannot be higher than sender's accessLevel.
+        + organization (number, optional) - Identifier of the organization the account belongs to. Should be same as the sender's organization
 
     + Body
 
@@ -394,7 +394,7 @@ It is not possible to modify protected accounts and accounts belonging to differ
 
     + Attributes (object)
         + permissions (array, optional) - A list of permissions granted to this account. It is not possible to give permissions the request sender lacks. 
-        + accessLevel (number, optional) - Access level of the account. Should be a non-negative integer. Cannot be higher than creator's accessLevel.
+        + accessLevel (number, optional) - Access level of the account. Should be a non-negative integer. Cannot be higher than senders's accessLevel.
         + organization (number, optional) - Identifier of the organization the account belongs to.
     + Body
 
