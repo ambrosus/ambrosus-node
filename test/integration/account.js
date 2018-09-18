@@ -513,6 +513,16 @@ describe('Accounts - Integrations', async () => {
         .to.deep.equal([scenario.accounts[1].address, scenario.accounts[3].address, adminAccountWithSecret.address].sort());
     });
 
+    it('should fail if access level is not a number', async () => {
+      const pendingRequest = apparatus.request()
+        .get('/accounts?accessLevel=2n')
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+        .send();
+      await expect(pendingRequest)
+        .to.eventually.be.rejected
+        .and.have.property('status', 400);
+    });
+
     it('should filter by registeredBy', async () => {
       const response = await apparatus.request()
         .get(`/accounts?registeredBy=${scenario.accounts[1].address}`)
