@@ -135,7 +135,7 @@ export default class DataModelEngine {
     this.entityBuilder.validateEvent(event);
     const {createdBy: creatorAddress, assetId} = event.content.idData;
 
-    await this.accountAccessDefinitions.ensureCanCreateEvent(creatorAddress);
+    await this.accountAccessDefinitions.ensureCanCreateEvent(creatorAddress, event.content.idData.accessLevel);
 
     if (await this.entityRepository.getAsset(assetId) === null) {
       throw new ValidationError(`Target asset with id=${assetId} doesn't exist`);
