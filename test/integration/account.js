@@ -111,6 +111,13 @@ describe('Accounts - Integrations', async () => {
         .and.have.property('status', 403);
     });
 
+    it('should fail to create account with same address twice', async () => {
+      await createAccountRequest(newAccount, adminAccountWithSecret);
+      await expect(createAccountRequest(newAccount, adminAccountWithSecret))
+        .to.eventually.be.rejected
+        .and.have.property('status', 400);
+    });
+
     it('should fail to create when creator lacks register_accounts permission', async () => {
       const accountWithoutPermissions = await injectAccount([allPermissions.manageAccounts, allPermissions.createEvent]);
       await expect(createAccountRequest(newAccount, accountWithoutPermissions))
@@ -504,6 +511,16 @@ describe('Accounts - Integrations', async () => {
       expect(response.body.resultCount).to.equal(3);
       expect(response.body.results.map((account) => account.address).sort())
         .to.deep.equal([scenario.accounts[1].address, scenario.accounts[3].address, adminAccountWithSecret.address].sort());
+    });
+
+    it('should fail if access level is not a number', async () => {
+      const pendingRequest = apparatus.request()
+        .get('/accounts?accessLevel=2n')
+        .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
+        .send();
+      await expect(pendingRequest)
+        .to.eventually.be.rejected
+        .and.have.property('status', 400);
     });
 
     it('should filter by registeredBy', async () => {

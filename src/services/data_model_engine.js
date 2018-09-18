@@ -51,6 +51,9 @@ export default class DataModelEngine {
       accessLevel: accountRequest.accessLevel,
       organization: accountRequest.organization
     };
+    if (await this.accountRepository.get(accountToStore.address)) {
+      throw new ValidationError(`Account with address ${accountToStore.address} already exists`);
+    }
     await this.accountRepository.store(accountToStore);
     return accountToStore;
   }
