@@ -143,7 +143,7 @@ describe('Data Model Engine', () => {
     beforeEach(() => {
       resetHistory(mockIdentityManager, mockAccountRepository, mockAccountAccessDefinitions);
 
-      mockAccountRepository.get.returns(adminAccount);
+      mockAccountRepository.get.resolves(null);
       mockAccountAccessDefinitions.ensureCanAddAccount.resolves();
     });
 
@@ -157,10 +157,17 @@ describe('Data Model Engine', () => {
       expect(await modelEngine.addAccount(request, createTokenFor(adminAccount.address)))
         .to.deep.equal(registrationResponse);
       expect(mockAccountAccessDefinitions.ensureCanAddAccount).to.been.calledOnceWith(adminAccount.address, request);
+      expect(mockAccountRepository.get).to.be.calledOnceWith(request.address);
       expect(mockAccountRepository.store).to.have.been.calledOnceWith({
         registeredBy : adminAccount.address,
         ...registrationResponse
       });
+    });
+
+    it('throws ValidationError if account with same address exists', async () => {
+      const request = addAccountRequest();
+      mockAccountRepository.get.resolves({address: request.address});
+      await expect(modelEngine.addAccount(request, createTokenFor(adminAccount.address))).to.be.rejectedWith(ValidationError);
     });
 
     it('throws ValidationError if invalid account request', async () => {
