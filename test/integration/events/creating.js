@@ -120,7 +120,7 @@ describe('Events Integrations: Create', () => {
       .and.have.property('status', 403);
   });
 
-  it('returns 403 when trying to create level with access level hither than own access level', async () => {
+  it('returns 403 when trying to create an event with access level hither than own access level', async () => {
     const highAccessLevelEvent = createFullEvent(apparatus.identityManager, {
       createdBy: adminAccount.address,
       assetId: asset.assetId,
