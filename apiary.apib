@@ -751,7 +751,7 @@ __Warning__ Message sender needs to have "create_event" permission
             + idData (object) - Public information about an event.
                 + assetId (string) - Id of an asset with which the event is connected.
                 + createdBy (string) - Public address of the event creator.
-                + accessLevel (number) - The access level of the event. Should be a non-negative integer. Should be greater or equal than the creator's access level.
+                + accessLevel (number) - The access level of the event. Should be a non-negative integer. Should be greater than or equal to the creator's access level.
                 + timestamp (number) - UNIX timestamp of the event creation.
                 + dataHash (string) - Hash of the [serialized](Serialization) `data` field
             + data (array) - data (array) - Array of custom entries as objects (this field is required and have to contain at least one entry).
