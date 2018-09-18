@@ -36,7 +36,7 @@ export default class AccountAccessDefinitions {
     await this.ensureHasPermission(address, allPermissions.createEvent);
     const creator = await this.accountRepository.get(address);
     if (accessLevel > creator.accessLevel) {
-      throw new PermissionError(`Your access level needs to be not smaller than the access level of the created event`);
+      throw new PermissionError(`The event's access level needs to be less than or equal to your access level`);
     }
   }
 
