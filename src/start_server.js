@@ -16,6 +16,9 @@ import {Role} from './services/roles_repository';
 async function start(logger) {
   const builder = new Builder();
   await builder.build(config);
+  if (await builder.migrator.isMigrationNeccesary()) {
+    throw 'Migration needs to be done';
+  }
   await builder.ensureAdminAccountExist();
   const role = await builder.ensureAccountIsOnboarded([Role.ATLAS, Role.HERMES]);
   const worker = new ServerWorker(
