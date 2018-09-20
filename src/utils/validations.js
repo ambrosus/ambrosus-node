@@ -42,10 +42,10 @@ class ValidationAndCasting {
     for (const valueName of valueNames) {
       const value = get(this.params, valueName);
       if (value) {
-        const parsedValue = parseFloat(value);
-        if (isNaN(parsedValue)) {
-          throw new ValidationError(`Invalid ${valueName} parameter value`);
+        if (isNaN(value)) {
+          throw new ValidationError(`Invalid ${valueName} parameter value. ${value} is not a number`);
         }
+        const parsedValue = parseFloat(value);
         this.params = put(this.params, valueName, parsedValue);
       }
     }

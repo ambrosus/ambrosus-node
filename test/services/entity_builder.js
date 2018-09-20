@@ -198,7 +198,7 @@ describe('Entity Builder', () => {
         expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
         brokenEvent = put('content.idData.timestamp', exampleEvent, -1);
         expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
-        expect(() => entityBuilder.validateEvent(exampleEvent)).not.to.throw;
+        expect(() => entityBuilder.validateEvent(exampleEvent)).not.to.throw();
       });
 
       it('throws if accessLevel is not a positive integer', () => {
@@ -208,7 +208,7 @@ describe('Entity Builder', () => {
         expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
         brokenEvent = put('content.idData.accessLevel', exampleEvent, -1);
         expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
-        expect(() => entityBuilder.validateEvent(exampleEvent)).not.to.throw;
+        expect(() => entityBuilder.validateEvent(exampleEvent)).not.to.throw();
       });
 
       it('uses the IdentityManager for checking signature (correct)', () => {

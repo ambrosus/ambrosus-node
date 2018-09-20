@@ -18,6 +18,7 @@ import IdentityManager from '../../src/services/identity_manager';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {adminAccountWithSecret, accountWithSecret} from '../fixtures/account';
 import config from '../../config/config';
+import allPermissions from '../../src/utils/all_permissions';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -173,7 +174,7 @@ describe('Find Event Query Object', () => {
       before(async () => {
         scenario = new ScenarioBuilder(identityManager);
         await scenario.addAdminAccount(adminAccountWithSecret);
-        await scenario.addAccount(0, accountWithSecret, {permissions: ['create_entity']});
+        await scenario.addAccount(0, accountWithSecret, {permissions: [allPermissions.createEvent]});
         await scenario.addAsset(0, {timestamp: 0});
         await scenario.addAsset(0, {timestamp: 1});
 

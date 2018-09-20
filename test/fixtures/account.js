@@ -7,17 +7,18 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+import allPermissions from '../../src/utils/all_permissions';
+
 const addAccountRequest = (fields) => ({
-  address: account.address,
-  permissions: ['permission1', 'permission2'],
-  accessLevel: 7,
+  ...account,
   ...fields
 });
 
 const account = {
   address: '0x742E62CC7A19Ef7D9c44306C07FAd54B5bF6d4bE',
-  permissions: ['permission1', 'permission2'],
-  accessLevel: 7
+  permissions: [allPermissions.registerAccounts],
+  accessLevel: 2,
+  organization: 2
 };
 
 const accountWithSecret = {
@@ -37,7 +38,7 @@ const adminAccountWithSecret = {
 const notRegisteredAccount = {
   address: '0x627306090abaB3A6e1400e9345bC60c78a8BEf57',
   secret: '0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3',
-  permissions: ['permission1'],
+  permissions: [],
   accessLevel: 4
 };
 

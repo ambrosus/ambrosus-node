@@ -39,7 +39,7 @@ describe('Account Repository', () => {
     const additionalFields = {registeredBy: '0x123', permissions: ['perm1', 'perm2']};
     const accountToStore = put(account, additionalFields);
 
-    await accountStore.store(accountToStore);
+    await accountStore.store(account);
     await accountStore.store(accountToStore);
 
     const count = await db.collection('accounts')

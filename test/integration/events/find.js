@@ -15,6 +15,7 @@ import chaiHttp from 'chai-http';
 
 import {accountWithSecret, adminAccountWithSecret, notRegisteredAccount} from '../../fixtures/account';
 import ScenarioBuilder from '../../fixtures/scenario_builder';
+import allPermissions from '../../../src/utils/all_permissions';
 
 chai.use(chaiHttp);
 chai.use(sinonChai);
@@ -34,7 +35,8 @@ describe('Events Integrations: Find', () => {
 
   before(async () => {
     await scenario.addAdminAccount(adminAccountWithSecret);
-    await scenario.addAccount(0, accountWithSecret, {permissions: ['create_entity'], accessLevel});
+    await scenario.addAccount(0, accountWithSecret, {permissions: [allPermissions.createEvent], accessLevel: 100});
+    await scenario.addAccount(0, null, {permissions: [allPermissions.createEvent], accessLevel});
     await scenario.addAsset(0, {timestamp: 0});
     await scenario.addAsset(0, {timestamp: 1});
     await scenario.generateEvents(
@@ -72,7 +74,7 @@ describe('Events Integrations: Find', () => {
 
   it('hides data field if access level is too low', async () => {
     const response = await apparatus.request().get(`/events`)
-      .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(scenario.accounts[1].secret)}`);
+      .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(scenario.accounts[2].secret)}`);
     const {body} = response;
 
     expect(body.results).to.have.length(12);

@@ -38,7 +38,6 @@ export default class TokenAuthenticator {
     if (!decoded.idData.validUntil) {
       throw new AuthenticationError('Invalid token, no expiration date.');
     }
-
     if (decoded.idData.validUntil < timeNow) {
       throw new AuthenticationError('Token has expired.');
     }

@@ -115,14 +115,18 @@ It consists of a pair - a public identifer `address` (compatible with ethereum a
 
 Account can hold any number of following permissions:
 
-* create_entity - allows account to create assets and events
-* register_account - allows account to add new accounts and manage already existing ones
+* super_account - Almighty administrator account. Is able to perform all kinds of calls.
+* protected_account - account protected from modification. Protected accounts can be created only by super accounts or other protected accounts. Only super accounts can modify the protected accounts. 
+* create_asset - allows account to create assets
+* create_event - allows account to create events
+* register_accounts - allows account to add new accounts
+* manage_accounts - allows account to view and manage existing accounts
 
 ### /accounts
 
 #### Add account [POST]
 
-__Warning__ Message sender needs to have "register_account" permission
+__Warning__ Request sender needs to have "register_accounts" permission
 
 + Request (application/json)
 
@@ -133,15 +137,17 @@ __Warning__ Message sender needs to have "register_account" permission
 
     + Attributes (object)
         + address (string) - An address of the new account
-        + permissions (array) - A list of permissions granted to this account
-        + accessLevel (number) - Access level of the account. Should be a non-negative integer.
+        + permissions (array) - A list of permissions granted to this account. It is not possible to give permissions the request sender lacks. 
+        + accessLevel (number) - Access level of the account. Should be a non-negative integer. Cannot be higher than sender's accessLevel.
+        + organization (number, optional) - Identifier of the organization the account belongs to. Should be same as the sender's organization
 
     + Body
 
             {
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
-                "permissions" : ["register_account","create_entity"],
-                "accessLevel" : 0
+                "permissions" : ["register_accounts","create_asset"],
+                "accessLevel" : 0,
+                "organization": 12623
             }
 
 
@@ -156,8 +162,9 @@ __Warning__ Message sender needs to have "register_account" permission
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
                 "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
                 "registeredOn": 32141243,
-                "permissions": ["register_account", "create_entity"],
-                "accessLevel": 0
+                "permissions": ["register_accounts", "create_asset"],
+                "accessLevel": 0,
+                "organization": 12623
             }
 
     + Schema
@@ -184,7 +191,10 @@ __Warning__ Message sender needs to have "register_account" permission
                   "items" : {
                   "type" : "string"
                   }
-                  "example": ["register_account", "create_entity"]
+                  "example": ["register_accounts", "create_asset"]
+                },
+                "organization": {
+                  "type": "integer"
                 }
               }
             }
@@ -203,13 +213,15 @@ __Warning__ Message sender needs to have "register_account" permission
 
 + Response 403 (application/json)
 
-    Invalid signature or missing register_account permission
+    Invalid signature or missing register_accounts permission
 
     + Body
 
 ### /accounts{?accessLevel,perPage,page}
 
 #### Find accounts [GET]
+
+__Warning__ Request sender needs to have "manage_accounts" permission
 
 Finds accounts satisfying provided criteria.
 
@@ -235,6 +247,7 @@ Finds accounts satisfying provided criteria.
               + registeredOn (number) -  - UNIX timestamp of account registration.
               + permissions (array) - A list of permissions granted to this account
               + accessLevel (number) - Access level of the account. Should be a non-negative integer.
+              + organization (number) - Identifier of the organization the account belongs to.
         + resultCount (number) - Total number of accounts matching provided criteria.
 
 
@@ -245,8 +258,9 @@ Finds accounts satisfying provided criteria.
                     {
                         "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd"
                         "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
-                        "permissions": ["register_account", "create_entity"],
-                        "accessLevel": 4
+                        "permissions": ["register_accounts", "create_asset"],
+                        "accessLevel": 4,
+                        "organization": 12351
                     }
                 ],
                 "resultCount": 322
@@ -266,7 +280,7 @@ Finds accounts satisfying provided criteria.
 
 + Response 403 (application/json)
 
-    Invalid signature or missing register_account permission
+    Invalid signature or missing register_accounts permission
 
     + Body
 
@@ -280,6 +294,8 @@ Finds accounts satisfying provided criteria.
 ### /accounts/{accountAddress}
 
 #### Get account [GET]
+
+__Warning__ Request sender needs to have "manage_accounts" permission
 
 + Parameters
     + accountAddress (string) - An address of the account
@@ -299,6 +315,7 @@ Finds accounts satisfying provided criteria.
         + registeredOn (number) -  - UNIX timestamp of account registration.
         + permissions (array) - A list of permissions granted to this account
         + accessLevel (number) - Access level of the account. Should be a non-negative integer.
+        + organization (number) - Identifier of the organization the account belongs to
 
     + Body
 
@@ -306,7 +323,7 @@ Finds accounts satisfying provided criteria.
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
                 "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
                 "registeredOn": 32141243,
-                "permissions": ["register_account", "create_entity"],
+                "permissions": ["register_accounts", "create_asset"],
                 "accessLevel": 4
             }
 
@@ -331,7 +348,7 @@ Finds accounts satisfying provided criteria.
                   "items" : {
                   "type" : "string"
                   }
-                  "example": ["register_account", "create_entity"]
+                  "example": ["register_accounts", "create_asset"]
                 },
                 "accessLevel": {
                   "type": "integer"
@@ -354,14 +371,15 @@ Finds accounts satisfying provided criteria.
 
 + Response 403 (application/json)
 
-    Invalid signature or missing register_account permission
+    Invalid signature or missing register_accounts permission
 
     + Body
 
 
 #### Modify account [PUT]
 
-__Warning__ Message sender needs to have "register_account" permission
+__Warning__ Request sender needs to have "manage_accounts" permission  
+It is not possible to modify protected accounts and accounts belonging to different organizations.
 
 + Parameters
     + accountAddress (string) - An address of the account
@@ -375,13 +393,13 @@ __Warning__ Message sender needs to have "register_account" permission
             Authorization: AMB_TOKEN ...
 
     + Attributes (object)
-        + permissions (array) - A list of permissions granted to this account
-        + accessLevel (number) - Access level of the account. Should be a non-negative integer.
-
+        + permissions (array, optional) - A list of permissions granted to this account. It is not possible to give permissions the request sender lacks. 
+        + accessLevel (number, optional) - Access level of the account. Should be a non-negative integer. Cannot be higher than senders's accessLevel.
+        + organization (number, optional) - Identifier of the organization the account belongs to.
     + Body
 
             {
-                "permissions" : ["register_account","create_entity"],
+                "permissions" : ["register_accounts","create_asset"],
                 "accessLevel" : 0
             }
 
@@ -395,7 +413,7 @@ __Warning__ Message sender needs to have "register_account" permission
                 "address": "0x162a44701727a31f457a53801cd181cd38eb5bbd",
                 "registeredBy": "0x345b44701723a31f457a534801cd181cd38eb5bcd",
                 "registeredOn": 32141243,
-                "permissions": ["register_account", "create_entity"],
+                "permissions": ["register_accounts", "create_asset"],
                 "accessLevel": 4
             }
 
@@ -423,7 +441,7 @@ __Warning__ Message sender needs to have "register_account" permission
                   "items" : {
                   "type" : "string"
                   }
-                  "example": ["register_account", "create_entity"]
+                  "example": ["register_accounts", "create_asset"]
                 }
               }
             }
@@ -442,7 +460,7 @@ __Warning__ Message sender needs to have "register_account" permission
 
 + Response 403 (application/json)
 
-    Invalid signature or missing register_account permission
+    Invalid signature or missing register_accounts permission
 
     + Body
 
@@ -461,7 +479,7 @@ Assets are identified by an `assetId` field which is a sha3 hash calculated from
 
 Places (after intensive validations) the provided asset object into the system.
 
-__Warning__ Message sender needs to have "create_entity" permission
+__Warning__ Request sender needs to have "create_asset" permission
 
 + Request (application/json)
 
@@ -563,7 +581,7 @@ __Warning__ Message sender needs to have "create_entity" permission
 
 + Response 403 (application/json)
 
-    The createdBy user is not registered or has no "create_entity" permission
+    The createdBy user is not registered or has no "create_asset" permission
 
     + Body
 
@@ -713,7 +731,7 @@ Following event types are predefined:
 
 Places (after intensive validations) the provided event object into the system.
 
-__Warning__ Message sender needs to have "create_entity" permission
+__Warning__ Message sender needs to have "create_event" permission
 
 + Parameters
 
@@ -733,7 +751,7 @@ __Warning__ Message sender needs to have "create_entity" permission
             + idData (object) - Public information about an event.
                 + assetId (string) - Id of an asset with which the event is connected.
                 + createdBy (string) - Public address of the event creator.
-                + accessLevel (number) - The access level of the event. Should be a non-negative integer.
+                + accessLevel (number) - The access level of the event. Should be a non-negative integer. Should be greater than or equal to the creator's access level.
                 + timestamp (number) - UNIX timestamp of the event creation.
                 + dataHash (string) - Hash of the [serialized](Serialization) `data` field
             + data (array) - data (array) - Array of custom entries as objects (this field is required and have to contain at least one entry).
@@ -851,7 +869,7 @@ __Warning__ Message sender needs to have "create_entity" permission
 
 + Response 403 (application/json)
 
-    The createdBy user is not registered or has no "create_entity" permission
+    The createdBy user is not registered or has no "create_event" permission
 
     + Body
 

@@ -18,6 +18,7 @@ import {createFullAsset} from '../fixtures/assets_events';
 import pkPair from '../fixtures/pk_pair';
 import {adminAccountWithSecret, notRegisteredAccount, accountWithSecret} from '../fixtures/account';
 import ScenarioBuilder from '../fixtures/scenario_builder';
+import allPermissions from '../../src/utils/all_permissions';
 
 chai.use(chaiHttp);
 chai.use(sinonChai);
@@ -41,7 +42,7 @@ describe('Assets - Integrations', () => {
     await apparatus.cleanDB();
     scenario.reset();
     adminAccount = await scenario.addAdminAccount(adminAccountWithSecret);
-    otherAccountWithPermissions = await scenario.addAccount(0, accountWithSecret, {permissions: ['create_entity']});
+    otherAccountWithPermissions = await scenario.addAccount(0, accountWithSecret, {permissions: [allPermissions.createAsset]});
     otherAccount = await scenario.addAccount(0, notRegisteredAccount);
   });
 
@@ -106,7 +107,7 @@ describe('Assets - Integrations', () => {
         .and.have.property('status', 403);
     });
 
-    it('returns 403 for permission error (no `create_entity` permission)', async () => {
+    it('returns 403 for permission error (no `create_asset` permission)', async () => {
       const notPermittedAsset = createFullAsset(apparatus.identityManager, {createdBy: otherAccount.address},
         otherAccount.secret);
 

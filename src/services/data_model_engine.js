@@ -10,6 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {NotFoundError, PermissionError, ValidationError} from '../errors/errors';
 import {getTimestamp} from '../utils/time_utils';
 import {pick, put} from '../utils/dict_utils';
+import allPermissions from '../utils/all_permissions';
 
 export default class DataModelEngine {
   constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, contractManager, uploadRepository, rolesRepository}) {
@@ -41,16 +42,18 @@ export default class DataModelEngine {
   }
 
   async addAccount(accountRequest, tokenData) {
-    await this.accountAccessDefinitions.ensureCanRegisterAccount(tokenData.createdBy);
-    this.accountAccessDefinitions.validateAddAccountRequest(accountRequest);
-
+    await this.accountAccessDefinitions.ensureCanAddAccount(tokenData.createdBy, accountRequest);
     const accountToStore = {
       address: accountRequest.address,
       permissions: accountRequest.permissions,
       registeredBy: tokenData.createdBy,
       registeredOn: getTimestamp(),
-      accessLevel: accountRequest.accessLevel
+      accessLevel: accountRequest.accessLevel,
+      organization: accountRequest.organization
     };
+    if (await this.accountRepository.get(accountToStore.address)) {
+      throw new ValidationError(`Account with address ${accountToStore.address} already exists`);
+    }
     await this.accountRepository.store(accountToStore);
     return accountToStore;
   }
@@ -60,6 +63,7 @@ export default class DataModelEngine {
     if (!sender) {
       throw new PermissionError(`Sender account ${tokenData.createdBy} not found.`);
     }
+    await this.accountAccessDefinitions.ensureHasPermission(tokenData.createdBy, allPermissions.manageAccounts);
     const result = await this.accountRepository.get(address);
     if (!result) {
       throw new NotFoundError(`Account ${address} not found.`);
@@ -69,23 +73,22 @@ export default class DataModelEngine {
 
   async findAccounts(params, tokenData) {
     const validatedParams = this.accountAccessDefinitions.validateAndCastFindAccountParams(params);
-    await this.accountAccessDefinitions.ensureCanRegisterAccount(tokenData.createdBy);
+    await this.accountAccessDefinitions.ensureHasPermission(tokenData.createdBy, allPermissions.manageAccounts);
     const findAccountQueryObject = this.findAccountQueryObjectFactory.create(validatedParams);
-    return await findAccountQueryObject.execute();
+    return findAccountQueryObject.execute();
   }
 
-  async modifyAccount(accountToChange, accountRequest, tokenData) {
-    await this.accountAccessDefinitions.ensureCanRegisterAccount(tokenData.createdBy);
-    this.accountAccessDefinitions.validateModifyAccountRequest(accountRequest);
-    await this.getAccount(accountToChange, tokenData);
-    return await this.accountRepository.update(accountToChange, accountRequest);
+  async modifyAccount(accountToChangeAddress, accountModificationRequest, tokenData) {
+    const accountToChange = await this.getAccount(accountToChangeAddress, tokenData);
+    await this.accountAccessDefinitions.ensureCanModifyAccount(tokenData.createdBy, accountToChange, accountModificationRequest);
+    return this.accountRepository.update(accountToChangeAddress, accountModificationRequest);
   }
 
   async createAsset(asset) {
     this.entityBuilder.validateAsset(asset);
     const {createdBy: creatorAddress} = asset.content.idData;
 
-    await this.accountAccessDefinitions.ensureCanCreateEntity(creatorAddress);
+    await this.accountAccessDefinitions.ensureCanCreateAsset(creatorAddress);
 
     const augmentedAsset = this.entityBuilder.setBundle(asset, null);
     const augmentedAssetWithUploadTimestamp = this.entityBuilder.setEntityUploadTimestamp(augmentedAsset);
@@ -132,7 +135,7 @@ export default class DataModelEngine {
     this.entityBuilder.validateEvent(event);
     const {createdBy: creatorAddress, assetId} = event.content.idData;
 
-    await this.accountAccessDefinitions.ensureCanCreateEntity(creatorAddress);
+    await this.accountAccessDefinitions.ensureCanCreateEvent(creatorAddress, event.content.idData.accessLevel);
 
     if (await this.entityRepository.getAsset(assetId) === null) {
       throw new ValidationError(`Target asset with id=${assetId} doesn't exist`);
