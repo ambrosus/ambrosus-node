@@ -19,6 +19,10 @@ export default class RolesWrapper extends ContractWrapper {
     return contract.methods.getOnboardedRole(address).call();
   }
 
+  async selfOnboardedRole() {
+    return this.onboardedRole(this.contractManager.defaultAddress());
+  }
+
   async nodeUrl(address) {
     const contract = await this.contract();
     return contract.methods.getUrl(address).call();

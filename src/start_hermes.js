@@ -18,7 +18,7 @@ async function start(logger) {
   await builder.build(config);
   await builder.ensureAccountIsOnboarded([Role.HERMES]);
   const strategy = loadStrategy(config.uploadStrategy);
-  const worker = new HermesWorker(builder.dataModelEngine, builder.uploadRepository, strategy, logger);
+  const worker = new HermesWorker(builder.dataModelEngine, builder.uploadRepository, strategy, config.uploadRetryPeriod, logger);
   await worker.start();
 }
 

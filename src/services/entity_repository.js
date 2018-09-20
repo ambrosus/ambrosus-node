@@ -187,8 +187,8 @@ export default class EntityRepository {
     await this.unsetEntitiesBundlesStubs(entities);
   }
 
-  async storeBundle(bundle) {
-    await this.db.collection('bundles').insertOne({...bundle});
+  async storeBundle(bundle, storagePeriods) {
+    await this.db.collection('bundles').insertOne({...bundle, metadata: {storagePeriods}});
   }
 
   async storeBundleProofMetadata(bundleId, proofBlock, txHash) {
@@ -223,6 +223,12 @@ export default class EntityRepository {
         'repository.holdUntil': expirationDate
       }
     });
+  }
+
+  async findNotRegisteredBundles() {
+    return this.db.collection('bundles')
+      .find({'metadata.proofBlock': {$exists: false}})
+      .toArray();
   }
 
   async getExpiredBundleIds() {

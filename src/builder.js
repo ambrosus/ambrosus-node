@@ -53,7 +53,13 @@ class Builder {
     const {headContractAddress} = this.config;
     this.contractManager = new ContractManager(this.web3, headContractAddress);
     this.rolesRepository = new RolesRepository(this.contractManager.rolesWrapper, this.contractManager.configWrapper);
-    this.uploadRepository = new UploadRepository(this.contractManager.uploadsWrapper, this.contractManager.shelteringWrapper, this.contractManager.feesWrapper, this.contractManager.configWrapper);
+    this.uploadRepository = new UploadRepository(
+      this.contractManager.uploadsWrapper,
+      this.contractManager.shelteringWrapper,
+      this.contractManager.rolesWrapper,
+      this.contractManager.feesWrapper,
+      this.contractManager.configWrapper
+    );
     this.challengesRepository = new ChallengesRepository(this.contractManager.challengesWrapper, this.contractManager.configWrapper);
     this.identityManager = new IdentityManager(this.web3);
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);

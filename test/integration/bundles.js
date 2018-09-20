@@ -93,7 +93,7 @@ describe('Bundles - Integrations', () => {
         .get(`/bundle/${res.bundleId}`);
       expect(response.body.content).to.deep.equal(res.content);
       expect(response.body.bundleId).to.equal(res.bundleId);
-      expect(response.body.metadata).to.have.keys(['proofBlock', 'bundleTransactionHash', 'bundleUploadTimestamp']);
+      expect(response.body.metadata).to.have.keys(['proofBlock', 'bundleTransactionHash', 'bundleUploadTimestamp', 'storagePeriods']);
       expect(response.body.metadata.bundleTransactionHash).to.be.properTxHash;
     });
 

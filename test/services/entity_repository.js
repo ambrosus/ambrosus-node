@@ -87,6 +87,7 @@ describe('Entity Repository', () => {
 
   describe('Bundles', () => {
     const txHash = '0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009';
+    const storagePeriods = 5;
     let clock;
 
     before(async () => {
@@ -104,9 +105,11 @@ describe('Entity Repository', () => {
       const exampleBundleWithMetadata = put(exampleBundle, {
         'metadata.proofBlock': 10,
         'metadata.bundleTransactionHash': txHash,
-        'metadata.bundleUploadTimestamp': 5
+        'metadata.bundleUploadTimestamp': 5,
+        'metadata.storagePeriods': storagePeriods
       });
-      await storage.storeBundle(exampleBundle);
+      await storage.storeBundle(exampleBundle, storagePeriods);
+      await expect(storage.getBundle(exampleBundleId)).to.eventually.deep.equal(put(exampleBundle, 'metadata.storagePeriods', storagePeriods));
       await storage.storeBundleProofMetadata(exampleBundleId, 10, txHash);
       await expect(storage.getBundle(exampleBundleId)).to.eventually.deep.equal(exampleBundleWithMetadata);
     });
@@ -323,6 +326,26 @@ describe('Entity Repository', () => {
         await storage.storeBundleShelteringExpirationDate(bundleId, expirationDate);
         const bundle = await storage.db.collection('bundles').findOne({bundleId});
         expect(bundle.repository.holdUntil).to.equal(expirationDate);
+      });
+    });
+
+    describe('Uploading unregistered bundles', () => {
+      beforeEach(async () => {
+        await storage.storeBundle({...createBundle(), bundleId: 'bundle1'});
+        await storage.storeBundle({...createBundle(), bundleId: 'bundle2'});
+        await storage.storeBundle({...createBundle(), bundleId: 'bundle3'});
+        await storage.storeBundleProofMetadata('bundle2', '0', '0');
+      });
+
+      afterEach(async () => {
+        await cleanDatabase(db);
+      });
+
+      it('findNotRegisteredBundles finds bundles without storeBundleProofMetadata being cold on them', async () => {
+        const notRegisteredBundles = await storage.findNotRegisteredBundles();
+        expect(notRegisteredBundles).to.have.length(2);
+        expect(notRegisteredBundles[0].bundleId).to.equal('bundle1');
+        expect(notRegisteredBundles[1].bundleId).to.equal('bundle3');
       });
     });
 
