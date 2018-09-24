@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {getDefaultAddress, loadContract} from '../utils/web3_tools';
 
-import {contractsJsons, serviceContractsJsons} from '../utils/contracts_consts';
+import {contractJsons} from '../utils/contracts_consts';
 import RolesWrapper from './contract_wrappers/roles_wrapper';
 import ConfigWrapper from './contract_wrappers/config_wrapper';
 import UploadsWrapper from './contract_wrappers/uploads_wrapper';
@@ -21,7 +21,7 @@ export default class ContractManager {
   constructor(web3, headContractAddress) {
     this.web3 = web3;
     if (headContractAddress) {
-      this.head = loadContract(web3, serviceContractsJsons.head.abi, headContractAddress);
+      this.head = loadContract(web3, contractJsons.head.abi, headContractAddress);
     } else {
       throw new Error('Head contract address is not configured');
     }
@@ -39,7 +39,7 @@ export default class ContractManager {
 
   async contractByKey(contractName) {
     const contractAddress = await this.contractAddressFromContext(contractName);
-    return loadContract(this.web3, contractsJsons[contractName].abi, contractAddress);
+    return loadContract(this.web3, contractJsons[contractName].abi, contractAddress);
   }
 
   async contractAddressFromContext(contractName) {
@@ -70,7 +70,7 @@ export default class ContractManager {
       .methods
       .context()
       .call({from});
-    return loadContract(this.web3, serviceContractsJsons.context.abi, contextAddress);
+    return loadContract(this.web3, contractJsons.context.abi, contextAddress);
   }
 
   async kycWhitelistContract() {

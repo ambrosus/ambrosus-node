@@ -40,7 +40,7 @@ export async function registerAdminAccount(dataModelEngine, logger) {
 export async function addToKycWhitelist(role, dataModelEngine, logger) {
   logger.info(`Whitelist node address with registry`);
   const address = dataModelEngine.identityManager.nodeAddress();
-  const kycContract = await dataModelEngine.contractManager.kycWhitelistContract();
+  const kycContract = await dataModelEngine.contractManager.kycWhitelistWrapper.contract();
   await kycContract
     .methods
     .add(address, role.roleIndex)

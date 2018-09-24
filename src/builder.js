@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import AccountAccessDefinitions from './services/account_access_definitions';
 import AccountRepository from './services/account_repository';
-import ContractManager from './services/contract_manager';
+import ContractManager from './services/contract_wrappers/contract_manager';
 import DataModelEngine from './services/data_model_engine';
 import EntityBuilder from './services/entity_builder';
 import EntityDownloader from './services/entity_downloader';
@@ -50,10 +50,10 @@ class Builder {
     this.db = db;
     this.client = client;
     this.web3 = web3 || await createWeb3(this.config);
-    const {headContractAddress} = this.config;
-    this.contractManager = new ContractManager(this.web3, headContractAddress);
-    this.rolesRepository = new RolesRepository(this.contractManager.rolesWrapper, this.contractManager.configWrapper);
     this.identityManager = new IdentityManager(this.web3);
+    const {headContractAddress} = this.config;
+    this.contractManager = new ContractManager(this.web3, headContractAddress, this.identityManager.nodeAddress());
+    this.rolesRepository = new RolesRepository(this.contractManager.rolesWrapper, this.contractManager.configWrapper);
     this.uploadRepository = new UploadRepository(
       this.web3,
       this.identityManager,

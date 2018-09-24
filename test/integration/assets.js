@@ -25,7 +25,7 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-describe('Assets - Integrations', () => {
+describe.skip('Assets - Integrations', () => {
   let apparatus;
   let scenario;
   let adminAccount;

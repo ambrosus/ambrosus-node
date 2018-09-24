@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import Web3 from 'web3';
 import config from '../../config/config';
 
-const DEFAULT_GAS = 4700000;
+export const DEFAULT_GAS = 4700000;
 
 function isValidRPCAddress(rpc) {
   return /^((?:http)|(?:ws)):\/\//g.test(rpc);
@@ -97,13 +97,12 @@ export function loadContract(web3, abi, address) {
     gasPrice: web3.utils.toWei(config.defaultGasPrice.toString(), 'gwei')
   });
 }
-
-export async function deployContract(web3, abi, bytecode, args = [], options = {}) {
+export async function deployContract(web3, json, args = [], options = {}) {
   const defaultAddress = getDefaultAddress(web3);
-  return new web3.eth.Contract(abi, undefined, {
+  return new web3.eth.Contract(json.abi, undefined, {
     gas: DEFAULT_GAS,
     gasPrice: web3.utils.toWei(config.defaultGasPrice.toString(), 'gwei')
-  }).deploy({data: bytecode, arguments: args})
+  }).deploy({data: json.bytecode, arguments: args})
     .send({
       from: defaultAddress,
       gas: DEFAULT_GAS,

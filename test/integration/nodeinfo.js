@@ -19,7 +19,7 @@ chai.use(chaiAsPromised);
 
 const {expect} = chai;
 
-describe('Nodeinfo - Integrations', async () => {
+describe.skip('Nodeinfo - Integrations', async () => {
   const gitCommit = 'aaaaaaa';
   let apparatus;
 

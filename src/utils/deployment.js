@@ -8,18 +8,18 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {deployContract, link, getDefaultAddress} from '../../src/utils/web3_tools';
-import {contractsJsons, serviceContractsJsons} from '../utils/contracts_consts';
+import {contractJsons} from '../utils/contracts_consts';
 
 
 const deployAll = async (web3, logger) => {
   const libraries = await deployLibraries(web3);
-  linkLibraries(libraries, contractsJsons);
+  linkLibraries(libraries, contractJsons);
 
-  const head = await deployContract(web3, serviceContractsJsons.head.abi, serviceContractsJsons.head.bytecode);
+  const head = await deployContract(web3, contractJsons.head.abi, contractJsons.head.bytecode);
 
-  const deployedContractsAddresses = await deployContracts(contractsJsons, web3, head);
+  const deployedContractsAddresses = await deployContracts(contractJsons, web3, head);
 
-  const context = await deployContract(web3, serviceContractsJsons.context.abi, serviceContractsJsons.context.bytecode, deployedContractsAddresses);
+  const context = await deployContract(web3, contractJsons.context.abi, contractJsons.context.bytecode, deployedContractsAddresses);
 
   await head.methods.setContext(context.options.address).send({
     from: getDefaultAddress(web3)
@@ -30,7 +30,7 @@ const deployAll = async (web3, logger) => {
   return head;
 };
 
-const deployLibraries = async (web3) => ({SafeMathExtensions: await deployContract(web3, serviceContractsJsons.safeMathExtensions.abi, serviceContractsJsons.safeMathExtensions.bytecode)});
+const deployLibraries = async (web3) => ({SafeMathExtensions: await deployContract(web3, contractJsons.safeMathExtensions.abi, contractJsons.safeMathExtensions.bytecode)});
 
 const getContractConstructor = (contractJson) => contractJson.abi.find((value) => value.type === 'constructor');
 
@@ -57,16 +57,16 @@ const deployOne = async (defaultJson, web3, head) => {
   return deployContract(web3, contractJson.abi, contractJson.bytecode, constructorArgs);
 };
 
-const deployContracts = async (contractsJsons, web3, head) => {
+const deployContracts = async (contractJsons, web3, head) => {
   const deployedContracts = {};
-  for (const contractName in contractsJsons) {
-    deployedContracts[contractName] = await deployOne(contractsJsons[contractName], web3, head);
+  for (const contractName in contractJsons) {
+    deployedContracts[contractName] = await deployOne(contractJsons[contractName], web3, head);
   }
-  const contextConstructorParams = getContractConstructor(serviceContractsJsons.context)
+  const contextConstructorParams = getContractConstructor(contractJsons.context)
     .inputs
     .map((input) => input.name.slice(1));
 
-  if (!contextConstructorParams.every((key) => contractsJsons[key] !== undefined)) {
+  if (!contextConstructorParams.every((key) => contractJsons[key] !== undefined)) {
     throw 'Missing a parameter for context constructor';
   }
 

@@ -18,7 +18,7 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Config Wrapper', () => {
-  let contractManagerMock;
+  let getContractStub;
   let configWrapper;
 
   describe('ATLAS1_STAKE', () => {
@@ -29,16 +29,19 @@ describe('Config Wrapper', () => {
     beforeEach(async () => {
       atlasStake1Stub = sinon.stub();
       atlasStake1CallStub = sinon.stub();
-      contractManagerMock = {
-        configContract: async () => ({
-          methods: {
-            ATLAS1_STAKE: atlasStake1Stub.returns({
-              call: atlasStake1CallStub.resolves(stake)
-            })
-          }
-        })
+      const contractMock = {
+        methods: {
+          ATLAS1_STAKE: atlasStake1Stub.returns({
+            call: atlasStake1CallStub.resolves(stake)
+          })
+        }
       };
-      configWrapper = new ConfigWrapper(contractManagerMock);
+      configWrapper = new ConfigWrapper();
+      getContractStub = sinon.stub(configWrapper, 'contract').resolves(contractMock);
+    });
+
+    afterEach(async () => {
+      getContractStub.restore();
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -56,16 +59,19 @@ describe('Config Wrapper', () => {
     beforeEach(async () => {
       challengeDurationStub = sinon.stub();
       challengeDurationCallStub = sinon.stub();
-      contractManagerMock = {
-        configContract: async () => ({
-          methods: {
-            CHALLENGE_DURATION: challengeDurationStub.returns({
-              call: challengeDurationCallStub.resolves(challengeDuration)
-            })
-          }
-        })
+      const contractMock = {
+        methods: {
+          CHALLENGE_DURATION: challengeDurationStub.returns({
+            call: challengeDurationCallStub.resolves(challengeDuration)
+          })
+        }
       };
-      configWrapper = new ConfigWrapper(contractManagerMock);
+      configWrapper = new ConfigWrapper();
+      getContractStub = sinon.stub(configWrapper, 'contract').resolves(contractMock);
+    });
+
+    afterEach(async () => {
+      getContractStub.restore();
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -83,16 +89,19 @@ describe('Config Wrapper', () => {
     beforeEach(async () => {
       bundleSizeLimitStub = sinon.stub();
       bundleSizeLimitCallStub = sinon.stub();
-      contractManagerMock = {
-        configContract: async () => ({
-          methods: {
-            BUNDLE_SIZE_LIMIT: bundleSizeLimitStub.returns({
-              call: bundleSizeLimitCallStub.resolves(bundleSizeLimit)
-            })
-          }
-        })
+      const contractMock = {
+        methods: {
+          BUNDLE_SIZE_LIMIT: bundleSizeLimitStub.returns({
+            call: bundleSizeLimitCallStub.resolves(bundleSizeLimit)
+          })
+        }
       };
-      configWrapper = new ConfigWrapper(contractManagerMock);
+      configWrapper = new ConfigWrapper();
+      getContractStub = sinon.stub(configWrapper, 'contract').resolves(contractMock);
+    });
+
+    afterEach(async () => {
+      getContractStub.restore();
     });
 
     it('calls contract method with correct arguments', async () => {

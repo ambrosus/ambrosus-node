@@ -1,0 +1,34 @@
+{
+  "contractName": "BlockRewardsBase",
+  "updatedAt": "2018-09-24T12:28:29.582Z",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "benefactors",
+          "type": "address[]"
+        },
+        {
+          "name": "kind",
+          "type": "uint16[]"
+        }
+      ],
+      "name": "reward",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address[]"
+        },
+        {
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x"
+}

@@ -18,7 +18,7 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Sheltering Wrapper', () => {
-  let contractManagerMock;
+  let getContractStub;
   let shelteringWrapper;
 
   describe('isSheltering', () => {
@@ -30,17 +30,19 @@ describe('Sheltering Wrapper', () => {
     beforeEach(async () => {
       isShelteringStub = sinon.stub();
       isShelteringCallStub = sinon.stub();
-      contractManagerMock = {
-        shelteringContract: async () => ({
-          methods: {
-            isSheltering: isShelteringStub.returns({
-              call: isShelteringCallStub.resolves(true)
-            })
-          }
-        }),
-        defaultAddress: () => defaultAddress
+      const contractMock = {
+        methods: {
+          isSheltering: isShelteringStub.returns({
+            call: isShelteringCallStub.resolves(true)
+          })
+        }
       };
-      shelteringWrapper = new ShelteringWrapper(contractManagerMock);
+      shelteringWrapper = new ShelteringWrapper({}, {}, defaultAddress);
+      getContractStub = sinon.stub(shelteringWrapper, 'contract').resolves(contractMock);
+    });
+
+    afterEach(async () => {
+      getContractStub.restore();
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -60,17 +62,19 @@ describe('Sheltering Wrapper', () => {
     beforeEach(async () => {
       shelteringExpirationDateStub = sinon.stub();
       shelteringExpirationDateCallStub = sinon.stub();
-      contractManagerMock = {
-        shelteringContract: async () => ({
-          methods: {
-            getShelteringExpirationDate: shelteringExpirationDateStub.returns({
-              call: shelteringExpirationDateCallStub.resolves(expirationDate)
-            })
-          }
-        }),
-        defaultAddress: () => defaultAddress
+      const contractMock = {
+        methods: {
+          getShelteringExpirationDate: shelteringExpirationDateStub.returns({
+            call: shelteringExpirationDateCallStub.resolves(expirationDate)
+          })
+        }
       };
-      shelteringWrapper = new ShelteringWrapper(contractManagerMock);
+      shelteringWrapper = new ShelteringWrapper({}, {}, defaultAddress);
+      getContractStub = sinon.stub(shelteringWrapper, 'contract').resolves(contractMock);
+    });
+
+    afterEach(async () => {
+      getContractStub.restore();
     });
 
     it('calls contract method with correct arguments', async () => {

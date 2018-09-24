@@ -7,12 +7,12 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import ContractWrapper from './contract_wrapper';
 import {MIN_BLOCK_TIME} from '../../utils/contracts_consts';
+import ContractWrapper from './contract_wrapper';
 
 export default class ChallengesWrapper extends ContractWrapper {
-  async contract() {
-    return this.contractManager.challengesContract();
+  get getContractName() {
+    return 'challenges';
   }
 
   async earliestMeaningfulBlock(challengeDuration) {
@@ -36,12 +36,12 @@ export default class ChallengesWrapper extends ContractWrapper {
 
   async resolve(challengeId) {
     const contract = await this.contract();
-    return contract.methods.resolve(challengeId).send({from: this.contractManager.defaultAddress()});
+    return contract.methods.resolve(challengeId).send({from: this.defaultAddress});
   }
 
   async canResolve(challengeId) {
     const contract = await this.contract();
-    return contract.methods.canResolve(this.contractManager.defaultAddress(), challengeId).call();
+    return contract.methods.canResolve(this.defaultAddress, challengeId).call();
   }
 
   async isInProgress(challengeId) {
