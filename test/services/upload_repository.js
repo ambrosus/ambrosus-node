@@ -26,41 +26,53 @@ describe('Upload repository', () => {
   let rolesWrapperMock;
   let configWrapperMock;
   let uploadRepository;
+  let identityManagerMock;
+  let web3Mock;
 
   describe('Upload bundle', async () => {
     const bundleId = '0xc0ffee';
     const storagePeriods = 3;
     const fee = '100';
+    const tooSmallBalance = '99';
+    const exampleAddress = '0xdeadface';
 
     beforeEach(async () => {
       uploadsWrapperMock = {
         registerBundle: sinon.stub()
       };
       rolesWrapperMock = {
-        selfOnboardedRole: sinon.stub().resolves('2')
+        onboardedRole: sinon.stub().resolves('2')
       };
       feesWrapperMock = {
-        feeForUpload: sinon.stub().resolves(fee),
-        checkIfEnoughFunds: sinon.stub().resolves(true)
+        feeForUpload: sinon.stub().resolves(fee)
       };
-      uploadRepository = new UploadRepository(uploadsWrapperMock, {}, rolesWrapperMock, feesWrapperMock);
+      identityManagerMock = {
+        nodeAddress: sinon.stub().returns(exampleAddress)
+      };
+      web3Mock = {
+        eth: {
+          getBalance: sinon.stub().resolves(fee)
+        }
+      };
+      uploadRepository = new UploadRepository(web3Mock, identityManagerMock, uploadsWrapperMock, {}, rolesWrapperMock, feesWrapperMock);
     });
 
     it('calls wrappers methods with correct arguments', async () => {
       await uploadRepository.uploadBundle(bundleId, storagePeriods);
       expect(feesWrapperMock.feeForUpload).to.be.calledOnceWith(storagePeriods);
-      expect(feesWrapperMock.checkIfEnoughFunds).to.be.calledOnceWith(fee);
-      expect(rolesWrapperMock.selfOnboardedRole).to.be.calledOnceWith();
+      expect(web3Mock.eth.getBalance).to.be.calledOnceWith(exampleAddress);
+      expect(rolesWrapperMock.onboardedRole).to.be.calledOnceWith(exampleAddress);
+      expect(identityManagerMock.nodeAddress).to.have.been.called;
       expect(uploadsWrapperMock.registerBundle).to.be.calledOnceWith(bundleId, fee, storagePeriods);
     });
 
     it('throws if not enough funds', async () => {
-      feesWrapperMock.checkIfEnoughFunds.resolves(false);
+      web3Mock.eth.getBalance.resolves(tooSmallBalance);
       await expect(uploadRepository.uploadBundle(bundleId, storagePeriods)).to.be.eventually.rejected;
     });
 
     it('throws if not onboarded as hermes', async () => {
-      rolesWrapperMock.selfOnboardedRole.resolves('1');
+      rolesWrapperMock.onboardedRole.resolves('1');
       await expect(uploadRepository.uploadBundle(bundleId, storagePeriods)).to.be.eventually.rejected;
     });
   });
@@ -72,7 +84,7 @@ describe('Upload repository', () => {
       shelteringWrapperMock = {
         isSheltering: sinon.stub().resolves(true)
       };
-      uploadRepository = new UploadRepository({}, shelteringWrapperMock);
+      uploadRepository = new UploadRepository({}, {}, {}, shelteringWrapperMock);
     });
 
     it('calls wrappers methods with correct arguments', async () => {
@@ -89,7 +101,7 @@ describe('Upload repository', () => {
       shelteringWrapperMock = {
         shelteringExpirationDate: sinon.stub().resolves(123)
       };
-      uploadRepository = new UploadRepository({}, shelteringWrapperMock);
+      uploadRepository = new UploadRepository({}, {}, {}, shelteringWrapperMock);
     });
 
     it('calls wrappers methods with correct arguments', async () => {
@@ -105,7 +117,7 @@ describe('Upload repository', () => {
       configWrapperMock = {
         bundleSizeLimit: sinon.stub().resolves(42)
       };
-      uploadRepository = new UploadRepository({}, {}, {}, {}, configWrapperMock);
+      uploadRepository = new UploadRepository({}, {}, {}, {}, {}, {}, configWrapperMock);
     });
 
     it('calls wrappers methods with correct arguments', async () => {
@@ -123,7 +135,7 @@ describe('Upload repository', () => {
         bundleSizeLimit: sinon.stub()
       };
 
-      uploadRepository = new UploadRepository({}, {}, {}, {}, configWrapperMock);
+      uploadRepository = new UploadRepository({}, {}, {}, {}, {}, {}, configWrapperMock);
     });
 
     it('passes for proper bundle', async () => {

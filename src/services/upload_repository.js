@@ -10,9 +10,12 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {ValidationError} from '../errors/errors';
 import {Role} from './roles_repository';
+import BN from 'bn.js';
 
 export default class UploadRepository {
-  constructor(uploadsWrapper, shelteringWrapper, rolesWrapper, feesWrapper, configWrapper) {
+  constructor(web3, identityManager, uploadsWrapper, shelteringWrapper, rolesWrapper, feesWrapper, configWrapper) {
+    this.web3 = web3;
+    this.identityManager = identityManager;
     this.uploadsWrapper = uploadsWrapper;
     this.feesWrapper = feesWrapper;
     this.shelteringWrapper = shelteringWrapper;
@@ -22,11 +25,11 @@ export default class UploadRepository {
 
   async uploadBundle(bundleId, storagePeriods) {
     const fee = await this.feesWrapper.feeForUpload(storagePeriods);
-    if (!await this.feesWrapper.checkIfEnoughFunds(fee)) {
+    if (!await this.checkIfEnoughFunds(fee)) {
       throw new Error(`Insufficient funds: need at least ${fee} to upload the bundle`);
     }
 
-    const uploaderRole = new Role(await this.rolesWrapper.selfOnboardedRole());
+    const uploaderRole = new Role(await this.rolesWrapper.onboardedRole(this.identityManager.nodeAddress()));
     if (!uploaderRole.is(Role.HERMES)) {
       throw new Error('Default address is not onboarded as the HERMES');
     }
@@ -51,5 +54,10 @@ export default class UploadRepository {
     if (bundle.content.entries.length > bundleSizeLimit) {
       throw new ValidationError('Bundle size surpasses the limit');
     }
+  }
+
+  async checkIfEnoughFunds(fee) {
+    const balance = new BN(await this.web3.eth.getBalance(this.identityManager.nodeAddress()));
+    return balance.gte(new BN(fee));
   }
 }
