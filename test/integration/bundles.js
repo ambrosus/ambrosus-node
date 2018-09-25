@@ -23,7 +23,7 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-describe.skip('Bundles - Integrations', () => {
+describe('Bundles - Integrations', () => {
   const url = 'node.ambrosus.com';
   let apparatus;
   let scenario;
@@ -79,7 +79,7 @@ describe.skip('Bundles - Integrations', () => {
     it('should upload the proof to ethereum, and emit a event', async () => {
       const uploadsContract = await apparatus
         .contractManager
-        .uploadsContract();
+        .uploadsWrapper.contract();
       const emittedEvents = await uploadsContract.getPastEvents('BundleUploaded');
 
       const expectedEvent = emittedEvents.filter((value) => value.returnValues.bundleId === res.bundleId);

@@ -24,7 +24,7 @@ chai.use(properSecret);
 
 const {expect} = chai;
 
-describe.skip('Accounts - Integrations', async () => {
+describe('Accounts - Integrations', async () => {
   let apparatus;
   let scenario;
   const newAccount = addAccountRequest();

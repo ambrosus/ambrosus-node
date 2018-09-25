@@ -22,7 +22,7 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-describe.skip('Events Integrations: Find', () => {
+describe('Events Integrations: Find', () => {
   const accessLevel = 3;
   let apparatus;
   let scenario;

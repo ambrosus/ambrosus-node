@@ -19,7 +19,7 @@ chai.use(chaiAsPromised);
 
 const {expect} = chai;
 
-describe.skip('Fallback - Integrations', async () => {
+describe('Fallback - Integrations', async () => {
   let apparatus;
 
   before(async () => {

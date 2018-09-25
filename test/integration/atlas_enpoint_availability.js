@@ -23,7 +23,7 @@ chai.use(properSecret);
 
 const {expect} = chai;
 
-describe.skip('Atlas node endpoints availability - Integrations', async () => {
+describe('Atlas node endpoints availability - Integrations', async () => {
   let apparatus;
   let scenario;
 

@@ -13,7 +13,7 @@ import ServerApparatus from '../helpers/server_apparatus';
 
 const {expect} = chai;
 
-describe.skip('Health check tests', () => {
+describe('Health check tests', () => {
   let apparatus;
 
   beforeEach(async () => {

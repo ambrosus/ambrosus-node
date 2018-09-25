@@ -15,7 +15,7 @@ import {Role} from '../services/roles_repository';
 
 async function setupDevelopment(web3, dataModelEngine, logger) {
   await registerAdminAccount(dataModelEngine, logger);
-  await addToKycWhitelist(Role.ATLAS, dataModelEngine, logger);
+  await addToKycWhitelist(Role.ATLAS, config.defaultStake, dataModelEngine, logger);
   await onboardAsAtlas(web3, dataModelEngine.rolesRepository, logger);
 }
 

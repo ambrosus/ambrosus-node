@@ -40,7 +40,7 @@ export default class ServerApparatus extends Builder {
     const web3 = _web3 || await createWeb3(this.config);
 
     if (!config.headContractAddress) {
-      const headContract = await deployAll(web3, this.logger);
+      const headContract = await deployAll(web3, config.nodePrivateKey, this.logger);
       const headContractAddress = headContract.options.address;
       this.config = Object.freeze({...this.config, headContractAddress});
     }
@@ -59,12 +59,12 @@ export default class ServerApparatus extends Builder {
   }
 
   async onboardAsHermes(url) {
-    await addToKycWhitelist(Role.HERMES, this.dataModelEngine, new EmptyLogger());
+    await addToKycWhitelist(Role.HERMES, '0', this.dataModelEngine, new EmptyLogger());
     await this.rolesRepository.onboardAsHermes(this.identityManager.nodeAddress(), url);
   }
 
   async onboardAsAtlas(url) {
-    await addToKycWhitelist(Role.ATLAS, this.dataModelEngine, new EmptyLogger());
+    await addToKycWhitelist(Role.ATLAS, this.config.defaultStake, this.dataModelEngine, new EmptyLogger());
     await this.rolesRepository.onboardAsAtlas(this.identityManager.nodeAddress(), url);
   }
 

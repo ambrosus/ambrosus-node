@@ -18,7 +18,7 @@ chai.use(chaiAsPromised);
 
 const {expect} = chai;
 
-describe.skip('CORS - Integrations', async () => {
+describe('CORS - Integrations', async () => {
   const requestData = {
     validUntil: 1700000000000
   };

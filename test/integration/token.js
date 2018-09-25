@@ -18,7 +18,7 @@ chai.use(chaiAsPromised);
 
 const {expect} = chai;
 
-describe.skip('Token - Integrations', async () => {
+describe('Token - Integrations', async () => {
   const requestData = {
     validUntil: 1600000000000
   };

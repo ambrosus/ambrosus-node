@@ -24,7 +24,7 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-describe.skip('Events Integrations: Create', () => {
+describe('Events Integrations: Create', () => {
   let apparatus;
   let scenario;
   let event;

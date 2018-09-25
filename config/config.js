@@ -12,6 +12,7 @@ module.exports = Object.freeze({
 
   web3Rpc: process.env.WEB3_RPC,
   nodePrivateKey: process.env.WEB3_NODEPRIVATEKEY,
+  defaultStake: process.env.DEFAULT_STAKE,
   sentryDSN: process.env.SENTRY_DSN,
 
   // Required, one or more hosts delimited with comma, e.g

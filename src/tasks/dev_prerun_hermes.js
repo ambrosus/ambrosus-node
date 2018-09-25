@@ -15,7 +15,7 @@ import {Role} from '../services/roles_repository';
 
 async function setupDevelopment(web3, dataModelEngine, logger) {
   await registerAdminAccount(dataModelEngine, logger);
-  await addToKycWhitelist(Role.HERMES, dataModelEngine, logger);
+  await addToKycWhitelist(Role.HERMES, '0', dataModelEngine, logger);
   await onboardAsHermes(web3, dataModelEngine.rolesRepository, logger);
 }
 

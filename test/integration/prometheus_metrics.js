@@ -11,7 +11,7 @@ import ServerApparatus from '../helpers/server_apparatus';
 
 const {expect} = chai;
 
-describe.skip('Prometheus middleware tests', () => {
+describe('Prometheus middleware tests', () => {
   let apparatus;
 
   beforeEach(async () => {
