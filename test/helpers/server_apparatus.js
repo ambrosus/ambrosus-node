@@ -15,6 +15,7 @@ import {createWeb3} from '../../src/utils/web3_tools';
 import {adminAccountWithSecret} from '../fixtures/account';
 import EmptyLogger from './empty_logger';
 import config from '../../config/config';
+import devConfig from '../../config/devConfig';
 import Builder from '../../src/builder';
 import ServerWorker from '../../src/workers/server_worker';
 import deployAll from '../../src/utils/deployment';
@@ -33,6 +34,7 @@ export default class ServerApparatus extends Builder {
     // Read defaults from global config, but allow the options to be customized
     // for each test.
     this.config = Object.freeze({...config, ...customConfig});
+    this.devConfig = devConfig;
     this.worker = null;
   }
 
@@ -40,7 +42,7 @@ export default class ServerApparatus extends Builder {
     const web3 = _web3 || await createWeb3(this.config);
 
     if (!config.headContractAddress) {
-      const headContract = await deployAll(web3, config.nodePrivateKey, this.logger);
+      const headContract = await deployAll(web3, devConfig.deployerPrivateKey, this.logger);
       const headContractAddress = headContract.options.address;
       this.config = Object.freeze({...this.config, headContractAddress});
     }
@@ -64,7 +66,7 @@ export default class ServerApparatus extends Builder {
   }
 
   async onboardAsAtlas(url) {
-    await addToKycWhitelist(Role.ATLAS, this.config.defaultStake, this.dataModelEngine, new EmptyLogger());
+    await addToKycWhitelist(Role.ATLAS, this.devConfig.defaultStake, this.dataModelEngine, new EmptyLogger());
     await this.rolesRepository.onboardAsAtlas(this.identityManager.nodeAddress(), url);
   }
 
