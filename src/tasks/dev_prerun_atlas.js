@@ -10,12 +10,13 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {WinstonConsoleLogger} from '../utils/loggers';
 import Builder from '../builder';
 import config from '../../config/config';
+import devConfig from '../../config/devConfig';
 import {addToKycWhitelist, onboardAsAtlas, registerAdminAccount} from '../utils/prerun';
 import {Role} from '../services/roles_repository';
 
 async function setupDevelopment(web3, dataModelEngine, logger) {
   await registerAdminAccount(dataModelEngine, logger);
-  await addToKycWhitelist(Role.ATLAS, config.defaultStake, dataModelEngine, logger);
+  await addToKycWhitelist(Role.ATLAS, devConfig.defaultStake, dataModelEngine, logger);
   await onboardAsAtlas(web3, dataModelEngine.rolesRepository, logger);
 }
 

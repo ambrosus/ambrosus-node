@@ -42,7 +42,7 @@ export default class ServerApparatus extends Builder {
     const web3 = _web3 || await createWeb3(this.config);
 
     if (!config.headContractAddress) {
-      const headContract = await deployAll(web3, devConfig.deployerPrivateKey, this.logger);
+      const headContract = await deployAll(web3, this.devConfig.deployerPrivateKey, this.logger);
       const headContractAddress = headContract.options.address;
       this.config = Object.freeze({...this.config, headContractAddress});
     }
