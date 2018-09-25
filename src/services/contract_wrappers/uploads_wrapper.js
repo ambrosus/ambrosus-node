@@ -10,8 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import ContractWrapper from './contract_wrapper';
 
 export default class UploadsWrapper extends ContractWrapper {
-  async contract() {
-    return this.contractManager.uploadsContract();
+  get getContractName() {
+    return 'uploads';
   }
 
   async registerBundle(bundleId, fee, storagePeriods) {
@@ -19,6 +19,6 @@ export default class UploadsWrapper extends ContractWrapper {
     return contract
       .methods
       .registerBundle(bundleId, storagePeriods)
-      .send({from: this.contractManager.defaultAddress(), value: fee});
+      .send({from: this.defaultAddress, value: fee});
   }
 }

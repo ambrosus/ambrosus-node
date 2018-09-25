@@ -79,7 +79,7 @@ describe('Bundles - Integrations', () => {
     it('should upload the proof to ethereum, and emit a event', async () => {
       const uploadsContract = await apparatus
         .contractManager
-        .uploadsContract();
+        .uploadsWrapper.contract();
       const emittedEvents = await uploadsContract.getPastEvents('BundleUploaded');
 
       const expectedEvent = emittedEvents.filter((value) => value.returnValues.bundleId === res.bundleId);

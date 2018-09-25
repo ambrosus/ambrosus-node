@@ -10,17 +10,17 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import ContractWrapper from './contract_wrapper';
 
 export default class ShelteringWrapper extends ContractWrapper {
-  async contract() {
-    return this.contractManager.shelteringContract();
+  get getContractName() {
+    return 'sheltering';
   }
 
   async isSheltering(bundleId) {
     const contract = await this.contract();
-    return contract.methods.isSheltering(bundleId, this.contractManager.defaultAddress()).call();
+    return contract.methods.isSheltering(bundleId, this.defaultAddress).call();
   }
 
   async shelteringExpirationDate(bundleId) {
     const contract = await this.contract();
-    return contract.methods.getShelteringExpirationDate(bundleId, this.contractManager.defaultAddress()).call();
+    return contract.methods.getShelteringExpirationDate(bundleId, this.defaultAddress).call();
   }
 }

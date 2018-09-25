@@ -1,0 +1,47 @@
+{
+  "contractName": "ValidatorSetBase",
+  "updatedAt": "2018-09-24T12:28:29.588Z",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "parentHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "name": "newSet",
+          "type": "address[]"
+        }
+      ],
+      "name": "InitiateChange",
+      "type": "event"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "getValidators",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "finalizeChange",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x"
+}

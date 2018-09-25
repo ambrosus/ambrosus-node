@@ -9,6 +9,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 process.env.NODE_ENV = 'test';
 process.env.WEB3_RPC = 'ganache';
 process.env.WEB3_NODEPRIVATEKEY = '0xfa654acfc59f0e4fe3bd57082ad28fbba574ac55fe96e915f17de27ad9c77696';
+process.env.WEB3_DEPLOYER_PRIVATEKEY = '0xfa654acfc59f0e4fe3bd57082ad28fbba574ac55fe96e915f17de27ad9c77696';
+process.env.DEFAULT_STAKE = '10000000000000000000000';
 process.env.MONGO_HOSTS = 'localhost:27017';
 process.env.MONGO_DB_NAME = 'ambrosus';
 process.env.AUTHORIZATION_WITH_SECRET_KEY_ENABLED = true;

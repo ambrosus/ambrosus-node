@@ -6,13 +6,13 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
-/* eslint-disable new-cap */
 
+/* eslint-disable new-cap */
 import ContractWrapper from './contract_wrapper';
 
 export default class ConfigWrapper extends ContractWrapper {
-  async contract() {
-    return this.contractManager.configContract();
+  get getContractName() {
+    return 'config';
   }
 
   async atlas1Stake() {

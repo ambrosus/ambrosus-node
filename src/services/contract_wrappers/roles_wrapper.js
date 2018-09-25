@@ -10,8 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import ContractWrapper from './contract_wrapper';
 
 export default class RolesWrapper extends ContractWrapper {
-  async contract() {
-    return this.contractManager.rolesContract();
+  get getContractName() {
+    return 'roles';
   }
 
   async onboardedRole(address) {
@@ -22,6 +22,14 @@ export default class RolesWrapper extends ContractWrapper {
   async nodeUrl(address) {
     const contract = await this.contract();
     return contract.methods.getUrl(address).call();
+  }
+
+  async onboardAsApollo(address, deposit) {
+    const contract = await this.contract();
+    return contract.methods.onboardAsApollo().send({
+      from: address,
+      value: deposit
+    });
   }
 
   async onboardAsAtlas(address, stake, url) {
@@ -37,5 +45,17 @@ export default class RolesWrapper extends ContractWrapper {
     return contract.methods.onboardAsHermes(url).send({
       from: address
     });
+  }
+
+  async selfOnboardAsApollo(deposit) {
+    return this.onboardAsApollo(this.defaultAddress, deposit);
+  }
+
+  async selfOnboardAsAtlas(stake, url) {
+    return this.onboardAsAtlas(this.defaultAddress, stake, url);
+  }
+
+  async selfOnboardAsHermes(url) {
+    return this.onboardAsHermes(this.defaultAddress, url);
   }
 }

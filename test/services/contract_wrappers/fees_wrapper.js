@@ -20,6 +20,7 @@ const {expect} = chai;
 describe('Fees Wrapper', () => {
   let contractManagerMock;
   let feesWrapper;
+  let getContractStub;
 
   describe('feeForUpload', () => {
     const storagePeriods = 23;
@@ -30,17 +31,20 @@ describe('Fees Wrapper', () => {
     beforeEach(async () => {
       getFeeForUploadStub = sinon.stub();
       getFeeForUploadCallStub = sinon.stub();
-      contractManagerMock = {
-        feesContract: async () => ({
-          methods: {
-            getFeeForUpload: getFeeForUploadStub
-          }
-        })
+      const contractMock = {
+        methods: {
+          getFeeForUpload: getFeeForUploadStub
+        }
       };
       getFeeForUploadStub.returns({
         call: getFeeForUploadCallStub.resolves(fee)
       });
       feesWrapper = new FeesWrapper(contractManagerMock);
+      getContractStub = sinon.stub(feesWrapper, 'contract').resolves(contractMock);
+    });
+
+    afterEach(async () => {
+      getContractStub.restore();
     });
 
     it('calls contract method with correct arguments', async () => {

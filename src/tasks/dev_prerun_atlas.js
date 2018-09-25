@@ -10,21 +10,22 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {WinstonConsoleLogger} from '../utils/loggers';
 import Builder from '../builder';
 import config from '../../config/config';
+import devConfig from '../../config/devConfig';
 import {addToKycWhitelist, onboardAsAtlas, registerAdminAccount} from '../utils/prerun';
 import {Role} from '../services/roles_repository';
 
-async function setupDevelopment(dataModelEngine, logger) {
+async function setupDevelopment(web3, dataModelEngine, logger) {
   await registerAdminAccount(dataModelEngine, logger);
-  await addToKycWhitelist(Role.ATLAS, dataModelEngine, logger);
-  await onboardAsAtlas(dataModelEngine.contractManager.web3, dataModelEngine.rolesRepository, logger);
+  await addToKycWhitelist(Role.ATLAS, devConfig.defaultStake, dataModelEngine, logger);
+  await onboardAsAtlas(web3, dataModelEngine.rolesRepository, logger);
 }
 
 const builder = new Builder();
 const logger = new WinstonConsoleLogger();
 
 builder.build(config)
-  .then(async ({client, dataModelEngine}) => {
-    await setupDevelopment(dataModelEngine, logger);
+  .then(async ({client, web3, dataModelEngine}) => {
+    await setupDevelopment(web3, dataModelEngine, logger);
     await client.close();
   })
   .catch((exception) => {

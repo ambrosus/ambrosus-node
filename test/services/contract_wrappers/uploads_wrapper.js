@@ -18,7 +18,7 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Uploads Wrapper', () => {
-  let contractManagerMock;
+  let getContractStub;
   let uploadsWrapper;
 
   describe('registerBundle', () => {
@@ -32,18 +32,20 @@ describe('Uploads Wrapper', () => {
     beforeEach(async () => {
       registerBundleStub = sinon.stub();
       registerBundleSendStub = sinon.stub();
-      contractManagerMock = {
-        uploadsContract: async () => ({
-          methods: {
-            registerBundle: registerBundleStub
-          }
-        }),
-        defaultAddress: () => defaultAccount
+      const contractMock = {
+        methods: {
+          registerBundle: registerBundleStub
+        }
       };
       registerBundleStub.returns({
         send: registerBundleSendStub
       });
-      uploadsWrapper = new UploadsWrapper(contractManagerMock);
+      uploadsWrapper = new UploadsWrapper({}, {}, defaultAccount);
+      getContractStub = sinon.stub(uploadsWrapper, 'contract').resolves(contractMock);
+    });
+
+    afterEach(async () => {
+      getContractStub.restore();
     });
 
     it('calls contract method with correct arguments', async () => {

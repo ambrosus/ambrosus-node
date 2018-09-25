@@ -7,15 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import ContractWrapper from './contract_wrapper';
-
-export default class FeesWrapper extends ContractWrapper {
-  get getContractName() {
-    return 'fees';
-  }
-
-  async feeForUpload(storagePeriods) {
-    const contract = await this.contract();
-    return contract.methods.getFeeForUpload(storagePeriods).call();
-  }
-}
+module.exports = Object.freeze({
+  defaultStake: process.env.DEFAULT_STAKE,
+  deployerPrivateKey: process.env.WEB3_DEPLOYER_PRIVATEKEY
+});
