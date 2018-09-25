@@ -16,7 +16,7 @@ const logger = new WinstonConsoleLogger();
 
 createWeb3(config)
   .then(async (web3) => {
-    await deployAll(web3, logger);
+    await deployAll(web3, config.nodePrivateKey, logger);
   })
   .catch((exception) => {
     logger.error(exception);
