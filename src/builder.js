@@ -25,6 +25,7 @@ import {createWeb3, getDefaultAddress} from './utils/web3_tools';
 import RolesRepository, {Role} from './services/roles_repository';
 import UploadRepository from './services/upload_repository';
 import ChallengesRepository from './services/challenges_repository';
+import Migrator from './migrations/Migrator';
 
 class Builder {
   async ensureAdminAccountExist() {
@@ -50,6 +51,7 @@ class Builder {
     this.db = db;
     this.client = client;
     this.web3 = web3 || await createWeb3(this.config);
+    this.migrator = new Migrator(db);
     this.identityManager = new IdentityManager(this.web3);
     const {headContractAddress} = this.config;
     this.contractManager = new ContractManager(this.web3, headContractAddress, this.identityManager.nodeAddress());

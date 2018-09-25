@@ -12,6 +12,7 @@
     "start:hermes": "node dist/start_hermes.js",
     "start:server": "node dist/start_server.js",
     "test": "mocha",
+    "migrate": "babel-node ./src/tasks/migrate",
     "dev:clean": "rimraf ./dist",
     "dev:deploy": "source ./dev.env && babel-node src/tasks/dev_deploy.js",
     "dev:prerun:hermes": "source ./dev.env && babel-node src/tasks/dev_prerun_hermes.js",
