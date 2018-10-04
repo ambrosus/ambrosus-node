@@ -152,9 +152,9 @@ ajv@^6.4.0:
     json-schema-traverse "^0.3.0"
     uri-js "^3.0.2"
 
-ambrosus-node-contracts@^0.0.4:
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/ambrosus-node-contracts/-/ambrosus-node-contracts-0.0.4.tgz#6b5d096370dcf3c2628de7d88c29609292cb87c3"
+ambrosus-node-contracts@0.0.8:
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/ambrosus-node-contracts/-/ambrosus-node-contracts-0.0.8.tgz#9c86de9c79aec5c0e1b0f81138b0c26673f87077"
   dependencies:
     command-line-args "^5.0.2"
     dotenv "^6.0.0"

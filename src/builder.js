@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import AccountAccessDefinitions from './services/account_access_definitions';
 import AccountRepository from './services/account_repository';
-import ContractManager from 'ambrosus-node-contracts/dist/wrappers/contract_manager';
+import {ContractManager} from 'ambrosus-node-contracts';
 import DataModelEngine from './services/data_model_engine';
 import EntityBuilder from './services/entity_builder';
 import EntityDownloader from './services/entity_downloader';
