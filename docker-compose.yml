@@ -9,6 +9,7 @@ services:
     container_name: "db"
 
   parity:
+    container_name: "parity"
     image: parity/parity:nightly
     # Parity by default only exposes it's API on localhost. For it to be
     # accessible from the other containers we need --unsafe-expose

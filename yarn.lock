@@ -152,6 +152,15 @@ ajv@^6.4.0:
     json-schema-traverse "^0.3.0"
     uri-js "^3.0.2"
 
+ambrosus-node-contracts@0.0.8:
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/ambrosus-node-contracts/-/ambrosus-node-contracts-0.0.8.tgz#9c86de9c79aec5c0e1b0f81138b0c26673f87077"
+  dependencies:
+    command-line-args "^5.0.2"
+    dotenv "^6.0.0"
+    openzeppelin-solidity "^1.10.0"
+    web3 "^1.0.0-beta.34"
+
 ansi-align@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/ansi-align/-/ansi-align-2.0.0.tgz#c36aeccba563b89ceb556f3690f0b1d9e3547f7f"
@@ -2104,6 +2113,10 @@ dot-prop@^4.1.0:
   resolved "https://registry.yarnpkg.com/dot-prop/-/dot-prop-4.2.0.tgz#1f19e0c2e1aa0e32797c49799f2837ac6af69c57"
   dependencies:
     is-obj "^1.0.0"
+
+dotenv@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-6.0.0.tgz#24e37c041741c5f4b25324958ebbc34bca965935"
 
 drbg.js@^1.0.1:
   version "1.0.1"
@@ -4801,6 +4814,10 @@ onetime@^2.0.0:
   resolved "https://registry.yarnpkg.com/onetime/-/onetime-2.0.1.tgz#067428230fd67443b2794b22bba528b6867962d4"
   dependencies:
     mimic-fn "^1.0.0"
+
+openzeppelin-solidity@^1.10.0:
+  version "1.12.0"
+  resolved "https://registry.yarnpkg.com/openzeppelin-solidity/-/openzeppelin-solidity-1.12.0.tgz#7b9c55975e73370d4541e3442b30cb3d91ac973a"
 
 optionator@^0.8.2:
   version "0.8.2"

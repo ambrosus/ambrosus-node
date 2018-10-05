@@ -8,8 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 // import {deployContract, link} from '../../src/utils/web3_tools';
-import {contractJsons} from '../utils/contracts_consts';
-import Deployer from './deployer';
+import {contractJsons, Deployer} from 'ambrosus-node-contracts';
 
 
 const deployAll = async (web3, privateKey, logger) => {
