@@ -9,6 +9,9 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {pick} from '../utils/dict_utils';
 import {getTimestamp} from '../utils/time_utils';
+import {mongoObjectSize} from '../utils/db_utils';
+
+const MONGO_SIZE_IN_BYTES_LIMIT = 16000000; // 16 Mb
 
 export default class EntityRepository {
   constructor(db) {
@@ -82,6 +85,19 @@ export default class EntityRepository {
       first.id.localeCompare(second.id));
   }
 
+  discardEntitiesForBundling(orderedEntities, bundleItemsCountLimit, bundleSizeInBytesLimit = MONGO_SIZE_IN_BYTES_LIMIT) {
+    const bundleSizeCut = orderedEntities
+      .slice(0, bundleItemsCountLimit)
+      .map(mongoObjectSize)
+      .reduce((cumsum, size) => (cumsum.length === 0 ? [size] : [...cumsum, cumsum[cumsum.length - 1] + size]), [])
+      .findIndex((size) => size > bundleSizeInBytesLimit);
+
+    if (bundleSizeCut !== -1) {
+      return orderedEntities.slice(bundleSizeCut);
+    }
+    return orderedEntities.slice(bundleItemsCountLimit);
+  }
+
   async updateEntities(entities, updateQuery) {
     const assetIds = entities.filter((ent) => ent.type === 'asset').map((asset) => asset.id);
     const eventIds = entities.filter((ent) => ent.type === 'event').map((event) => event.id);
@@ -118,7 +134,7 @@ export default class EntityRepository {
     await this.updateEntities(entities, update);
   }
 
-  async fetchEntitiesForBundling(bundleStubId, bundleSizeLimit) {
+  async fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit) {
     const notBundledQuery = {
       'metadata.bundleId': null,
       'repository.bundleStubId': null
@@ -137,26 +153,24 @@ export default class EntityRepository {
       'repository.bundleStubId': bundleStubId
     };
 
-    let assets = await this.db
+    const assets = await this.db
       .collection('assets')
       .find(thisBundleStubQuery, {fields: this.blacklistedFields})
       .toArray();
-    let events = await this.db
+    const events = await this.db
       .collection('events')
       .find(thisBundleStubQuery, {fields: this.blacklistedFields})
       .toArray();
 
-
     const entities = this.assetsAndEventsToEntityIds(assets, events);
     const orderedEntities = this.orderEntityIds(entities);
-    const discardedEntities = orderedEntities.slice(bundleSizeLimit);
+
+    const discardedEntities = this.discardEntitiesForBundling(orderedEntities, bundleItemsCountLimit);
     await this.unsetEntitiesBundlesStubs(discardedEntities);
 
-    assets = assets.filter((asset) => !discardedEntities.some((id) => asset.assetId === id));
-    events = events.filter((event) => !discardedEntities.some((id) => event.eventId === id));
     return {
-      assets,
-      events
+      assets: assets.filter((asset) => !discardedEntities.some(({id}) => asset.assetId === id)),
+      events: events.filter((event) => !discardedEntities.some(({id}) => event.eventId === id))
     };
   }
 

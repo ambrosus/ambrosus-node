@@ -176,8 +176,8 @@ export default class DataModelEngine {
     return bundle;
   }
 
-  async initialiseBundling(bundleStubId, bundleSizeLimit) {
-    const notBundled = await this.entityRepository.fetchEntitiesForBundling(bundleStubId, bundleSizeLimit);
+  async initialiseBundling(bundleStubId, bundleItemsCountLimit) {
+    const notBundled = await this.entityRepository.fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit);
 
     const nodeSecret = await this.identityManager.nodePrivateKey();
     const newBundle = this.entityBuilder.assembleBundle(notBundled.assets, notBundled.events, getTimestamp(), nodeSecret);

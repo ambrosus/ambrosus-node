@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinon from 'sinon';
-import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
+import {cleanDatabase, connectToMongo, mongoObjectSize} from '../../src/utils/db_utils';
 import {pick, put} from '../../src/utils/dict_utils';
 import {createAsset, createBundle, createEvent} from '../fixtures/assets_events';
 import {createWeb3} from '../../src/utils/web3_tools';
@@ -29,6 +29,7 @@ describe('Entity Repository', () => {
   let db;
   let client;
   let storage;
+  const MONGO_SIZE_LIMIT = 16000000; // 16 Mb
 
   before(async () => {
     ({db, client} = await connectToMongo(config));
@@ -118,6 +119,23 @@ describe('Entity Repository', () => {
       const otherBundleId = '0x33333';
       await expect(storage.getBundle(otherBundleId)).to.eventually.be.equal(null);
     });
+
+    describe('discardEntitiesForBundling', () => {
+      const exampleEntities = [...Array(10).keys()].map((id) => ({id}));
+
+      it('returns empty array if neither entities count nor their size exceed limit', async () => {
+        expect(storage.discardEntitiesForBundling(exampleEntities, 100)).to.deep.equal([]);
+      });
+
+      it('returns all entities after bundleItemsCountLimit when the size does not exceed lengthLimit', async () => {
+        expect(storage.discardEntitiesForBundling(exampleEntities, 8)).to.deep.equal([{id: 8}, {id: 9}]);
+      });
+
+      it('returns all entities after mongo size limit', async () => {
+        const itemSize = mongoObjectSize(exampleEntities[0]);
+        expect(storage.discardEntitiesForBundling(exampleEntities, 8, itemSize * 5)).to.deep.equal([{id: 5}, {id: 6}, {id: 7}, {id: 8}, {id: 9}]);
+      });
+    });
   });
 
   describe('Bundle process (successful)', () => {
@@ -126,7 +144,7 @@ describe('Entity Repository', () => {
     const bundleStubId = '123';
     const bundleId = 'xyz';
     const bundleTxHash = '0x123';
-    const bundleSizeLimit = 3;
+    const bundleItemsCountLimit = 3;
     let alreadyBundledAssets;
     let alreadyBundledEvents;
     let nonBundledAssets;
@@ -135,7 +153,7 @@ describe('Entity Repository', () => {
 
     let ret;
 
-    before(async () => {
+    beforeEach(async () => {
       scenario = new ScenarioBuilder(new IdentityManager(await createWeb3()));
       await scenario.addAdminAccount(adminAccountWithSecret);
 
@@ -164,21 +182,19 @@ describe('Entity Repository', () => {
 
       clock = sinon.useFakeTimers(5000);
 
-      ret = await expect(storage.fetchEntitiesForBundling(bundleStubId, bundleSizeLimit)).to.be.fulfilled;
+      ret = await expect(storage.fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit)).to.be.fulfilled;
       await expect(storage.markEntitiesAsBundled(bundleStubId, bundleId)).to.be.fulfilled;
       await expect(storage.storeBundleProofMetadata(bundleId, 10, bundleTxHash)).to.be.fulfilled;
     });
 
-    after(async () => {
+    afterEach(async () => {
       await cleanDatabase(db);
       clock.restore();
     });
 
     it('returns only assets and events without a bundle', () => {
-      expect(ret.assets).to.deep.include.members(nonBundledAssets);
-      expect(ret.assets).to.have.lengthOf(nonBundledAssets.length);
-      expect(ret.events).to.deep.include.members(nonBundledEvents);
-      expect(ret.events).to.have.lengthOf(nonBundledEvents.length);
+      expect(ret.assets).to.deep.equal(nonBundledAssets);
+      expect(ret.events).to.deep.equal([nonBundledEvents[1]]);
     });
 
     it('other assets and events that are not included in the bundle should be left untouched', async () => {
@@ -191,6 +207,9 @@ describe('Entity Repository', () => {
         const storedEvent = await storage.getEvent(event.eventId);
         expect(storedEvent).to.deep.equal(event);
       }
+
+      const [outOfQuotaEvent] = nonBundledEvents;
+      expect(await storage.getEvent(outOfQuotaEvent.eventId)).to.deep.equal(outOfQuotaEvent);
     });
 
     it('orderEntityIds sorts correctly (by timestamp, then by type)', () => {
@@ -208,6 +227,14 @@ describe('Entity Repository', () => {
         .to.deep.equal(['asset2', 'event2', 'asset1', 'event1', 'event3']);
     });
 
+    it('fetchEntitiesForBundling should not pick entities with a total size larger than MONGO_SIZE_LIMIT', async () => {
+      const mongoSizeStub = sinon.stub(require('../../src/utils/db_utils'), 'mongoObjectSize').returns(MONGO_SIZE_LIMIT / 2);
+      await Promise.all([...alreadyBundledAssets, ...nonBundledAssets].map((asset) => storage.storeAsset(asset)));
+      await Promise.all([...alreadyBundledEvents, ...nonBundledEvents].map((event) => storage.storeEvent(event)));
+      const {assets, events} = await storage.fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit);
+      expect([...assets, ...events]).to.have.length(2);
+      mongoSizeStub.restore();
+    });
 
     it('both assets and earliest event included in the bundle should have the metadata.bundleId set after the call to markEntitiesAsBundled', async () => {
       for (const asset of nonBundledAssets) {
@@ -247,7 +274,7 @@ describe('Entity Repository', () => {
     });
 
     it('second call to fetchEntitiesForBundling should include latest events and the leftovers from the previous bundling', async () => {
-      const ret2 = await expect(storage.fetchEntitiesForBundling('otherId')).to.be.fulfilled;
+      const ret2 = await expect(storage.fetchEntitiesForBundling('otherId', bundleItemsCountLimit)).to.be.fulfilled;
       expect(ret2.assets).to.be.empty;
       expect(ret2.events).to.deep.equal([nonBundledEvents[0]]);
     });
@@ -257,7 +284,7 @@ describe('Entity Repository', () => {
     let scenario;
 
     const bundleStubId = '123';
-    const bundleSizeLimit = 3;
+    const bundleItemsCountLimit = 3;
     let alreadyBundledAssets;
     let alreadyBundledEvents;
     let nonBundledAssets;
@@ -295,7 +322,7 @@ describe('Entity Repository', () => {
 
       clock = sinon.useFakeTimers(5000);
 
-      ret = await expect(storage.fetchEntitiesForBundling(bundleStubId, bundleSizeLimit)).to.be.fulfilled;
+      ret = await expect(storage.fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit)).to.be.fulfilled;
       await expect(storage.discardBundling(bundleStubId)).to.be.fulfilled;
     });
 
@@ -305,7 +332,7 @@ describe('Entity Repository', () => {
     });
 
     it('should return to state from before bundling initialisation', async () => {
-      expect(await storage.fetchEntitiesForBundling(bundleStubId, bundleSizeLimit)).to.be.deep.equal(ret);
+      expect(await storage.fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit)).to.be.deep.equal(ret);
     });
   });
 

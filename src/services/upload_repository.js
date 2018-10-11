@@ -45,13 +45,13 @@ export default class UploadRepository {
     return this.shelteringWrapper.shelteringExpirationDate(bundleId);
   }
 
-  async bundleSizeLimit() {
+  async bundleItemsCountLimit() {
     return this.configWrapper.bundleSizeLimit();
   }
 
   async verifyBundle(bundle) {
-    const bundleSizeLimit = await this.bundleSizeLimit();
-    if (bundle.content.entries.length > bundleSizeLimit) {
+    const bundleItemsCountLimit = await this.bundleItemsCountLimit();
+    if (bundle.content.entries.length > bundleItemsCountLimit) {
       throw new ValidationError('Bundle size surpasses the limit');
     }
   }

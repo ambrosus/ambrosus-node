@@ -914,7 +914,7 @@ describe('Data Model Engine', () => {
 
     const bundleStubId = 'abc';
     const nodeSecret = 'nodeSecret';
-    const bundleSizeLimit = 100;
+    const bundleItemsCountLimit = 100;
     let unbundledAssets;
     let unbundledEvents;
     let assembledBundle;
@@ -968,7 +968,7 @@ describe('Data Model Engine', () => {
         entityBuilder: mockEntityBuilder
       });
 
-      ret = await expect(modelEngine.initialiseBundling(bundleStubId, bundleSizeLimit)).to.be.fulfilled;
+      ret = await expect(modelEngine.initialiseBundling(bundleStubId, bundleItemsCountLimit)).to.be.fulfilled;
     });
 
     after(() => {
@@ -976,7 +976,7 @@ describe('Data Model Engine', () => {
     });
 
     it('fetches entities to bundle from the repository', () => {
-      expect(mockEntityRepository.fetchEntitiesForBundling).to.have.been.calledWith(bundleStubId, bundleSizeLimit);
+      expect(mockEntityRepository.fetchEntitiesForBundling).to.have.been.calledWith(bundleStubId, bundleItemsCountLimit);
     });
 
     it('asks the identity manager for the node private key', () => {

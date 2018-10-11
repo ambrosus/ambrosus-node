@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {MongoClient} from 'mongodb';
 import querystring from 'querystring';
+import bson from 'bson';
 
 const createMongoUrl = (config) => {
   const query = {};
@@ -44,4 +45,6 @@ const cleanDatabase = async (db) => {
   }
 };
 
-export {connectToMongo, cleanDatabase, createMongoUrl};
+const mongoObjectSize = new bson.BSON().calculateObjectSize;
+
+export {connectToMongo, cleanDatabase, createMongoUrl, mongoObjectSize};
