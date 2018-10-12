@@ -25,6 +25,7 @@ export default class UploadRepository {
 
   async uploadBundle(bundleId, storagePeriods) {
     const fee = await this.feesWrapper.feeForUpload(storagePeriods);
+
     if (!await this.checkIfEnoughFunds(fee)) {
       throw new Error(`Insufficient funds: need at least ${fee} to upload the bundle`);
     }
@@ -56,8 +57,12 @@ export default class UploadRepository {
     }
   }
 
-  async checkIfEnoughFunds(fee) {
+  async checkIfEnoughFundsForUpload(storagePeriods) {
+    return this.checkIfEnoughFunds(await this.feesWrapper.feeForUpload(storagePeriods));
+  }
+
+  async checkIfEnoughFunds(requiredBalance) {
     const balance = new BN(await this.web3.eth.getBalance(this.identityManager.nodeAddress()));
-    return balance.gte(new BN(fee));
+    return balance.gte(new BN(requiredBalance));
   }
 }
