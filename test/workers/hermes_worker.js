@@ -17,7 +17,7 @@ chai.use(sinonChai);
 const {expect} = chai;
 
 describe('Hermes Worker', () => {
-  const bundleSizeLimit = 10;
+  const bundleItemsCountLimit = 10;
   const storagePeriods = 1;
   const retryPeriod = 7;
   let mockDataModelEngine;
@@ -39,7 +39,7 @@ describe('Hermes Worker', () => {
       uploadNotRegisteredBundles: sinon.stub().resolves([])
     };
     mockUploadRepository = {
-      bundleSizeLimit: sinon.stub()
+      bundleItemsCountLimit: sinon.stub()
     };
     mockLogger = {
       info: sinon.stub()
@@ -55,7 +55,7 @@ describe('Hermes Worker', () => {
 
     hermesWorker = new HermesWorker(mockDataModelEngine, mockUploadRepository, mockStrategy, retryPeriod, mockLogger);
     mockDataModelEngine.initialiseBundling.resolves(mockResult);
-    mockUploadRepository.bundleSizeLimit.resolves(bundleSizeLimit);
+    mockUploadRepository.bundleItemsCountLimit.resolves(bundleItemsCountLimit);
     await hermesWorker.beforeWorkLoop();
   });
 
@@ -69,13 +69,13 @@ describe('Hermes Worker', () => {
 
   it('asks config contract for bundle size limit', async () => {
     await hermesWorker.periodicWork();
-    expect(mockUploadRepository.bundleSizeLimit).to.have.been.calledOnce;
+    expect(mockUploadRepository.bundleItemsCountLimit).to.have.been.calledOnce;
   });
 
   it('asks data model engine for bundle candidate', async () => {
     const {bundleSequenceNumber} = hermesWorker;
     await hermesWorker.periodicWork();
-    expect(mockDataModelEngine.initialiseBundling).to.have.been.calledWith(bundleSequenceNumber, bundleSizeLimit);
+    expect(mockDataModelEngine.initialiseBundling).to.have.been.calledWith(bundleSequenceNumber, bundleItemsCountLimit);
   });
 
   it('asks strategy if the bundle should be uploaded', async () => {

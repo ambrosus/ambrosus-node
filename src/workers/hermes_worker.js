@@ -36,8 +36,8 @@ export default class HermesWorker extends PeriodicWorker {
   }
 
   async periodicWork() {
-    const bundleSizeLimit = await this.uploadRepository.bundleSizeLimit();
-    const bundle = await this.dataModelEngine.initialiseBundling(this.bundleSequenceNumber, bundleSizeLimit);
+    const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
+    const bundle = await this.dataModelEngine.initialiseBundling(this.bundleSequenceNumber, bundleItemsCountLimit);
 
     await this.retryUploadIfNecessary();
 

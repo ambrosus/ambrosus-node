@@ -110,7 +110,7 @@ describe('Upload repository', () => {
     });
   });
 
-  describe('bundleSizeLimit', async () => {
+  describe('bundleItemsCountLimit', async () => {
     const sizeLimit = 42;
 
     beforeEach(async () => {
@@ -121,7 +121,7 @@ describe('Upload repository', () => {
     });
 
     it('calls wrappers methods with correct arguments', async () => {
-      expect(await uploadRepository.bundleSizeLimit()).to.equal(sizeLimit);
+      expect(await uploadRepository.bundleItemsCountLimit()).to.equal(sizeLimit);
       expect(configWrapperMock.bundleSizeLimit).to.be.calledOnceWith();
     });
   });

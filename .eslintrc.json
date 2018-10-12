@@ -40,7 +40,7 @@
     "arrow-spacing": 2,
     "arrow-parens": 2,
     "arrow-body-style": 2,
-    "no-confusing-arrow": 2,
+    "no-confusing-arrow": [2, {"allowParens": true}],
     "no-useless-constructor": 2,
     "no-dupe-class-members": 2,
     "no-duplicate-imports": 2,
