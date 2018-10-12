@@ -39,10 +39,12 @@ describe('Hermes Worker', () => {
       uploadNotRegisteredBundles: sinon.stub().resolves([])
     };
     mockUploadRepository = {
-      bundleItemsCountLimit: sinon.stub()
+      bundleItemsCountLimit: sinon.stub(),
+      checkIfEnoughFundsForUpload: sinon.stub().resolves(true)
     };
     mockLogger = {
-      info: sinon.stub()
+      info: sinon.stub(),
+      error: sinon.stub()
     };
     mockResult = {
       bundleId: '0xc0ffee'
@@ -72,6 +74,12 @@ describe('Hermes Worker', () => {
     expect(mockUploadRepository.bundleItemsCountLimit).to.have.been.calledOnce;
   });
 
+  it('checks if node has enough funds', async () => {
+    storagePeriodsStub.returns(storagePeriods);
+    await hermesWorker.periodicWork();
+    expect(mockUploadRepository.checkIfEnoughFundsForUpload).to.have.been.calledOnceWith(storagePeriods);
+  });
+
   it('asks data model engine for bundle candidate', async () => {
     const {bundleSequenceNumber} = hermesWorker;
     await hermesWorker.periodicWork();
@@ -92,6 +100,12 @@ describe('Hermes Worker', () => {
     expect(mockDataModelEngine.uploadNotRegisteredBundles).to.be.calledOnce;
     await hermesWorker.periodicWork();
     expect(mockDataModelEngine.uploadNotRegisteredBundles).to.be.calledTwice;
+  });
+
+  it('does not bundle if insufficient funds', async () => {
+    mockUploadRepository.checkIfEnoughFundsForUpload.resolves(false);
+    await hermesWorker.periodicWork();
+    expect(mockDataModelEngine.initialiseBundling).to.be.not.called;
   });
 
   describe('Bundle aborted', async () => {

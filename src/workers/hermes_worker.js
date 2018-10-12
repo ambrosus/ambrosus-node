@@ -36,22 +36,26 @@ export default class HermesWorker extends PeriodicWorker {
   }
 
   async periodicWork() {
+    const storagePeriods = this.strategy.storagePeriods();
+    if (!await this.uploadRepository.checkIfEnoughFundsForUpload(storagePeriods)) {
+      this.logger.error('Insufficient funds to perform bundle upload.');
+      return;
+    }
+    await this.retryUploadIfNecessary();
+
     const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
     const bundle = await this.dataModelEngine.initialiseBundling(this.bundleSequenceNumber, bundleItemsCountLimit);
 
-    await this.retryUploadIfNecessary();
-
     if (await this.strategy.shouldBundle(bundle)) {
-      await this.performBundling(bundle);
+      await this.performBundling(bundle, storagePeriods);
     } else {
       await this.dataModelEngine.cancelBundling(this.bundleSequenceNumber);
       this.logger.info('Bundling process canceled');
     }
   }
 
-  async performBundling(bundle) {
+  async performBundling(bundle, storagePeriods) {
     this.logger.info('Trying to upload bundle...');
-    const storagePeriods = this.strategy.storagePeriods();
     const result = await this.dataModelEngine.finaliseBundling(bundle, this.bundleSequenceNumber, storagePeriods);
     if (result !== null) {
       this.logger.info({message: 'Bundle successfully uploaded', bundleId: result.bundleId});
