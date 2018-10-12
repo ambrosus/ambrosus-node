@@ -9,7 +9,17 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import AccountAccessDefinitions from './services/account_access_definitions';
 import AccountRepository from './services/account_repository';
-import {ContractManager} from 'ambrosus-node-contracts';
+import {
+  ChallengesWrapper,
+  ConfigWrapper,
+  FeesWrapper,
+  HeadWrapper,
+  KycWhitelistWrapper,
+  RolesWrapper,
+  ShelteringWrapper,
+  UploadActions,
+  UploadsWrapper
+} from 'ambrosus-node-contracts';
 import DataModelEngine from './services/data_model_engine';
 import EntityBuilder from './services/entity_builder';
 import EntityDownloader from './services/entity_downloader';
@@ -55,18 +65,31 @@ class Builder {
     this.migrator = new Migrator(db);
     this.identityManager = new IdentityManager(this.web3);
     const {headContractAddress} = this.config;
-    this.contractManager = new ContractManager(this.web3, headContractAddress, this.identityManager.nodeAddress());
-    this.rolesRepository = new RolesRepository(this.contractManager.rolesWrapper, this.contractManager.configWrapper);
+
+    const defaultAddress = await getDefaultAddress(web3);
+
+    this.headWrapper = new HeadWrapper(headContractAddress, web3, defaultAddress);
+    this.rolesWrapper = new RolesWrapper(this.headWrapper, web3, defaultAddress);
+    this.configWrapper = new ConfigWrapper(this.headWrapper, web3, defaultAddress);
+    this.uploadsWrapper = new UploadsWrapper(this.headWrapper, web3, defaultAddress);
+    this.feesWrapper = new FeesWrapper(this.headWrapper, web3, defaultAddress);
+    this.challengesWrapper = new ChallengesWrapper(this.headWrapper, web3, defaultAddress);
+    this.shelteringWrapper = new ShelteringWrapper(this.headWrapper, web3, defaultAddress);
+    this.kycWhitelistWrapper = new KycWhitelistWrapper(this.headWrapper, web3, defaultAddress);
+    this.uploadActions = new UploadActions(this.uploadsWrapper, this.feesWrapper, this.shelteringWrapper);
+
+    this.rolesRepository = new RolesRepository(this.rolesWrapper, this.configWrapper);
     this.uploadRepository = new UploadRepository(
       this.web3,
       this.identityManager,
-      this.contractManager.uploadsWrapper,
-      this.contractManager.shelteringWrapper,
-      this.contractManager.rolesWrapper,
-      this.contractManager.feesWrapper,
-      this.contractManager.configWrapper
+      this.uploadActions,
+      this.shelteringWrapper,
+      this.rolesWrapper,
+      this.feesWrapper,
+      this.configWrapper
     );
-    this.challengesRepository = new ChallengesRepository(this.contractManager.challengesWrapper, this.contractManager.configWrapper);
+    this.challengesRepository = new ChallengesRepository(this.challengesWrapper,
+      this.configWrapper);
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
     const {maximumEntityTimestampOvertake} = this.config;
     this.entityBuilder = new EntityBuilder(this.identityManager, maximumEntityTimestampOvertake);
@@ -93,12 +116,11 @@ class Builder {
       findAssetQueryObjectFactory: this.findAssetQueryObjectFactory,
       accountAccessDefinitions: this.accountAccessDefinitions,
       mongoClient: this.client,
-      contractManager: this.contractManager,
       uploadRepository: this.uploadRepository,
       rolesRepository: this.rolesRepository,
       workerLogRepository: this.workerLogRepository
     });
-    return {dataModelEngine: this.dataModelEngine, client: this.client};
+    return {dataModelEngine: this.dataModelEngine, client: this.client, kycWhitelistWrapper: this.kycWhitelistWrapper};
   }
 }
 

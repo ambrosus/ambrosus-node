@@ -13,10 +13,10 @@ import {Role} from './roles_repository';
 import BN from 'bn.js';
 
 export default class UploadRepository {
-  constructor(web3, identityManager, uploadsWrapper, shelteringWrapper, rolesWrapper, feesWrapper, configWrapper) {
+  constructor(web3, identityManager, uploadsActions, shelteringWrapper, rolesWrapper, feesWrapper, configWrapper) {
     this.web3 = web3;
     this.identityManager = identityManager;
-    this.uploadsWrapper = uploadsWrapper;
+    this.uploadsActions = uploadsActions;
     this.feesWrapper = feesWrapper;
     this.shelteringWrapper = shelteringWrapper;
     this.configWrapper = configWrapper;
@@ -35,7 +35,11 @@ export default class UploadRepository {
       throw new Error('Default address is not onboarded as the HERMES');
     }
 
-    return this.uploadsWrapper.registerBundle(bundleId, fee, storagePeriods);
+    return this.uploadsActions.uploadBundle(bundleId, storagePeriods);
+  }
+
+  async getBundleChainData(bundleId) {
+    return this.uploadsActions.getBundleUploadData(bundleId);
   }
 
   async isSheltering(bundleId) {
