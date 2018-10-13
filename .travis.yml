@@ -21,11 +21,13 @@ before_install:
 install:
   - docker-compose pull
   - npx yarn install
+  - docker pull hadolint/hadolint
 
 script:
   - npx yarn dev:docker:db
   - npx yarn dev:lint
   - npx yarn test
+  - docker run --rm -i hadolint/hadolint < Dockerfile
 
 notifications:
   slack: ambrosus:ybmTQyso2XmAp6SM9NQPhdl2
