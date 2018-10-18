@@ -22,6 +22,7 @@ describe('Hermes Worker', () => {
   const retryPeriod = 7;
   let mockDataModelEngine;
   let mockUploadRepository;
+  let mockWorkerLogRepository;
   let mockLogger;
   let mockStrategy;
   let mockResult;
@@ -42,6 +43,9 @@ describe('Hermes Worker', () => {
       bundleItemsCountLimit: sinon.stub(),
       checkIfEnoughFundsForUpload: sinon.stub().resolves(true)
     };
+    mockWorkerLogRepository = {
+      storeLog: sinon.stub()
+    };
     mockLogger = {
       info: sinon.stub(),
       error: sinon.stub()
@@ -55,7 +59,7 @@ describe('Hermes Worker', () => {
     shouldBundleStub = sinon.stub(mockStrategy, 'shouldBundle');
     bundlingSucceededStub = sinon.stub(mockStrategy, 'bundlingSucceeded');
 
-    hermesWorker = new HermesWorker(mockDataModelEngine, mockUploadRepository, mockStrategy, retryPeriod, mockLogger);
+    hermesWorker = new HermesWorker(mockDataModelEngine, mockUploadRepository, mockWorkerLogRepository, mockStrategy, retryPeriod, mockLogger);
     mockDataModelEngine.initialiseBundling.resolves(mockResult);
     mockUploadRepository.bundleItemsCountLimit.resolves(bundleItemsCountLimit);
     await hermesWorker.beforeWorkLoop();
@@ -145,6 +149,10 @@ describe('Hermes Worker', () => {
 
     it('informs strategy', async () => {
       expect(bundlingSucceededStub).to.have.been.calledOnce;
+    });
+
+    it('saves log to mongo', async () => {
+      expect(mockWorkerLogRepository.storeLog).to.have.been.calledOnce;
     });
   });
 });

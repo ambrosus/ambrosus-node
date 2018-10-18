@@ -9,14 +9,17 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import PeriodicWorker from './periodic_worker';
 import HermesUploadStrategy from './hermes_strategies/upload_strategy';
+import {getTimestamp} from '../utils/time_utils';
+
 
 export default class HermesWorker extends PeriodicWorker {
-  constructor(dataModelEngine, uploadRepository, strategy, retryPeriod, logger) {
+  constructor(dataModelEngine, uploadRepository, workerLogRepository, strategy, retryPeriod, logger) {
     super(strategy.workerInterval, logger);
     this.dataModelEngine = dataModelEngine;
     this.bundleSequenceNumber = 0;
     this.strategy = strategy;
     this.uploadRepository = uploadRepository;
+    this.workerLogRepository = workerLogRepository;
     this.retryPeriod = retryPeriod;
     this.sinceLastRetry = retryPeriod;
     if (!(this.strategy instanceof HermesUploadStrategy)) {
@@ -59,6 +62,12 @@ export default class HermesWorker extends PeriodicWorker {
     const result = await this.dataModelEngine.finaliseBundling(bundle, this.bundleSequenceNumber, storagePeriods);
     if (result !== null) {
       this.logger.info({message: 'Bundle successfully uploaded', bundleId: result.bundleId});
+      const log = {
+        message: 'Bundle successfully uploaded',
+        bundleId: result.bundleId,
+        timestamp: getTimestamp()
+      };
+      await this.workerLogRepository.storeLog(log);
       await this.strategy.bundlingSucceeded();
       this.bundleSequenceNumber++;
     }

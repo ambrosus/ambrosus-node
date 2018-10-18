@@ -14,6 +14,7 @@ import DataModelEngine from './services/data_model_engine';
 import EntityBuilder from './services/entity_builder';
 import EntityDownloader from './services/entity_downloader';
 import EntityRepository from './services/entity_repository';
+import WorkerLogRepository from './services/worker_log_repository';
 import FindEventQueryObjectFactory from './services/find_event_query_object';
 import FindAccountQueryObjectFactory from './services/find_account_query_object';
 import FindAssetQueryObjectFactory from './services/find_asset_query_object';
@@ -71,6 +72,8 @@ class Builder {
     this.entityBuilder = new EntityBuilder(this.identityManager, maximumEntityTimestampOvertake);
     this.entityRepository = new EntityRepository(this.db);
     await this.entityRepository.initializeIndexes();
+    this.workerLogRepository = new WorkerLogRepository(this.db);
+    await this.workerLogRepository.initializeIndex();
     this.findEventQueryObjectFactory = new FindEventQueryObjectFactory(this.db);
     this.findAssetQueryObjectFactory = new FindAssetQueryObjectFactory(this.db);
     this.httpsClient = new HttpsClient();
