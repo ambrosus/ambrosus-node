@@ -168,7 +168,7 @@ export default class EntityBuilder {
         'content.idData.entriesHash',
         'content.entries'
       ])
-      .fieldsConstrainedToSet(['content', 'bundleId'])
+      .fieldsConstrainedToSet(['content', 'bundleId', 'metadata'])
       .fieldsConstrainedToSet(['idData', 'entries', 'signature'], 'content')
       .isNonNegativeInteger(['content.idData.timestamp'])
       .validate(
