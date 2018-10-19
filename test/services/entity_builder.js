@@ -109,7 +109,7 @@ describe('Entity Builder', () => {
         mockEnsureTimestampWithinLimit.restore();
       });
 
-      it(`doesn't allow root-level fields other than content, and assetId`, () => {
+      it(`doesn't allow root-level fields other than content and assetId`, () => {
         const brokenAsset = put(exampleAsset, 'metadata', 'abc');
         expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
       });
@@ -288,13 +288,18 @@ describe('Entity Builder', () => {
         expect(mockIdentityManager.validateSignature).to.have.been.calledOnce;
       });
 
-      it(`doesn't allow root-level fields other than content, and bundleId`, () => {
-        const brokenBundle = put(exampleBundle, 'metadata', 'abc');
+      it(`allow metadata field`, () => {
+        const exampleBundleWithMetadata = put(exampleBundle, 'metadata', 'abc');
+        expect(() => entityBuilder.validateBundle(exampleBundleWithMetadata)).not.to.throw();
+      });
+
+      it(`doesn't allow root-level fields other than content, metadata and bundleId`, () => {
+        const brokenBundle = put(exampleBundle, 'extraField', 'abc');
         expect(() => entityBuilder.validateBundle(brokenBundle)).to.throw(ValidationError);
       });
 
       it(`doesn't allow content fields other than idData, and signature`, () => {
-        const brokenBundle = put(exampleBundle, 'content.metadata', 'abc');
+        const brokenBundle = put(exampleBundle, 'content.extraField', 'abc');
         expect(() => entityBuilder.validateBundle(brokenBundle)).to.throw(ValidationError);
       });
     });
