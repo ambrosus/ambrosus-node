@@ -202,7 +202,7 @@ export default class EntityRepository {
   }
 
   async storeBundle(bundle, storagePeriods) {
-    await this.db.collection('bundles').insertOne({...bundle, metadata: {storagePeriods}});
+    await this.db.collection('bundles').insertOne({metadata: {storagePeriods}, ...bundle});
   }
 
   async storeBundleProofMetadata(bundleId, proofBlock, txHash) {
