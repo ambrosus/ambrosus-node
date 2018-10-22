@@ -12,6 +12,8 @@ import sinonChai from 'sinon-chai';
 import chaiAsPromissed from 'chai-as-promised';
 import ChallengesRepository from '../../src/services/challenges_repository';
 import sinon from 'sinon';
+import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
+import config from '../../config/config';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromissed);
@@ -227,6 +229,31 @@ describe('Challenges repository', () => {
       challengeWrapperMock.canResolve.resolves(false);
       await expect(challengesRepository.resolveChallenge(challengeId)).to.be.eventually.rejected;
       expect(challengeWrapperMock.resolve).to.be.not.called;
+    });
+  });
+
+  describe('Remembering rejected challenges', () => {
+    const challengeId = '0xdeadbeef';
+    let client;
+    let db;
+
+    before(async () => {
+      ({client, db} = await connectToMongo(config));
+      challengesRepository = new ChallengesRepository({}, {}, db);
+    });
+
+    it('stores challengeId together with current date', async () => {
+      expect(await challengesRepository.wasChallengeRejectedRecently(challengeId)).to.be.false;
+      await challengesRepository.markChallengeAsRejected(challengeId);
+      expect(await challengesRepository.wasChallengeRejectedRecently(challengeId)).to.be.true;
+    });
+
+    afterEach(async () => {
+      await cleanDatabase(db);
+    });
+
+    after(async () => {
+      await client.close();
     });
   });
 });

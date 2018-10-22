@@ -10,9 +10,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {put} from '../utils/dict_utils';
 
 export default class ChallengesRepository {
-  constructor(challengesWrapper, configWrapper) {
+  constructor(challengesWrapper, configWrapper, db) {
     this.challengesWrapper = challengesWrapper;
     this.configWrapper = configWrapper;
+    this.db = db;
   }
 
   filterOutFinished(allChallenges, resolvedChallenges, timedOutChallenges) {
@@ -44,5 +45,13 @@ export default class ChallengesRepository {
       throw new Error('Cannot resolve the challenge');
     }
     return this.challengesWrapper.resolve(challengeId);
+  }
+
+  async wasChallengeRejectedRecently(challengeId) {
+    return (await this.db.collection('rejectedChallenges').findOne({challengeId})) !== null;
+  }
+
+  async markChallengeAsRejected(challengeId) {
+    await this.db.collection('rejectedChallenges').insertOne({challengeId, createdAt: Date.now()});
   }
 }

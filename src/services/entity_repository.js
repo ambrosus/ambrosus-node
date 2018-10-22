@@ -45,6 +45,9 @@ export default class EntityRepository {
     // for internal use by repository
     await this.db.collection('assets').ensureIndex({'repository.bundleStubId' : 1});
     await this.db.collection('events').ensureIndex({'repository.bundleStubId' : 1});
+
+    // keep failed challenges for 1 day
+    await this.db.collection('rejectedChallenges').ensureIndex({createdAt: 1}, {expireAfterSeconds: 86400});
   }
 
   async storeAsset(asset) {

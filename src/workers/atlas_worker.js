@@ -23,7 +23,12 @@ export default class AtlasWorker extends PeriodicWorker {
   }
 
   async tryToResolve(bundle, {challengeId}) {
-    await this.challengesRepository.resolveChallenge(challengeId);
+    try {
+      await this.challengesRepository.resolveChallenge(challengeId);
+    } catch (err) {
+      await this.challengesRepository.markChallengeAsRejected(challengeId);
+      throw err;
+    }
     await this.dataModelEngine.updateShelteringExpirationDate(bundle.bundleId);
     this.logger.info({message: '🍾 Yahoo! The bundle is ours.', bundleId: bundle.bundleId});
   }
@@ -36,6 +41,9 @@ export default class AtlasWorker extends PeriodicWorker {
   async periodicWork() {
     const challenges = await this.challengesRepository.ongoingChallenges();
     for (const challenge of challenges) {
+      if (await this.challengesRepository.wasChallengeRejectedRecently(challenge.challengeId)) {
+        continue;
+      }
       try {
         if (!await this.strategy.shouldFetchBundle(challenge)) {
           this.logger.info({message: 'Decided not to download bundle', ...challenge});
@@ -44,6 +52,7 @@ export default class AtlasWorker extends PeriodicWorker {
         const bundle = await this.tryToDownload(challenge);
         if (!await this.strategy.shouldResolveChallenge(bundle)) {
           this.logger.info({message: 'Challenge resolution cancelled', ...challenge});
+          await this.challengesRepository.markChallengeAsRejected(challenge.challengeId);
           continue;
         }
         await this.tryToResolve(bundle, challenge);
