@@ -93,6 +93,44 @@ describe('Challenges repository', () => {
     });
   });
 
+  describe('filterOutNotResolvableChallenges', () => {
+    const allChallenges = [
+      {challengeId: '1', bundleId: '0x123'},
+      {challengeId: '2', bundleId: '0xabc'},
+      {challengeId: '3', bundleId: '0x123'},
+      {challengeId: '4', bundleId: '0xabc'},
+      {challengeId: '5', bundleId: '0x123'},
+      {challengeId: '6', bundleId: '0xc0ffee'},
+      {challengeId: '7', bundleId: '0x123'}
+    ];
+
+    beforeEach(() => {
+      challengeWrapperMock = {
+        canResolve: sinon.stub().resolves(false)
+      };
+      challengesRepository = new ChallengesRepository(challengeWrapperMock);
+    });
+
+    it('should return only challenges that are resolvable on blockchain', async () => {
+      challengeWrapperMock.canResolve.resolves(true)
+        .withArgs('1')
+        .resolves(false)
+        .withArgs('2')
+        .resolves(false)
+        .withArgs('3')
+        .resolves(false);
+
+      expect(await challengesRepository.filterOutNotResolvableChallenges(allChallenges)).to.deep.equal([
+        {challengeId: '4', bundleId: '0xabc'},
+        {challengeId: '5', bundleId: '0x123'},
+        {challengeId: '6', bundleId: '0xc0ffee'},
+        {challengeId: '7', bundleId: '0x123'}
+      ]);
+      expect(challengeWrapperMock.canResolve).to.have.callCount(7);
+      allChallenges.forEach(({challengeId}) => expect(challengeWrapperMock.canResolve).to.be.calledWith(challengeId));
+    });
+  });
+
   describe('extractChallengeFromEvent', () => {
     const sheltererId = 1;
     const bundleId = 2;
@@ -165,6 +203,7 @@ describe('Challenges repository', () => {
     const resolvedEvents = [{returnValues: {bundleId, sheltererId, challengeId: 'resolved'}}];
     const timedOutEvents = [{returnValues: {bundleId, sheltererId, challengeId: 'timedOut'}}];
     const notFinishedEvents = 'notFinishedEvents';
+    const resolvableEvents = 'resolvableEvents';
 
     beforeEach(() => {
       challengeWrapperMock = {
@@ -173,14 +212,13 @@ describe('Challenges repository', () => {
         timedOutChallenges: sinon.stub().resolves(timedOutEvents),
         earliestMeaningfulBlock: sinon.stub().resolves(fromBlock)
       };
-
       configWrapperMock = {
         challengeDuration: sinon.stub().resolves(challengeDuration)
       };
-
       challengesRepository = new ChallengesRepository(challengeWrapperMock, configWrapperMock);
       sinon.spy(challengesRepository, 'extractChallengeFromEvent');
       sinon.stub(challengesRepository, 'filterOutFinished').returns(notFinishedEvents);
+      sinon.stub(challengesRepository, 'filterOutNotResolvableChallenges').resolves(resolvableEvents);
     });
 
     it('calls wrappers with correct parameters', async () => {
@@ -190,7 +228,7 @@ describe('Challenges repository', () => {
       expect(challengeWrapperMock.challenges).to.be.calledWith(fromBlock);
       expect(challengeWrapperMock.resolvedChallenges).to.be.calledWith(fromBlock);
       expect(challengeWrapperMock.timedOutChallenges).to.be.calledWith(fromBlock);
-      expect(result).to.deep.equal(notFinishedEvents);
+      expect(result).to.deep.equal(resolvableEvents);
     });
 
     it('calls own methods with correct params', async () => {
@@ -204,6 +242,7 @@ describe('Challenges repository', () => {
           {sheltererId, bundleId, challengeId: 100, count}],
         [{challengeId: 'resolved'}],
         [{challengeId: 'timedOut'}]);
+      expect(challengesRepository.filterOutNotResolvableChallenges).to.be.calledOnceWith(notFinishedEvents);
     });
   });
 
