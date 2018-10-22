@@ -32,6 +32,11 @@ export default class HermesWorker extends PeriodicWorker {
     if (this.sinceLastRetry >= this.retryPeriod) {
       const uploaded = await this.dataModelEngine.uploadNotRegisteredBundles();
       if (uploaded.length > 0) {
+        const log = {
+          message: `Performed reupload. Uploaded ${uploaded.length} not registered bundles`,
+          timestamp: getTimestamp()
+        };
+        await this.workerLogRepository.storeLog(log);
         this.logger.info(`Uploaded ${uploaded.length} not registered bundles`);
       }
       this.sinceLastRetry = 0;
@@ -41,6 +46,12 @@ export default class HermesWorker extends PeriodicWorker {
   async periodicWork() {
     const storagePeriods = this.strategy.storagePeriods();
     if (!await this.uploadRepository.checkIfEnoughFundsForUpload(storagePeriods)) {
+      const log = {
+        message: 'Insufficient funds to perform bundle upload',
+        timestamp: getTimestamp()
+      };
+      await this.workerLogRepository.storeLog(log);
+
       this.logger.error('Insufficient funds to perform bundle upload.');
       return;
     }
@@ -53,6 +64,11 @@ export default class HermesWorker extends PeriodicWorker {
       await this.performBundling(bundle, storagePeriods);
     } else {
       await this.dataModelEngine.cancelBundling(this.bundleSequenceNumber);
+      const log = {
+        message: 'Bundling process canceled',
+        timestamp: getTimestamp()
+      };
+      await this.workerLogRepository.storeLog(log);
       this.logger.info('Bundling process canceled');
     }
   }
@@ -70,6 +86,12 @@ export default class HermesWorker extends PeriodicWorker {
       await this.workerLogRepository.storeLog(log);
       await this.strategy.bundlingSucceeded();
       this.bundleSequenceNumber++;
+    } else {
+      const log = {
+        message: 'Bundle upload failed',
+        timestamp: getTimestamp()
+      };
+      await this.workerLogRepository.storeLog(log);
     }
   }
 }
