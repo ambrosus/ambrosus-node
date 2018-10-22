@@ -121,6 +121,10 @@ describe('Hermes Worker', () => {
     it('cancels bundling', async () => {
       expect(mockDataModelEngine.cancelBundling).to.have.been.calledOnceWith(hermesWorker.bundleSequenceNumber);
     });
+
+    it('saves log to mongo', async () => {
+      expect(mockWorkerLogRepository.storeLog).to.have.been.calledOnce;
+    });
   });
 
   describe('Bundle completed', async () => {
