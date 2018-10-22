@@ -13,7 +13,7 @@ import {pick, put} from '../utils/dict_utils';
 import allPermissions from '../utils/all_permissions';
 
 export default class DataModelEngine {
-  constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, contractManager, uploadRepository, rolesRepository}) {
+  constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, contractManager, uploadRepository, rolesRepository, workerLogRepository}) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
@@ -28,6 +28,7 @@ export default class DataModelEngine {
     this.contractManager = contractManager;
     this.uploadRepository = uploadRepository;
     this.rolesRepository = rolesRepository;
+    this.workerLogRepository = workerLogRepository;
   }
 
   async addAdminAccount(address = this.identityManager.nodeAddress()) {
@@ -234,5 +235,9 @@ export default class DataModelEngine {
     await this.entityRepository.deleteBundles(toBeRemoved);
     await Promise.all(toBeUpdated.map((bundleId) => this.updateShelteringExpirationDate(bundleId)));
     return toBeRemoved;
+  }
+
+  async getWorkerLogs(logsCount = 5) {
+    return await this.workerLogRepository.getLogs(logsCount);
   }
 }

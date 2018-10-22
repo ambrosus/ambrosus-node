@@ -95,7 +95,8 @@ class Builder {
       mongoClient: this.client,
       contractManager: this.contractManager,
       uploadRepository: this.uploadRepository,
-      rolesRepository: this.rolesRepository
+      rolesRepository: this.rolesRepository,
+      workerLogRepository: this.workerLogRepository
     });
     return {dataModelEngine: this.dataModelEngine, client: this.client};
   }
