@@ -22,6 +22,11 @@ export default class ChallengesRepository {
     return allChallenges.filter(({challengeId}) => unresolvedCount[challengeId] > 0 && !timedOutSet.has(challengeId));
   }
 
+  async filterOutNotResolvableChallenges(ongoingChallenges) {
+    const isResolvable = await Promise.all(ongoingChallenges.map(({challengeId}) => this.challengesWrapper.canResolve(challengeId)));
+    return ongoingChallenges.filter((challenge, index) => isResolvable[index]);
+  }
+
   extractChallengeFromEvent(challengeEvents, outputFields) {
     return challengeEvents.map(({returnValues}) => outputFields.reduce((acc, fieldName) => put(acc, fieldName, returnValues[fieldName]), {}));
   }
@@ -32,11 +37,12 @@ export default class ChallengesRepository {
     const allChallengeEvents = await this.challengesWrapper.challenges(fromBlock);
     const resolvedChallengeEvents = await this.challengesWrapper.resolvedChallenges(fromBlock);
     const timedOutChallengeEvents = await this.challengesWrapper.timedOutChallenges(fromBlock);
-    return this.filterOutFinished(
+
+    return this.filterOutNotResolvableChallenges(this.filterOutFinished(
       this.extractChallengeFromEvent(allChallengeEvents, ['challengeId', 'sheltererId', 'bundleId', 'count']),
       this.extractChallengeFromEvent(resolvedChallengeEvents, ['challengeId']),
       this.extractChallengeFromEvent(timedOutChallengeEvents, ['challengeId'])
-    );
+    ));
   }
 
   async resolveChallenge(challengeId) {
