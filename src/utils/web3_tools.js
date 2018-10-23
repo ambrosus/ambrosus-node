@@ -13,7 +13,7 @@ import config from '../../config/config';
 export const DEFAULT_GAS = 4700000;
 
 function isValidRPCAddress(rpc) {
-  return /^((?:http)|(?:ws)):\/\//g.test(rpc);
+  return /^((?:https?)|(?:ws)):\/\//g.test(rpc);
 }
 
 function isUsingGanache(rpc) {
