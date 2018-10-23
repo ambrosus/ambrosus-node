@@ -51,7 +51,7 @@ export default class ServerWorker extends Worker {
 
     app.use(cachePreventionMiddleware);
 
-    app.use('/nodeinfo', nodeInfoRouter(this.modelEngine.identityManager, this.config.gitCommit));
+    app.use('/nodeinfo', nodeInfoRouter(this.modelEngine, this.modelEngine.identityManager, this.config.gitCommit));
     app.use('/bundle', bundlesRouter(this.modelEngine));
     app.get('/health', asyncMiddleware(healthCheckHandler(this.modelEngine.mongoClient, this.web3)));
     app.get('/metrics', prometheusMetricsHandler(promClient));

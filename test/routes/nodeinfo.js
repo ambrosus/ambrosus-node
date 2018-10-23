@@ -21,19 +21,30 @@ describe('Node info', () => {
   let req = null;
   let res = null;
   let mockIdentityManager;
+  let mockModel;
   const mockAddress = '0x33323df655da4e8eBF343E73b7703D2188389f20';
+  const mockLogs = [{foo: 'bar'}, {foo2: 'bar2'}, {foo3: 'bar3'}];
 
   beforeEach(async () => {
     mockIdentityManager = {
-      nodeAddress: sinon.stub()
+      nodeAddress: sinon.stub().returns(mockAddress)
     };
-    mockIdentityManager.nodeAddress.returns(mockAddress);
+    mockModel = {
+      getWorkerLogs: sinon.stub().resolves(mockLogs)
+    };
     req = httpMocks.createRequest();
     res = httpMocks.createResponse();
   });
 
+  it('asks for worker logs', async () => {
+    await getNodeInfoHandler(mockModel, mockIdentityManager)(req, res);
+    const responseBody = res._getData();
+    expect(responseBody.workerLogs).to.equal(mockLogs);
+    expect(mockModel.getWorkerLogs).to.have.been.calledOnce;
+  });
+
   it('gets info on node', async () => {
-    await getNodeInfoHandler(mockIdentityManager)(req, res);
+    await getNodeInfoHandler(mockModel, mockIdentityManager)(req, res);
     const responseBody = res._getData();
     expect(responseBody.version).to.match(/^\d+\.\d+\.\d+$/);
     expect(responseBody.nodeAddress).to.equal(mockAddress);

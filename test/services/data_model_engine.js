@@ -1295,4 +1295,33 @@ describe('Data Model Engine', () => {
       expect(mockUploadRepository.uploadBundle).to.be.calledWith('bundle3', 3);
     });
   });
+
+  describe('Getting worker logs', () => {
+    let modelEngine;
+    let mockWorkerLogRepository;
+
+    let ret;
+
+    const exampleLogs = [{foo: 'bar'}, {foo2: 'bar2'}, {foo3: 'bar3'}];
+
+    before(async () => {
+      mockWorkerLogRepository = {
+        getLogs: sinon.stub().resolves(exampleLogs)
+      };
+
+      modelEngine = new DataModelEngine({
+        workerLogRepository: mockWorkerLogRepository
+      });
+
+      ret = await expect(modelEngine.getWorkerLogs()).to.fulfilled;
+    });
+
+    it('asks the worker log repository for the logs', async () => {
+      expect(mockWorkerLogRepository.getLogs).to.have.been.calledOnce;
+    });
+
+    it('properly returns the result', () => {
+      expect(ret).to.equal(exampleLogs);
+    });
+  });
 });
