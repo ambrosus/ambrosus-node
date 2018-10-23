@@ -33,7 +33,7 @@ export default class HermesWorker extends PeriodicWorker {
       const uploaded = await this.dataModelEngine.uploadNotRegisteredBundles();
       if (uploaded.length > 0) {
         const log = {
-          message: `Performed reupload. Uploaded ${uploaded.length} not registered bundles`,
+          message: `Performed upload retry. Uploaded ${uploaded.length} previously not registered bundles`,
           timestamp: getTimestamp()
         };
         await this.workerLogRepository.storeLog(log);
