@@ -17,7 +17,7 @@ async function start(logger) {
   const builder = new Builder();
   await builder.build(config);
   if (await builder.migrator.isMigrationNeccesary()) {
-    throw 'Migration needs to be done';
+    throw new Error('Migration needs to be done');
   }
   await builder.ensureAccountIsOnboarded([Role.HERMES]);
   const strategy = loadStrategy(config.uploadStrategy);
