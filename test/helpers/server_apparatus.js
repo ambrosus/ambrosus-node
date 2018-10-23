@@ -61,12 +61,12 @@ export default class ServerApparatus extends Builder {
   }
 
   async onboardAsHermes(url) {
-    await addToKycWhitelist(Role.HERMES, '0', this.dataModelEngine, new EmptyLogger());
+    await addToKycWhitelist(Role.HERMES, '0', this.dataModelEngine, this.kycWhitelistWrapper, new EmptyLogger());
     await this.rolesRepository.onboardAsHermes(this.identityManager.nodeAddress(), url);
   }
 
   async onboardAsAtlas(url) {
-    await addToKycWhitelist(Role.ATLAS, this.devConfig.defaultStake, this.dataModelEngine, new EmptyLogger());
+    await addToKycWhitelist(Role.ATLAS, this.devConfig.defaultStake, this.dataModelEngine, this.kycWhitelistWrapper, new EmptyLogger());
     await this.rolesRepository.onboardAsAtlas(this.identityManager.nodeAddress(), url);
   }
 

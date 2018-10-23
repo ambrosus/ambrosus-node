@@ -1044,7 +1044,8 @@ describe('Data Model Engine', () => {
       };
 
       mockUploadRepository = {
-        uploadBundle: sinon.stub()
+        uploadBundle: sinon.stub(),
+        getBundleChainData: sinon.stub().resolves(null)
       };
 
       mockEntityRepository.markEntitiesAsBundled.resolves();
@@ -1056,32 +1057,65 @@ describe('Data Model Engine', () => {
         entityRepository: mockEntityRepository,
         uploadRepository: mockUploadRepository
       });
-
-      ret = await expect(modelEngine.finaliseBundling(assembledBundle, bundleStubId, storagePeriods)).to.be.fulfilled;
     });
 
     after(() => {
       clock.restore();
     });
 
-    it('stores the bundle it in the repository', () => {
-      expect(mockEntityRepository.storeBundle).to.have.been.calledWith(assembledBundle);
+    describe('Bundle was not on blockchain', () => {
+      before(async () => {
+        ret = await expect(modelEngine.finaliseBundling(assembledBundle, bundleStubId, storagePeriods)).to.be.fulfilled;
+      });
+
+      it('stores the bundle in the repository', () => {
+        expect(mockEntityRepository.storeBundle).to.have.been.calledWith(assembledBundle);
+      });
+
+      it('ends the bundling procedure in the repository', () => {
+        expect(mockEntityRepository.markEntitiesAsBundled).to.have.been.calledWith(bundleStubId, assembledBundle.bundleId);
+      });
+
+      it('gets data about bundle on blockchain', async () => {
+        expect(mockUploadRepository.getBundleChainData).to.have.been.calledWith(assembledBundle.bundleId);
+      });
+
+      it('uploads the proof to the UploadsContract when the bundle was not uploaded', () => {
+        expect(mockUploadRepository.uploadBundle).to.have.been.calledWith(assembledBundle.bundleId, storagePeriods);
+      });
+
+      it('stores block number and tx hash in metadata', async () => {
+        expect(mockEntityRepository.storeBundleProofMetadata).to.have.been.calledWith(assembledBundle.bundleId, blockNumber, txHash);
+      });
+
+      it('returns the bundle', () => {
+        expect(ret).to.be.deep.eq(assembledBundle);
+      });
+
+      after(() => {
+        resetHistory(mockUploadRepository);
+      });
     });
 
-    it('ends the bundling procedure in the repository', () => {
-      expect(mockEntityRepository.markEntitiesAsBundled).to.have.been.calledWith(bundleStubId, assembledBundle.bundleId);
-    });
+    describe('Bundle was already on blockchain', () => {
+      before(async () => {
+        mockUploadRepository.getBundleChainData.resolves({blockNumber, transactionHash: txHash});
+        await modelEngine.finaliseBundling(assembledBundle, bundleStubId, storagePeriods);
+      });
 
-    it('uploads the proof to the uploads contract', () => {
-      expect(mockUploadRepository.uploadBundle).to.have.been.calledWith(assembledBundle.bundleId, storagePeriods);
-    });
+      it('saves bundle locally, updates entities', async () => {
+        expect(mockEntityRepository.storeBundle).to.have.been.calledWith(assembledBundle);
+        expect(mockEntityRepository.markEntitiesAsBundled).to.have.been.calledWith(bundleStubId, assembledBundle.bundleId);
+        expect(mockEntityRepository.storeBundleProofMetadata).to.have.been.calledWith(assembledBundle.bundleId, blockNumber, txHash);
+      });
 
-    it('stores block number and tx hash in metadata', async () => {
-      expect(mockEntityRepository.storeBundleProofMetadata).to.have.been.calledWith(assembledBundle.bundleId, blockNumber, txHash);
-    });
+      it('does not upload the proof if the bundle is on blockchain', async () => {
+        expect(mockUploadRepository.uploadBundle).to.have.been.not.called;
+      });
 
-    it('returns the bundle', () => {
-      expect(ret).to.be.deep.eq(assembledBundle);
+      after(() => {
+        resetHistory(mockUploadRepository);
+      });
     });
   });
 

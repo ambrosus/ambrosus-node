@@ -13,7 +13,7 @@ import {pick, put} from '../utils/dict_utils';
 import allPermissions from '../utils/all_permissions';
 
 export default class DataModelEngine {
-  constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, contractManager, uploadRepository, rolesRepository, workerLogRepository}) {
+  constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, uploadRepository, rolesRepository, workerLogRepository}) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
@@ -25,7 +25,6 @@ export default class DataModelEngine {
     this.findAssetQueryObjectFactory = findAssetQueryObjectFactory;
     this.accountAccessDefinitions = accountAccessDefinitions;
     this.mongoClient = mongoClient;
-    this.contractManager = contractManager;
     this.uploadRepository = uploadRepository;
     this.rolesRepository = rolesRepository;
     this.workerLogRepository = workerLogRepository;
@@ -191,9 +190,14 @@ export default class DataModelEngine {
 
     await this.entityRepository.markEntitiesAsBundled(bundleStubId, newBundle.bundleId);
 
-    const {blockNumber, transactionHash} = await this.uploadRepository.uploadBundle(newBundle.bundleId, storagePeriods);
+    const chainData = await this.uploadRepository.getBundleChainData(newBundle.bundleId);
 
-    await this.entityRepository.storeBundleProofMetadata(newBundle.bundleId, blockNumber, transactionHash);
+    if (chainData) {
+      await this.entityRepository.storeBundleProofMetadata(newBundle.bundleId, chainData.blockNumber, chainData.transactionHash);
+    } else {
+      const {blockNumber, transactionHash} = await this.uploadRepository.uploadBundle(newBundle.bundleId, storagePeriods);
+      await this.entityRepository.storeBundleProofMetadata(newBundle.bundleId, blockNumber, transactionHash);
+    }
 
     return newBundle;
   }

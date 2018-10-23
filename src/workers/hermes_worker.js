@@ -45,6 +45,7 @@ export default class HermesWorker extends PeriodicWorker {
 
   async periodicWork() {
     const storagePeriods = this.strategy.storagePeriods();
+
     if (!await this.uploadRepository.checkIfEnoughFundsForUpload(storagePeriods)) {
       const log = {
         message: 'Insufficient funds to perform bundle upload',

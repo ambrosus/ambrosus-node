@@ -20,8 +20,9 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Upload repository', () => {
+  const bundleId = '0xc0ffee';
   let feesWrapperMock;
-  let uploadsWrapperMock;
+  let uploadsActionsMock;
   let shelteringWrapperMock;
   let rolesWrapperMock;
   let configWrapperMock;
@@ -30,15 +31,14 @@ describe('Upload repository', () => {
   let web3Mock;
 
   describe('Upload bundle', async () => {
-    const bundleId = '0xc0ffee';
     const storagePeriods = 3;
     const fee = '100';
     const tooSmallBalance = '99';
     const exampleAddress = '0xdeadface';
 
     beforeEach(async () => {
-      uploadsWrapperMock = {
-        registerBundle: sinon.stub()
+      uploadsActionsMock = {
+        uploadBundle: sinon.stub()
       };
       rolesWrapperMock = {
         onboardedRole: sinon.stub().resolves('2')
@@ -54,7 +54,7 @@ describe('Upload repository', () => {
           getBalance: sinon.stub().resolves(fee)
         }
       };
-      uploadRepository = new UploadRepository(web3Mock, identityManagerMock, uploadsWrapperMock, {}, rolesWrapperMock, feesWrapperMock);
+      uploadRepository = new UploadRepository(web3Mock, identityManagerMock, uploadsActionsMock, {}, rolesWrapperMock, feesWrapperMock);
     });
 
     it('calls wrappers methods with correct arguments', async () => {
@@ -63,7 +63,7 @@ describe('Upload repository', () => {
       expect(web3Mock.eth.getBalance).to.be.calledOnceWith(exampleAddress);
       expect(rolesWrapperMock.onboardedRole).to.be.calledOnceWith(exampleAddress);
       expect(identityManagerMock.nodeAddress).to.have.been.called;
-      expect(uploadsWrapperMock.registerBundle).to.be.calledOnceWith(bundleId, fee, storagePeriods);
+      expect(uploadsActionsMock.uploadBundle).to.be.calledOnceWith(bundleId, storagePeriods);
     });
 
     it('throws if not enough funds', async () => {
@@ -77,9 +77,23 @@ describe('Upload repository', () => {
     });
   });
 
-  describe('isSheltering', async () => {
-    const bundleId = '0xc0ffee';
+  describe('Get bundle chain data', () => {
+    const exampleUploadData = 'data';
 
+    beforeEach(() => {
+      uploadsActionsMock = {
+        getBundleUploadData: sinon.stub().resolves(exampleUploadData)
+      };
+      uploadRepository = new UploadRepository({}, {}, uploadsActionsMock);
+    });
+
+    it('should call upload actions method', async () => {
+      expect(await uploadRepository.getBundleChainData(bundleId)).to.equal(exampleUploadData);
+      expect(uploadsActionsMock.getBundleUploadData).to.be.calledOnceWith(bundleId);
+    });
+  });
+
+  describe('isSheltering', async () => {
     beforeEach(async () => {
       shelteringWrapperMock = {
         isSheltering: sinon.stub().resolves(true)
@@ -94,18 +108,17 @@ describe('Upload repository', () => {
   });
 
   describe('expirationDate', async () => {
-    const bundleId = '0xc0ffee';
-    const exoirationDate = 123;
+    const expirationDate = 123;
 
     beforeEach(async () => {
       shelteringWrapperMock = {
-        shelteringExpirationDate: sinon.stub().resolves(123)
+        shelteringExpirationDate: sinon.stub().resolves(expirationDate)
       };
       uploadRepository = new UploadRepository({}, {}, {}, shelteringWrapperMock);
     });
 
     it('calls wrappers methods with correct arguments', async () => {
-      expect(await uploadRepository.expirationDate(bundleId)).to.equal(exoirationDate);
+      expect(await uploadRepository.expirationDate(bundleId)).to.equal(expirationDate);
       expect(shelteringWrapperMock.shelteringExpirationDate).to.be.calledOnceWith(bundleId);
     });
   });
@@ -115,7 +128,7 @@ describe('Upload repository', () => {
 
     beforeEach(async () => {
       configWrapperMock = {
-        bundleSizeLimit: sinon.stub().resolves(42)
+        bundleSizeLimit: sinon.stub().resolves(sizeLimit)
       };
       uploadRepository = new UploadRepository({}, {}, {}, {}, {}, {}, configWrapperMock);
     });

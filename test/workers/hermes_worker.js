@@ -37,7 +37,8 @@ describe('Hermes Worker', () => {
       initialiseBundling: sinon.stub(),
       cancelBundling: sinon.stub(),
       finaliseBundling: sinon.stub(),
-      uploadNotRegisteredBundles: sinon.stub().resolves([])
+      uploadNotRegisteredBundles: sinon.stub().resolves([]),
+      updateBundleProofMetadata: sinon.stub()
     };
     mockUploadRepository = {
       bundleItemsCountLimit: sinon.stub(),
