@@ -66,16 +66,16 @@ class Builder {
     this.identityManager = new IdentityManager(this.web3);
     const {headContractAddress} = this.config;
 
-    const defaultAddress = await getDefaultAddress(web3);
+    const defaultAddress = await getDefaultAddress(this.web3);
 
-    this.headWrapper = new HeadWrapper(headContractAddress, web3, defaultAddress);
-    this.rolesWrapper = new RolesWrapper(this.headWrapper, web3, defaultAddress);
-    this.configWrapper = new ConfigWrapper(this.headWrapper, web3, defaultAddress);
-    this.uploadsWrapper = new UploadsWrapper(this.headWrapper, web3, defaultAddress);
-    this.feesWrapper = new FeesWrapper(this.headWrapper, web3, defaultAddress);
-    this.challengesWrapper = new ChallengesWrapper(this.headWrapper, web3, defaultAddress);
-    this.shelteringWrapper = new ShelteringWrapper(this.headWrapper, web3, defaultAddress);
-    this.kycWhitelistWrapper = new KycWhitelistWrapper(this.headWrapper, web3, defaultAddress);
+    this.headWrapper = new HeadWrapper(headContractAddress, this.web3, defaultAddress);
+    this.rolesWrapper = new RolesWrapper(this.headWrapper, this.web3, defaultAddress);
+    this.configWrapper = new ConfigWrapper(this.headWrapper, this.web3, defaultAddress);
+    this.uploadsWrapper = new UploadsWrapper(this.headWrapper, this.web3, defaultAddress);
+    this.feesWrapper = new FeesWrapper(this.headWrapper, this.web3, defaultAddress);
+    this.challengesWrapper = new ChallengesWrapper(this.headWrapper, this.web3, defaultAddress);
+    this.shelteringWrapper = new ShelteringWrapper(this.headWrapper, this.web3, defaultAddress);
+    this.kycWhitelistWrapper = new KycWhitelistWrapper(this.headWrapper, this.web3, defaultAddress);
     this.uploadActions = new UploadActions(this.uploadsWrapper, this.feesWrapper, this.shelteringWrapper);
 
     this.rolesRepository = new RolesRepository(this.rolesWrapper, this.configWrapper);
