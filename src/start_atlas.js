@@ -17,7 +17,7 @@ async function start(logger) {
   const builder = new Builder();
   await builder.build(config);
   if (await builder.migrator.isMigrationNeccesary()) {
-    throw 'Migration needs to be done';
+    throw new Error('Migration needs to be done');
   }
   await builder.ensureAccountIsOnboarded([Role.ATLAS]);
   const strategy = loadStrategy(config.challengeResolutionStrategy);
