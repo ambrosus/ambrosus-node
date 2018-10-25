@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import Worker from './worker';
 
+/** @abstract */
 export default class PeriodicWorker extends Worker {
   constructor(interval, logger) {
     super(logger);
@@ -18,19 +19,29 @@ export default class PeriodicWorker extends Worker {
 
   async work() {
     await this.beforeWorkLoop();
-    this.timerId = setInterval(
-      () => {
-        this.periodicWork().catch((err) => this.logger.error(err));
-      },
-      this.interval);
+    return this.periodicWorkInternal();
+  }
+
+  async periodicWorkInternal() {
+    try {
+      await this.periodicWork();
+    } catch (err) {
+      this.logger.error(err);
+    }
+    if (this.started) {
+      this.timerId = setTimeout(() => this.periodicWorkInternal(), this.interval);
+    }
   }
 
   async teardown() {
-    clearInterval(this.timerId);
+    if (this.timerId) {
+      clearTimeout(this.timerId);
+    }
     this.timerId = null;
     await this.afterWorkLoop();
   }
 
+  /** @abstract */
   async periodicWork() {
     throw new Error('Abstract method work() needs to be overridden');
   }
@@ -40,6 +51,5 @@ export default class PeriodicWorker extends Worker {
   }
 
   async afterWorkLoop() {
-
   }
 }
