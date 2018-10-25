@@ -9,9 +9,11 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import sinon from 'sinon';
+import sinonChai from 'sinon-chai';
 import PeriodicWorker from '../../src/workers/periodic_worker';
 
 const {expect} = chai;
+chai.use(sinonChai);
 
 describe('Periodic Worker', () => {
   let clock;
@@ -30,7 +32,6 @@ describe('Periodic Worker', () => {
     beforeWorkLoopSpy = sinon.spy(worker, 'beforeWorkLoop');
     afterWorkLoopSpy = sinon.spy(worker, 'afterWorkLoop');
     periodicWorkStub = sinon.stub(worker, 'periodicWork');
-    periodicWorkStub.resolves();
   });
 
   afterEach(() => {
@@ -63,15 +64,25 @@ describe('Periodic Worker', () => {
     it(`doesn't call the afterWorkLoop method`, () => {
       expect(afterWorkLoopSpy).to.not.have.been.called;
     });
+  });
 
-    it('begins execution of the periodicWork method exactly every interval', async () => {
-      expect(periodicWorkStub).to.not.have.been.called;
-      clock.tick(interval);
-      expect(periodicWorkStub).to.have.been.calledOnce;
+  describe('periodicWorkInternal', () => {
+    beforeEach(async () => {
+      worker.started = true;
+      await worker.periodicWorkInternal();
+    });
+
+    it('calls periodicWork', async () => {
+      expect(periodicWorkStub).to.be.calledOnce;
+    });
+
+    it('calls itself after interval has passed', async () => {
+      const periodicWorkInternalStub = sinon.stub(worker, 'periodicWorkInternal');
+      expect(periodicWorkInternalStub).to.be.not.called;
       clock.tick(interval - 1);
-      expect(periodicWorkStub).to.have.been.calledOnce;
+      expect(periodicWorkInternalStub).to.be.not.called;
       clock.tick(1);
-      expect(periodicWorkStub).to.have.been.calledTwice;
+      expect(periodicWorkInternalStub).to.be.calledOnce;
     });
   });
 
@@ -91,10 +102,10 @@ describe('Periodic Worker', () => {
     });
 
     it('stops execution of the periodicWork method', () => {
-      expect(periodicWorkStub).to.have.been.calledOnce;
+      expect(periodicWorkStub).to.have.been.calledTwice;
       clock.tick(interval);
       clock.tick(interval);
-      expect(periodicWorkStub).to.have.been.calledOnce;
+      expect(periodicWorkStub).to.have.been.calledTwice;
     });
   });
 });

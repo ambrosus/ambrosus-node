@@ -25,9 +25,9 @@ export default class Worker {
     if (!this.started) {
       throw new Error(`Wasn't started`);
     }
+    this.started = false;
 
     await this.teardown();
-    this.started = false;
   }
 
   async work() {
