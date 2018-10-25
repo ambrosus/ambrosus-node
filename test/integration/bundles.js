@@ -57,9 +57,9 @@ describe('Bundles - Integrations', () => {
       await scenario.addEvent(0, 1, {timestamp: 2}, [{type: 'e'}])
     ].map(mapEntitiesToIds);
 
-    const newBundle = await apparatus.dataModelEngine.initialiseBundling(1, 16384);
-    res = await apparatus.dataModelEngine.finaliseBundling(newBundle, 1, 1);
-
+    const newBundle = await apparatus.dataModelEngine.prepareBundleCandidate(1);
+    res = await apparatus.dataModelEngine.acceptBundleCandidate(newBundle, 1, 1);
+    await apparatus.dataModelEngine.uploadAcceptedBundleCandidates();
     // this additional event should not go into the bundle
     await scenario.addEvent(0, 1, {timestamp: 3}, [{type: '4'}]);
   });
@@ -74,6 +74,14 @@ describe('Bundles - Integrations', () => {
       const includedEntities = res.content.entries.map(mapEntitiesToIds);
       expect(includedEntities).to.deep.include.members(entitiesIds);
       expect(includedEntities.length).to.equal(entitiesIds.length);
+    });
+
+    it('should upload the proof to ethereum, and emit an event', async () => {
+      const uploadsContract = await apparatus.uploadActions.uploadsWrapper.contract();
+      const emittedEvents = await uploadsContract.getPastEvents('BundleUploaded');
+
+      const expectedEvent = emittedEvents.filter((value) => value.returnValues.bundleId === res.bundleId);
+      expect(expectedEvent).to.have.length(1);
     });
 
     it('should upload the proof to ethereum, and emit an event', async () => {

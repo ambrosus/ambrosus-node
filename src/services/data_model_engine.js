@@ -176,7 +176,8 @@ export default class DataModelEngine {
     return bundle;
   }
 
-  async initialiseBundling(bundleStubId, bundleItemsCountLimit) {
+  async prepareBundleCandidate(bundleStubId) {
+    const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
     const notBundled = await this.entityRepository.fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit);
 
     const nodeSecret = await this.identityManager.nodePrivateKey();
@@ -185,25 +186,37 @@ export default class DataModelEngine {
     return newBundle;
   }
 
-  async finaliseBundling(newBundle, bundleStubId, storagePeriods) {
+  async acceptBundleCandidate(newBundle, bundleStubId, storagePeriods) {
     await this.entityRepository.storeBundle(newBundle, storagePeriods);
-
     await this.entityRepository.markEntitiesAsBundled(bundleStubId, newBundle.bundleId);
-
-    const chainData = await this.uploadRepository.getBundleChainData(newBundle.bundleId);
-
-    if (chainData) {
-      await this.entityRepository.storeBundleProofMetadata(newBundle.bundleId, chainData.blockNumber, chainData.transactionHash);
-    } else {
-      const {blockNumber, transactionHash} = await this.uploadRepository.uploadBundle(newBundle.bundleId, storagePeriods);
-      await this.entityRepository.storeBundleProofMetadata(newBundle.bundleId, blockNumber, transactionHash);
-    }
 
     return newBundle;
   }
 
-  async cancelBundling(bundleStubId) {
+  async rejectBundleCandidate(bundleStubId) {
     await this.entityRepository.discardBundling(bundleStubId);
+  }
+
+  async rejectAllBundleCandidate() {
+    await this.entityRepository.discardAllBundling();
+  }
+
+  async uploadAcceptedBundleCandidates() {
+    const waitingBundles = await this.entityRepository.findBundlesWaitingForUpload();
+    const summary = {
+      ok: [],
+      failed: {}
+    };
+    for (const waitingBundle of waitingBundles) {
+      try {
+        const {blockNumber, transactionHash} = await this.uploadRepository.uploadBundle(waitingBundle.bundleId, waitingBundle.metadata.storagePeriods);
+        await this.entityRepository.storeBundleProofMetadata(waitingBundle.bundleId, blockNumber, transactionHash);
+        summary.ok.push(waitingBundle.bundleId);
+      } catch (err) {
+        summary.failed[waitingBundle.bundleId] = err.message;
+      }
+    }
+    return summary;
   }
 
   async downloadBundle(bundleId, sheltererId) {
@@ -221,14 +234,6 @@ export default class DataModelEngine {
   async updateShelteringExpirationDate(bundleId) {
     const expirationDate = await this.uploadRepository.expirationDate(bundleId);
     await this.entityRepository.storeBundleShelteringExpirationDate(bundleId, expirationDate);
-  }
-
-  async uploadNotRegisteredBundles() {
-    const notRegisteredBundles = await this.entityRepository.findNotRegisteredBundles();
-    for (const bundle of notRegisteredBundles) {
-      await this.uploadRepository.uploadBundle(bundle.bundleId, bundle.metadata.storagePeriods);
-    }
-    return notRegisteredBundles;
   }
 
   async cleanupBundles() {

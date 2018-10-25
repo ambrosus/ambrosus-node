@@ -201,6 +201,22 @@ export default class EntityRepository {
     await this.unsetEntitiesBundlesStubs(entities);
   }
 
+  async discardAllBundling() {
+    const bundleStubQuery = {
+      'repository.bundleStubId': {
+        $exists: true
+      }
+    };
+
+    const assets = await this.db.collection('assets').find(bundleStubQuery)
+      .toArray();
+    const events = await this.db.collection('events').find(bundleStubQuery)
+      .toArray();
+    const entities = this.assetsAndEventsToEntityIds(assets, events);
+
+    await this.unsetEntitiesBundlesStubs(entities);
+  }
+
   async storeBundle(bundle, storagePeriods) {
     await this.db.collection('bundles').insertOne({metadata: {storagePeriods}, ...bundle});
   }
@@ -239,7 +255,7 @@ export default class EntityRepository {
     });
   }
 
-  async findNotRegisteredBundles() {
+  async findBundlesWaitingForUpload() {
     return this.db.collection('bundles')
       .find({'metadata.proofBlock': {$exists: false}})
       .toArray();

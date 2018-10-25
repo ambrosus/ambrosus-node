@@ -11,7 +11,7 @@ import HermesUploadStrategy from './upload_strategy';
 
 export default class RegularIntervalUploadStrategy extends HermesUploadStrategy {
   get workerInterval() {
-    return 300000; // 5 minutes
+    return process.env.WORKER_INTERVAL || 300000; // 5 minutes
   }
 
   storagePeriods() {
