@@ -7,6 +7,8 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+import validateAndCast from '../utils/validations';
+
 export default class RolesRepository {
   constructor(rolesWrapper, configWrapper) {
     this.rolesWrapper = rolesWrapper;
@@ -28,7 +30,11 @@ export default class RolesRepository {
   }
 
   async nodeUrl(address) {
-    return this.rolesWrapper.nodeUrl(address);
+    const url = await this.rolesWrapper.nodeUrl(address);
+    validateAndCast({url})
+      .required(['url'])
+      .isUrl(['url']);
+    return url;
   }
 }
 

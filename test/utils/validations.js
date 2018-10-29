@@ -277,6 +277,46 @@ describe('validation', () => {
     });
   });
 
+  describe('isUrl', () => {
+    const input = {
+      correctUrl1: 'http://ambrosusnode.com',
+      correctUrl2: 'http://ambrosus-node.com',
+      correctUrl3: 'http://ambrosus-node.masternode.com',
+      correctUrl4: 'http://ambrosus-node.com:8080',
+      correctUrl5: 'https://ambrosus-node.com/api',
+      correctUrl6: 'https://ambrosus-node.com/resources/ambnet/app.js',
+      incorrectUrl1: 'http://ambrosus-node.123',
+      incorrectUrl2: 'http://ambrosus-node.',
+      incorrectUrl3: 'http://ambrosus-node',
+      incorrectUrl4: 'ftp://ambrosus-node.com',
+      incorrectUrl5: '//ambrosus-node.com/resources/ambnet/accesspoint/app.js',
+      incorrectUrl6: 'ambrosus-node.com',
+      incorrectUrl7: 'ambrosus-node'
+    };
+
+    beforeEach(() => {
+      validator = validateAndCast(input);
+    });
+
+    it('returns self', async () => {
+      expect(validator.isUrl([])).to.deep.equal(validator);
+    });
+
+    it('works for correct values', async () => {
+      for (let ind = 1; ind <= 6; ind++) {
+        // eslint-disable-next-line no-loop-func
+        expect(() => validator.isUrl([`correctUrl${ind}`])).to.not.throw();
+      }
+    });
+
+    it('throws for incorrect values', async () => {
+      for (let ind = 1; ind <= 7; ind++) {
+        // eslint-disable-next-line no-loop-func
+        expect(() => validator.isUrl([`incorrectUrl${ind}`])).to.throw(ValidationError);
+      }
+    });
+  });
+
   describe('validate', () => {
     const input = {one: 0, two: '2', three: false};
     const predicate = (value) => value !== '2';
