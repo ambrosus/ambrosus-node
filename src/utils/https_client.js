@@ -25,9 +25,14 @@ export default class HttpsClient {
       try {
         agent.get(options, (res) => {
           let rawData = '';
+          let parsedData;
           res.on('data', (chunk) => rawData += chunk);
           res.on('end', () => {
-            const parsedData = JSON.parse(rawData);
+            try {
+              parsedData = JSON.parse(rawData);
+            } catch (error) {
+              reject(error);
+            }
             resolve({body: parsedData, statusCode: res.statusCode});
           });
         });

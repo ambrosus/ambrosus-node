@@ -24,15 +24,20 @@ export default class UploadRepository {
   }
 
   async uploadBundle(bundleId, storagePeriods) {
-    const fee = await this.feesWrapper.feeForUpload(storagePeriods);
+    const uploaderRole = new Role(await this.rolesWrapper.onboardedRole(this.identityManager.nodeAddress()));
+    if (!uploaderRole.is(Role.HERMES)) {
+      throw new Error('Node is not onboarded as a HERMES');
+    }
 
+    const fee = await this.feesWrapper.feeForUpload(storagePeriods);
     if (!await this.checkIfEnoughFunds(fee)) {
       throw new Error(`Insufficient funds: need at least ${fee} to upload the bundle`);
     }
 
-    const uploaderRole = new Role(await this.rolesWrapper.onboardedRole(this.identityManager.nodeAddress()));
-    if (!uploaderRole.is(Role.HERMES)) {
-      throw new Error('Default address is not onboarded as the HERMES');
+    const previousUploader = await this.shelteringWrapper.getBundleUploader(bundleId);
+    const emptyAddressRegex = /^0x0+$/gi;
+    if (!emptyAddressRegex.test(previousUploader)) {
+      throw new Error(`Bundle was already uploaded`);
     }
 
     return this.uploadsActions.uploadBundle(bundleId, storagePeriods);
@@ -59,10 +64,6 @@ export default class UploadRepository {
     if (bundle.content.entries.length > bundleItemsCountLimit) {
       throw new ValidationError('Bundle size surpasses the limit');
     }
-  }
-
-  async checkIfEnoughFundsForUpload(storagePeriods) {
-    return this.checkIfEnoughFunds(await this.feesWrapper.feeForUpload(storagePeriods));
   }
 
   async checkIfEnoughFunds(requiredBalance) {

@@ -46,6 +46,9 @@ describe('Upload repository', () => {
       feesWrapperMock = {
         feeForUpload: sinon.stub().resolves(fee)
       };
+      shelteringWrapperMock = {
+        getBundleUploader: sinon.stub().resolves('0x0')
+      };
       identityManagerMock = {
         nodeAddress: sinon.stub().returns(exampleAddress)
       };
@@ -54,7 +57,7 @@ describe('Upload repository', () => {
           getBalance: sinon.stub().resolves(fee)
         }
       };
-      uploadRepository = new UploadRepository(web3Mock, identityManagerMock, uploadsActionsMock, {}, rolesWrapperMock, feesWrapperMock);
+      uploadRepository = new UploadRepository(web3Mock, identityManagerMock, uploadsActionsMock, shelteringWrapperMock, rolesWrapperMock, feesWrapperMock);
     });
 
     it('calls wrappers methods with correct arguments', async () => {
@@ -63,6 +66,7 @@ describe('Upload repository', () => {
       expect(web3Mock.eth.getBalance).to.be.calledOnceWith(exampleAddress);
       expect(rolesWrapperMock.onboardedRole).to.be.calledOnceWith(exampleAddress);
       expect(identityManagerMock.nodeAddress).to.have.been.called;
+      expect(shelteringWrapperMock.getBundleUploader).to.have.been.calledOnceWith(bundleId);
       expect(uploadsActionsMock.uploadBundle).to.be.calledOnceWith(bundleId, storagePeriods);
     });
 
@@ -73,6 +77,11 @@ describe('Upload repository', () => {
 
     it('throws if not onboarded as hermes', async () => {
       rolesWrapperMock.onboardedRole.resolves('1');
+      await expect(uploadRepository.uploadBundle(bundleId, storagePeriods)).to.be.eventually.rejected;
+    });
+
+    it('throws if bundle was already uploaded', async () => {
+      shelteringWrapperMock.getBundleUploader.resolves('0x1234');
       await expect(uploadRepository.uploadBundle(bundleId, storagePeriods)).to.be.eventually.rejected;
     });
   });

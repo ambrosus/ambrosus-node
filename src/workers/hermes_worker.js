@@ -13,86 +13,58 @@ import {getTimestamp} from '../utils/time_utils';
 
 
 export default class HermesWorker extends PeriodicWorker {
-  constructor(dataModelEngine, uploadRepository, workerLogRepository, strategy, retryPeriod, logger) {
+  constructor(dataModelEngine, workerLogRepository, strategy, logger) {
     super(strategy.workerInterval, logger);
     this.dataModelEngine = dataModelEngine;
     this.bundleSequenceNumber = 0;
     this.strategy = strategy;
-    this.uploadRepository = uploadRepository;
     this.workerLogRepository = workerLogRepository;
-    this.retryPeriod = retryPeriod;
-    this.sinceLastRetry = retryPeriod;
     if (!(this.strategy instanceof HermesUploadStrategy)) {
       throw new Error('A valid strategy must be provided');
     }
   }
 
-  async retryUploadIfNecessary() {
-    this.sinceLastRetry++;
-    if (this.sinceLastRetry >= this.retryPeriod) {
-      const uploaded = await this.dataModelEngine.uploadNotRegisteredBundles();
-      if (uploaded.length > 0) {
-        const log = {
-          message: `Performed upload retry. Uploaded ${uploaded.length} previously not registered bundles`,
-          timestamp: getTimestamp()
-        };
-        await this.workerLogRepository.storeLog(log);
-        this.logger.info(`Uploaded ${uploaded.length} not registered bundles`);
-      }
-      this.sinceLastRetry = 0;
-    }
+  async periodicWork() {
+    await this.bundleCandidates();
+    await this.uploadWaitingCandidates();
   }
 
-  async periodicWork() {
+  async bundleCandidates() {
     const storagePeriods = this.strategy.storagePeriods();
 
-    if (!await this.uploadRepository.checkIfEnoughFundsForUpload(storagePeriods)) {
-      const log = {
-        message: 'Insufficient funds to perform bundle upload',
-        timestamp: getTimestamp()
-      };
-      await this.workerLogRepository.storeLog(log);
-
-      this.logger.error('Insufficient funds to perform bundle upload.');
-      return;
-    }
-    await this.retryUploadIfNecessary();
-
-    const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
-    const bundle = await this.dataModelEngine.initialiseBundling(this.bundleSequenceNumber, bundleItemsCountLimit);
+    const sequenceNumber = this.bundleSequenceNumber++;
+    const bundle = await this.dataModelEngine.prepareBundleCandidate(sequenceNumber);
 
     if (await this.strategy.shouldBundle(bundle)) {
-      await this.performBundling(bundle, storagePeriods);
+      await this.dataModelEngine.acceptBundleCandidate(bundle, sequenceNumber, storagePeriods);
+      await this.strategy.bundlingSucceeded();
+      await this.addLog('Bundle candidate accepted');
     } else {
-      await this.dataModelEngine.cancelBundling(this.bundleSequenceNumber);
-      const log = {
-        message: 'Bundling process canceled',
-        timestamp: getTimestamp()
-      };
-      await this.workerLogRepository.storeLog(log);
-      this.logger.info('Bundling process canceled');
+      await this.dataModelEngine.rejectBundleCandidate(sequenceNumber);
+      await this.addLog('Bundle candidate discarded');
     }
   }
 
-  async performBundling(bundle, storagePeriods) {
-    this.logger.info('Trying to upload bundle...');
-    const result = await this.dataModelEngine.finaliseBundling(bundle, this.bundleSequenceNumber, storagePeriods);
-    if (result !== null) {
-      this.logger.info({message: 'Bundle successfully uploaded', bundleId: result.bundleId});
-      const log = {
-        message: 'Bundle successfully uploaded',
-        bundleId: result.bundleId,
-        timestamp: getTimestamp()
-      };
-      await this.workerLogRepository.storeLog(log);
-      await this.strategy.bundlingSucceeded();
-      this.bundleSequenceNumber++;
-    } else {
-      const log = {
-        message: 'Bundle upload failed',
-        timestamp: getTimestamp()
-      };
-      await this.workerLogRepository.storeLog(log);
+  async uploadWaitingCandidates() {
+    const results = await this.dataModelEngine.uploadAcceptedBundleCandidates();
+    for (const bundleId of results.ok) {
+      await this.addLog(`Bundle was uploaded`, {bundleId});
     }
+    for (const [bundleId, error] of Object.entries(results.failed)) {
+      await this.addLog(`Bundle failed to upload`, {bundleId, errorMsg: error.message});
+    }
+  }
+
+  async addLog(message, additionalFields) {
+    const log = {
+      message,
+      ...additionalFields
+    };
+    this.logger.info(log);
+    await this.workerLogRepository.storeLog({timestamp: getTimestamp(), ...log});
+  }
+
+  async beforeWorkLoop() {
+    await this.dataModelEngine.rejectAllBundleCandidate();
   }
 }

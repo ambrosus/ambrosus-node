@@ -159,7 +159,7 @@ describe('Data Model Engine', () => {
       expect(mockAccountAccessDefinitions.ensureCanAddAccount).to.been.calledOnceWith(adminAccount.address, request);
       expect(mockAccountRepository.get).to.be.calledOnceWith(request.address);
       expect(mockAccountRepository.store).to.have.been.calledOnceWith({
-        registeredBy : adminAccount.address,
+        registeredBy: adminAccount.address,
         ...registrationResponse
       });
     });
@@ -207,7 +207,7 @@ describe('Data Model Engine', () => {
         accountRepository: mockAccountRepository,
         accountAccessDefinitions: mockAccountAccessDefinitions
       });
-      account = put(accountWithSecret, {registeredBy : adminAccount.address, permissions : ['perm1', 'perm2']});
+      account = put(accountWithSecret, {registeredBy: adminAccount.address, permissions: ['perm1', 'perm2']});
       accountWithoutSecret = pick(account, 'secret');
     });
 
@@ -218,25 +218,25 @@ describe('Data Model Engine', () => {
     });
 
     it('delegates to accountRepository', async () => {
-      expect(await modelEngine.getAccount(account.address, {createdBy : adminAccount.address})).to.eq(accountWithoutSecret);
+      expect(await modelEngine.getAccount(account.address, {createdBy: adminAccount.address})).to.eq(accountWithoutSecret);
       expect(mockAccountRepository.get).to.have.been.called;
     });
 
     it('throws PermissionError if the sender misses `manage_accounts` permission', async () => {
       mockAccountAccessDefinitions.ensureHasPermission.throws(new PermissionError());
-      await expect(modelEngine.getAccount(account.address, {createdBy : adminAccount.address})).to.be.rejectedWith(PermissionError);
+      await expect(modelEngine.getAccount(account.address, {createdBy: adminAccount.address})).to.be.rejectedWith(PermissionError);
       expect(mockAccountAccessDefinitions.ensureHasPermission).to.be.calledOnceWith(adminAccount.address, allPermissions.manageAccounts);
     });
 
     it('throws PermissionError if non-existing sender', async () => {
       mockAccountRepository.get.resolves(null);
-      await expect(modelEngine.getAccount(account.address, {createdBy : adminAccount.address})).to.be.rejectedWith(PermissionError);
+      await expect(modelEngine.getAccount(account.address, {createdBy: adminAccount.address})).to.be.rejectedWith(PermissionError);
     });
 
     it('throws NotFoundError if non-existing account requested', async () => {
       mockAccountRepository.get.withArgs(adminAccount.address).resolves(adminAccount);
       mockAccountRepository.get.withArgs(account.address).resolves(null);
-      await expect(modelEngine.getAccount(account.address, {createdBy : adminAccount.address})).to.be.rejectedWith(NotFoundError);
+      await expect(modelEngine.getAccount(account.address, {createdBy: adminAccount.address})).to.be.rejectedWith(NotFoundError);
     });
   });
 
@@ -265,7 +265,7 @@ describe('Data Model Engine', () => {
         findAccountQueryObjectFactory: mockFindAccountQueryObjectFactory,
         accountAccessDefinitions: mockAccountAccessDefinitions
       });
-      account = put(accountWithSecret, {registeredBy: adminAccount.address, permissions : ['perm1', 'perm2']});
+      account = put(accountWithSecret, {registeredBy: adminAccount.address, permissions: ['perm1', 'perm2']});
       accountWithoutSecret = pick(account, 'secret');
     });
 
@@ -278,19 +278,19 @@ describe('Data Model Engine', () => {
     });
 
     it('uses findAccountQueryObjectFactory and delegates to findAccountQueryObject', async () => {
-      expect(await modelEngine.findAccounts(mockParams, {createdBy : adminAccount.address})).to.deep.equal({result: [accountWithoutSecret], resultCount: 1});
+      expect(await modelEngine.findAccounts(mockParams, {createdBy: adminAccount.address})).to.deep.equal({result: [accountWithoutSecret], resultCount: 1});
       expect(mockFindAccountQueryObjectFactory.create).to.have.been.calledOnceWith(validatedParams);
       expect(mockFindAccountQueryObject.execute).to.have.been.calledOnce;
     });
 
     it('validates params', async () => {
-      await modelEngine.findAccounts(mockParams, {createdBy : adminAccount.address});
+      await modelEngine.findAccounts(mockParams, {createdBy: adminAccount.address});
       expect(mockAccountAccessDefinitions.validateAndCastFindAccountParams).to.have.been.calledOnceWith(mockParams);
     });
 
     it('throws PermissionError if the sender misses `manage_accounts` permission', async () => {
       mockAccountAccessDefinitions.ensureHasPermission.throws(new PermissionError());
-      await expect(modelEngine.findAccounts(mockParams, {createdBy : adminAccount.address})).to.be.rejectedWith(PermissionError);
+      await expect(modelEngine.findAccounts(mockParams, {createdBy: adminAccount.address})).to.be.rejectedWith(PermissionError);
       expect(mockAccountAccessDefinitions.ensureHasPermission).to.be.calledOnceWith(adminAccount.address, allPermissions.manageAccounts);
     });
   });
@@ -300,9 +300,9 @@ describe('Data Model Engine', () => {
     let modelEngine;
     let mockAccountAccessDefinitions;
     let getAccountStub;
-    const account = put(accountWithSecret, {registeredBy : adminAccount.address, permissions : ['perm1', 'perm2']});
+    const account = put(accountWithSecret, {registeredBy: adminAccount.address, permissions: ['perm1', 'perm2']});
     const accountWithoutSecret = pick(account, 'secret');
-    const modifyRequest = {permissions : ['changedPerm1', 'changedPerm2']};
+    const modifyRequest = {permissions: ['changedPerm1', 'changedPerm2']};
     const accountToModify = accountWithoutSecret;
     const modifiedAccount = put(accountWithoutSecret, modifyRequest);
 
@@ -329,7 +329,7 @@ describe('Data Model Engine', () => {
     });
 
     it('gets modified account and delegates to AccountRepository', async () => {
-      expect(await modelEngine.modifyAccount(accountToModify.address, modifyRequest, {createdBy : adminAccount.address})).to.deep.equal(modifiedAccount);
+      expect(await modelEngine.modifyAccount(accountToModify.address, modifyRequest, {createdBy: adminAccount.address})).to.deep.equal(modifiedAccount);
       expect(getAccountStub).to.be.calledOnceWith(accountToModify.address);
       expect(mockAccountAccessDefinitions.ensureCanModifyAccount).to.be.calledOnceWith(adminAccount.address, accountToModify, modifyRequest);
       expect(mockAccountRepository.update).to.have.been.calledOnceWith(accountToModify.address, modifyRequest);
@@ -337,17 +337,17 @@ describe('Data Model Engine', () => {
 
     it('throws NotFoundError in case of modification of non-existing account requested', async () => {
       getAccountStub.withArgs('0x1234').rejects(new NotFoundError());
-      await expect(modelEngine.modifyAccount('0x1234', modifyRequest, {createdBy : adminAccount.address})).to.rejectedWith(NotFoundError);
+      await expect(modelEngine.modifyAccount('0x1234', modifyRequest, {createdBy: adminAccount.address})).to.rejectedWith(NotFoundError);
     });
 
     it('throws PermissionError if the sender misses required permissions', async () => {
       mockAccountAccessDefinitions.ensureCanModifyAccount.throws(new PermissionError());
-      await expect(modelEngine.modifyAccount(accountToModify.address, modifyRequest, {createdBy : adminAccount.address})).to.rejectedWith(PermissionError);
+      await expect(modelEngine.modifyAccount(accountToModify.address, modifyRequest, {createdBy: adminAccount.address})).to.rejectedWith(PermissionError);
     });
 
     it('throws ValidationError when request is not valid', async () => {
       mockAccountAccessDefinitions.ensureCanModifyAccount.throws(new ValidationError());
-      await expect(modelEngine.modifyAccount(accountToModify.address, modifyRequest, {createdBy : adminAccount.address})).to.rejectedWith(ValidationError);
+      await expect(modelEngine.modifyAccount(accountToModify.address, modifyRequest, {createdBy: adminAccount.address})).to.rejectedWith(ValidationError);
     });
   });
 
@@ -903,10 +903,11 @@ describe('Data Model Engine', () => {
     });
   });
 
-  describe('Initialising bundle', () => {
+  describe('Preparing bundle candidate', () => {
     let mockEntityRepository;
     let mockEntityBuilder;
     let mockIdentityManager;
+    let mockUploadRepository;
     let modelEngine;
 
     let clock;
@@ -947,32 +948,37 @@ describe('Data Model Engine', () => {
       };
 
       mockEntityRepository = {
-        fetchEntitiesForBundling: sinon.stub()
+        fetchEntitiesForBundling: sinon.stub().resolves({assets: unbundledAssets, events: unbundledEvents})
       };
 
       mockIdentityManager = {
-        nodePrivateKey: sinon.stub()
+        nodePrivateKey: sinon.stub().resolves(nodeSecret)
       };
 
       mockEntityBuilder = {
-        assembleBundle: sinon.stub()
+        assembleBundle: sinon.stub().resolves(assembledBundle)
       };
 
-      mockEntityRepository.fetchEntitiesForBundling.resolves({assets: unbundledAssets, events: unbundledEvents});
-      mockIdentityManager.nodePrivateKey.resolves(nodeSecret);
-      mockEntityBuilder.assembleBundle.resolves(assembledBundle);
+      mockUploadRepository = {
+        bundleItemsCountLimit: sinon.stub().resolves(bundleItemsCountLimit)
+      };
 
       modelEngine = new DataModelEngine({
         entityRepository: mockEntityRepository,
         identityManager: mockIdentityManager,
-        entityBuilder: mockEntityBuilder
+        entityBuilder: mockEntityBuilder,
+        uploadRepository: mockUploadRepository
       });
 
-      ret = await expect(modelEngine.initialiseBundling(bundleStubId, bundleItemsCountLimit)).to.be.fulfilled;
+      ret = await expect(modelEngine.prepareBundleCandidate(bundleStubId)).to.be.fulfilled;
     });
 
     after(() => {
       clock.restore();
+    });
+
+    it('gets the entity count limit per bundle from the upload repository', () => {
+      expect(mockUploadRepository.bundleItemsCountLimit).to.have.been.calledOnce;
     });
 
     it('fetches entities to bundle from the repository', () => {
@@ -994,18 +1000,15 @@ describe('Data Model Engine', () => {
     });
   });
 
-  describe('Finalising bundle', () => {
+  describe('Accepting bundle candidate', () => {
     let mockEntityRepository;
-    let mockUploadRepository;
     let modelEngine;
 
     let clock;
     let scenario;
 
     const bundleStubId = 'abc';
-    const blockNumber = 10;
     const storagePeriods = 2;
-    const txHash = '0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009';
     let unbundledAssets;
     let unbundledEvents;
     let assembledBundle;
@@ -1043,83 +1046,35 @@ describe('Data Model Engine', () => {
         storeBundleProofMetadata: sinon.stub()
       };
 
-      mockUploadRepository = {
-        uploadBundle: sinon.stub(),
-        getBundleChainData: sinon.stub().resolves(null)
-      };
-
       mockEntityRepository.markEntitiesAsBundled.resolves();
       mockEntityRepository.storeBundle.resolves();
       mockEntityRepository.storeBundleProofMetadata.resolves();
-      mockUploadRepository.uploadBundle.resolves({blockNumber, transactionHash: txHash});
 
       modelEngine = new DataModelEngine({
-        entityRepository: mockEntityRepository,
-        uploadRepository: mockUploadRepository
+        entityRepository: mockEntityRepository
       });
+
+      ret = await expect(modelEngine.acceptBundleCandidate(assembledBundle, bundleStubId, storagePeriods)).to.be.fulfilled;
     });
 
     after(() => {
       clock.restore();
     });
 
-    describe('Bundle was not on blockchain', () => {
-      before(async () => {
-        ret = await expect(modelEngine.finaliseBundling(assembledBundle, bundleStubId, storagePeriods)).to.be.fulfilled;
-      });
-
-      it('stores the bundle in the repository', () => {
-        expect(mockEntityRepository.storeBundle).to.have.been.calledWith(assembledBundle);
-      });
-
-      it('ends the bundling procedure in the repository', () => {
-        expect(mockEntityRepository.markEntitiesAsBundled).to.have.been.calledWith(bundleStubId, assembledBundle.bundleId);
-      });
-
-      it('gets data about bundle on blockchain', async () => {
-        expect(mockUploadRepository.getBundleChainData).to.have.been.calledWith(assembledBundle.bundleId);
-      });
-
-      it('uploads the proof to the UploadsContract when the bundle was not uploaded', () => {
-        expect(mockUploadRepository.uploadBundle).to.have.been.calledWith(assembledBundle.bundleId, storagePeriods);
-      });
-
-      it('stores block number and tx hash in metadata', async () => {
-        expect(mockEntityRepository.storeBundleProofMetadata).to.have.been.calledWith(assembledBundle.bundleId, blockNumber, txHash);
-      });
-
-      it('returns the bundle', () => {
-        expect(ret).to.be.deep.eq(assembledBundle);
-      });
-
-      after(() => {
-        resetHistory(mockUploadRepository);
-      });
+    it('stores the bundle in the repository', () => {
+      expect(mockEntityRepository.storeBundle).to.have.been.calledWith(assembledBundle, storagePeriods);
     });
 
-    describe('Bundle was already on blockchain', () => {
-      before(async () => {
-        mockUploadRepository.getBundleChainData.resolves({blockNumber, transactionHash: txHash});
-        await modelEngine.finaliseBundling(assembledBundle, bundleStubId, storagePeriods);
-      });
+    it('ends the bundling procedure in the repository', () => {
+      expect(mockEntityRepository.markEntitiesAsBundled).to.have.been.calledWith(bundleStubId, assembledBundle.bundleId);
+    });
 
-      it('saves bundle locally, updates entities', async () => {
-        expect(mockEntityRepository.storeBundle).to.have.been.calledWith(assembledBundle);
-        expect(mockEntityRepository.markEntitiesAsBundled).to.have.been.calledWith(bundleStubId, assembledBundle.bundleId);
-        expect(mockEntityRepository.storeBundleProofMetadata).to.have.been.calledWith(assembledBundle.bundleId, blockNumber, txHash);
-      });
-
-      it('does not upload the proof if the bundle is on blockchain', async () => {
-        expect(mockUploadRepository.uploadBundle).to.have.been.not.called;
-      });
-
-      after(() => {
-        resetHistory(mockUploadRepository);
-      });
+    it('returns the bundle', () => {
+      expect(ret).to.be.deep.eq(assembledBundle);
     });
   });
 
-  describe('Cancelling bundle', () => {
+  describe('Rejecting bundle candidate', () => {
     let mockEntityRepository;
     let modelEngine;
 
@@ -1136,11 +1091,98 @@ describe('Data Model Engine', () => {
         entityRepository: mockEntityRepository
       });
 
-      await expect(modelEngine.cancelBundling(bundleStubId)).to.be.fulfilled;
+      await expect(modelEngine.rejectBundleCandidate(bundleStubId)).to.be.fulfilled;
     });
 
     it('revokes entities from being bundled', async () => {
       expect(mockEntityRepository.discardBundling).to.have.been.calledWith(bundleStubId);
+    });
+  });
+
+  describe('Upload accepted bundle candidates', () => {
+    let mockEntityRepository;
+    let mockUploadRepository;
+    let modelEngine;
+    const blockNumber = 10;
+    const txHash = '0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009';
+
+    beforeEach(() => {
+      mockEntityRepository = {
+        findBundlesWaitingForUpload: sinon.stub().resolves([
+          {
+            bundleId: 'bundle1',
+            metadata: {
+              storagePeriods: 2
+            }
+          },
+          {
+            bundleId: 'bundle3',
+            metadata: {
+              storagePeriods: 6
+            }
+          }
+        ]),
+        storeBundleProofMetadata: sinon.stub()
+      };
+
+      mockUploadRepository = {
+        uploadBundle: sinon.stub()
+      };
+      mockUploadRepository.uploadBundle.withArgs('bundle1', 2).resolves({blockNumber, transactionHash: txHash});
+      mockUploadRepository.uploadBundle.withArgs('bundle3', 6).rejects(new Error('An error'));
+
+      modelEngine = new DataModelEngine({
+        entityRepository: mockEntityRepository,
+        uploadRepository: mockUploadRepository
+      });
+    });
+
+    it('asks the entity repository for waiting candidates', async () => {
+      await expect(modelEngine.uploadAcceptedBundleCandidates()).to.eventually.be.fulfilled;
+      expect(mockEntityRepository.findBundlesWaitingForUpload).to.be.calledOnce;
+    });
+
+    it('for each candidate calls the uploadBundle method on the upload repository', async () => {
+      await expect(modelEngine.uploadAcceptedBundleCandidates()).to.eventually.be.fulfilled;
+      expect(mockUploadRepository.uploadBundle).to.be.have.been.calledWith('bundle1', 2);
+      expect(mockUploadRepository.uploadBundle).to.be.have.been.calledWith('bundle3', 6);
+      expect(mockUploadRepository.uploadBundle).to.have.callCount(2);
+    });
+
+    it('for each uploaded candidate stores bundle proof metadata in the entity repository', async () => {
+      await expect(modelEngine.uploadAcceptedBundleCandidates()).to.eventually.be.fulfilled;
+      expect(mockEntityRepository.storeBundleProofMetadata).to.be.have.been.calledOnceWith('bundle1', blockNumber, txHash);
+    });
+
+    it('returns a summary', async () => {
+      await expect(modelEngine.uploadAcceptedBundleCandidates()).to.eventually.be.fulfilled.and.deep.equal({
+        ok: [
+          'bundle1'
+        ],
+        failed: {
+          bundle3: 'An error'
+        }
+      });
+    });
+  });
+
+  describe('Reject all bundle candidates', () => {
+    let mockEntityRepository;
+    let modelEngine;
+
+    beforeEach(() => {
+      mockEntityRepository = {
+        discardAllBundling: sinon.stub().resolves()
+      };
+
+      modelEngine = new DataModelEngine({
+        entityRepository: mockEntityRepository
+      });
+    });
+
+    it('proxies the call down to the entity repository', async () => {
+      await expect(modelEngine.rejectAllBundleCandidate()).to.eventually.be.fulfilled;
+      expect(mockEntityRepository.discardAllBundling).to.be.calledOnce;
     });
   });
 
@@ -1287,46 +1329,6 @@ describe('Data Model Engine', () => {
       expect(modelEngine.updateShelteringExpirationDate).to.be.calledTwice;
       expect(modelEngine.updateShelteringExpirationDate).to.be.calledWith('bundle2');
       expect(modelEngine.updateShelteringExpirationDate).to.be.calledWith('bundle1');
-    });
-  });
-
-  describe('Uploading not registered bundles', () => {
-    const allBundles = [{
-      bundleId: 'bundle1',
-      metadata: {storagePeriods: 1}
-    }, {
-      bundleId: 'bundle2',
-      metadata: {storagePeriods: 2}
-    }, {
-      bundleId: 'bundle3',
-      metadata: {storagePeriods: 3}
-    }];
-    let mockEntityRepository;
-    let mockUploadRepository;
-    let modelEngine;
-
-    beforeEach(() => {
-      mockEntityRepository = {
-        findNotRegisteredBundles: sinon.stub().resolves(allBundles)
-      };
-
-      mockUploadRepository = {
-        uploadBundle: sinon.stub().resolves()
-      };
-
-      modelEngine = new DataModelEngine({
-        entityRepository: mockEntityRepository,
-        uploadRepository: mockUploadRepository
-      });
-    });
-
-    it('uploads all found bundles', async () => {
-      expect(await modelEngine.uploadNotRegisteredBundles()).to.equal(allBundles);
-      expect(mockEntityRepository.findNotRegisteredBundles).to.be.calledOnce;
-      expect(mockUploadRepository.uploadBundle).to.be.calledThrice;
-      expect(mockUploadRepository.uploadBundle).to.be.calledWith('bundle1', 1);
-      expect(mockUploadRepository.uploadBundle).to.be.calledWith('bundle2', 2);
-      expect(mockUploadRepository.uploadBundle).to.be.calledWith('bundle3', 3);
     });
   });
 

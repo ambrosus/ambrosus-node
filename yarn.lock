@@ -175,10 +175,10 @@ ajv@^6.4.0:
     json-schema-traverse "^0.3.0"
     uri-js "^3.0.2"
 
-ambrosus-node-contracts@0.0.12:
-  version "0.0.12"
-  resolved "https://registry.yarnpkg.com/ambrosus-node-contracts/-/ambrosus-node-contracts-0.0.12.tgz#01ba889d703c18e7bcb4fd2e9042204e1f3ec65c"
-  integrity sha512-rSz4MD011bgZyb8oZvzjMGP1DRv8Bom340rYPZFO8iB45pLJgrMFYCUguZQ6RDqGLN8LKFdhVsMm3/vhgHoI1g==
+ambrosus-node-contracts@0.0.15:
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/ambrosus-node-contracts/-/ambrosus-node-contracts-0.0.15.tgz#9673d837642f241d7e3339088d95e3d6ca4e60ae"
+  integrity sha512-TCJNrwoHhZ/f8OF35vAsSGH5axOvwvwM04qH1OulYIBRBCFb2Jq8EeQh4Tv/e4EBzJbcP07pfQnSGcFIYKoRug==
   dependencies:
     babel-runtime "^6.26.0"
     command-line-args "^5.0.2"
