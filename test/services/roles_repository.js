@@ -9,9 +9,11 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 import sinon from 'sinon';
 import RolesRepository from '../../src/services/roles_repository';
 
+chai.use(chaiAsPromised);
 chai.use(sinonChai);
 const {expect} = chai;
 
@@ -49,7 +51,7 @@ describe('Roles repository', () => {
   });
 
   describe('nodeUrl', () => {
-    const nodeUrl = 'url';
+    const nodeUrl = 'https://google.com';
 
     beforeEach(async () => {
       rolesWrapperMock = {
@@ -63,6 +65,16 @@ describe('Roles repository', () => {
       const url = await rolesRepository.nodeUrl(address);
       expect(rolesWrapperMock.nodeUrl).to.be.calledWith(address);
       expect(url).to.equal(nodeUrl);
+    });
+
+    it('throws if url is null', async () => {
+      rolesWrapperMock.nodeUrl.resolves(null);
+      await expect(rolesRepository.nodeUrl(address)).to.be.eventually.rejected;
+    });
+
+    it('throws if url is not valid', async () => {
+      rolesWrapperMock.nodeUrl.resolves('localhost');
+      await expect(rolesRepository.nodeUrl(address)).to.be.eventually.rejected;
     });
   });
 
