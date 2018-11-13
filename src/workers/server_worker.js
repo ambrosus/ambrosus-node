@@ -40,7 +40,7 @@ export default class ServerWorker extends Worker {
   async work() {
     this.logger.info('starting server');
 
-    Sentry.init({ dsn: this.config.sentryDSN, environment: process.env.NODE_ENV});
+    Sentry.init({dsn: this.config.sentryDSN, environment: process.env.NODE_ENV});
 
     this.collectMetricsInterval = promClient.collectDefaultMetrics({timeout: 10000});
     const app = express();
