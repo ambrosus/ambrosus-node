@@ -11,6 +11,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import PeriodicWorker from '../../src/workers/periodic_worker';
+import EmptyLogger from '../helpers/empty_logger';
 
 const {expect} = chai;
 chai.use(sinonChai);
@@ -28,7 +29,7 @@ describe('Periodic Worker', () => {
   });
 
   beforeEach(() => {
-    worker = new PeriodicWorker(interval);
+    worker = new PeriodicWorker(interval, new EmptyLogger());
     beforeWorkLoopSpy = sinon.spy(worker, 'beforeWorkLoop');
     afterWorkLoopSpy = sinon.spy(worker, 'afterWorkLoop');
     periodicWorkStub = sinon.stub(worker, 'periodicWork');

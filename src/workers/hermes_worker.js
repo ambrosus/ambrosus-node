@@ -51,7 +51,7 @@ export default class HermesWorker extends PeriodicWorker {
       await this.addLog(`Bundle was uploaded`, {bundleId});
     }
     for (const [bundleId, error] of Object.entries(results.failed)) {
-      await this.addLog(`Bundle failed to upload`, {bundleId, errorMsg: error.message});
+      await this.addLog(`Bundle failed to upload`, {bundleId, errorMsg: error.message || error});
     }
   }
 
