@@ -29,6 +29,7 @@
     "yarn": ">=1.3.2 <2.0.0"
   },
   "dependencies": {
+    "@sentry/node": "^4.3.0",
     "ajv": "^6.4.0",
     "ambrosus-node-contracts": "0.0.15",
     "base64url": "^2.0.0",
@@ -40,7 +41,6 @@
     "morgan": "^1.9.0",
     "pkginfo": "^0.4.1",
     "prom-client": "^11.1.1",
-    "raven": "^2.6.3",
     "web3": "1.0.0-beta.34",
     "winston": "^3.0.0"
   },

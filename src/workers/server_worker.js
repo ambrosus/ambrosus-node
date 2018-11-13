@@ -11,6 +11,7 @@ import Worker from './worker';
 import cors from 'cors';
 import express from 'express';
 import promClient from 'prom-client';
+import * as Sentry from '@sentry/node';
 import cachePreventionMiddleware from '../middlewares/cache_prevention_middleware';
 import errorHandling from '../middlewares/error_handling';
 import loggerMiddleware from '../middlewares/logger_middleware';
@@ -39,9 +40,12 @@ export default class ServerWorker extends Worker {
   async work() {
     this.logger.info('starting server');
 
+    Sentry.init({ dsn: this.config.sentryDSN, environment: process.env.NODE_ENV});
+
     this.collectMetricsInterval = promClient.collectDefaultMetrics({timeout: 10000});
     const app = express();
 
+    app.use(Sentry.Handlers.requestHandler());
     app.use(loggerMiddleware(this.logger));
     app.use(prometheusMiddleware(promClient));
     app.use(cors({
@@ -64,6 +68,8 @@ export default class ServerWorker extends Worker {
     }
 
     app.use('*', fallbackRouter(this.config));
+
+    app.use(Sentry.Handlers.errorHandler());
 
     // Should always be last
     app.use(errorHandling(this.logger));
