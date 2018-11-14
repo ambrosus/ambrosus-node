@@ -15,20 +15,32 @@ export default class ChallengesRepository {
     this.configWrapper = configWrapper;
   }
 
-  filterOutFinished(allChallenges, resolvedChallenges, timedOutChallenges) {
+  filterOutFinishedChallenges(allChallenges, resolvedChallenges, timedOutChallenges, ownAddress) {
     const timedOutSet = new Set(timedOutChallenges.map(({challengeId}) => challengeId));
     const startedCount = allChallenges.reduce((acc, {challengeId, count}) => put(acc, challengeId, count), {});
-    const unresolvedCount = resolvedChallenges.reduce((acc, {challengeId}) => put(acc, challengeId, acc[challengeId] - 1), startedCount);
+    const unresolvedCount = resolvedChallenges.reduce(
+      (acc, {challengeId, resolverId}) => {
+        if (resolverId === ownAddress) {
+          return put(acc, challengeId, 0);
+        }
+        return put(acc, challengeId, acc[challengeId] - 1);
+      },
+      startedCount
+    );
     return allChallenges.filter(({challengeId}) => unresolvedCount[challengeId] > 0 && !timedOutSet.has(challengeId));
   }
 
-  async filterOutNotResolvableChallenges(ongoingChallenges) {
-    const isResolvable = await Promise.all(ongoingChallenges.map(({challengeId}) => this.challengesWrapper.canResolve(challengeId)));
-    return ongoingChallenges.filter((challenge, index) => isResolvable[index]);
+  extractChallengeFromEvent(challengeEvents, outputFields) {
+    return challengeEvents.map(
+      ({blockNumber, returnValues}) => outputFields.reduce(
+        (acc, fieldName) => put(acc, fieldName, returnValues[fieldName]),
+        {blockNumber}
+      )
+    );
   }
 
-  extractChallengeFromEvent(challengeEvents, outputFields) {
-    return challengeEvents.map(({returnValues}) => outputFields.reduce((acc, fieldName) => put(acc, fieldName, returnValues[fieldName]), {}));
+  sortChallenges(challenges) {
+    return challenges.sort((left, right) => left.blockNumber - right.blockNumber);
   }
 
   async ongoingChallenges() {
@@ -38,16 +50,19 @@ export default class ChallengesRepository {
     const resolvedChallengeEvents = await this.challengesWrapper.resolvedChallenges(fromBlock);
     const timedOutChallengeEvents = await this.challengesWrapper.timedOutChallenges(fromBlock);
 
-    return this.filterOutNotResolvableChallenges(this.filterOutFinished(
-      this.extractChallengeFromEvent(allChallengeEvents, ['challengeId', 'sheltererId', 'bundleId', 'count']),
-      this.extractChallengeFromEvent(resolvedChallengeEvents, ['challengeId']),
-      this.extractChallengeFromEvent(timedOutChallengeEvents, ['challengeId'])
-    ));
+    return this.sortChallenges(
+      this.filterOutFinishedChallenges(
+        this.extractChallengeFromEvent(allChallengeEvents, ['challengeId', 'sheltererId', 'bundleId', 'count']),
+        this.extractChallengeFromEvent(resolvedChallengeEvents, ['challengeId', 'resolverId']),
+        this.extractChallengeFromEvent(timedOutChallengeEvents, ['challengeId']),
+        this.challengesWrapper.defaultAddress
+      )
+    );
   }
 
   async resolveChallenge(challengeId) {
     if (!await this.challengesWrapper.canResolve(challengeId)) {
-      throw new Error('Cannot resolve the challenge');
+      throw new Error('Unable to resolve challenge - boundary check fail');
     }
     return this.challengesWrapper.resolve(challengeId);
   }
