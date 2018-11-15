@@ -9,13 +9,15 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import PeriodicWorker from './periodic_worker';
 import AtlasChallengeParticipationStrategy from './atlas_strategies/atlas_challenge_resolution_strategy';
+import {getTimestamp} from '../utils/time_utils';
 
 export default class AtlasWorker extends PeriodicWorker {
-  constructor(web3, dataModelEngine, challengesRepository, strategy, logger) {
+  constructor(web3, dataModelEngine, workerLogRepository, challengesRepository, strategy, logger) {
     super(strategy.workerInterval, logger);
     this.web3 = web3;
     this.dataModelEngine = dataModelEngine;
     this.strategy = strategy;
+    this.workerLogRepository = workerLogRepository;
     this.challengesRepository = challengesRepository;
     if (!(this.strategy instanceof AtlasChallengeParticipationStrategy)) {
       throw new Error('A valid strategy must be provided');
@@ -25,11 +27,11 @@ export default class AtlasWorker extends PeriodicWorker {
   async tryToResolve(bundle, {challengeId}) {
     await this.challengesRepository.resolveChallenge(challengeId);
     await this.dataModelEngine.updateShelteringExpirationDate(bundle.bundleId);
-    this.logger.info({message: '🍾 Yahoo! The bundle is ours.', bundleId: bundle.bundleId});
+    await this.addLog('🍾 Yahoo! The bundle is ours.', {bundleId: bundle.bundleId});
   }
 
   async tryToDownload({sheltererId, bundleId, challengeId}) {
-    this.logger.info({message: `Trying to fetch the bundle`, sheltererId, bundleId, challengeId});
+    await this.addLog(`Trying to fetch the bundle`, {sheltererId, bundleId, challengeId});
     return this.dataModelEngine.downloadBundle(bundleId, sheltererId);
   }
 
@@ -38,23 +40,29 @@ export default class AtlasWorker extends PeriodicWorker {
     for (const challenge of challenges) {
       try {
         if (!await this.strategy.shouldFetchBundle(challenge)) {
-          this.logger.info({message: 'Decided not to download bundle', ...challenge});
+          await this.addLog('Decided not to download bundle', challenge);
           continue;
         }
         const bundle = await this.tryToDownload(challenge);
         if (!await this.strategy.shouldResolveChallenge(bundle)) {
-          this.logger.info({message: 'Challenge resolution cancelled', ...challenge});
+          await this.addLog('Challenge resolution cancelled', challenge);
           continue;
         }
         await this.tryToResolve(bundle, challenge);
         await this.strategy.afterChallengeResolution(bundle);
       } catch (err) {
-        this.logger.error({
-          message: `Failed to resolve challenge: ${err.message}`,
-          ...challenge
-        });
+        await this.addLog(`Failed to resolve challenge: ${err.message}`, challenge);
       }
     }
     await this.dataModelEngine.cleanupBundles();
+  }
+
+  async addLog(message, additionalFields) {
+    const log = {
+      message,
+      ...additionalFields
+    };
+    this.logger.info(log);
+    await this.workerLogRepository.storeLog({timestamp: getTimestamp(), ...log});
   }
 }

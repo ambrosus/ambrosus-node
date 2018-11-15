@@ -25,6 +25,7 @@ describe('Atlas Worker', () => {
   let atlasWorker;
   let challengesRepositoryMock;
   let dataModelEngineMock;
+  let mockWorkerLogRepository;
   let strategyMock;
   let loggerMock;
   let shouldFetchBundleStub;
@@ -46,6 +47,9 @@ describe('Atlas Worker', () => {
       cleanupBundles: sinon.spy(),
       updateShelteringExpirationDate: sinon.stub()
     };
+    mockWorkerLogRepository = {
+      storeLog: sinon.stub()
+    };
     strategyMock = new AtlasChallengeParticipationStrategy();
     sinon.stub(strategyMock, 'workerInterval').get(() => workerInterval);
     shouldFetchBundleStub = sinon.stub(strategyMock, 'shouldFetchBundle').resolves(true);
@@ -55,7 +59,7 @@ describe('Atlas Worker', () => {
       info: sinon.spy(),
       error: sinon.spy()
     };
-    atlasWorker = new AtlasWorker(mockWeb3, dataModelEngineMock, challengesRepositoryMock, strategyMock, loggerMock);
+    atlasWorker = new AtlasWorker(mockWeb3, dataModelEngineMock, mockWorkerLogRepository, challengesRepositoryMock, strategyMock, loggerMock);
   });
 
   describe('challenge resolution strategy', () => {
