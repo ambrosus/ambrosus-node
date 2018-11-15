@@ -11,7 +11,7 @@ import {pick} from '../utils/dict_utils';
 import {getTimestamp} from '../utils/time_utils';
 import {mongoObjectSize} from '../utils/db_utils';
 
-const MONGO_SIZE_IN_BYTES_LIMIT = 16000000; // 16 Mb
+const MONGO_SIZE_IN_BYTES_LIMIT = 15000000; // 15 Mb
 
 export default class EntityRepository {
   constructor(db) {
@@ -24,27 +24,27 @@ export default class EntityRepository {
 
   async initializeIndexes() {
     // assets
-    await this.db.collection('assets').ensureIndex({assetId : 1});
-    await this.db.collection('assets').ensureIndex({'content.idData.timestamp' : 1});
-    await this.db.collection('assets').ensureIndex({'content.idData.createdBy' : 1});
+    await this.db.collection('assets').ensureIndex({assetId: 1});
+    await this.db.collection('assets').ensureIndex({'content.idData.timestamp': 1});
+    await this.db.collection('assets').ensureIndex({'content.idData.createdBy': 1});
 
     // events
-    await this.db.collection('events').ensureIndex({eventId : 1});
-    await this.db.collection('events').ensureIndex({'content.idData.timestamp' : 1});
-    await this.db.collection('events').ensureIndex({'content.idData.createdBy' : 1});
-    await this.db.collection('events').ensureIndex({'content.idData.accessLevel' : 1});
-    await this.db.collection('events').ensureIndex({'content.idData.assetId' : 1});
-    await this.db.collection('events').ensureIndex({'content.data.type' : 1});
-    await this.db.collection('events').ensureIndex({'content.data.geoJson' : '2dsphere'});
+    await this.db.collection('events').ensureIndex({eventId: 1});
+    await this.db.collection('events').ensureIndex({'content.idData.timestamp': 1});
+    await this.db.collection('events').ensureIndex({'content.idData.createdBy': 1});
+    await this.db.collection('events').ensureIndex({'content.idData.accessLevel': 1});
+    await this.db.collection('events').ensureIndex({'content.idData.assetId': 1});
+    await this.db.collection('events').ensureIndex({'content.data.type': 1});
+    await this.db.collection('events').ensureIndex({'content.data.geoJson': '2dsphere'});
 
     // bundles
-    await this.db.collection('bundles').ensureIndex({bundleId : 1});
-    await this.db.collection('bundles').ensureIndex({'content.idData.timestamp' : 1});
-    await this.db.collection('bundles').ensureIndex({'content.idData.createdBy' : 1});
+    await this.db.collection('bundles').ensureIndex({bundleId: 1});
+    await this.db.collection('bundles').ensureIndex({'content.idData.timestamp': 1});
+    await this.db.collection('bundles').ensureIndex({'content.idData.createdBy': 1});
 
     // for internal use by repository
-    await this.db.collection('assets').ensureIndex({'repository.bundleStubId' : 1});
-    await this.db.collection('events').ensureIndex({'repository.bundleStubId' : 1});
+    await this.db.collection('assets').ensureIndex({'repository.bundleStubId': 1});
+    await this.db.collection('events').ensureIndex({'repository.bundleStubId': 1});
   }
 
   async storeAsset(asset) {
@@ -73,29 +73,29 @@ export default class EntityRepository {
 
   assetsAndEventsToEntityIds(assets, events) {
     return [
-      ...assets.map((asset) => ({type: 'asset', id: asset.assetId, timestamp: asset.content.idData.timestamp})),
-      ...events.map((event) => ({type: 'event', id: event.eventId, timestamp: event.content.idData.timestamp}))
+      ...assets.map((asset) => ({type: 'asset', id: asset.assetId, timestamp: asset.content.idData.timestamp, mongoSize: mongoObjectSize(asset)})),
+      ...events.map((event) => ({type: 'event', id: event.eventId, timestamp: event.content.idData.timestamp, mongoSize: mongoObjectSize(event)}))
     ];
   }
 
   orderEntityIds(entities) {
-    return entities.sort((first, second) =>
+    return [...entities].sort((first, second) =>
       first.timestamp - second.timestamp ||
       first.type.localeCompare(second.type) || // asset < event
       first.id.localeCompare(second.id));
   }
 
-  discardEntitiesForBundling(orderedEntities, bundleItemsCountLimit, bundleSizeInBytesLimit = MONGO_SIZE_IN_BYTES_LIMIT) {
-    const bundleSizeCut = orderedEntities
-      .slice(0, bundleItemsCountLimit)
-      .map(mongoObjectSize)
-      .reduce((cumsum, size) => (cumsum.length === 0 ? [size] : [...cumsum, cumsum[cumsum.length - 1] + size]), [])
-      .findIndex((size) => size > bundleSizeInBytesLimit);
-
-    if (bundleSizeCut !== -1) {
-      return orderedEntities.slice(bundleSizeCut);
+  discardEntitiesForBundling(orderedEntities, bundleItemsCountLimit, bundleSizeInBytesLimit) {
+    let lastIndex = 0;
+    let sizeAccum = 0;
+    while (lastIndex < orderedEntities.length && lastIndex < bundleItemsCountLimit) {
+      sizeAccum += orderedEntities[lastIndex].mongoSize;
+      if (sizeAccum > bundleSizeInBytesLimit) {
+        break;
+      }
+      lastIndex++;
     }
-    return orderedEntities.slice(bundleItemsCountLimit);
+    return orderedEntities.slice(lastIndex);
   }
 
   async updateEntities(entities, updateQuery) {
@@ -134,7 +134,7 @@ export default class EntityRepository {
     await this.updateEntities(entities, update);
   }
 
-  async fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit) {
+  async fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit, bundleSizeInBytesLimit = MONGO_SIZE_IN_BYTES_LIMIT) {
     const notBundledQuery = {
       'metadata.bundleId': null,
       'repository.bundleStubId': null
@@ -165,7 +165,7 @@ export default class EntityRepository {
     const entities = this.assetsAndEventsToEntityIds(assets, events);
     const orderedEntities = this.orderEntityIds(entities);
 
-    const discardedEntities = this.discardEntitiesForBundling(orderedEntities, bundleItemsCountLimit);
+    const discardedEntities = this.discardEntitiesForBundling(orderedEntities, bundleItemsCountLimit, bundleSizeInBytesLimit);
     await this.unsetEntitiesBundlesStubs(discardedEntities);
 
     return {
