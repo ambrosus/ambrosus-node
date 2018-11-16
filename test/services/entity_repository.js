@@ -29,7 +29,6 @@ describe('Entity Repository', () => {
   let db;
   let client;
   let storage;
-  const MONGO_SIZE_LIMIT = 16000000; // 16 Mb
 
   before(async () => {
     ({db, client} = await connectToMongo(config));
@@ -342,7 +341,7 @@ describe('Entity Repository', () => {
       expect(ret2.events).to.deep.equal([nonBundledEvents[2], nonBundledEvents[0]]);
     });
 
-    it('should take the size limit into consideration', async () => { 
+    it('should take the size limit into consideration', async () => {
       const mongoSizeOfFirstEvent = mongoObjectSize(nonBundledEvents[0]);
       const ret2 = await expect(storage.fetchEntitiesForBundling('otherId', bundleItemsCountLimit, mongoSizeOfFirstEvent + 1)).to.be.fulfilled;
       expect(ret2.assets).to.be.empty;
