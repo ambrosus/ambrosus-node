@@ -51,7 +51,7 @@ export default class AtlasWorker extends PeriodicWorker {
         await this.tryToResolve(bundle, challenge);
         await this.strategy.afterChallengeResolution(bundle);
       } catch (err) {
-        await this.addLog(`Failed to resolve challenge: ${err.message}`, challenge);
+        await this.addLog(`Failed to resolve challenge: ${err.message || err}`, challenge);
       }
     }
     await this.dataModelEngine.cleanupBundles();
