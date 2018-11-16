@@ -338,14 +338,14 @@ describe('Entity Repository', () => {
     it('second call to fetchEntitiesForBundling should include latest events and the leftovers from the previous bundling', async () => {
       const ret2 = await expect(storage.fetchEntitiesForBundling('otherId', bundleItemsCountLimit)).to.be.fulfilled;
       expect(ret2.assets).to.be.empty;
-      expect(ret2.events).to.deep.equal([nonBundledEvents[2], nonBundledEvents[0]]);
+      expect(ret2.events).to.have.deep.members([nonBundledEvents[0], nonBundledEvents[2]]);
     });
 
     it('should take the size limit into consideration', async () => {
       const mongoSizeOfFirstEvent = mongoObjectSize(nonBundledEvents[0]);
       const ret2 = await expect(storage.fetchEntitiesForBundling('otherId', bundleItemsCountLimit, mongoSizeOfFirstEvent + 1)).to.be.fulfilled;
       expect(ret2.assets).to.be.empty;
-      expect(ret2.events).to.deep.equal([nonBundledEvents[0]]);
+      expect(ret2.events).to.have.deep.members([nonBundledEvents[0]]);
     });
   });
 
