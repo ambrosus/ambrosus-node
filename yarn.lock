@@ -175,15 +175,15 @@ ajv@^6.4.0:
     json-schema-traverse "^0.3.0"
     uri-js "^3.0.2"
 
-ambrosus-node-contracts@0.0.15:
-  version "0.0.15"
-  resolved "https://registry.yarnpkg.com/ambrosus-node-contracts/-/ambrosus-node-contracts-0.0.15.tgz#9673d837642f241d7e3339088d95e3d6ca4e60ae"
-  integrity sha512-TCJNrwoHhZ/f8OF35vAsSGH5axOvwvwM04qH1OulYIBRBCFb2Jq8EeQh4Tv/e4EBzJbcP07pfQnSGcFIYKoRug==
+ambrosus-node-contracts@0.0.18:
+  version "0.0.18"
+  resolved "https://registry.yarnpkg.com/ambrosus-node-contracts/-/ambrosus-node-contracts-0.0.18.tgz#7e0a3708778064511d85116ff3b813fead42340d"
+  integrity sha512-germeosgDy9aUu/lysM+Ta9yuUfq+HOISPHESB+1SkMCbzttKLSbC12COWDpVVuyjLWtDKKM0SQ0BH2zEPjx5A==
   dependencies:
     babel-runtime "^6.26.0"
     command-line-args "^5.0.2"
     dotenv "^6.0.0"
-    openzeppelin-solidity "^1.10.0"
+    openzeppelin-solidity "^1.12.0"
     web3 "1.0.0-beta.34"
 
 ansi-align@^2.0.0:
@@ -5554,7 +5554,7 @@ onetime@^2.0.0:
   dependencies:
     mimic-fn "^1.0.0"
 
-openzeppelin-solidity@^1.10.0:
+openzeppelin-solidity@^1.12.0:
   version "1.12.0"
   resolved "https://registry.yarnpkg.com/openzeppelin-solidity/-/openzeppelin-solidity-1.12.0.tgz#7b9c55975e73370d4541e3442b30cb3d91ac973a"
   integrity sha512-WlorzMXIIurugiSdw121RVD5qA3EfSI7GybTn+/Du0mPNgairjt29NpVTAaH8eLjAeAwlw46y7uQKy0NYem/gA==
