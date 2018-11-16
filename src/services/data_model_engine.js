@@ -246,7 +246,7 @@ export default class DataModelEngine {
     return toBeRemoved;
   }
 
-  async getWorkerLogs(logsCount = 5) {
+  async getWorkerLogs(logsCount = 10) {
     return await this.workerLogRepository.getLogs(logsCount);
   }
 }
