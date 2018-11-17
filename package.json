@@ -31,7 +31,7 @@
   "dependencies": {
     "@sentry/node": "^4.3.0",
     "ajv": "^6.4.0",
-    "ambrosus-node-contracts": "0.0.15",
+    "ambrosus-node-contracts": "0.0.18",
     "base64url": "^2.0.0",
     "body-parser": "^1.18.2",
     "command-line-args": "^5.0.2",
