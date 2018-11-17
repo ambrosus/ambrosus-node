@@ -79,6 +79,7 @@ class Builder {
     this.uploadActions = new UploadActions(this.uploadsWrapper, this.feesWrapper, this.shelteringWrapper);
 
     this.rolesRepository = new RolesRepository(this.rolesWrapper, this.configWrapper);
+    const {lowFundsWarningAmount} = this.config;
     this.uploadRepository = new UploadRepository(
       this.web3,
       this.identityManager,
@@ -86,7 +87,8 @@ class Builder {
       this.shelteringWrapper,
       this.rolesWrapper,
       this.feesWrapper,
-      this.configWrapper
+      this.configWrapper,
+      lowFundsWarningAmount
     );
     this.challengesRepository = new ChallengesRepository(this.challengesWrapper,
       this.configWrapper);
