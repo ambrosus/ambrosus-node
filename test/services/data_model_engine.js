@@ -1155,14 +1155,10 @@ describe('Data Model Engine', () => {
     });
 
     it('returns a summary', async () => {
-      await expect(modelEngine.uploadAcceptedBundleCandidates()).to.eventually.be.fulfilled.and.deep.equal({
-        ok: [
-          'bundle1'
-        ],
-        failed: {
-          bundle3: 'An error'
-        }
-      });
+      const result = await modelEngine.uploadAcceptedBundleCandidates();
+      expect(result.ok).to.deep.equal(['bundle1']);
+      expect(result.failed.bundle3.message).to.equal('An error');
+      expect(result.failed.bundle3.stack).to.exist;
     });
   });
 
