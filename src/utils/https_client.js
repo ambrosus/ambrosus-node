@@ -51,20 +51,21 @@ export default class HttpsClient {
     throw Error(`Invalid protocol ${protocol}`);
   }
 
-  validateIncomingStatusCode(statusCode) {
+  validateIncomingStatusCode(statusCode, url) {
+    const errorMsg = `Received code ${statusCode} at ${url}`;
     switch (statusCode) {
       case 200:
         return;
       case 400:
-        throw new ValidationError();
+        throw new ValidationError(errorMsg);
       case 401:
-        throw new AuthenticationError();
+        throw new AuthenticationError(errorMsg);
       case 403:
-        throw new PermissionError();
+        throw new PermissionError(errorMsg);
       case 404:
-        throw new NotFoundError();
+        throw new NotFoundError(errorMsg);
       default:
-        throw new Error();
+        throw new Error(errorMsg);
     }
   }
 }

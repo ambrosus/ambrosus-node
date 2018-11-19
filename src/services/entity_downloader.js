@@ -15,7 +15,7 @@ export default class EntityDownloader {
   async downloadBundle(vendorUrl, bundleId) {
     const fullPath = `/bundle/${bundleId}`;
     const res = await this.httpsClient.performHTTPSGet(vendorUrl, fullPath);
-    await this.httpsClient.validateIncomingStatusCode(res.statusCode);
+    await this.httpsClient.validateIncomingStatusCode(res.statusCode, vendorUrl);
     return res.body;
   }
 }
