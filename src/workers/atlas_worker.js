@@ -12,6 +12,7 @@ import asyncMiddleware from '../middlewares/async_middleware';
 import healthCheckHandler from '../routes/health_check';
 import PeriodicWorker from './periodic_worker';
 import AtlasChallengeParticipationStrategy from './atlas_strategies/atlas_challenge_resolution_strategy';
+import {getBalance, maximalGasPrice} from '../utils/web3_tools';
 
 const ATLAS_RESOLUTION_WORK_TYPE = 'AtlasChallengeResolution';
 
@@ -91,6 +92,10 @@ export default class AtlasWorker extends PeriodicWorker {
       return;
     }
     try {
+      if (!await this.checkIfEnoughFundsToPayForGas()) {
+        await this.addLog('Not enough funds to pay for gas');
+        return;
+      }
       const challenges = await this.challengesRepository.ongoingChallenges();
       await this.addLog(`Challenges preselected for resolution: ${challenges.length}`);
       for (const challenge of challenges) {
@@ -103,6 +108,10 @@ export default class AtlasWorker extends PeriodicWorker {
     } finally {
       await this.workerTaskTrackingRepository.finishWork(workId);
     }
+  }
+
+  async checkIfEnoughFundsToPayForGas() {
+    return (await getBalance(this.web3)).gt(maximalGasPrice());
   }
 
   async addLog(message, additionalFields, stacktrace) {

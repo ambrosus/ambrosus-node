@@ -23,6 +23,8 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Atlas Worker', () => {
+  const defaultAccount = '0x123';
+  const exampleBalance = '10000000000000000000';
   const fetchedBundle = {bundleId: 'fetchedBundle'};
   const exampleWorkId = 'workid';
   const workerInterval = 10;
@@ -41,7 +43,8 @@ describe('Atlas Worker', () => {
   beforeEach(async () => {
     const mockWeb3 = {
       eth: {
-        defaultAccount: '0x123',
+        defaultAccount,
+        getBalance: sinon.stub().resolves(exampleBalance),
         getNodeInfo: () => Promise.resolve()
       }
     };
@@ -232,6 +235,12 @@ describe('Atlas Worker', () => {
         await expect(atlasWorker.periodicWork()).to.be.rejected;
         expect(workerTaskTrackingRepositoryMock.finishWork).to.be.calledOnceWith(exampleWorkId);
       });
+    });
+
+    it('periodicWork does not do anything when not enough balance to pay for the gas', async () => {
+      mockWeb3.eth.getBalance.resolves('10');
+      await expect(atlasWorker.periodicWork()).to.be.eventually.fulfilled;
+      await expect(challengesRepositoryMock.ongoingChallenges).to.be.not.called;
     });
   });
 

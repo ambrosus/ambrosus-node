@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import {isSyncing, waitForChainSync} from '../../src/utils/web3_tools';
+import {getBalance, isSyncing, maximalGasPrice, waitForChainSync} from '../../src/utils/web3_tools';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
@@ -19,11 +19,14 @@ const {expect} = chai;
 
 describe('Web3 tools', () => {
   let mockWeb3;
+  const address = '0xdeadbeef';
+  const exampleBalance = '10';
 
   beforeEach(async () => {
     mockWeb3 = {
       eth: {
-        isSyncing: sinon.stub()
+        isSyncing: sinon.stub(),
+        getBalance: sinon.stub().resolves(exampleBalance)
       }
     };
   });
@@ -90,5 +93,15 @@ describe('Web3 tools', () => {
       await waitForChainSync(mockWeb3, timeout, spy);
       expect(spy).to.be.not.called;
     });
+  });
+
+  describe('getBalance', () => {
+    it(`returns user's balance`, async () => {
+      expect(await getBalance(mockWeb3, address)).to.equal(exampleBalance);
+    });
+  });
+
+  it('maximalGasPrice returns correct value', () => {
+    expect(maximalGasPrice().toString()).to.equal('40000000000000000');
   });
 });
