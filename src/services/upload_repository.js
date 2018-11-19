@@ -11,9 +11,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {ValidationError} from '../errors/errors';
 import {Role} from './roles_repository';
 import BN from 'bn.js';
+import * as Sentry from '@sentry/node';
 
 export default class UploadRepository {
-  constructor(web3, identityManager, uploadsActions, shelteringWrapper, rolesWrapper, feesWrapper, configWrapper) {
+  constructor(web3, identityManager, uploadsActions, shelteringWrapper, rolesWrapper, feesWrapper, configWrapper, lowFundsWarningAmount) {
     this.web3 = web3;
     this.identityManager = identityManager;
     this.uploadsActions = uploadsActions;
@@ -21,6 +22,7 @@ export default class UploadRepository {
     this.shelteringWrapper = shelteringWrapper;
     this.configWrapper = configWrapper;
     this.rolesWrapper = rolesWrapper;
+    this.lowFundsWarningAmount = lowFundsWarningAmount;
   }
 
   async uploadBundle(bundleId, storagePeriods) {
@@ -31,7 +33,9 @@ export default class UploadRepository {
 
     const fee = await this.feesWrapper.feeForUpload(storagePeriods);
     if (!await this.checkIfEnoughFunds(fee)) {
-      throw new Error(`Insufficient funds: need at least ${fee} to upload the bundle`);
+      const err = new Error(`Insufficient funds: need at least ${fee} to upload the bundle`);
+      Sentry.captureException(err);
+      throw err;
     }
 
     const previousUploader = await this.shelteringWrapper.getBundleUploader(bundleId);
@@ -68,6 +72,12 @@ export default class UploadRepository {
 
   async checkIfEnoughFunds(requiredBalance) {
     const balance = new BN(await this.web3.eth.getBalance(this.identityManager.nodeAddress()));
+    if (balance.lte(new BN(this.lowFundsWarningAmount))) {
+      Sentry.captureMessage(
+        `Hermes low balance warning triggered. Balance: ${balance}`,
+        Sentry.Severity.Warning
+      );
+    }
     return balance.gte(new BN(requiredBalance));
   }
 }
