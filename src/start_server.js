@@ -12,6 +12,7 @@ import config from '../config/config';
 import Builder from './builder';
 import ServerWorker from './workers/server_worker';
 import {Role} from './services/roles_repository';
+import {waitForChainSync} from './utils/web3_tools';
 
 async function start(logger) {
   const builder = new Builder();
@@ -20,6 +21,7 @@ async function start(logger) {
     throw new Error('Migration needs to be done');
   }
   await builder.ensureAdminAccountExist();
+  await waitForChainSync(builder.web3, 5, () => logger.info('Ethereum client is not in sync. Retrying in 5 seconds'));
   const role = await builder.ensureAccountIsOnboarded([Role.ATLAS, Role.HERMES]);
   const worker = new ServerWorker(
     builder.dataModelEngine,
