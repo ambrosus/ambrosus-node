@@ -121,16 +121,18 @@ export async function isSyncing(web3) {
   if (isSyncing === false) {
     return false;
   }
-  return isSyncing.currentBlock !== isSyncing.highestBlock;
+  return isSyncing.currentBlock < isSyncing.highestBlock;
 }
 
-export async function waitForChainSync(web3, timeoutInSeconds, chainNotSyncedCallback) {
-  const sleep = async (timeout) => new Promise((resolve) => setTimeout(resolve, timeout * 1000));
+export async function waitForChainSync(web3, timeoutInSeconds, iterationCallback) {
+  const sleep = async (timeout) => new Promise((resolve) => {
+    setTimeout(resolve, timeout * 1000);
+    if (iterationCallback) {
+      iterationCallback();
+    }
+  });
 
   while (await isSyncing(web3)) {
-    if (chainNotSyncedCallback) {
-      chainNotSyncedCallback();
-    }
     await sleep(timeoutInSeconds);
   }
 }
