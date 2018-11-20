@@ -12,7 +12,7 @@ import asyncMiddleware from '../middlewares/async_middleware';
 import healthCheckHandler from '../routes/health_check';
 import PeriodicWorker from './periodic_worker';
 import AtlasChallengeParticipationStrategy from './atlas_strategies/atlas_challenge_resolution_strategy';
-import {getBalance, maximalGasPrice} from '../utils/web3_tools';
+import {checkIfEnoughFundsToPayForGas, getDefaultAddress} from '../utils/web3_tools';
 
 const ATLAS_RESOLUTION_WORK_TYPE = 'AtlasChallengeResolution';
 
@@ -38,6 +38,7 @@ export default class AtlasWorker extends PeriodicWorker {
     this.workerTaskTrackingRepository = workerTaskTrackingRepository;
     this.failedChallengesCache = failedChallengesCache;
     this.mongoClient = mongoClient;
+    this.isOutOfFunds = false;
     this.expressApp = express();
     this.serverPort = serverPort;
     this.expressApp.get('/health', asyncMiddleware(
@@ -92,8 +93,7 @@ export default class AtlasWorker extends PeriodicWorker {
       return;
     }
     try {
-      if (!await this.checkIfEnoughFundsToPayForGas()) {
-        await this.addLog('Not enough funds to pay for gas');
+      if (!await this.isEnoughFundsToPayForGas()) {
         return;
       }
       const challenges = await this.challengesRepository.ongoingChallenges();
@@ -110,8 +110,16 @@ export default class AtlasWorker extends PeriodicWorker {
     }
   }
 
-  async checkIfEnoughFundsToPayForGas() {
-    return (await getBalance(this.web3)).gt(maximalGasPrice());
+  async isEnoughFundsToPayForGas() {
+    if (!await checkIfEnoughFundsToPayForGas(this.web3, getDefaultAddress(this.web3))) {
+      if (!this.isOutOfFunds) {
+        await this.addLog('Not enough funds to pay for gas');
+        this.isOutOfFunds = true;
+      }
+      return false;
+    }
+    this.isOutOfFunds = false;
+    return true;
   }
 
   async addLog(message, additionalFields, stacktrace) {
