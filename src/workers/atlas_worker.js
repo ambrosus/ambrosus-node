@@ -7,11 +7,24 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+import express from 'express';
+import asyncMiddleware from '../middlewares/async_middleware';
+import healthCheckHandler from '../routes/health_check';
 import PeriodicWorker from './periodic_worker';
 import AtlasChallengeParticipationStrategy from './atlas_strategies/atlas_challenge_resolution_strategy';
 
 export default class AtlasWorker extends PeriodicWorker {
-  constructor(web3, dataModelEngine, workerLogRepository, challengesRepository, failedChallengesCache, strategy, logger) {
+  constructor(
+    web3,
+    dataModelEngine,
+    workerLogRepository,
+    challengesRepository,
+    failedChallengesCache,
+    strategy,
+    logger,
+    mongoClient,
+    serverPort
+  ) {
     super(strategy.workerInterval, logger);
     this.web3 = web3;
     this.dataModelEngine = dataModelEngine;
@@ -19,6 +32,13 @@ export default class AtlasWorker extends PeriodicWorker {
     this.workerLogRepository = workerLogRepository;
     this.challengesRepository = challengesRepository;
     this.failedChallengesCache = failedChallengesCache;
+    this.mongoClient = mongoClient;
+    this.expressApp = express();
+    this.serverPort = serverPort;
+    this.expressApp.get('/health', asyncMiddleware(
+      healthCheckHandler(mongoClient, web3)
+    ));
+
     if (!(this.strategy instanceof AtlasChallengeParticipationStrategy)) {
       throw new Error('A valid strategy must be provided');
     }
@@ -78,5 +98,14 @@ export default class AtlasWorker extends PeriodicWorker {
     };
     this.logger.info({...log, stacktrace});
     await this.workerLogRepository.storeLog({timestamp: new Date(), ...log});
+  }
+
+  beforeWorkLoop() {
+    this.server = this.expressApp.listen(this.serverPort);
+  }
+
+  async afterWorkLoop() {
+    await this.server.close();
+    await this.mongoClient.close();
   }
 }

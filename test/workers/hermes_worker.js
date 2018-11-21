@@ -12,6 +12,8 @@ import sinon from 'sinon';
 import HermesWorker from '../../src/workers/hermes_worker';
 import sinonChai from 'sinon-chai';
 import HermesUploadStrategy from '../../src/workers/hermes_strategies/upload_strategy';
+import {connectToMongo} from '../../src/utils/db_utils';
+import config from '../../config/config';
 
 chai.use(sinonChai);
 const {expect} = chai;
@@ -31,6 +33,12 @@ describe('Hermes Worker', () => {
       bundleId: '0xc0ffee'
     };
     mockDataModelEngine = {
+      identityManager: {
+        web3: {
+          eth: {getNodeInfo: () => Promise.resolve()}
+        }
+      },
+      rejectAllBundleCandidate: sinon.stub().resolves(),
       prepareBundleCandidate: sinon.stub().resolves(mockResult),
       rejectBundleCandidate: sinon.stub().resolves(),
       acceptBundleCandidate: sinon.stub().resolves(mockResult),
@@ -48,7 +56,16 @@ describe('Hermes Worker', () => {
     };
     mockStrategy = sinon.createStubInstance(HermesUploadStrategy);
 
-    hermesWorker = new HermesWorker(mockDataModelEngine, mockWorkerLogRepository, mockStrategy, mockLogger);
+    const {client: mongoClient} = await connectToMongo(config);
+
+    hermesWorker = new HermesWorker(
+      mockDataModelEngine,
+      mockWorkerLogRepository,
+      mockStrategy,
+      mockLogger,
+      mongoClient,
+      config.serverPort
+    );
     await hermesWorker.beforeWorkLoop();
 
     ({bundleSequenceNumber} = hermesWorker);
@@ -113,5 +130,11 @@ describe('Hermes Worker', () => {
       await hermesWorker.periodicWork();
       expect(mockDataModelEngine.uploadAcceptedBundleCandidates).to.have.been.calledOnce;
     });
+  });
+
+  it('health checks', async () => {
+    const {port} = hermesWorker.server.address();
+    const {status} = await chai.request(`http://localhost:${port}`).get('/health');
+    expect(status).to.eql(200);
   });
 });

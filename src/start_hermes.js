@@ -23,7 +23,14 @@ async function start(logger) {
   await waitForChainSync(builder.web3, 5, () => logger.info('Ethereum client is not in sync. Retrying in 5 seconds'));
   await builder.ensureAccountIsOnboarded([Role.HERMES]);
   const strategy = loadStrategy(config.uploadStrategy);
-  const worker = new HermesWorker(builder.dataModelEngine, builder.workerLogRepository, strategy, logger);
+  const worker = new HermesWorker(
+    builder.dataModelEngine,
+    builder.workerLogRepository,
+    strategy,
+    logger,
+    builder.client,
+    config.serverPort
+  );
   await worker.start();
 }
 

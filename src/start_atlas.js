@@ -23,7 +23,17 @@ async function start(logger) {
   await waitForChainSync(builder.web3, 5, () => logger.info('Ethereum client is not in sync. Retrying in 5 seconds'));
   await builder.ensureAccountIsOnboarded([Role.ATLAS]);
   const strategy = loadStrategy(config.challengeResolutionStrategy);
-  const worker = new AtlasWorker(builder.web3, builder.dataModelEngine, builder.workerLogRepository, builder.challengesRepository, builder.failedChallengesCache, strategy, logger);
+  const worker = new AtlasWorker(
+    builder.web3,
+    builder.dataModelEngine,
+    builder.workerLogRepository,
+    builder.challengesRepository,
+    builder.failedChallengesCache,
+    strategy,
+    logger,
+    builder.client,
+    config.serverPort
+  );
   await worker.start();
 }
 
