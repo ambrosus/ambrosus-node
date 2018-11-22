@@ -51,16 +51,16 @@ export default class HermesWorker extends PeriodicWorker {
       await this.addLog(`Bundle was uploaded`, {bundleId});
     }
     for (const [bundleId, error] of Object.entries(results.failed)) {
-      await this.addLog(`Bundle failed to upload`, {bundleId, errorMsg: error.message || error});
+      await this.addLog(`Bundle failed to upload`, {bundleId, errorMsg: error.message || error}, error.stack);
     }
   }
 
-  async addLog(message, additionalFields) {
+  async addLog(message, additionalFields, stacktrace) {
     const log = {
       message,
       ...additionalFields
     };
-    this.logger.info(log);
+    this.logger.info({...log, stacktrace});
     await this.workerLogRepository.storeLog({timestamp: getTimestamp(), ...log});
   }
 
