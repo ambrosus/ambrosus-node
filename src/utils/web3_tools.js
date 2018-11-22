@@ -116,3 +116,23 @@ export function link(contract, name, library) {
   contract.bytecode = contract.bytecode.replace(pattern, address);
 }
 
+export async function isSyncing(web3) {
+  const isSyncing = await web3.eth.isSyncing();
+  if (isSyncing === false) {
+    return false;
+  }
+  return isSyncing.currentBlock < isSyncing.highestBlock;
+}
+
+export async function waitForChainSync(web3, timeoutInSeconds, iterationCallback) {
+  const sleep = async (timeout) => new Promise((resolve) => {
+    setTimeout(resolve, timeout * 1000);
+    if (iterationCallback) {
+      iterationCallback();
+    }
+  });
+
+  while (await isSyncing(web3)) {
+    await sleep(timeoutInSeconds);
+  }
+}

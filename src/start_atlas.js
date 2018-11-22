@@ -12,6 +12,7 @@ import AtlasWorker from './workers/atlas_worker';
 import config from '../config/config';
 import Builder from './builder';
 import {Role} from './services/roles_repository';
+import {waitForChainSync} from './utils/web3_tools';
 
 async function start(logger) {
   const builder = new Builder();
@@ -19,6 +20,7 @@ async function start(logger) {
   if (await builder.migrator.isMigrationNeccesary()) {
     throw new Error('Migration needs to be done');
   }
+  await waitForChainSync(builder.web3, 5, () => logger.info('Ethereum client is not in sync. Retrying in 5 seconds'));
   await builder.ensureAccountIsOnboarded([Role.ATLAS]);
   const strategy = loadStrategy(config.challengeResolutionStrategy);
   const worker = new AtlasWorker(builder.web3, builder.dataModelEngine, builder.workerLogRepository, builder.challengesRepository, strategy, logger);
