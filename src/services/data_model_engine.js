@@ -197,10 +197,6 @@ export default class DataModelEngine {
     await this.entityRepository.discardBundling(bundleStubId);
   }
 
-  async rejectAllBundleCandidate() {
-    await this.entityRepository.discardAllBundling();
-  }
-
   async uploadAcceptedBundleCandidates() {
     const waitingBundles = await this.entityRepository.findBundlesWaitingForUpload();
     const summary = {

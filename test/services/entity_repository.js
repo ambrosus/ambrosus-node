@@ -405,57 +405,6 @@ describe('Entity Repository', () => {
     });
   });
 
-  describe('Bundle process (cleanup after restart)', () => {
-    let scenario;
-
-    const bundleItemsCountLimit = 5;
-    let nonBundledAssets1;
-    let nonBundledAssets2;
-    let clock;
-
-    before(async () => {
-      scenario = new ScenarioBuilder(new IdentityManager(await createWeb3()));
-      await scenario.addAdminAccount(adminAccountWithSecret);
-
-      nonBundledAssets1 = [
-        await scenario.addAsset(0, {timestamp: 0}),
-        await scenario.addAsset(0, {timestamp: 1})
-      ].map((asset) => put(asset, 'metadata.bundleId', null));
-
-      nonBundledAssets2 = [
-        await scenario.addAsset(0, {timestamp: 3}),
-        await scenario.addAsset(0, {timestamp: 4})
-      ].map((asset) => put(asset, 'metadata.bundleId', null));
-
-      clock = sinon.useFakeTimers(5000);
-    });
-
-    after(async () => {
-      await cleanDatabase(db);
-      clock.restore();
-    });
-
-    it('should clear all entities currently blocked for bundling', async () => {
-      await Promise.all(nonBundledAssets1.map((asset) => storage.storeAsset(asset)));
-      const ret1 = await expect(storage.fetchEntitiesForBundling('abc', bundleItemsCountLimit)).to.be.fulfilled;
-      expect(ret1.assets.length).to.be.equal(2);
-
-      await Promise.all(nonBundledAssets2.map((asset) => storage.storeAsset(asset)));
-      const ret2 = await expect(storage.fetchEntitiesForBundling('xyz', bundleItemsCountLimit)).to.be.fulfilled;
-      expect(ret2.assets.length).to.be.equal(2);
-
-      const ret3 = await expect(storage.fetchEntitiesForBundling('uio', bundleItemsCountLimit)).to.be.fulfilled;
-      expect(ret3.assets.length).to.be.equal(0);
-
-      await expect(storage.discardAllBundling()).to.eventually.be.fulfilled;
-
-      const ret4 = await expect(storage.fetchEntitiesForBundling('efg', bundleItemsCountLimit)).to.be.fulfilled;
-      expect(ret4.assets.length).to.be.equal(4);
-      expect(ret4.assets).to.deep.include.members(ret1.assets);
-      expect(ret4.assets).to.deep.include.members(ret2.assets);
-    });
-  });
-
   describe('Bundle cleanup process', () => {
     describe('Set bundle expiration date', () => {
       const bundleId = 'bundle';

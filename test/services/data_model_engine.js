@@ -1162,26 +1162,6 @@ describe('Data Model Engine', () => {
     });
   });
 
-  describe('Reject all bundle candidates', () => {
-    let mockEntityRepository;
-    let modelEngine;
-
-    beforeEach(() => {
-      mockEntityRepository = {
-        discardAllBundling: sinon.stub().resolves()
-      };
-
-      modelEngine = new DataModelEngine({
-        entityRepository: mockEntityRepository
-      });
-    });
-
-    it('proxies the call down to the entity repository', async () => {
-      await expect(modelEngine.rejectAllBundleCandidate()).to.eventually.be.fulfilled;
-      expect(mockEntityRepository.discardAllBundling).to.be.calledOnce;
-    });
-  });
-
   describe('Downloading a bundle', () => {
     const bundleId = '0x123';
     const sheltererId = '0x789';
