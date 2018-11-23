@@ -135,7 +135,7 @@ describe(`Event Entry Validator - 'ambrosus.asset.info'`, () => {
 
   it('throws if "images" is an empty object', async () => {
     const brokenEntry = put(validEntry, 'images', {});
-    const errorMessage = `should NOT have less than 1 properties`;
+    const errorMessage = `should NOT have fewer than 1 properties`;
     expectValidationError(brokenEntry, errorMessage);
   });
 

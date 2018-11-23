@@ -21,113 +21,75 @@ describe('Challenges repository', () => {
   let challengeWrapperMock;
   let configWrapperMock;
   let challengesRepository;
+  const ownAddress = 'ownAddress';
+  const otherAddress = 'otherAddress';
 
-  describe('filterOutFinished', () => {
+  describe('filterOutFinishedChallenges', () => {
     beforeEach(() => {
       challengesRepository = new ChallengesRepository();
     });
 
-    describe('Single challenges', () => {
-      const allChallenges = [
-        {challengeId: '1', count: 1},
-        {challengeId: '2', count: 1},
-        {challengeId: '3', count: 1},
-        {challengeId: '4', count: 1},
-        {challengeId: '5', count: 1},
-        {challengeId: '6', count: 1},
-        {challengeId: '7', count: 1}
-      ];
-      const resolvedChallenges = [
-        {challengeId: '1'},
-        {challengeId: '100'},
-        {challengeId: '6'}
-      ];
-      const timedOutChallenges = [
-        {challengeId: '0'},
-        {challengeId: '2'},
-        {challengeId: '3'},
-        {challengeId: '-1'},
-        {challengeId: '7'},
-        {challengeId: '7'}
-      ];
+    const allChallenges = [
+      {challengeId: '1', count: 3},
+      {challengeId: '2', count: 2},
+      {challengeId: '3', count: 3},
+      {challengeId: '4', count: 2}
+    ];
+    const resolvedChallenges = [
+      {challengeId: '1', resolverId: ownAddress},
+      {challengeId: '2', resolverId: otherAddress},
+      {challengeId: '2', resolverId: ownAddress},
+      {challengeId: '2', resolverId: otherAddress},
+      {challengeId: '4', resolverId: otherAddress}
+    ];
+    const timedOutChallenges = [
+      {challengeId: '2'},
+      {challengeId: '3'},
+      {challengeId: '7'}
+    ];
 
-      it('should remove single challenges that are resolved or timed out', async () => {
-        expect(challengesRepository.filterOutFinished(allChallenges, resolvedChallenges, timedOutChallenges)).to.deep.equal([
-          {challengeId: '4', count: 1},
-          {challengeId: '5', count: 1}
-        ]);
-      });
+    it('should remove challenges that were fully resolved (resolutions count match start count)', async () => {
+      expect(challengesRepository.filterOutFinishedChallenges(allChallenges, resolvedChallenges, [], 'nonSignificant')).to.deep.equal([
+        {challengeId: '1', count: 3},
+        {challengeId: '3', count: 3},
+        {challengeId: '4', count: 2}
+      ]);
     });
 
-    describe('Multiple challenges', () => {
-      const allChallenges = [
-        {challengeId: '1', count: 2},
-        {challengeId: '2', count: 1},
-        {challengeId: '3', count: 4}
-      ];
-      const resolvedChallenges = [
-        {challengeId: '1'},
-        {challengeId: '1'},
-        {challengeId: '2'},
-        {challengeId: '3'},
-        {challengeId: '3'}
-      ];
-      const timedOutChallenges = [{challengeId: '3'}];
+    it('should remove challenges that were resolved by the current atlas', async () => {
+      expect(challengesRepository.filterOutFinishedChallenges(allChallenges, resolvedChallenges, [], ownAddress)).to.deep.equal([
+        {challengeId: '3', count: 3},
+        {challengeId: '4', count: 2}
+      ]);
+    });
 
-      it('should remove challenges only if resolution count is not less then creation count', async () => {
-        expect(challengesRepository.filterOutFinished(allChallenges, resolvedChallenges, [])).to.deep.equal([
-          {challengeId: '3', count: 4}
-        ]);
-      });
+    it('should remove challenge when timed out', async () => {
+      expect(challengesRepository.filterOutFinishedChallenges(allChallenges, [], timedOutChallenges, 'nonSignificant')).to.deep.equal([
+        {challengeId: '1', count: 3},
+        {challengeId: '4', count: 2}
+      ]);
+    });
 
-      it('should remove challenge when timed out', async () => {
-        expect(challengesRepository.filterOutFinished(allChallenges, [], timedOutChallenges)).to.deep.equal([
-          {challengeId: '1', count: 2},
-          {challengeId: '2', count: 1}
-        ]);
-      });
-
-      it('timed out and resolved work together', async () => {
-        expect(challengesRepository.filterOutFinished(allChallenges, resolvedChallenges, timedOutChallenges)).to.deep.equal([]);
-      });
+    it('should work in complex scenario', async () => {
+      expect(challengesRepository.filterOutFinishedChallenges(allChallenges, resolvedChallenges, timedOutChallenges, ownAddress)).to.deep.equal([
+        {challengeId: '4', count: 2}
+      ]);
     });
   });
 
-  describe('filterOutNotResolvableChallenges', () => {
-    const allChallenges = [
-      {challengeId: '1', bundleId: '0x123'},
-      {challengeId: '2', bundleId: '0xabc'},
-      {challengeId: '3', bundleId: '0x123'},
-      {challengeId: '4', bundleId: '0xabc'},
-      {challengeId: '5', bundleId: '0x123'},
-      {challengeId: '6', bundleId: '0xc0ffee'},
-      {challengeId: '7', bundleId: '0x123'}
+  describe('sortChallenges', () => {
+    const events = [
+      {blockNumber: 5},
+      {blockNumber: 9},
+      {blockNumber: 2}
     ];
 
     beforeEach(() => {
-      challengeWrapperMock = {
-        canResolve: sinon.stub().resolves(false)
-      };
-      challengesRepository = new ChallengesRepository(challengeWrapperMock);
+      challengesRepository = new ChallengesRepository();
     });
 
-    it('should return only challenges that are resolvable on blockchain', async () => {
-      challengeWrapperMock.canResolve.resolves(true)
-        .withArgs('1')
-        .resolves(false)
-        .withArgs('2')
-        .resolves(false)
-        .withArgs('3')
-        .resolves(false);
-
-      expect(await challengesRepository.filterOutNotResolvableChallenges(allChallenges)).to.deep.equal([
-        {challengeId: '4', bundleId: '0xabc'},
-        {challengeId: '5', bundleId: '0x123'},
-        {challengeId: '6', bundleId: '0xc0ffee'},
-        {challengeId: '7', bundleId: '0x123'}
-      ]);
-      expect(challengeWrapperMock.canResolve).to.have.callCount(7);
-      allChallenges.forEach(({challengeId}) => expect(challengeWrapperMock.canResolve).to.be.calledWith(challengeId));
+    it('in increasing blockNumber order', () => {
+      expect(challengesRepository.sortChallenges(events)).to.deep.equal([{blockNumber: 2}, {blockNumber: 5}, {blockNumber: 9}]);
     });
   });
 
@@ -143,7 +105,8 @@ describe('Challenges repository', () => {
           bundleId,
           challengeId,
           count
-        }
+        },
+        blockNumber: 1
       },
       {
         returnValues: {
@@ -151,7 +114,8 @@ describe('Challenges repository', () => {
           bundleId,
           challengeId: 100,
           count
-        }
+        },
+        blockNumber: 2
       },
       {
         returnValues: {
@@ -159,20 +123,21 @@ describe('Challenges repository', () => {
           bundleId,
           challengeId,
           count
-        }
+        },
+        blockNumber: 3
       }];
     const challenges = [
-      {sheltererId, bundleId, challengeId, count},
-      {sheltererId, bundleId, challengeId: 100, count},
-      {sheltererId, bundleId, challengeId, count}];
+      {sheltererId, bundleId, challengeId, count, blockNumber: 1},
+      {sheltererId, bundleId, challengeId: 100, count, blockNumber: 2},
+      {sheltererId, bundleId, challengeId, count, blockNumber: 3}];
 
     beforeEach(() => {
       challengesRepository = new ChallengesRepository();
     });
 
-    it('extracts fields specified in selector from events list', async () => {
+    it('extracts the blockNumber and the fields specified in selector', async () => {
       expect(challengesRepository.extractChallengeFromEvent(events, ['challengeId', 'sheltererId', 'bundleId', 'count'])).to.deep.equal(challenges);
-      expect(challengesRepository.extractChallengeFromEvent(events, ['challengeId'])).to.deep.equal([{challengeId}, {challengeId: 100}, {challengeId}]);
+      expect(challengesRepository.extractChallengeFromEvent(events, ['challengeId'])).to.deep.equal([{challengeId, blockNumber: 1}, {challengeId: 100, blockNumber: 2}, {challengeId, blockNumber: 3}]);
     });
   });
 
@@ -185,6 +150,7 @@ describe('Challenges repository', () => {
     const challengeDuration = 5;
     const events = [
       {
+        blockNumber: 4,
         returnValues: {
           sheltererId,
           bundleId,
@@ -193,6 +159,7 @@ describe('Challenges repository', () => {
         }
       },
       {
+        blockNumber: 2,
         returnValues: {
           sheltererId,
           bundleId,
@@ -200,25 +167,26 @@ describe('Challenges repository', () => {
           count
         }
       }];
-    const resolvedEvents = [{returnValues: {bundleId, sheltererId, challengeId: 'resolved'}}];
-    const timedOutEvents = [{returnValues: {bundleId, sheltererId, challengeId: 'timedOut'}}];
+    const resolvedEvents = [{blockNumber: 3, returnValues: {bundleId, sheltererId, challengeId: 'resolved', resolverId: 'someResolverId'}}];
+    const timedOutEvents = [{blockNumber: 5, returnValues: {bundleId, sheltererId, challengeId: 'timedOut'}}];
     const notFinishedEvents = 'notFinishedEvents';
-    const resolvableEvents = 'resolvableEvents';
+    const sortedEvents = 'sortedEvents';
 
     beforeEach(() => {
       challengeWrapperMock = {
         challenges: sinon.stub().resolves(events),
         resolvedChallenges: sinon.stub().resolves(resolvedEvents),
         timedOutChallenges: sinon.stub().resolves(timedOutEvents),
-        earliestMeaningfulBlock: sinon.stub().resolves(fromBlock)
+        earliestMeaningfulBlock: sinon.stub().resolves(fromBlock),
+        defaultAddress: 'defaultAddress'
       };
       configWrapperMock = {
         challengeDuration: sinon.stub().resolves(challengeDuration)
       };
       challengesRepository = new ChallengesRepository(challengeWrapperMock, configWrapperMock);
       sinon.spy(challengesRepository, 'extractChallengeFromEvent');
-      sinon.stub(challengesRepository, 'filterOutFinished').returns(notFinishedEvents);
-      sinon.stub(challengesRepository, 'filterOutNotResolvableChallenges').resolves(resolvableEvents);
+      sinon.stub(challengesRepository, 'filterOutFinishedChallenges').returns(notFinishedEvents);
+      sinon.stub(challengesRepository, 'sortChallenges').returns(sortedEvents);
     });
 
     it('calls wrappers with correct parameters', async () => {
@@ -228,7 +196,7 @@ describe('Challenges repository', () => {
       expect(challengeWrapperMock.challenges).to.be.calledWith(fromBlock);
       expect(challengeWrapperMock.resolvedChallenges).to.be.calledWith(fromBlock);
       expect(challengeWrapperMock.timedOutChallenges).to.be.calledWith(fromBlock);
-      expect(result).to.deep.equal(resolvableEvents);
+      expect(result).to.deep.equal(sortedEvents);
     });
 
     it('calls own methods with correct params', async () => {
@@ -237,12 +205,16 @@ describe('Challenges repository', () => {
       expect(challengesRepository.extractChallengeFromEvent).to.be.calledWith(events);
       expect(challengesRepository.extractChallengeFromEvent).to.be.calledWith(resolvedEvents);
       expect(challengesRepository.extractChallengeFromEvent).to.be.calledWith(timedOutEvents);
-      expect(challengesRepository.filterOutFinished).to.be.calledOnceWith(
-        [{sheltererId, bundleId, challengeId, count},
-          {sheltererId, bundleId, challengeId: 100, count}],
-        [{challengeId: 'resolved'}],
-        [{challengeId: 'timedOut'}]);
-      expect(challengesRepository.filterOutNotResolvableChallenges).to.be.calledOnceWith(notFinishedEvents);
+      expect(challengesRepository.filterOutFinishedChallenges).to.be.calledOnceWith(
+        [
+          {sheltererId, bundleId, challengeId, count, blockNumber: 4},
+          {sheltererId, bundleId, challengeId: 100, count, blockNumber: 2}
+        ],
+        [{challengeId: 'resolved', blockNumber: 3, resolverId: 'someResolverId'}],
+        [{challengeId: 'timedOut', blockNumber: 5}],
+        challengeWrapperMock.defaultAddress
+      );
+      expect(challengesRepository.sortChallenges).to.be.calledWith(notFinishedEvents);
     });
   });
 

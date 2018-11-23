@@ -63,8 +63,4 @@ export default class HermesWorker extends PeriodicWorker {
     this.logger.info({...log, stacktrace});
     await this.workerLogRepository.storeLog({timestamp: getTimestamp(), ...log});
   }
-
-  async beforeWorkLoop() {
-    await this.dataModelEngine.rejectAllBundleCandidate();
-  }
 }

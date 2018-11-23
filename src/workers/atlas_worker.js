@@ -35,26 +35,35 @@ export default class AtlasWorker extends PeriodicWorker {
     return this.dataModelEngine.downloadBundle(bundleId, sheltererId);
   }
 
+  async tryWithChallenge(challenge) {
+    try {
+      if (!await this.strategy.shouldFetchBundle(challenge)) {
+        await this.addLog('Decided not to download bundle', challenge);
+        return false;
+      }
+      const bundle = await this.tryToDownload(challenge);
+      if (!await this.strategy.shouldResolveChallenge(bundle)) {
+        await this.addLog('Challenge resolution cancelled', challenge);
+        return false;
+      }
+      await this.tryToResolve(bundle, challenge);
+      await this.strategy.afterChallengeResolution(bundle);
+      return true;
+    } catch (err) {
+      await this.addLog(`Failed to resolve challenge: ${err.message || err}`, challenge, err.stack);
+      return false;
+    }
+  }
+
   async periodicWork() {
     const challenges = await this.challengesRepository.ongoingChallenges();
+    await this.addLog(`Challenges preselected for resolution: ${challenges.length}`);
     for (const challenge of challenges) {
-      try {
-        if (!await this.strategy.shouldFetchBundle(challenge)) {
-          await this.addLog('Decided not to download bundle', challenge);
-          continue;
-        }
-        const bundle = await this.tryToDownload(challenge);
-        if (!await this.strategy.shouldResolveChallenge(bundle)) {
-          await this.addLog('Challenge resolution cancelled', challenge);
-          continue;
-        }
-        await this.tryToResolve(bundle, challenge);
-        await this.strategy.afterChallengeResolution(bundle);
-      } catch (err) {
-        await this.addLog(`Failed to resolve challenge: ${err.message || err}`, challenge, err.stack);
+      const successful = await this.tryWithChallenge(challenge);
+      if (successful) {
+        break;
       }
     }
-    await this.dataModelEngine.cleanupBundles();
   }
 
   async addLog(message, additionalFields, stacktrace) {
