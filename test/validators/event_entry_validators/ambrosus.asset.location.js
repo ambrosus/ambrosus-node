@@ -77,7 +77,7 @@ describe(`Event Entry Validator - 'ambrosus.asset.location'`, () => {
 
   it('throws if missing coordinate', async () => {
     const brokenEntry = put(validEntry, 'geoJson.coordinates', [0]);
-    const errorMessage = 'should NOT have less than 2 items';
+    const errorMessage = 'should NOT have fewer than 2 items';
     expectValidationError(brokenEntry, errorMessage);
   });
 

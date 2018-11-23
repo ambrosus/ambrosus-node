@@ -59,13 +59,13 @@ describe(`Event Entry Validator - 'ambrosus.event.identifiers'`, () => {
 
   it('throws when "identifiers" field is an empty object', () => {
     const brokenEntry = {type: 'ambrosus.event.identifiers', identifiers: {}};
-    const errorMessage = `should NOT have less than 1 properties`;
+    const errorMessage = `should NOT have fewer than 1 properties`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws when identifier is an empty array', () => {
     const brokenEntry = {type: 'ambrosus.event.identifiers', identifiers: {isbn: []}};
-    const errorMessage = 'should NOT have less than 1 items';
+    const errorMessage = 'should NOT have fewer than 1 items';
     expectValidationError(brokenEntry, errorMessage);
   });
 
