@@ -31,7 +31,6 @@ describe('Hermes Worker', () => {
       bundleId: '0xc0ffee'
     };
     mockDataModelEngine = {
-      rejectAllBundleCandidate: sinon.stub().resolves(),
       prepareBundleCandidate: sinon.stub().resolves(mockResult),
       rejectBundleCandidate: sinon.stub().resolves(),
       acceptBundleCandidate: sinon.stub().resolves(mockResult),
