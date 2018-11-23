@@ -69,6 +69,7 @@ export default class AtlasWorker extends PeriodicWorker {
         break;
       }
     }
+    this.failedChallengesCache.clearOutdatedChallenges();
   }
 
   async addLog(message, additionalFields, stacktrace) {

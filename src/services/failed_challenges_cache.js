@@ -27,4 +27,13 @@ export default class FailedChallengesCache {
     }
     return false;
   }
+
+  clearOutdatedChallenges() {
+    const challengeIds = Object.keys(this.failedChallengesEndTime);
+    for (const challengeId of challengeIds) {
+      if (this.failedChallengesEndTime[challengeId] <= getTimestamp()) {
+        delete this.failedChallengesEndTime[challengeId];
+      }
+    }
+  }
 }

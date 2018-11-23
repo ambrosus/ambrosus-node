@@ -45,8 +45,9 @@ describe('Atlas Worker', () => {
       resolveChallenge: sinon.stub()
     };
     failedChallengesMock = {
-      rememberFailedChallenge: sinon.stub(),
-      didChallengeFailRecently: sinon.stub().returns(false)
+      rememberFailedChallenge: sinon.spy(),
+      didChallengeFailRecently: sinon.stub().returns(false),
+      clearOutdatedChallenges: sinon.spy()
     };
     dataModelEngineMock = {
       downloadBundle: sinon.stub().resolves(fetchedBundle),
@@ -183,6 +184,11 @@ describe('Atlas Worker', () => {
         expect(tryWithChallengeMock).to.have.been.calledWith(challenge1);
         expect(tryWithChallengeMock).to.have.been.calledWith(challenge2);
         expect(tryWithChallengeMock).to.not.have.been.calledWith(challenge3);
+      });
+
+      it('clears outdated challenges', async () => {
+        await atlasWorker.periodicWork();
+        expect(failedChallengesMock.clearOutdatedChallenges).to.be.calledOnce;
       });
     });
   });

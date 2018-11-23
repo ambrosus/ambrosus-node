@@ -44,25 +44,37 @@ describe('Failed challenges cache', () => {
     });
   });
 
-  it('didChallengeFailRecently returns false when challenge is not saved as failed', () => {
-    expect(failedChallengesCache.didChallengeFailRecently(challengeId1)).to.be.false;
+  describe('didChallengeFailRecently', () => {
+    it('returns false when challenge is not saved as failed', () => {
+      expect(failedChallengesCache.didChallengeFailRecently(challengeId1)).to.be.false;
+    });
+
+    it('returns true when challenge has been saved as failed and ttl has not passed', async () => {
+      failedChallengesCache.rememberFailedChallenge(challengeId1, ttl);
+      expect(failedChallengesCache.didChallengeFailRecently(challengeId1)).to.be.true;
+    });
+
+    it('returns false when challenge has been saved as failed but ttl has passed', async () => {
+      failedChallengesCache.rememberFailedChallenge(challengeId1, ttl);
+      clock.tick(ttl * 1000);
+      expect(failedChallengesCache.didChallengeFailRecently(challengeId1)).to.be.false;
+    });
+
+    it('removes challenge from cache when ttl has passed', async () => {
+      failedChallengesCache.rememberFailedChallenge(challengeId1, ttl);
+      clock.tick(ttl * 1000);
+      failedChallengesCache.didChallengeFailRecently(challengeId1);
+      expect(failedChallengesCache.failedChallengesEndTime).to.deep.equal({});
+    });
   });
 
-  it('didChallengeFailRecently returns true when challenge has been saved as failed and ttl has not passed', async () => {
+  it('clearOutdatedChallenges removes all outdated challenges', async () => {
     failedChallengesCache.rememberFailedChallenge(challengeId1, ttl);
-    expect(failedChallengesCache.didChallengeFailRecently(challengeId1)).to.be.true;
-  });
-
-  it('didChallengeFailRecently returns false when challenge has been saved as failed but ttl has passed', async () => {
-    failedChallengesCache.rememberFailedChallenge(challengeId1, ttl);
+    failedChallengesCache.rememberFailedChallenge(challengeId2, ttl + 1);
     clock.tick(ttl * 1000);
-    expect(failedChallengesCache.didChallengeFailRecently(challengeId1)).to.be.false;
-  });
-
-  it('didChallengeFailRecently removes challenge from cache when ttl has passed', async () => {
-    failedChallengesCache.rememberFailedChallenge(challengeId1, ttl);
-    clock.tick(ttl * 1000);
-    failedChallengesCache.didChallengeFailRecently(challengeId1);
-    expect(failedChallengesCache.failedChallengesEndTime).to.deep.equal({});
+    failedChallengesCache.clearOutdatedChallenges();
+    expect(failedChallengesCache.failedChallengesEndTime).to.deep.equal({
+      [challengeId2]: now + ttl + 1
+    });
   });
 });
