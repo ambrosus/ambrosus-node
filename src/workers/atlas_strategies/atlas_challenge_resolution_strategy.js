@@ -13,6 +13,10 @@ export default class AtlasChallengeParticipationStrategy {
     return 5000;
   }
 
+  get retryTimeout() {
+    return 86400; // 1 day
+  }
+
   // eslint-disable-next-line no-unused-vars
   async shouldFetchBundle(challenge) {
     throw new Error('Should be implemented');
