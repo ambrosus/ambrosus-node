@@ -51,18 +51,18 @@ export default class AtlasWorker extends PeriodicWorker {
         await this.tryToResolve(bundle, challenge);
         await this.strategy.afterChallengeResolution(bundle);
       } catch (err) {
-        await this.addLog(`Failed to resolve challenge: ${err.message || err}`, challenge);
+        await this.addLog(`Failed to resolve challenge: ${err.message || err}`, challenge, err.stack);
       }
     }
     await this.dataModelEngine.cleanupBundles();
   }
 
-  async addLog(message, additionalFields) {
+  async addLog(message, additionalFields, stacktrace) {
     const log = {
       message,
       ...additionalFields
     };
-    this.logger.info(log);
+    this.logger.info({...log, stacktrace});
     await this.workerLogRepository.storeLog({timestamp: getTimestamp(), ...log});
   }
 }

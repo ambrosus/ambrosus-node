@@ -20,6 +20,7 @@ const {expect} = chai;
 
 describe('Https client', () => {
   let httpsClient;
+  const url = 'google.com';
 
   before(async () => {
     httpsClient = new HttpsClient();
@@ -27,22 +28,28 @@ describe('Https client', () => {
 
   describe('validate status code', () => {
     it('should resolve when status code 200 provided', async () => {
-      httpsClient.validateIncomingStatusCode(200);
+      httpsClient.validateIncomingStatusCode(200, url);
     });
     it('throws ValidationError when status code 400 provided', async () => {
       expect(() => httpsClient.validateIncomingStatusCode(400)).to.throw(ValidationError);
     });
     it('throws AuthenticationError when status code 401 provided', async () => {
-      expect(() => httpsClient.validateIncomingStatusCode(401)).to.throw(AuthenticationError);
+      expect(() => httpsClient.validateIncomingStatusCode(401, url)).to.throw(AuthenticationError)
+        .with.property('message', 'Authentication failed: Received code 401 at google.com');
     });
+
     it('throws PermissionError when status code 403 provided', async () => {
-      expect(() => httpsClient.validateIncomingStatusCode(403)).to.throw(PermissionError);
+      expect(() => httpsClient.validateIncomingStatusCode(403, url)).to.throw(PermissionError)
+        .with.property('message', 'Permission denied: Received code 403 at google.com');
     });
+
     it('throws NotFoundError when status code 404 provided', async () => {
-      expect(() => httpsClient.validateIncomingStatusCode(404)).to.throw(NotFoundError);
+      expect(() => httpsClient.validateIncomingStatusCode(404, url)).to.throw(NotFoundError)
+        .with.property('message', 'Not found: Received code 404 at google.com');
     });
+
     it('throws Error when unknown status code provided', async () => {
-      expect(() => httpsClient.validateIncomingStatusCode(500)).to.throw(Error);
+      expect(() => httpsClient.validateIncomingStatusCode(500, url)).to.throw(Error);
     });
   });
 });

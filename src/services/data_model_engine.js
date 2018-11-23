@@ -213,7 +213,7 @@ export default class DataModelEngine {
         await this.entityRepository.storeBundleProofMetadata(waitingBundle.bundleId, blockNumber, transactionHash);
         summary.ok.push(waitingBundle.bundleId);
       } catch (err) {
-        summary.failed[waitingBundle.bundleId] = err.message;
+        summary.failed[waitingBundle.bundleId] = err;
       }
     }
     return summary;
