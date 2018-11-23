@@ -61,7 +61,7 @@ describe('JsonSchemaValidator', () => {
       it('throws JsonValidationError when empty data', () => {
         expect(() => validator.validate({data: []}))
           .to.throw(JsonValidationError)
-          .with.nested.property('errors[0].message', 'should NOT have less than 1 items');
+          .with.nested.property('errors[0].message', 'should NOT have fewer than 1 items');
       });
 
       it('throws JsonValidationError when some entry in data is not object', async () => {
