@@ -1260,54 +1260,6 @@ describe('Data Model Engine', () => {
     });
   });
 
-  describe('Cleanup unnecessary bundles', () => {
-    const allBundles = ['bundle1', 'bundle2', 'bundle3'];
-    let mockEntityRepository;
-    let mockUploadRepository;
-    let modelEngine;
-
-    beforeEach(() => {
-      mockEntityRepository = {
-        getExpiredBundleIds: sinon.stub().resolves(allBundles),
-        deleteBundles: sinon.stub()
-      };
-
-      mockUploadRepository = {
-        isSheltering: sinon.stub().resolves(true)
-      };
-
-      modelEngine = new DataModelEngine({
-        entityRepository: mockEntityRepository,
-        uploadRepository: mockUploadRepository
-      });
-
-      sinon.stub(modelEngine, 'updateShelteringExpirationDate');
-    });
-
-    it('checks if is still sheltering for all bundles', async () => {
-      await modelEngine.cleanupBundles();
-      expect(mockEntityRepository.getExpiredBundleIds).to.be.calledOnce;
-      expect(mockUploadRepository.isSheltering).to.be.calledThrice;
-      expect(mockUploadRepository.isSheltering).to.be.calledWith('bundle1');
-      expect(mockUploadRepository.isSheltering).to.be.calledWith('bundle2');
-      expect(mockUploadRepository.isSheltering).to.be.calledWith('bundle3');
-    });
-
-    it('deletes not sheltered bundles and returns their ids', async () => {
-      mockUploadRepository.isSheltering.withArgs('bundle3').resolves(false);
-      expect(await modelEngine.cleanupBundles()).to.deep.equal(['bundle3']);
-      expect(mockEntityRepository.deleteBundles).to.be.calledOnceWith(['bundle3']);
-    });
-
-    it('updates expiration date on all bundles marked as expired but still sheltered', async () => {
-      mockUploadRepository.isSheltering.withArgs('bundle3').resolves(false);
-      await modelEngine.cleanupBundles();
-      expect(modelEngine.updateShelteringExpirationDate).to.be.calledTwice;
-      expect(modelEngine.updateShelteringExpirationDate).to.be.calledWith('bundle2');
-      expect(modelEngine.updateShelteringExpirationDate).to.be.calledWith('bundle1');
-    });
-  });
-
   describe('Getting worker logs', () => {
     let modelEngine;
     let mockWorkerLogRepository;

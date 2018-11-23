@@ -232,16 +232,6 @@ export default class DataModelEngine {
     await this.entityRepository.storeBundleShelteringExpirationDate(bundleId, expirationDate);
   }
 
-  async cleanupBundles() {
-    const expiredBundleIds = await this.entityRepository.getExpiredBundleIds();
-    const isSheltering = await Promise.all(expiredBundleIds.map((bundleId) => this.uploadRepository.isSheltering(bundleId)));
-    const toBeRemoved = expiredBundleIds.filter((bundleId, ind) => !isSheltering[ind]);
-    const toBeUpdated = expiredBundleIds.filter((bundleId, ind) => isSheltering[ind]);
-    await this.entityRepository.deleteBundles(toBeRemoved);
-    await Promise.all(toBeUpdated.map((bundleId) => this.updateShelteringExpirationDate(bundleId)));
-    return toBeRemoved;
-  }
-
   async getWorkerLogs(logsCount = 10) {
     return await this.workerLogRepository.getLogs(logsCount);
   }
