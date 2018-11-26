@@ -37,6 +37,7 @@ import RolesRepository, {Role} from './services/roles_repository';
 import UploadRepository from './services/upload_repository';
 import ChallengesRepository from './services/challenges_repository';
 import Migrator from './migrations/Migrator';
+import FailedChallengesCache from './services/failed_challenges_cache';
 
 class Builder {
   async ensureAdminAccountExist() {
@@ -101,6 +102,7 @@ class Builder {
     await this.workerLogRepository.initializeIndex();
     this.findEventQueryObjectFactory = new FindEventQueryObjectFactory(this.db);
     this.findAssetQueryObjectFactory = new FindAssetQueryObjectFactory(this.db);
+    this.failedChallengesCache = new FailedChallengesCache();
     this.httpsClient = new HttpsClient();
     this.entityDownloader = new EntityDownloader(this.httpsClient);
     this.accountRepository = new AccountRepository(this.db);

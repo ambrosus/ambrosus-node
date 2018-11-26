@@ -12,13 +12,14 @@ import AtlasChallengeParticipationStrategy from './atlas_strategies/atlas_challe
 import {getTimestamp} from '../utils/time_utils';
 
 export default class AtlasWorker extends PeriodicWorker {
-  constructor(web3, dataModelEngine, workerLogRepository, challengesRepository, strategy, logger) {
+  constructor(web3, dataModelEngine, workerLogRepository, challengesRepository, failedChallengesCache, strategy, logger) {
     super(strategy.workerInterval, logger);
     this.web3 = web3;
     this.dataModelEngine = dataModelEngine;
     this.strategy = strategy;
     this.workerLogRepository = workerLogRepository;
     this.challengesRepository = challengesRepository;
+    this.failedChallengesCache = failedChallengesCache;
     if (!(this.strategy instanceof AtlasChallengeParticipationStrategy)) {
       throw new Error('A valid strategy must be provided');
     }
@@ -37,6 +38,9 @@ export default class AtlasWorker extends PeriodicWorker {
 
   async tryWithChallenge(challenge) {
     try {
+      if (this.failedChallengesCache.didChallengeFailRecently(challenge.challengeId)) {
+        return false;
+      }
       if (!await this.strategy.shouldFetchBundle(challenge)) {
         await this.addLog('Decided not to download bundle', challenge);
         return false;
@@ -50,6 +54,7 @@ export default class AtlasWorker extends PeriodicWorker {
       await this.strategy.afterChallengeResolution(bundle);
       return true;
     } catch (err) {
+      this.failedChallengesCache.rememberFailedChallenge(challenge.challengeId, this.strategy.retryTimeout);
       await this.addLog(`Failed to resolve challenge: ${err.message || err}`, challenge, err.stack);
       return false;
     }
@@ -64,6 +69,7 @@ export default class AtlasWorker extends PeriodicWorker {
         break;
       }
     }
+    this.failedChallengesCache.clearOutdatedChallenges();
   }
 
   async addLog(message, additionalFields, stacktrace) {

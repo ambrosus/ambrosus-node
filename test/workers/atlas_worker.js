@@ -22,8 +22,10 @@ describe('Atlas Worker', () => {
   const defaultAccount = '0x123';
   const fetchedBundle = {bundleId: 'fetchedBundle'};
   const workerInterval = 10;
+  const retryTimeout = 14;
   let atlasWorker;
   let challengesRepositoryMock;
+  let failedChallengesMock;
   let dataModelEngineMock;
   let mockWorkerLogRepository;
   let strategyMock;
@@ -42,6 +44,11 @@ describe('Atlas Worker', () => {
       ongoingChallenges: sinon.stub(),
       resolveChallenge: sinon.stub()
     };
+    failedChallengesMock = {
+      rememberFailedChallenge: sinon.spy(),
+      didChallengeFailRecently: sinon.stub().returns(false),
+      clearOutdatedChallenges: sinon.spy()
+    };
     dataModelEngineMock = {
       downloadBundle: sinon.stub().resolves(fetchedBundle),
       cleanupBundles: sinon.spy(),
@@ -52,6 +59,7 @@ describe('Atlas Worker', () => {
     };
     strategyMock = new AtlasChallengeParticipationStrategy();
     sinon.stub(strategyMock, 'workerInterval').get(() => workerInterval);
+    sinon.stub(strategyMock, 'retryTimeout').get(() => retryTimeout);
     shouldFetchBundleStub = sinon.stub(strategyMock, 'shouldFetchBundle').resolves(true);
     shouldResolveChallengeStub = sinon.stub(strategyMock, 'shouldResolveChallenge').resolves(true);
     sinon.stub(strategyMock, 'afterChallengeResolution');
@@ -59,7 +67,7 @@ describe('Atlas Worker', () => {
       info: sinon.spy(),
       error: sinon.spy()
     };
-    atlasWorker = new AtlasWorker(mockWeb3, dataModelEngineMock, mockWorkerLogRepository, challengesRepositoryMock, strategyMock, loggerMock);
+    atlasWorker = new AtlasWorker(mockWeb3, dataModelEngineMock, mockWorkerLogRepository, challengesRepositoryMock, failedChallengesMock, strategyMock, loggerMock);
   });
 
   it('copies the work interval from the strategy', () => {
@@ -110,16 +118,25 @@ describe('Atlas Worker', () => {
         tryToResolveMock.restore();
       });
 
+      it('returns false if the challenge was previously marked as failing', async () => {
+        failedChallengesMock.didChallengeFailRecently.returns(true);
+        expect(await atlasWorker.tryWithChallenge(challenge1)).to.equal(false);
+        expect(failedChallengesMock.didChallengeFailRecently).to.be.calledOnceWith(challenge1.challengeId);
+        expect(tryToDownloadMock).to.not.have.been.called;
+      });
+
       it('returns false if the strategy disqualifies the challenge', async () => {
         shouldFetchBundleStub.resolves(false);
         expect(await atlasWorker.tryWithChallenge(challenge1)).to.equal(false);
         expect(tryToDownloadMock).to.not.have.been.called;
+        expect(failedChallengesMock.rememberFailedChallenge).to.not.have.been.called;
       });
 
-      it('returns false if an attempt to download the bundle fails', async () => {
+      it('returns false and marks challenge as failed if an attempt to download the bundle fails', async () => {
         tryToDownloadMock.rejects();
         expect(await atlasWorker.tryWithChallenge(challenge1)).to.equal(false);
         expect(tryToDownloadMock).to.have.been.calledWith(challenge1);
+        expect(failedChallengesMock.rememberFailedChallenge).to.be.calledOnceWith(challenge1.challengeId, retryTimeout);
       });
 
       it('returns false if the strategy disqualifies the challenge after downloaded the bundle', async () => {
@@ -127,12 +144,14 @@ describe('Atlas Worker', () => {
         expect(await atlasWorker.tryWithChallenge(challenge1)).to.equal(false);
         expect(shouldResolveChallengeStub).to.have.been.calledWith('bundle');
         expect(tryToResolveMock).to.not.have.been.called;
+        expect(failedChallengesMock.rememberFailedChallenge).to.not.have.been.called;
       });
 
-      it('returns false if the resolution attempt fails', async () => {
+      it('returns false and marks challenge as failed if the resolution attempt fails', async () => {
         tryToResolveMock.rejects();
         expect(await atlasWorker.tryWithChallenge(challenge1)).to.equal(false);
         expect(tryToResolveMock).to.have.been.calledWith(bundle, challenge1);
+        expect(failedChallengesMock.rememberFailedChallenge).to.be.calledOnceWith(challenge1.challengeId, retryTimeout);
       });
 
       it('returns true if everything goes ok', async () => {
@@ -143,6 +162,7 @@ describe('Atlas Worker', () => {
 
     describe('periodicWork', () => {
       let tryWithChallengeMock;
+
       beforeEach(() => {
         challengesRepositoryMock.ongoingChallenges.resolves(challenges);
         tryWithChallengeMock = sinon.stub(atlasWorker, 'tryWithChallenge');
@@ -164,6 +184,11 @@ describe('Atlas Worker', () => {
         expect(tryWithChallengeMock).to.have.been.calledWith(challenge1);
         expect(tryWithChallengeMock).to.have.been.calledWith(challenge2);
         expect(tryWithChallengeMock).to.not.have.been.calledWith(challenge3);
+      });
+
+      it('clears outdated challenges', async () => {
+        await atlasWorker.periodicWork();
+        expect(failedChallengesMock.clearOutdatedChallenges).to.be.calledOnce;
       });
     });
   });
