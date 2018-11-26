@@ -34,7 +34,7 @@ Run linter:
 yarn dev:lint
 ```
 
-## Building an clean-up
+## Building and clean-up
 Building consists of transpiling the source code. It is performed by running:
 ```sh
 yarn build
