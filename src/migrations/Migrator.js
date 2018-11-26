@@ -11,8 +11,9 @@ import path from 'path';
 import fs from 'fs';
 
 class Migrator {
-  constructor(db, directory = path.dirname(__filename)) {
+  constructor(db, config, directory = path.dirname(__filename)) {
     this.db = db;
+    this.config = config;
     this.directory = directory;
   }
 
@@ -43,7 +44,7 @@ class Migrator {
     if (version > getCurrentVersion) {
       logger.info(`Migrating: ${path.basename(fullPath)}`);
       const imported = require(fullPath);
-      await imported.up(this.db, logger);
+      await imported.up(this.db, this.config, logger);
       await this.db.collection('migrations').findOneAndReplace({}, {version});
     } else {
       logger.info(`Ignoring migration: ${path.basename(fullPath)}`);

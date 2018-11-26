@@ -9,7 +9,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import PeriodicWorker from './periodic_worker';
 import HermesUploadStrategy from './hermes_strategies/upload_strategy';
-import {getTimestamp} from '../utils/time_utils';
 
 
 export default class HermesWorker extends PeriodicWorker {
@@ -61,6 +60,6 @@ export default class HermesWorker extends PeriodicWorker {
       ...additionalFields
     };
     this.logger.info({...log, stacktrace});
-    await this.workerLogRepository.storeLog({timestamp: getTimestamp(), ...log});
+    await this.workerLogRepository.storeLog({timestamp: new Date(), ...log});
   }
 }

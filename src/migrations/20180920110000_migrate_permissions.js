@@ -7,7 +7,8 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-export const up = async (db, logger) => {
+// eslint-disable-next-line import/prefer-default-export
+export const up = async (db, config, logger) => {
   const registerCount = (await db.collection('accounts').updateMany(
     {permissions: 'register_account'},
     {
