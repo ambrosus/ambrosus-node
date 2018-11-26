@@ -63,7 +63,7 @@ class Builder {
     this.db = db;
     this.client = client;
     this.web3 = web3 || await createWeb3(this.config);
-    this.migrator = new Migrator(db);
+    this.migrator = new Migrator(db, this.config);
     this.identityManager = new IdentityManager(this.web3);
     const {headContractAddress} = this.config;
 
@@ -98,7 +98,7 @@ class Builder {
     this.entityBuilder = new EntityBuilder(this.identityManager, maximumEntityTimestampOvertake);
     this.entityRepository = new EntityRepository(this.db);
     await this.entityRepository.initializeIndexes();
-    this.workerLogRepository = new WorkerLogRepository(this.db);
+    this.workerLogRepository = new WorkerLogRepository(this.db, this.config);
     await this.workerLogRepository.initializeIndex();
     this.findEventQueryObjectFactory = new FindEventQueryObjectFactory(this.db);
     this.findAssetQueryObjectFactory = new FindAssetQueryObjectFactory(this.db);

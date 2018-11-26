@@ -9,15 +9,21 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 
 export default class WorkerLogRepository {
-  constructor(db) {
+  constructor(db, config) {
     this.db = db;
+    this.config = config;
     this.blacklistedFields = {
       _id: 0
     };
   }
 
   async initializeIndex() {
-    await this.db.collection('workerLogs').ensureIndex({timestamp : -1});
+    await this.db.createCollection('workerLogs');
+    if ((await this.db.collection('workerLogs').indexes()).length > 1) {
+      // There exists other index besides _id
+      await this.db.collection('workerLogs').dropIndexes();
+    }
+    await this.db.collection('workerLogs').createIndex({timestamp: -1}, {expireAfterSeconds: this.config.workerLogsTTLInSeconds});
   }
 
   async storeLog(log) {

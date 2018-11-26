@@ -44,5 +44,7 @@ module.exports = Object.freeze({
 
   docsLink: process.env.DOCS_LINK || 'https://dev.ambrosus.com/',
 
-  requestSizeLimit: process.env.REQUEST_SIZE_LIMIT || '1mb'
+  requestSizeLimit: process.env.REQUEST_SIZE_LIMIT || '1mb',
+
+  workerLogsTTLInSeconds: process.env.WORKER_LOGS_TTL || 172800 // 2 days
 });

@@ -15,7 +15,7 @@ import {WinstonExpressLogger} from '../utils/loggers';
 const init = async (logger) => {
   try {
     const {client, db} = await connectToMongo(config);
-    await new Migrator(db).migrate(logger);
+    await new Migrator(db, config).migrate(logger);
     await client.close();
   } catch (err) {
     logger.error(err);

@@ -9,7 +9,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import PeriodicWorker from './periodic_worker';
 import AtlasChallengeParticipationStrategy from './atlas_strategies/atlas_challenge_resolution_strategy';
-import {getTimestamp} from '../utils/time_utils';
 
 export default class AtlasWorker extends PeriodicWorker {
   constructor(web3, dataModelEngine, workerLogRepository, challengesRepository, failedChallengesCache, strategy, logger) {
@@ -78,6 +77,6 @@ export default class AtlasWorker extends PeriodicWorker {
       ...additionalFields
     };
     this.logger.info({...log, stacktrace});
-    await this.workerLogRepository.storeLog({timestamp: getTimestamp(), ...log});
+    await this.workerLogRepository.storeLog({timestamp: new Date(), ...log});
   }
 }
