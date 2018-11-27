@@ -30,10 +30,6 @@ describe('Worker Log Repository', () => {
     storage = new WorkerTaskTrackingRepository(db);
   });
 
-  beforeEach(async () => {
-    await storage.initializeIndex();
-  });
-
   afterEach(async () => {
     await cleanDatabase(db);
   });

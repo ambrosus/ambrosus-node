@@ -13,10 +13,6 @@ export default class WorkerTaskTrackingRepository {
     this.db = db;
   }
 
-  async initializeIndex() {
-    await this.db.collection('workerTasks').ensureIndex({workType : 1}, {unique: true});
-  }
-
   async tryToBeginWork(workType) {
     try {
       const {insertedId} = await this.db.collection('workerTasks').insertOne({workType});
