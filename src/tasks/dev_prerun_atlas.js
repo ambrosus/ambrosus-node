@@ -14,18 +14,18 @@ import devConfig from '../../config/devConfig';
 import {addToKycWhitelist, onboardAsAtlas, registerAdminAccount} from '../utils/prerun';
 import {Role} from '../services/roles_repository';
 
-async function setupDevelopment(web3, dataModelEngine, kycWhitelistWrapper, logger) {
+async function setupDevelopment(dataModelEngine, kycWhitelistWrapper, logger) {
   await registerAdminAccount(dataModelEngine, logger);
   await addToKycWhitelist(Role.ATLAS, devConfig.defaultStake, dataModelEngine, kycWhitelistWrapper, logger);
-  await onboardAsAtlas(web3, dataModelEngine.rolesRepository, logger);
+  await onboardAsAtlas(dataModelEngine, dataModelEngine.rolesRepository, logger);
 }
 
 const builder = new Builder();
 const logger = new WinstonConsoleLogger();
 
 builder.build(config)
-  .then(async ({client, web3, dataModelEngine, kycWhitelistWrapper}) => {
-    await setupDevelopment(web3, dataModelEngine, kycWhitelistWrapper, logger);
+  .then(async ({client, dataModelEngine, kycWhitelistWrapper}) => {
+    await setupDevelopment(dataModelEngine, kycWhitelistWrapper, logger);
     await client.close();
   })
   .catch((exception) => {

@@ -8,18 +8,17 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import config from '../../config/config';
-import {getDefaultAddress} from './web3_tools';
 
-export async function onboardAsAtlas(web3, rolesRepository, logger) {
+export async function onboardAsAtlas(dataModelEngine, rolesRepository, logger) {
   logger.info(`Onboarding node as ATLAS with stake of 10000 AMB`);
-  const address = getDefaultAddress(web3);
+  const address = dataModelEngine.identityManager.nodeAddress();
   const url = `localhost:${config.serverPort}`;
   await rolesRepository.onboardAsAtlas(address, url);
 }
 
-export async function onboardAsHermes(web3, rolesRepository, logger) {
+export async function onboardAsHermes(dataModelEngine, rolesRepository, logger) {
   logger.info(`Onboarding node as HERMES`);
-  const address = getDefaultAddress(web3);
+  const address = dataModelEngine.identityManager.nodeAddress();
   const url = `localhost:${config.serverPort}`;
   await rolesRepository.onboardAsHermes(address, url);
 }

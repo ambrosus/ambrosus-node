@@ -34,7 +34,7 @@ Run linter:
 yarn dev:lint
 ```
 
-## Building an clean-up
+## Building and clean-up
 Building consists of transpiling the source code. It is performed by running:
 ```sh
 yarn build
@@ -53,26 +53,34 @@ Start the MongoDB container
 yarn dev:docker:db
 ```
 
-Start a ethereum client of your choice. For example the provided parity (in dev mode) container.
+Start an ethereum client of your choice. For example, the provided parity container (in dev mode).
 ```sh
 yarn dev:docker:parity
 ```
 
-Set `WEB3_NODEPRIVATEKEY` in `dev.env` to a private key with a positive balance. 
+Set `WEB3_NODEPRIVATEKEY` and `WEB3_DEPLOYER_PRIVATEKEY`a in `dev.env` to a private key with 
+a positive balance. 
+
+If you're using provided parity from container, the private key in `dev.env` should already match a dev account.
 
 Run the contract deployment task:
 ```sh
 yarn dev:deploy
 ```
 
-Update `HEAD_CONTRACT_ADDRESS` in `dev.env` to match the address given from `yarn dev:deploy`.
+Update `HEAD_CONTRACT_ADDRESS` in `dev.env` to match the address returned from `yarn dev:deploy`.
 
 Run the system pre-run task:
 ```sh
-yarn dev:prerun
+yarn dev:prerun:hermes
 ```
+or
+```sh
+yarn dev:prerun:atlas
+```
+to match your desired type of node: hermes or atlas.
 
-Finaly run on of the workers you are interested in:
+Finally, run one of the workers you are interested in:
 ```sh
 yarn dev:start:server
 ```
