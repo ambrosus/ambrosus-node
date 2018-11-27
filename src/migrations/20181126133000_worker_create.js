@@ -8,8 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 // eslint-disable-next-line import/prefer-default-export
-export const up = async (db, {workerLogsTTLInSeconds}, logger) => {
-  await db.collection('workerLogs').drop();
-  await db.collection('workerLogs').createIndex({timestamp: -1}, {expireAfterSeconds: workerLogsTTLInSeconds});
-  logger.info(`Added index to worker logs with TTL=${workerLogsTTLInSeconds}`);
+export const up = async (db, config, logger) => {
+  await db.createCollection('workerLogs');
+  logger.info(`Created workerLogs collection`);
 };
