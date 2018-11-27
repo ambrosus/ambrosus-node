@@ -23,7 +23,9 @@ const builder = new Builder();
 const logger = new WinstonConsoleLogger();
 
 builder.build(config)
-  .then(async ({client, web3, dataModelEngine, kycWhitelistWrapper}) => {
+  .then(async ({client, web3, dataModelEngine, kycWhitelistWrapper}) =>
+  {
+    console.log(`here web3 is ${web3}`);
     await setupDevelopment(web3, dataModelEngine, kycWhitelistWrapper, logger);
     await client.close();
   })

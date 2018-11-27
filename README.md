@@ -53,7 +53,7 @@ Start the MongoDB container
 yarn dev:docker:db
 ```
 
-Start a ethereum client of your choice. For example the provided parity (in dev mode) container.
+Start an ethereum client of your choice. For example, the provided parity container (in dev mode).
 ```sh
 yarn dev:docker:parity
 ```
@@ -65,14 +65,15 @@ Run the contract deployment task:
 yarn dev:deploy
 ```
 
-Update `HEAD_CONTRACT_ADDRESS` in `dev.env` to match the address given from `yarn dev:deploy`.
+Update `HEAD_CONTRACT_ADDRESS` in `dev.env` to match the address returned from `yarn dev:deploy`.
 
 Run the system pre-run task:
 ```sh
-yarn dev:prerun
+yarn dev:prerun:[node-type]
 ```
+where [node-type] is your desired type of node: hermes or atlas.
 
-Finaly run on of the workers you are interested in:
+Finally, run one of the workers you are interested in:
 ```sh
 yarn dev:start:server
 ```
