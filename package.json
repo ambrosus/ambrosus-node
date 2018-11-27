@@ -21,7 +21,7 @@
     "dev:start:hermes": "source ./dev.env && nodemon --watch src --exec babel-node --inspect src/start_hermes.js",
     "dev:start:server": "source ./dev.env && nodemon --watch src --exec babel-node --inspect src/start_server.js",
     "dev:lint": "eslint src test config",
-    "dev:docker:db": "docker-compose up -d db && source ./dev.env && yarn migrate",
+    "dev:docker:db": "docker-compose up -d db",
     "dev:docker:parity": "docker-compose up -d parity"
   },
   "engines": {
