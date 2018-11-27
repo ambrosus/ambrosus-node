@@ -21,13 +21,11 @@ describe('Worker Log Repository', () => {
   let db;
   let client;
   let storage;
-  const workerLogsTTLInSeconds = 60;
   const exampleLog = {foo: 'bar', timestamp: '1234'};
 
   before(async () => {
     ({db, client} = await connectToMongo(config));
-    storage = new WorkerLogRepository(db, {workerLogsTTLInSeconds});
-    await storage.initializeIndex();
+    storage = new WorkerLogRepository(db);
   });
 
   afterEach(async () => {
@@ -54,15 +52,8 @@ describe('Worker Log Repository', () => {
     expect((await storage.getLogs(3)).length).to.be.equal(3);
   });
 
-  it('calling initializeIndex does not remove data from collection', async () => {
-    await storage.storeLog(exampleLog);
-    await storage.storeLog(exampleLog);
-    await storage.initializeIndex();
-    expect((await storage.getLogs(3)).length).to.be.equal(2);
-  });
-
   it('creates index with correct ttl', async () => {
     await storage.storeLog(exampleLog);
-    expect((await db.collection('workerLogs').indexes())[1].expireAfterSeconds).to.equal(workerLogsTTLInSeconds);
+    expect((await db.collection('workerLogs').indexes())[1].expireAfterSeconds).to.equal(config.workerLogsTTLInSeconds);
   });
 });

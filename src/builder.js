@@ -97,9 +97,7 @@ class Builder {
     const {maximumEntityTimestampOvertake} = this.config;
     this.entityBuilder = new EntityBuilder(this.identityManager, maximumEntityTimestampOvertake);
     this.entityRepository = new EntityRepository(this.db);
-    await this.entityRepository.initializeIndexes();
-    this.workerLogRepository = new WorkerLogRepository(this.db, this.config);
-    await this.workerLogRepository.initializeIndex();
+    this.workerLogRepository = new WorkerLogRepository(this.db);
     this.findEventQueryObjectFactory = new FindEventQueryObjectFactory(this.db);
     this.findAssetQueryObjectFactory = new FindAssetQueryObjectFactory(this.db);
     this.failedChallengesCache = new FailedChallengesCache();

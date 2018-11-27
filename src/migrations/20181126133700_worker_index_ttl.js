@@ -12,5 +12,4 @@ export const up = async (db, {workerLogsTTLInSeconds}, logger) => {
   await db.collection('workerLogs').drop();
   await db.collection('workerLogs').createIndex({timestamp: -1}, {expireAfterSeconds: workerLogsTTLInSeconds});
   logger.info(`Added index to worker logs with TTL=${workerLogsTTLInSeconds}`);
-}
-;
+};
