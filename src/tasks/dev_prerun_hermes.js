@@ -13,20 +13,18 @@ import config from '../../config/config';
 import {addToKycWhitelist, onboardAsHermes, registerAdminAccount} from '../utils/prerun';
 import {Role} from '../services/roles_repository';
 
-async function setupDevelopment(web3, dataModelEngine, kycWhitelistWrapper, logger) {
+async function setupDevelopment(dataModelEngine, kycWhitelistWrapper, logger) {
   await registerAdminAccount(dataModelEngine, logger);
   await addToKycWhitelist(Role.HERMES, '0', dataModelEngine, kycWhitelistWrapper, logger);
-  await onboardAsHermes(web3, dataModelEngine.rolesRepository, logger);
+  await onboardAsHermes(dataModelEngine, dataModelEngine.rolesRepository, logger);
 }
 
 const builder = new Builder();
 const logger = new WinstonConsoleLogger();
 
 builder.build(config)
-  .then(async ({client, web3, dataModelEngine, kycWhitelistWrapper}) =>
-  {
-    console.log(`here web3 is ${web3}`);
-    await setupDevelopment(web3, dataModelEngine, kycWhitelistWrapper, logger);
+  .then(async ({client, dataModelEngine, kycWhitelistWrapper}) => {
+    await setupDevelopment(dataModelEngine, kycWhitelistWrapper, logger);
     await client.close();
   })
   .catch((exception) => {

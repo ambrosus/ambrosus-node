@@ -58,7 +58,10 @@ Start an ethereum client of your choice. For example, the provided parity contai
 yarn dev:docker:parity
 ```
 
-Set `WEB3_NODEPRIVATEKEY` in `dev.env` to a private key with a positive balance. 
+Set `WEB3_NODEPRIVATEKEY` and `WEB3_DEPLOYER_PRIVATEKEY`a in `dev.env` to a private key with 
+a positive balance. 
+
+If you're using provided parity from container, the private key in `dev.env` should already match a dev account.
 
 Run the contract deployment task:
 ```sh
@@ -69,9 +72,13 @@ Update `HEAD_CONTRACT_ADDRESS` in `dev.env` to match the address returned from `
 
 Run the system pre-run task:
 ```sh
-yarn dev:prerun:[node-type]
+yarn dev:prerun:hermes
 ```
-where [node-type] is your desired type of node: hermes or atlas.
+or
+```sh
+yarn dev:prerun:atlas
+```
+to match your desired type of node: hermes or atlas.
 
 Finally, run one of the workers you are interested in:
 ```sh

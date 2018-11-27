@@ -122,7 +122,7 @@ class Builder {
       rolesRepository: this.rolesRepository,
       workerLogRepository: this.workerLogRepository
     });
-    return {dataModelEngine: this.dataModelEngine, client: this.client, kycWhitelistWrapper: this.kycWhitelistWrapper, web3: this.web3};
+    return {dataModelEngine: this.dataModelEngine, client: this.client, kycWhitelistWrapper: this.kycWhitelistWrapper};
   }
 }
 
