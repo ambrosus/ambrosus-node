@@ -123,4 +123,13 @@ describe('Bundles - Integrations', () => {
         .and.have.property('status', 404);
     });
   });
+
+  describe('getting bundle metadata', () => {
+    it('works for existing bundle', async () => {
+      const response = await apparatus.request()
+        .get(`/bundle/${res.bundleId}/info`);
+
+      expect(response.body).to.have.keys(['proofBlock', 'bundleTransactionHash', 'bundleUploadTimestamp', 'storagePeriods']);
+    });
+  });
 });
