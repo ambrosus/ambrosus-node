@@ -102,16 +102,18 @@ describe('Entity Repository', () => {
     it('db round trip works', async () => {
       const exampleBundleId = '0xabcdef';
       const exampleBundle = put(createBundle(), 'bundleId', exampleBundleId);
-      const exampleBundleWithMetadata = put(exampleBundle, {
-        'metadata.proofBlock': 10,
-        'metadata.bundleTransactionHash': txHash,
-        'metadata.bundleUploadTimestamp': 5,
-        'metadata.storagePeriods': storagePeriods
-      });
       await storage.storeBundle(exampleBundle, storagePeriods);
-      await expect(storage.getBundle(exampleBundleId)).to.eventually.deep.equal(put(exampleBundle, 'metadata.storagePeriods', storagePeriods));
+      await expect(storage.getBundle(exampleBundleId)).to.eventually.deep.equal(exampleBundle);
+      await expect(storage.getBundleMetadata(exampleBundleId)).to.eventually.deep.equal({bundleId: exampleBundleId, storagePeriods});
       await storage.storeBundleProofMetadata(exampleBundleId, 10, txHash);
-      await expect(storage.getBundle(exampleBundleId)).to.eventually.deep.equal(exampleBundleWithMetadata);
+      await expect(storage.getBundle(exampleBundleId), 'bundle after proof').to.eventually.deep.equal(exampleBundle);
+      await expect(storage.getBundleMetadata(exampleBundleId), 'bundle metadata after proof').to.eventually.deep.equal({
+        bundleId: exampleBundleId,
+        proofBlock: 10,
+        bundleTransactionHash: txHash,
+        bundleUploadTimestamp: 5,
+        storagePeriods
+      });
     });
 
     it('returns null for non-existing bundle', async () => {
@@ -280,7 +282,7 @@ describe('Entity Repository', () => {
     });
 
     it('considers only assets and events without a bundle', () => {
-      expect(ret.assets).to.deep.equal(nonBundledAssets);
+      expect(ret.assets).to.have.deep.members(nonBundledAssets);
       expect(ret.events).to.deep.equal([nonBundledEvents[1]]);
     });
 

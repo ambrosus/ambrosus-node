@@ -173,12 +173,20 @@ export default class DataModelEngine {
     if (bundle === null) {
       throw new NotFoundError(`No bundle with id = ${bundleId} found`);
     }
-    return bundle;
+    let metadata = await this.entityRepository.getBundleMetadata(bundleId);
+    if (metadata === null) {
+      return bundle;
+    }
+    metadata = pick(metadata, 'bundleId');
+    return {...bundle, metadata};
   }
 
   async getBundleMetadata(bundleId) {
-    const {metadata} = await this.getBundle(bundleId);
-    return {...metadata, bundleId};
+    const metadata = await this.entityRepository.getBundleMetadata(bundleId);
+    if (metadata === null) {
+      throw new NotFoundError(`No bundle metadata for bundleId = ${bundleId} found`);
+    }
+    return metadata;
   }
 
   async prepareBundleCandidate(bundleStubId) {
@@ -210,7 +218,7 @@ export default class DataModelEngine {
     };
     for (const waitingBundle of waitingBundles) {
       try {
-        const {blockNumber, transactionHash} = await this.uploadRepository.uploadBundle(waitingBundle.bundleId, waitingBundle.metadata.storagePeriods);
+        const {blockNumber, transactionHash} = await this.uploadRepository.uploadBundle(waitingBundle.bundleId, waitingBundle.storagePeriods);
         await this.entityRepository.storeBundleProofMetadata(waitingBundle.bundleId, blockNumber, transactionHash);
         summary.ok.push(waitingBundle.bundleId);
       } catch (err) {

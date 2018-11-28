@@ -177,17 +177,18 @@ export default class EntityRepository {
   }
 
   async storeBundle(bundle, storagePeriods) {
-    await this.db.collection('bundles').insertOne({metadata: {storagePeriods}, ...bundle});
+    await this.db.collection('bundles').insertOne({...bundle});
+    await this.db.collection('bundle_metadata').insertOne({bundleId: bundle.bundleId, storagePeriods});
   }
 
   async storeBundleProofMetadata(bundleId, proofBlock, txHash) {
     const currentTimestamp = getTimestamp();
 
-    await this.db.collection('bundles').updateOne({bundleId}, {
+    await this.db.collection('bundle_metadata').updateOne({bundleId}, {
       $set: {
-        'metadata.bundleTransactionHash': txHash,
-        'metadata.proofBlock': proofBlock,
-        'metadata.bundleUploadTimestamp': currentTimestamp
+        bundleTransactionHash: txHash,
+        proofBlock,
+        bundleUploadTimestamp: currentTimestamp
       }
     });
 
@@ -215,8 +216,8 @@ export default class EntityRepository {
   }
 
   async findBundlesWaitingForUpload() {
-    return this.db.collection('bundles')
-      .find({'metadata.proofBlock': {$exists: false}})
+    return await this.db.collection('bundle_metadata')
+      .find({proofBlock: {$exists: false}})
       .toArray();
   }
 
@@ -234,6 +235,10 @@ export default class EntityRepository {
 
   async getBundle(bundleId) {
     return await this.db.collection('bundles').findOne({bundleId}, {fields: this.blacklistedFields});
+  }
+
+  async getBundleMetadata(bundleId) {
+    return await this.db.collection('bundle_metadata').findOne({bundleId}, {fields: this.blacklistedFields});
   }
 
   async deleteBundles(bundleIds) {

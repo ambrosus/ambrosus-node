@@ -876,10 +876,12 @@ describe('Data Model Engine', () => {
 
     before(async () => {
       mockEntityRepository = {
-        getBundle: sinon.stub()
+        getBundle: sinon.stub(),
+        getBundleMetadata: sinon.stub()
       };
 
       mockEntityRepository.getBundle.resolves(exampleBundle);
+      mockEntityRepository.getBundleMetadata.resolves(null);
 
       modelEngine = new DataModelEngine({
         entityBuilder: mockEntityBuilder,
@@ -1111,15 +1113,11 @@ describe('Data Model Engine', () => {
         findBundlesWaitingForUpload: sinon.stub().resolves([
           {
             bundleId: 'bundle1',
-            metadata: {
-              storagePeriods: 2
-            }
+            storagePeriods: 2
           },
           {
             bundleId: 'bundle3',
-            metadata: {
-              storagePeriods: 6
-            }
+            storagePeriods: 6
           }
         ]),
         storeBundleProofMetadata: sinon.stub()
