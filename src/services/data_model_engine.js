@@ -176,6 +176,11 @@ export default class DataModelEngine {
     return bundle;
   }
 
+  async getBundleMetadata(bundleId) {
+    const {metadata} = await this.getBundle(bundleId);
+    return {...metadata, bundleId};
+  }
+
   async prepareBundleCandidate(bundleStubId) {
     const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
     const notBundled = await this.entityRepository.fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit);
