@@ -123,4 +123,20 @@ describe('Bundles - Integrations', () => {
         .and.have.property('status', 404);
     });
   });
+
+  describe('getting bundle metadata', () => {
+    it('works for existing bundle', async () => {
+      const response = await apparatus.request()
+        .get(`/bundle/${res.bundleId}/info`);
+
+      expect(response.body).to.have.keys(['bundleId', 'proofBlock', 'bundleTransactionHash', 'bundleUploadTimestamp', 'storagePeriods']);
+    });
+
+    it('return 404 if bundle with requested id does not exist', async () => {
+      const request = apparatus.request()
+        .get(`/bundle/nonexistingBundle/info`);
+      await expect(request).to.eventually.be.rejected
+        .and.have.property('status', 404);
+    });
+  });
 });

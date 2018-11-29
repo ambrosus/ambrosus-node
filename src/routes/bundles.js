@@ -17,10 +17,20 @@ export const getBundleHandler = (modelEngine) => async (req, res) => {
     .send(JSON.stringify(result));
 };
 
+export const getBundleMetadataHandler = (modelEngine) => async (req, res) => {
+  const result = await modelEngine.getBundleMetadata(req.params.bundleId);
+  res.status(200)
+    .type('json')
+    .send(JSON.stringify(result));
+};
+
 const bundlesRouter = (modelEngine) => {
   const router = new express.Router();
   router.get('/:bundleId',
     asyncMiddleware(getBundleHandler(modelEngine))
+  );
+  router.get('/:bundleId/info',
+    asyncMiddleware(getBundleMetadataHandler(modelEngine))
   );
   return router;
 };
