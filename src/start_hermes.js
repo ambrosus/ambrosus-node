@@ -26,6 +26,7 @@ async function start(logger) {
   const worker = new HermesWorker(
     builder.dataModelEngine,
     builder.workerLogRepository,
+    builder.workerTaskTrackingRepository,
     strategy,
     logger,
     builder.client,

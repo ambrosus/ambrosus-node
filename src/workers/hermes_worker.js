@@ -13,11 +13,10 @@ import healthCheckHandler from '../routes/health_check';
 import PeriodicWorker from './periodic_worker';
 import HermesUploadStrategy from './hermes_strategies/upload_strategy';
 
+const HERMES_BUNDLING_WORK_NAME = 'HermesBundling';
+
 export default class HermesWorker extends PeriodicWorker {
-  constructor(
-    dataModelEngine,
-    workerLogRepository,
-    strategy,
+  constructor(dataModelEngine, workerLogRepository, workerTaskTrackingRepository, strategy,
     logger,
     mongoClient,
     serverPort
@@ -25,8 +24,10 @@ export default class HermesWorker extends PeriodicWorker {
     super(strategy.workerInterval, logger);
     this.dataModelEngine = dataModelEngine;
     this.bundleSequenceNumber = 0;
+    this.workerTaskTrackingRepository = workerTaskTrackingRepository;
     this.strategy = strategy;
     this.workerLogRepository = workerLogRepository;
+    this.workId = null;
     this.mongoClient = mongoClient;
     this.expressApp = express();
     this.serverPort = serverPort;
@@ -40,8 +41,13 @@ export default class HermesWorker extends PeriodicWorker {
   }
 
   async periodicWork() {
-    await this.bundleCandidates();
-    await this.uploadWaitingCandidates();
+    this.workId = await this.workerTaskTrackingRepository.tryToBeginWork(HERMES_BUNDLING_WORK_NAME);
+    try {
+      await this.bundleCandidates();
+      await this.uploadWaitingCandidates();
+    } finally {
+      await this.workerTaskTrackingRepository.finishWork(this.workId);
+    }
   }
 
   async bundleCandidates() {
@@ -84,7 +90,11 @@ export default class HermesWorker extends PeriodicWorker {
   }
 
   async afterWorkLoop() {
-    await this.server.close();
-    await this.mongoClient.close();
+    try {
+      await this.workerTaskTrackingRepository.finishWork(this.workId);
+    } finally {
+      await this.server.close();
+      await this.mongoClient.close();
+    }
   }
 }

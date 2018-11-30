@@ -21,7 +21,7 @@ export default class WorkerTaskTrackingRepository {
       if (error.message.includes(`duplicate key error`)) {
         throw new Error('Work of this type is currently in progress');
       }
-      throw new Error(error);
+      throw error;
     }
   }
 
