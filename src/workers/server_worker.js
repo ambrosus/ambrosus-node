@@ -43,7 +43,7 @@ export default class ServerWorker extends Worker {
     Sentry.init({
       dsn: this.config.sentryDSN,
       environment: process.env.NODE_ENV,
-      ignoreErrors: this.config.sentryIgnoreRegex ? new RegExp(this.config.sentryIgnoreRegex): [],
+      ignoreErrors: this.config.sentryIgnoreRegex ? new RegExp(this.config.sentryIgnoreRegex) : []
     });
 
     this.collectMetricsInterval = promClient.collectDefaultMetrics({timeout: 10000});
