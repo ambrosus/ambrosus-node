@@ -119,6 +119,7 @@ describe('Entity Repository', () => {
     it('returns null for non-existing bundle', async () => {
       const otherBundleId = '0x33333';
       await expect(storage.getBundle(otherBundleId)).to.eventually.be.equal(null);
+      await expect(storage.getBundleMetadata(otherBundleId)).to.eventually.be.equal(null);
     });
 
     describe('discardEntitiesForBundling', () => {

@@ -891,8 +891,9 @@ describe('Data Model Engine', () => {
       ret = await expect(modelEngine.getBundle(exampleBundleId)).to.fulfilled;
     });
 
-    it('asks the entity repository for the bundle', async () => {
+    it('asks the entity repository for the bundle and bundle metadata', async () => {
       expect(mockEntityRepository.getBundle).to.have.been.calledWith(exampleBundleId);
+      expect(mockEntityRepository.getBundleMetadata).to.have.been.calledWith(exampleBundleId);
     });
 
     it('properly assembles the result', () => {
@@ -902,6 +903,49 @@ describe('Data Model Engine', () => {
     it('throws NotFoundError when bundle with requested id does not exist', async () => {
       mockEntityRepository.getBundle.resolves(null);
       await expect(modelEngine.getBundle(exampleBundleId)).to.be.rejectedWith(NotFoundError);
+    });
+  });
+
+
+  describe('Getting a bundle metadata by id', () => {
+    let mockEntityRepository;
+    let mockEntityBuilder;
+    let modelEngine;
+
+    let ret;
+
+    const exampleBundleId = '0xabcdef';
+    const exampleBundleMetadata = {
+      bundleId: exampleBundleId,
+      storagePeriods: 2
+    };
+
+    before(async () => {
+      mockEntityRepository = {
+        getBundleMetadata: sinon.stub()
+      };
+
+      mockEntityRepository.getBundleMetadata.resolves(exampleBundleMetadata);
+
+      modelEngine = new DataModelEngine({
+        entityBuilder: mockEntityBuilder,
+        entityRepository: mockEntityRepository
+      });
+
+      ret = await expect(modelEngine.getBundleMetadata(exampleBundleId)).to.fulfilled;
+    });
+
+    it('asks the entity repository for bundle metadata', async () => {
+      expect(mockEntityRepository.getBundleMetadata).to.have.been.calledWith(exampleBundleId);
+    });
+
+    it('properly assembles the result', () => {
+      expect(ret).to.equal(exampleBundleMetadata);
+    });
+
+    it('throws NotFoundError when bundle with requested id does not exist', async () => {
+      mockEntityRepository.getBundleMetadata.resolves(null);
+      await expect(modelEngine.getBundleMetadata(exampleBundleId)).to.be.rejectedWith(NotFoundError);
     });
   });
 
