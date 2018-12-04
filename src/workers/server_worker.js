@@ -49,6 +49,7 @@ export default class ServerWorker extends Worker {
     this.collectMetricsInterval = promClient.collectDefaultMetrics({timeout: 10000});
     const app = express();
 
+    app.set('json spaces', 2);
     app.use(Sentry.Handlers.requestHandler());
     app.use(loggerMiddleware(this.logger));
     app.use(prometheusMiddleware(promClient));
