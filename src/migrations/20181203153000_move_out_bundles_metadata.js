@@ -13,10 +13,8 @@ export const up = async (db, config, logger) => {
   await db.collection('bundle_metadata').ensureIndex({bundleId : 1}, {unique: true});
 
   const extractMetadata = (bundle) => {
-    const {metadata} = bundle;
-    const {bundleId} = bundle;
-    const result = {bundleId, ...metadata};
-    return result;
+    const {metadata, bundleId} = bundle;
+    return {bundleId, ...metadata};
   };
 
   const performMetadataMigration = async (bundle) => {
