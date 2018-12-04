@@ -184,7 +184,7 @@ export default class DataModelEngine {
   async getBundleMetadata(bundleId) {
     const metadata = await this.entityRepository.getBundleMetadata(bundleId);
     if (metadata === null) {
-      throw new NotFoundError(`No bundle metadata for bundleId = ${bundleId} found`);
+      throw new NotFoundError(`No metadata found for bundleId = ${bundleId}`);
     }
     return metadata;
   }
