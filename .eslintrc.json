@@ -44,6 +44,7 @@
     "no-useless-constructor": 2,
     "no-dupe-class-members": 2,
     "no-duplicate-imports": 2,
+    "no-constant-condition": "off",
     "import/no-mutable-exports": 2,
     "import/prefer-default-export": 1,
     "import/first": 2,

@@ -1230,6 +1230,36 @@ describe('Data Model Engine', () => {
       expect(progressCallbacks.success).to.have.been.calledOnceWith('bundle1', 'Success');
       expect(progressCallbacks.fail).to.have.been.calledOnceWith('bundle3', bundle3Error);
     });
+
+    it('retries uploads when rate limited', async () => {
+      mockEntityRepository = {
+        findBundlesWaitingForUpload: sinon.stub().resolves([
+          {
+            bundleId: 'bundle1',
+            metadata: {storagePeriods: 2}
+          }
+        ]),
+        storeBundleProofMetadata: sinon.stub()
+      };
+
+      const uploadBundle = sinon.stub();
+      const rateLimitError = new Error(
+        'Invalid JSON RPC response: "<html>\r\n<head><title>429 Too Many Requests</title></head>'
+      );
+      uploadBundle.onCall(0).rejects(rateLimitError);
+      uploadBundle.onCall(1).rejects(rateLimitError);
+      uploadBundle.onCall(2).resolves({blockNumber, transactionHash: txHash});
+
+      mockUploadRepository = {uploadBundle};
+      modelEngine = new DataModelEngine({
+        entityRepository: mockEntityRepository,
+        uploadRepository: mockUploadRepository
+      });
+
+      await modelEngine.uploadAcceptedBundleCandidates();
+      expect(mockUploadRepository.uploadBundle).to.have.callCount(3);
+      expect(mockEntityRepository.storeBundleProofMetadata).to.be.have.been.calledOnceWith('bundle1', blockNumber, txHash);
+    });
   });
 
   describe('Downloading a bundle', () => {
