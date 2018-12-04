@@ -9,8 +9,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 // eslint-disable-next-line import/prefer-default-export
 export const up = async (db, config, logger) => {
-  await db.collection('bundles').ensureIndex({bundleId : 1}, {unique: true});
-  await db.collection('bundle_metadata').ensureIndex({bundleId : 1}, {unique: true});
+  await db.collection('bundle_metadata').createIndex({bundleId : 1}, {unique: true});
+
+  await db.collection('bundles').dropIndex('bundleId_1');
+  await db.collection('bundles').createIndex({bundleId : 1}, {unique: true});
 
   const extractMetadata = (bundle) => {
     const {metadata, bundleId} = bundle;
