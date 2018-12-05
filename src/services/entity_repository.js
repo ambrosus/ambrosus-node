@@ -177,8 +177,12 @@ export default class EntityRepository {
   }
 
   async storeBundle(bundle, storagePeriods) {
-    await this.db.collection('bundles').insertOne({...bundle});
-    await this.db.collection('bundle_metadata').insertOne({bundleId: bundle.bundleId, storagePeriods});
+    if (await this.db.collection('bundles').findOne({bundleId: bundle.bundleId}) === null) {
+      await this.db.collection('bundles').insertOne({...bundle});
+    }
+    if (await this.db.collection('bundle_metadata').findOne({bundleId: bundle.bundleId}) === null) {
+      await this.db.collection('bundle_metadata').insertOne({bundleId: bundle.bundleId, storagePeriods});
+    }
   }
 
   async storeBundleProofMetadata(bundleId, proofBlock, txHash) {

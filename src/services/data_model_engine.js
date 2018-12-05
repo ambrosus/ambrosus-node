@@ -173,11 +173,7 @@ export default class DataModelEngine {
     if (bundle === null) {
       throw new NotFoundError(`No bundle with id = ${bundleId} found`);
     }
-    let metadata = await this.entityRepository.getBundleMetadata(bundleId);
-    if (metadata === null) {
-      return bundle;
-    }
-    metadata = pick(metadata, 'bundleId');
+    const metadata = pick(await this.getBundleMetadata(bundleId), 'bundleId');
     return {...bundle, metadata};
   }
 

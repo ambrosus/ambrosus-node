@@ -21,18 +21,19 @@ export const up = async (db, config, logger) => {
 
   const performMetadataMigration = async (bundle) => {
     const metadata = extractMetadata(bundle);
-    try {
+    if ((await db.collection('bundle_metadata').findOne({bundleId: bundle.bundleId})) === null) {
       await db.collection('bundle_metadata').insertOne(metadata);
-    } finally {
-      await db.collection('bundles').updateOne({bundleId: bundle.bundleId}, {$unset: {metadata: 1}});
     }
+    await db.collection('bundles').updateOne({bundleId: bundle.bundleId}, {$unset: {metadata: 1}});
   };
 
   const existingBundlesWithMetadata = await db.collection('bundles').find({metadata: {$exists: true}});
 
   const migrationsCount = await existingBundlesWithMetadata.count();
 
-  await existingBundlesWithMetadata.forEach(performMetadataMigration);
+  while (await existingBundlesWithMetadata.hasNext()) {
+    await performMetadataMigration(await existingBundlesWithMetadata.next());
+  }
 
   logger.info(`Moved metadata of ${migrationsCount} bundles`);
 };
