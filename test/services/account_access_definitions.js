@@ -406,6 +406,16 @@ describe('Account Access Definitions', () => {
       const params = put(validParamsAsStrings, 'registeredBy', '0x12312312');
       expect(() => accountAccessDefinitions.validateAndCastFindAccountParams(params)).to.throw(ValidationError);
     });
+
+    it('throws if perPage is not positive', () => {
+      const params = put(validParamsAsStrings, 'perPage', '0');
+      expect(() => accountAccessDefinitions.validateAndCastFindAccountParams(params)).to.throw(ValidationError);
+    });
+
+    it('throws if perPage is bigger than 100', () => {
+      const params = put(validParamsAsStrings, 'perPage', '101');
+      expect(() => accountAccessDefinitions.validateAndCastFindAccountParams(params)).to.throw(ValidationError);
+    });
   });
 
 
