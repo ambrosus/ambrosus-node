@@ -36,10 +36,10 @@ describe('Worker Task Tracking Repository', () => {
 
   afterEach(async () => {
     await cleanDatabase(db);
-    clock.restore();
   });
 
   after(async () => {
+    clock.restore();
     client.close();
   });
 
