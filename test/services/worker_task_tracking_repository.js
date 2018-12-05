@@ -81,11 +81,4 @@ describe('Worker Task Tracking Repository', () => {
     await expect(storage.finishWork(fakeTaskId)).to.be.fulfilled;
     await expect(storage.tryToBeginWork(exampleTaskType)).to.be.rejectedWith('Work of this type is currently in progress');
   });
-
-  it('creates index with correct ttl', async () => {
-    expect((await db.collection('workerTasks').indexes())[2].expireAfterSeconds).to
-      .equal(config.workerTasksTTLInSeconds);
-    expect((await db.collection('workerTasks').indexes())[2].name).to
-      .equal('startTime_-1');
-  });
 });
