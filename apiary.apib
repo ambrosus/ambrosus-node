@@ -1043,6 +1043,7 @@ Fetches a bundle by identifier
             + bundleTransactionHash (string) - Identifier of the transaction on which the proof of bundle has been uploaded.
               More info on the transaction can be found under `http://explorer-test.ambrosus.com/#/tx/{bundleTransactionHash}`
             + proofBlock (number) - Block number in which the transaction was included
+            + bundleUploadTimestamp (number) - Timestamp of bundle upload
 
 
     + Body
@@ -1062,13 +1063,52 @@ Fetches a bundle by identifier
                 },
                 "metadata" : {
                   "bundleTransactionHash": "0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009",
-                  "proofBlock": 142
+                  "proofBlock": 142,
+                  "bundleUploadTimestamp": 1503424969
                 }
             }
 
 + Response 404 (application/json)
 
     Bundle not found
+
+    + Body
+
+## /bundle/{bundleId}/info
+
+#### Fetch bundle metadata [GET]
+
+Fetches a bundle metadata by identifier
+
++ Parameters
+
+    + bundleId (string, required) - ID of a bundle
+    
+
++ Response 200 (application/json)
+
+    The requested bundle
+
+    + Attributes (object)
+        + bundleId (string) - Content-addressable identifier of the bundle.
+        + bundleTransactionHash (string) - Identifier of the transaction on which the proof of bundle has been uploaded.
+          More info on the transaction can be found under `http://explorer-test.ambrosus.com/#/tx/{bundleTransactionHash}`
+        + proofBlock (number) - Block number in which the transaction was included
+        + bundleUploadTimestamp (number) - Timestamp of bundle upload
+
+
+    + Body
+
+            {
+                "bundleId" : "0xa9bfd34.....30795ed11",
+                "bundleTransactionHash": "0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009",
+                "proofBlock": 142,
+                "bundleUploadTimestamp": 1503424969
+            }
+
++ Response 404 (application/json)
+
+    Bundle metadata not found
 
     + Body
 
@@ -1086,12 +1126,17 @@ Information on the Gateway node.
         + commit (string) - Hash of the latest git commit on the node
         + version (string) - Version of the Ambrosus Node
         + nodeAddress (string) - An Ambrosus address of the node
+        + workerLogs (array) - An array containing 10 last worker logs (Hermes or Atlas - depending on node type)
+
 
     + Body
 
-          {
-              "commit": "e7b85366ba78e34d4ec98cbcc01a4ae0aa36b098",
-              "version": "0.0.1",
-              "nodeAddress": "0xEbDEAC82424a053DFf79397862BD122F76798bC5"
-          }
+            {
+                "commit" : "e7b85366ba78e34d4ec98cbcc01a4ae0aa36b098",
+                "version": "0.0.1",
+                "nodeAddress": "0xEbDEAC82424a053DFf79397862BD122F76798bC5",
+                "workerLogs": [
+                    "<up to 10 worker logs>"
+                ]
+            }
 
