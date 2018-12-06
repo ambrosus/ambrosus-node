@@ -13,10 +13,13 @@ import healthCheckHandler from '../routes/health_check';
 import PeriodicWorker from './periodic_worker';
 import HermesUploadStrategy from './hermes_strategies/upload_strategy';
 
+const HERMES_BUNDLING_WORK_TYPE = 'HermesBundling';
+
 export default class HermesWorker extends PeriodicWorker {
   constructor(
     dataModelEngine,
     workerLogRepository,
+    workerTaskTrackingRepository,
     strategy,
     logger,
     mongoClient,
@@ -25,6 +28,7 @@ export default class HermesWorker extends PeriodicWorker {
     super(strategy.workerInterval, logger);
     this.dataModelEngine = dataModelEngine;
     this.bundleSequenceNumber = 0;
+    this.workerTaskTrackingRepository = workerTaskTrackingRepository;
     this.strategy = strategy;
     this.workerLogRepository = workerLogRepository;
     this.mongoClient = mongoClient;
@@ -40,8 +44,18 @@ export default class HermesWorker extends PeriodicWorker {
   }
 
   async periodicWork() {
-    await this.bundleCandidates();
-    await this.uploadWaitingCandidates();
+    let workId = null;
+    try {
+      workId = await this.workerTaskTrackingRepository.tryToBeginWork(HERMES_BUNDLING_WORK_TYPE);
+    } catch (err) {
+      return;
+    }
+    try {
+      await this.bundleCandidates();
+      await this.uploadWaitingCandidates();
+    } finally {
+      await this.workerTaskTrackingRepository.finishWork(workId);
+    }
   }
 
   async bundleCandidates() {

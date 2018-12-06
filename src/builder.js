@@ -38,6 +38,7 @@ import UploadRepository from './services/upload_repository';
 import ChallengesRepository from './services/challenges_repository';
 import Migrator from './migrations/Migrator';
 import FailedChallengesCache from './services/failed_challenges_cache';
+import WorkerTaskTrackingRepository from './services/worker_task_tracking_repository';
 
 class Builder {
   async ensureAdminAccountExist() {
@@ -98,6 +99,7 @@ class Builder {
     this.entityBuilder = new EntityBuilder(this.identityManager, maximumEntityTimestampOvertake);
     this.entityRepository = new EntityRepository(this.db);
     this.workerLogRepository = new WorkerLogRepository(this.db);
+    this.workerTaskTrackingRepository = new WorkerTaskTrackingRepository(this.db);
     this.findEventQueryObjectFactory = new FindEventQueryObjectFactory(this.db);
     this.findAssetQueryObjectFactory = new FindAssetQueryObjectFactory(this.db);
     this.failedChallengesCache = new FailedChallengesCache();
