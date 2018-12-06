@@ -11,11 +11,13 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromissed from 'chai-as-promised';
+import chaiHttp from 'chai-http';
 import HermesWorker from '../../src/workers/hermes_worker';
 import HermesUploadStrategy from '../../src/workers/hermes_strategies/upload_strategy';
 import {connectToMongo} from '../../src/utils/db_utils';
 import config from '../../config/config';
 
+chai.use(chaiHttp);
 chai.use(sinonChai);
 chai.use(chaiAsPromissed);
 const {expect} = chai;
@@ -151,12 +153,6 @@ describe('Hermes Worker', () => {
     it('should end task in every work loop even if error was thrown', async () => {
       mockDataModelEngine.prepareBundleCandidate.rejects();
       await expect(hermesWorker.periodicWork()).to.be.rejected;
-      expect(mockWorkerTaskTrackingRepository.finishWork).to.be.calledOnceWith(exampleWorkId);
-    });
-
-    it('After work: should remove all running tasks', async () => {
-      hermesWorker.workId = exampleWorkId;
-      await hermesWorker.afterWorkLoop();
       expect(mockWorkerTaskTrackingRepository.finishWork).to.be.calledOnceWith(exampleWorkId);
     });
   });
