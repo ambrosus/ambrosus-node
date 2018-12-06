@@ -10,12 +10,13 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import chaiAsPromised from 'chai-as-promised';
 import chaiHttp from 'chai-http';
+import chaiAsPromised from 'chai-as-promised';
 import AtlasWorker from '../../src/workers/atlas_worker';
 import AtlasChallengeParticipationStrategy from '../../src/workers/atlas_strategies/atlas_challenge_resolution_strategy';
 import {connectToMongo} from '../../src/utils/db_utils';
 import config from '../../config/config';
+import Web3 from 'web3';
 
 chai.use(chaiHttp);
 chai.use(sinonChai);
@@ -29,6 +30,7 @@ describe('Atlas Worker', () => {
   const exampleWorkId = 'workid';
   const workerInterval = 10;
   const retryTimeout = 14;
+  const {utils} = new Web3();
   let atlasWorker;
   let challengesRepositoryMock;
   let workerTaskTrackingRepositoryMock;
@@ -47,7 +49,8 @@ describe('Atlas Worker', () => {
         defaultAccount,
         getBalance: sinon.stub().resolves(exampleBalance),
         getNodeInfo: () => Promise.resolve()
-      }
+      },
+      utils
     };
     const {client: mongoClient} = await connectToMongo(config);
     challengesRepositoryMock = {
@@ -239,41 +242,41 @@ describe('Atlas Worker', () => {
     });
 
     describe('isEnoughFundsToPayForGas', () => {
-      it('isOutOfFunds is false at first', async () => {
+      it('isOutOfFunds property is false after atlas worker was initialized', async () => {
         expect(atlasWorker.isOutOfFunds).to.be.false;
       });
 
-      it('returns true when account has enough funds', async () => {
+      it('returns true when account has enough funds to pay for gas', async () => {
         expect(await atlasWorker.isEnoughFundsToPayForGas()).to.be.true;
         expect(mockWeb3.eth.getBalance).to.be.calledWith(defaultAccount);
       });
 
-      it('sets atlasWorker.isOutOfFunds to false when account has enough funds', async () => {
+      it('sets isOutOfFunds property to false when account has enough funds', async () => {
         atlasWorker.isOutOfFunds = undefined;
         await atlasWorker.isEnoughFundsToPayForGas();
         expect(atlasWorker.isOutOfFunds).to.be.false;
       });
 
-      it('returns false when balance is too small', async () => {
+      it('returns false when account does not have enough funds to pay for gas', async () => {
         mockWeb3.eth.getBalance.resolves('23123');
         expect(await atlasWorker.isEnoughFundsToPayForGas()).to.be.false;
       });
 
-      it('sets atlasWorker.isOutOfFunds to true when account does not have enough funds', async () => {
+      it('sets isOutOfFunds property to true when account does not have enough funds to pay for gas', async () => {
         mockWeb3.eth.getBalance.resolves('23123');
         atlasWorker.isOutOfFunds = undefined;
         await atlasWorker.isEnoughFundsToPayForGas();
         expect(atlasWorker.isOutOfFunds).to.be.true;
       });
 
-      it('writes message to log when outOfFunds is raised for the first time', async () => {
+      it('writes message to log when outOfFunds is raised for the first time in a row', async () => {
         mockWeb3.eth.getBalance.resolves('23123');
         atlasWorker.isOutOfFunds = false;
         expect(await atlasWorker.isEnoughFundsToPayForGas()).to.be.false;
         expect(loggerMock.info).to.be.calledOnce;
       });
 
-      it('does not write message to log when outOfFunds is not raised for the first time', async () => {
+      it('does not write message to log when outOfFunds is raised the second or more time in a row', async () => {
         mockWeb3.eth.getBalance.resolves('23123');
         atlasWorker.isOutOfFunds = true;
         expect(await atlasWorker.isEnoughFundsToPayForGas()).to.be.false;
@@ -281,7 +284,7 @@ describe('Atlas Worker', () => {
       });
     });
 
-    it('periodicWork does not do anything when not enough balance to pay for the gas', async () => {
+    it('periodicWork does not do anything when account does not have enough funds to pay for gas', async () => {
       mockWeb3.eth.getBalance.resolves('10');
       await expect(atlasWorker.periodicWork()).to.be.eventually.fulfilled;
       await expect(challengesRepositoryMock.ongoingChallenges).to.be.not.called;

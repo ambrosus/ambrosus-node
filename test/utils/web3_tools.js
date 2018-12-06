@@ -113,7 +113,7 @@ describe('Web3 tools', () => {
       expect(await checkIfEnoughFundsToPayForGas(mockWeb3, address)).to.be.false;
     });
 
-    it('returns false if balance is greater or equals to maxGasPrice', async () => {
+    it('returns true if balance is greater or equals to maxGasPrice', async () => {
       mockWeb3.eth.getBalance.resolves('23500000000000000');
       expect(await checkIfEnoughFundsToPayForGas(mockWeb3, address)).to.be.true;
       mockWeb3.eth.getBalance.resolves('23500000000000001');
