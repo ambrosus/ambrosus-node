@@ -120,7 +120,7 @@ describe('Events Integrations: Create', () => {
       .and.have.property('status', 403);
   });
 
-  it('returns 403 when trying to create an event with access level hither than own access level', async () => {
+  it('returns 403 when trying to create an event with access level higher than own access level', async () => {
     const highAccessLevelEvent = createFullEvent(apparatus.identityManager, {
       createdBy: adminAccount.address,
       assetId: asset.assetId,
@@ -134,6 +134,34 @@ describe('Events Integrations: Create', () => {
     await expect(request)
       .to.eventually.be.rejected
       .and.have.property('status', 403);
+  });
+
+  it('returns 400 when trying to create an event that exceeds the 10KB size limit', async () => {
+    const longString = new Array(10 * 1024)
+      .fill('0')
+      .join('');
+    const largeEvent = createFullEvent(
+      apparatus.identityManager,
+      {
+        createdBy: adminAccount.address,
+        assetId: asset.assetId
+      },
+      [
+        {
+          type: 'ambrosus.event.large',
+          someData: longString
+        }
+      ],
+      adminAccount.secret
+    );
+
+    const request = apparatus.request()
+      .post(`/assets/${asset.assetId}/events`)
+      .send(largeEvent);
+
+    await expect(request)
+      .to.eventually.be.rejected
+      .and.have.property('status', 400);
   });
 
   afterEach(async () => {

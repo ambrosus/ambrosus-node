@@ -184,11 +184,23 @@ describe('Entity Builder', () => {
         const brokenEvent = put(
           exampleEvent,
           'content.data',
-          [...exampleEvent.content.data, {type: 'ambrosus.event.location', geoJson : {type : 'Point', coordinates : [50]}}]
+          [...exampleEvent.content.data, {type: 'ambrosus.event.location', geoJson: {type: 'Point', coordinates: [50]}}]
         );
         expect(() => entityBuilder.validateEvent(brokenEvent))
           .to.throw(JsonValidationError)
           .and.have.nested.property('errors[0].dataPath', '.geoJson.coordinates');
+      });
+
+      it('throws ValidationError if event exceeds the 10KB size limit', () => {
+        const longString = new Array(10 * 1024)
+          .fill('0')
+          .join('');
+        const oversizeEvent = put(
+          exampleEvent,
+          'content.data',
+          [{type: 'some.type', longString}]
+        );
+        expect(() => entityBuilder.validateEvent(oversizeEvent)).to.throw(ValidationError);
       });
 
       it('throws if timestamp is not a positive integer', () => {
@@ -601,7 +613,7 @@ describe('Entity Builder', () => {
       });
 
       it('throws if geo data stored in field other than geoJson', () => {
-        const params = {data: {someField: {locationLongitude : 2, locationLatitude : 10, locationMaxDistance : 15}}};
+        const params = {data: {someField: {locationLongitude: 2, locationLatitude: 10, locationMaxDistance: 15}}};
         expect(() => entityBuilder.ensureGeoLocationParamsCorrectlyPlaced(params)).to.throw(ValidationError);
       });
 
