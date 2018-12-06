@@ -43,7 +43,7 @@ describe('Worker Task Tracking Repository', () => {
     client.close();
   });
 
-  it('keeps task start time', async () => {
+  it('saves task start time', async () => {
     await expect(storage.tryToBeginWork(exampleTaskType)).to.be.fulfilled;
     expect(await db.collection('workerTasks').findOne({}, {fields: {_id: 0}})).to.deep.equal({
       startTime: new Date(now),
