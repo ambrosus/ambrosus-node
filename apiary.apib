@@ -228,7 +228,7 @@ Finds accounts satisfying provided criteria.
 + Parameters
 
     + accessLevel (string, optional) - Finds only accounts with access level not smaller than provided parameter value
-    + perPage (integer, optional) - Number of accounts to return per page
+    + perPage (integer, optional) - Number of accounts to return per page (limited to 100)
     + page (integer, optional) - Number of page (more search results than specified in perPage parameter concludes more than one page)
 
 + Request (application/json)
@@ -648,7 +648,7 @@ Finds assets satisfying provided criteria.
 
 + Parameters
 
-    + perPage (integer, optional) - number of assets to return per page
+    + perPage (integer, optional) - number of assets to return per page (limited to 100)
     + page (integer, optional) - number of page (more search results than specified in perPage parameter concludes more than one page)
     + createdBy (string, optional) - address of account that created targeting assets
     + fromTimestamp (integer, optional) - earliest timestamp for the asset
@@ -942,7 +942,7 @@ Finds event satisfying provided criteria.
     + assetId (string, optional) - ID of the asset the events are targeting
     + fromTimestamp (integer, optional) - earliest timestamp for the events
     + toTimestamp (integer, optional) - latest timestamp for the events
-    + perPage (integer, optional) - number of events to return per page
+    + perPage (integer, optional) - number of events to return per page (limited to 100)
     + page (integer, optional) - number of page (more search results than specified in perPage parameter concludes more than one page)
     + createdBy (string, optional) - address of account that created targeting events
     + data : data[type]=ambrosus.event.custom (object, optional) - This syntax allows to query for events by any fields in data array. Query for nested fields is possible, e.g. data[acceleration.x]=10. By default the type of the value is string. To provide a number, use data[acceleration.x]=number(10). To provide geo coordinates use data[geoJson]=geo(longitude, latitude, radius). It is possible to match data values by the pattern using the pattern decorator like so `data[type]=pattern(ambrosus.event.*)`. It support 2 kinds of special characters:
@@ -1043,6 +1043,7 @@ Fetches a bundle by identifier
             + bundleTransactionHash (string) - Identifier of the transaction on which the proof of bundle has been uploaded.
               More info on the transaction can be found under `http://explorer-test.ambrosus.com/#/tx/{bundleTransactionHash}`
             + proofBlock (number) - Block number in which the transaction was included
+            + bundleUploadTimestamp (number) - Timestamp of bundle upload
 
 
     + Body
@@ -1062,13 +1063,52 @@ Fetches a bundle by identifier
                 },
                 "metadata" : {
                   "bundleTransactionHash": "0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009",
-                  "proofBlock": 142
+                  "proofBlock": 142,
+                  "bundleUploadTimestamp": 1503424969
                 }
             }
 
 + Response 404 (application/json)
 
     Bundle not found
+
+    + Body
+
+## /bundle/{bundleId}/info
+
+#### Fetch bundle metadata [GET]
+
+Fetches a bundle metadata by identifier
+
++ Parameters
+
+    + bundleId (string, required) - ID of a bundle
+    
+
++ Response 200 (application/json)
+
+    The requested bundle
+
+    + Attributes (object)
+        + bundleId (string) - Content-addressable identifier of the bundle.
+        + bundleTransactionHash (string) - Identifier of the transaction on which the proof of bundle has been uploaded.
+          More info on the transaction can be found under `http://explorer-test.ambrosus.com/#/tx/{bundleTransactionHash}`
+        + proofBlock (number) - Block number in which the transaction was included
+        + bundleUploadTimestamp (number) - Timestamp of bundle upload
+
+
+    + Body
+
+            {
+                "bundleId" : "0xa9bfd34.....30795ed11",
+                "bundleTransactionHash": "0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009",
+                "proofBlock": 142,
+                "bundleUploadTimestamp": 1503424969
+            }
+
++ Response 404 (application/json)
+
+    Bundle doesn't exist or the metadata for it is missing
 
     + Body
 
@@ -1086,12 +1126,17 @@ Information on the Gateway node.
         + commit (string) - Hash of the latest git commit on the node
         + version (string) - Version of the Ambrosus Node
         + nodeAddress (string) - An Ambrosus address of the node
+        + workerLogs (array) - An array containing up to 10 last worker logs (Hermes or Atlas - depending on node type)
+
 
     + Body
 
-          {
-              "commit": "e7b85366ba78e34d4ec98cbcc01a4ae0aa36b098",
-              "version": "0.0.1",
-              "nodeAddress": "0xEbDEAC82424a053DFf79397862BD122F76798bC5"
-          }
+            {
+                "commit" : "e7b85366ba78e34d4ec98cbcc01a4ae0aa36b098",
+                "version": "0.0.1",
+                "nodeAddress": "0xEbDEAC82424a053DFf79397862BD122F76798bC5",
+                "workerLogs": [
+                    "<up to 10 worker logs>"
+                ]
+            }
 
