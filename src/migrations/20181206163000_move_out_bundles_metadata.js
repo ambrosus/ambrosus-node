@@ -37,7 +37,9 @@ export const up = async (db, config, logger) => {
   await deduplicateBundles(db);
   await db.collection('bundle_metadata').createIndex({bundleId : 1}, {unique: true});
 
-  await db.collection('bundles').dropIndex('bundleId_1');
+  if (await db.collection('bundles').indexExists(['bundleId_1'])) {
+    await db.collection('bundles').dropIndex('bundleId_1');
+  }
   await db.collection('bundles').createIndex({bundleId : 1}, {unique: true});
 
   const extractMetadata = (bundle) => {
