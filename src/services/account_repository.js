@@ -20,10 +20,10 @@ export default class AccountRepository {
 
   async update(address, changedParams) {
     await this.db.collection('accounts').updateOne({address}, {$set : {...changedParams}});
-    return await this.db.collection('accounts').findOne({address}, {fields: {_id: 0}});
+    return await this.db.collection('accounts').findOne({address}, {projection: {_id: 0}});
   }
 
   async get(address) {
-    return this.db.collection('accounts').findOne({address}, {fields: {_id: 0}});
+    return this.db.collection('accounts').findOne({address}, {projection: {_id: 0}});
   }
 }

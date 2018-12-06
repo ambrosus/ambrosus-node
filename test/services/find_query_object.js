@@ -42,7 +42,7 @@ describe('FindQueryObject', () => {
       skip : 4,
       limit : 2,
       sort : mockSortingKey,
-      fields : blacklistedFields
+      projection : blacklistedFields
     };
   });
 

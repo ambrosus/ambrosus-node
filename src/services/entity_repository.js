@@ -27,7 +27,7 @@ export default class EntityRepository {
   }
 
   async getAsset(assetId) {
-    return await this.db.collection('assets').findOne({assetId}, {fields: this.blacklistedFields});
+    return await this.db.collection('assets').findOne({assetId}, {projection: this.blacklistedFields});
   }
 
   async storeEvent(event) {
@@ -42,7 +42,7 @@ export default class EntityRepository {
   }
 
   async getEvent(eventId, accessLevel = 0) {
-    const event = await this.db.collection('events').findOne({eventId}, {fields: this.blacklistedFields});
+    const event = await this.db.collection('events').findOne({eventId}, {projection: this.blacklistedFields});
     return this.hideEventDataIfNecessary(event, accessLevel);
   }
 
@@ -130,11 +130,11 @@ export default class EntityRepository {
 
     const assets = await this.db
       .collection('assets')
-      .find(thisBundleStubQuery, {fields: this.blacklistedFields})
+      .find(thisBundleStubQuery, {projection: this.blacklistedFields})
       .toArray();
     const events = await this.db
       .collection('events')
-      .find(thisBundleStubQuery, {fields: this.blacklistedFields})
+      .find(thisBundleStubQuery, {projection: this.blacklistedFields})
       .toArray();
 
     const entities = this.assetsAndEventsToEntityIds(assets, events);
@@ -238,7 +238,7 @@ export default class EntityRepository {
   }
 
   async getBundle(bundleId) {
-    return await this.db.collection('bundles').findOne({bundleId}, {fields: this.blacklistedFields});
+    return await this.db.collection('bundles').findOne({bundleId}, {projection: this.blacklistedFields});
   }
 
   async getBundleMetadata(bundleId) {
