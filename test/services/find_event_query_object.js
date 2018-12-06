@@ -60,7 +60,7 @@ describe('Find Event Query Object', () => {
       skip: 0,
       limit: 100,
       sort: [['content.idData.timestamp', 'descending']],
-      fields: {
+      projection: {
         _id: 0,
         repository: 0
       }

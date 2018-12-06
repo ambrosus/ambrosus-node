@@ -43,7 +43,7 @@ export default class FindQueryObject {
       skip: resultsToSkip,
       limit: pageSize,
       sort: this.getSortingKey(),
-      fields: this.getBlacklistedFields()
+      projection: this.getBlacklistedFields()
     };
   }
 

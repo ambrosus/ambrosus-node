@@ -33,7 +33,7 @@ const createMongoUrl = (config) => {
 
 const connectToMongo = async (config) => {
   const url = createMongoUrl(config);
-  const client = await MongoClient.connect(url);
+  const client = await MongoClient.connect(url,  {useNewUrlParser: true});
   const db = await client.db(config.mongoDBName);
   return {client, db};
 };
