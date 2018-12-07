@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 /** @abstract */
 export default class AtlasChallengeParticipationStrategy {
   get workerInterval() {
-    return 5000;
+    return 5;
   }
 
   get retryTimeout() {

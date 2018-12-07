@@ -22,7 +22,7 @@ describe('Periodic Worker', () => {
   let beforeWorkLoopSpy;
   let afterWorkLoopSpy;
   let periodicWorkStub;
-  const interval = 10000;
+  const interval = 10;
 
   before(() => {
     clock = sinon.useFakeTimers();
@@ -80,7 +80,7 @@ describe('Periodic Worker', () => {
     it('calls itself after interval has passed', async () => {
       const periodicWorkInternalStub = sinon.stub(worker, 'periodicWorkInternal');
       expect(periodicWorkInternalStub).to.be.not.called;
-      clock.tick(interval - 1);
+      clock.tick((interval * 1000) - 1);
       expect(periodicWorkInternalStub).to.be.not.called;
       clock.tick(1);
       expect(periodicWorkInternalStub).to.be.calledOnce;
@@ -90,7 +90,7 @@ describe('Periodic Worker', () => {
   describe('stop', () => {
     beforeEach(async () => {
       await worker.start();
-      clock.tick(interval);
+      clock.tick(interval * 1000);
       await worker.stop();
     });
 
@@ -104,8 +104,8 @@ describe('Periodic Worker', () => {
 
     it('stops execution of the periodicWork method', () => {
       expect(periodicWorkStub).to.have.been.calledTwice;
-      clock.tick(interval);
-      clock.tick(interval);
+      clock.tick(interval * 1000);
+      clock.tick(interval * 1000);
       expect(periodicWorkStub).to.have.been.calledTwice;
     });
   });
