@@ -30,4 +30,27 @@ export default class WorkerTaskTrackingRepository {
   async finishWork(taskId) {
     await this.db.collection('workerTasks').deleteOne({_id: taskId});
   }
+
+  async beginWorkWhenPossible(workType, timeoutInSeconds, maxTries, iterationCallback) {
+    const sleep = async (timeout) => new Promise((resolve) => {
+      setTimeout(resolve, timeout * 1000);
+      if (iterationCallback) {
+        iterationCallback();
+      }
+    });
+    let iterationCount = 0;
+    while (iterationCount < maxTries) {
+      iterationCount++;
+      try {
+        return await this.tryToBeginWork(workType);
+      } catch (err) {
+        if (err.message === 'Work of this type is currently in progress') {
+          await sleep(timeoutInSeconds);
+        } else {
+          throw err;
+        }
+      }
+    }
+    throw new Error(`Could not start ${workType} task after ${maxTries} retries`);
+  }
 }

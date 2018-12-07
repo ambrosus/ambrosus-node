@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import path from 'path';
 import fs from 'fs';
+import {getTimestamp} from '../utils/time_utils';
 
 class Migrator {
   constructor(db, config, directory = path.dirname(__filename)) {
@@ -51,22 +52,43 @@ class Migrator {
     }
   }
 
-  async initMigrations() {
+  async waitForOpenWindowAndStartMigration(logger) {
+    const sleep = async (timeout) => new Promise((resolve) => {
+      setTimeout(resolve, timeout * 1000);
+    });
+    let migrationStartTime;
+    do {
+      const {modifiedCount} = await this.db.collection('migrations').updateOne({migrationStartTime: {$exists: false}}, {$set: {migrationStartTime: getTimestamp()}});
+      if (modifiedCount > 0) {
+        return;
+      }
+      logger.info('Another migration is running. Waiting for it to end');
+      ({migrationStartTime} = (await this.db.collection('migrations').findOne({})));
+      await sleep(this.config.migrationSleepTime);
+    } while (migrationStartTime + this.config.migrationTaskTimeout > getTimestamp());
+  }
+
+  async initMigrations(logger) {
     await this.db.createCollection('migrations');
     const result = await this.db.collection('migrations').findOne({});
     if (!result) {
       await this.db.collection('migrations').insertOne({version: 0});
     }
+    await this.waitForOpenWindowAndStartMigration(logger);
   }
 
   async migrate(logger) {
-    await this.initMigrations();
-    const migrationFiles = await this.migrationFiles();
-    for (const file of migrationFiles) {
-      if (this.isMigrationPath(file)) {
-        const fullPath = path.join(this.directory, file);
-        await this.up(fullPath, logger);
+    await this.initMigrations(logger);
+    try {
+      const migrationFiles = await this.migrationFiles();
+      for (const file of migrationFiles) {
+        if (this.isMigrationPath(file)) {
+          const fullPath = path.join(this.directory, file);
+          await this.up(fullPath, logger);
+        }
       }
+    } finally {
+      await this.db.collection('migrations').updateOne({}, {$unset: {migrationStartTime: ''}});
     }
   }
 
