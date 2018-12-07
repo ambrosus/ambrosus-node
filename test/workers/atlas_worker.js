@@ -11,21 +11,25 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
+import chaiHttp from 'chai-http';
 import AtlasWorker from '../../src/workers/atlas_worker';
 import AtlasChallengeParticipationStrategy from '../../src/workers/atlas_strategies/atlas_challenge_resolution_strategy';
 import {connectToMongo} from '../../src/utils/db_utils';
 import config from '../../config/config';
 
+chai.use(chaiHttp);
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Atlas Worker', () => {
   const fetchedBundle = {bundleId: 'fetchedBundle'};
+  const exampleWorkId = 'workid';
   const workerInterval = 10;
   const retryTimeout = 14;
   let atlasWorker;
   let challengesRepositoryMock;
+  let workerTaskTrackingRepositoryMock;
   let failedChallengesMock;
   let dataModelEngineMock;
   let mockWorkerLogRepository;
@@ -51,6 +55,10 @@ describe('Atlas Worker', () => {
       didChallengeFailRecently: sinon.stub().returns(false),
       clearOutdatedChallenges: sinon.spy()
     };
+    workerTaskTrackingRepositoryMock = {
+      tryToBeginWork: sinon.stub().resolves(exampleWorkId),
+      finishWork: sinon.spy()
+    };
     dataModelEngineMock = {
       downloadBundle: sinon.stub().resolves(fetchedBundle),
       cleanupBundles: sinon.spy(),
@@ -75,6 +83,7 @@ describe('Atlas Worker', () => {
       dataModelEngineMock,
       mockWorkerLogRepository,
       challengesRepositoryMock,
+      workerTaskTrackingRepositoryMock,
       failedChallengesMock,
       strategyMock,
       loggerMock,
@@ -208,6 +217,20 @@ describe('Atlas Worker', () => {
       it('clears outdated challenges', async () => {
         await atlasWorker.periodicWork();
         expect(failedChallengesMock.clearOutdatedChallenges).to.be.calledOnce;
+      });
+
+      it('starts and ends AtlasChallengeResolution task', async () => {
+        await atlasWorker.periodicWork();
+        expect(workerTaskTrackingRepositoryMock.tryToBeginWork).to.be.calledBefore(challengesRepositoryMock.ongoingChallenges);
+        expect(workerTaskTrackingRepositoryMock.tryToBeginWork).to.be.calledOnceWith('AtlasChallengeResolution');
+        expect(workerTaskTrackingRepositoryMock.finishWork).to.be.calledAfter(failedChallengesMock.clearOutdatedChallenges);
+        expect(workerTaskTrackingRepositoryMock.finishWork).to.be.calledOnceWith(exampleWorkId);
+      });
+
+      it('should end task even if an error was thrown', async () => {
+        challengesRepositoryMock.ongoingChallenges.rejects();
+        await expect(atlasWorker.periodicWork()).to.be.rejected;
+        expect(workerTaskTrackingRepositoryMock.finishWork).to.be.calledOnceWith(exampleWorkId);
       });
     });
   });

@@ -28,6 +28,7 @@ async function start(logger) {
     builder.dataModelEngine,
     builder.workerLogRepository,
     builder.challengesRepository,
+    builder.workerTaskTrackingRepository,
     builder.failedChallengesCache,
     strategy,
     logger,

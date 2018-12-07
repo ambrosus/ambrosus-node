@@ -84,6 +84,14 @@ class ValidationAndCasting {
     return this;
   }
 
+  isConstrainedToSize(maxLength, errorMsg = `Object is too large.`) {
+    const serialized = JSON.stringify(this.params, null, 0);
+    if (serialized.length > maxLength) {
+      throw new ValidationError(errorMsg);
+    }
+    return this;
+  }
+
   /**
    * Custom validator
    * @param valueNames - list of paths to validated parameters

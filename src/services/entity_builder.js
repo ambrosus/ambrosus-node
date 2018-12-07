@@ -82,6 +82,7 @@ export default class EntityBuilder {
       .fieldsConstrainedToSet(['content', 'eventId'])
       .fieldsConstrainedToSet(['idData', 'data', 'signature'], 'content')
       .isNonNegativeInteger(['content.idData.accessLevel', 'content.idData.timestamp'])
+      .isConstrainedToSize(10 * 1024, `Event exceeds 10KB size limit`)
       .validate(
         ['eventId'],
         (hash) => this.identityManager.checkHashMatches(hash, event.content),

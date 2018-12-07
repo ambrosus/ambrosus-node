@@ -21,7 +21,7 @@ export default class WorkerLogRepository {
   }
 
   async getLogs(logCount) {
-    const cursor = await this.db.collection('workerLogs').find({}, {fields: this.blacklistedFields})
+    const cursor = await this.db.collection('workerLogs').find({}, {projection: this.blacklistedFields})
       .sort({timestamp: -1})
       .limit(logCount);
     return await cursor.toArray();

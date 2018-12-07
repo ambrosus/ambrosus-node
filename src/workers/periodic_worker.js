@@ -29,7 +29,7 @@ export default class PeriodicWorker extends Worker {
       this.logger.error(err);
     }
     if (this.started) {
-      this.timerId = setTimeout(() => this.periodicWorkInternal(), this.interval);
+      this.timerId = setTimeout(() => this.periodicWorkInternal(), this.interval * 1000);
     }
   }
 

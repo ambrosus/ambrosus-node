@@ -13,12 +13,15 @@ import healthCheckHandler from '../routes/health_check';
 import PeriodicWorker from './periodic_worker';
 import AtlasChallengeParticipationStrategy from './atlas_strategies/atlas_challenge_resolution_strategy';
 
+const ATLAS_RESOLUTION_WORK_TYPE = 'AtlasChallengeResolution';
+
 export default class AtlasWorker extends PeriodicWorker {
   constructor(
     web3,
     dataModelEngine,
     workerLogRepository,
     challengesRepository,
+    workerTaskTrackingRepository,
     failedChallengesCache,
     strategy,
     logger,
@@ -31,6 +34,7 @@ export default class AtlasWorker extends PeriodicWorker {
     this.strategy = strategy;
     this.workerLogRepository = workerLogRepository;
     this.challengesRepository = challengesRepository;
+    this.workerTaskTrackingRepository = workerTaskTrackingRepository;
     this.failedChallengesCache = failedChallengesCache;
     this.mongoClient = mongoClient;
     this.expressApp = express();
@@ -80,15 +84,25 @@ export default class AtlasWorker extends PeriodicWorker {
   }
 
   async periodicWork() {
-    const challenges = await this.challengesRepository.ongoingChallenges();
-    await this.addLog(`Challenges preselected for resolution: ${challenges.length}`);
-    for (const challenge of challenges) {
-      const successful = await this.tryWithChallenge(challenge);
-      if (successful) {
-        break;
-      }
+    let workId = null;
+    try {
+      workId = await this.workerTaskTrackingRepository.tryToBeginWork(ATLAS_RESOLUTION_WORK_TYPE);
+    } catch (err) {
+      return;
     }
-    this.failedChallengesCache.clearOutdatedChallenges();
+    try {
+      const challenges = await this.challengesRepository.ongoingChallenges();
+      await this.addLog(`Challenges preselected for resolution: ${challenges.length}`);
+      for (const challenge of challenges) {
+        const successful = await this.tryWithChallenge(challenge);
+        if (successful) {
+          break;
+        }
+      }
+      this.failedChallengesCache.clearOutdatedChallenges();
+    } finally {
+      await this.workerTaskTrackingRepository.finishWork(workId);
+    }
   }
 
   async addLog(message, additionalFields, stacktrace) {
