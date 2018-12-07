@@ -121,108 +121,43 @@ describe('Entity Repository', () => {
       await expect(storage.getBundle(otherBundleId)).to.eventually.be.equal(null);
       await expect(storage.getBundleMetadata(otherBundleId)).to.eventually.be.equal(null);
     });
-
-    describe('discardEntitiesForBundling', () => {
-      const exampleEntities = [...Array(10).keys()].map((inx) => ({
-        id: inx,
-        mongoSize: 10
-      }));
-
-      it('returns empty array if neither entities count nor their size exceed limit', async () => {
-        expect(storage.discardEntitiesForBundling(exampleEntities, 100, 1000)).to.deep.equal([]);
-      });
-
-      it('returns entities (from the end) not fitting into bundleItemsCountLimit', async () => {
-        expect(storage.discardEntitiesForBundling(exampleEntities, 8, 1000)).to.deep.equal([exampleEntities[8], exampleEntities[9]]);
-      });
-
-      it('returns entities (from the end) not fitting into the bundleSizeInBytesLimit', async () => {
-        expect(storage.discardEntitiesForBundling(exampleEntities, 100, 50)).to.deep.equal(exampleEntities.slice(5));
-      });
-    });
   });
 
-  describe('bundling entities helper functions', () => {
-    let scenario;
-    let assets;
-    let events;
+  describe('Bundle process helper functions', () => {
+    describe('selectEntityForBundling', () => {
+      const asset = {
+        content: {
+          idData: {
+            timestamp: 123
+          }
+        }
+      };
 
-    before(async () => {
-      scenario = new ScenarioBuilder(new IdentityManager(await createWeb3()));
-      await scenario.addAdminAccount(adminAccountWithSecret);
+      const event = {
+        content: {
+          idData: {
+            timestamp: 123
+          }
+        }
+      };
 
-      assets = [
-        await scenario.addAsset(0, {timestamp: 2}),
-        await scenario.addAsset(0, {timestamp: 62, sequenceNumber: 0}),
-        await scenario.addAsset(0, {timestamp: 62, sequenceNumber: 1})
-      ];
-
-      events = [
-        await scenario.addEvent(0, 0, {timestamp: 62}),
-        await scenario.addEvent(0, 1, {timestamp: 21, accessLevel: 0}),
-        await scenario.addEvent(0, 1, {timestamp: 21, accessLevel: 2})
-      ];
-    });
-
-    describe('assetsAndEventsToEntityIds', () => {
-      let ret;
-
-      before(() => {
-        ret = storage.assetsAndEventsToEntityIds(assets, events);
+      it('returns event, if asset is null', () => {
+        expect(storage.selectEntityForBundling(null, event)).to.equal(event);
       });
 
-      it('includes an entry for every provided asset and event', () => {
-        expect(ret).to.have.length(assets.length + events.length);
+      it('return asset, if event is null', () => {
+        expect(storage.selectEntityForBundling(asset, null)).to.equal(asset);
       });
 
-      it('extracts ids', () => {
-        expect(ret[0].id).to.equal(assets[0].assetId);
-        expect(ret[1].id).to.equal(assets[1].assetId);
-        expect(ret[2].id).to.equal(assets[2].assetId);
-        expect(ret[3].id).to.equal(events[0].eventId);
-        expect(ret[4].id).to.equal(events[1].eventId);
-        expect(ret[5].id).to.equal(events[2].eventId);
+      it('return the entity with the earlier timestamp', () => {
+        const smallerAsset = put(asset, 'content.idData.timestamp', 2);
+        const smallerEvent = put(event, 'content.idData.timestamp', 15);
+        expect(storage.selectEntityForBundling(smallerAsset, event)).to.equal(smallerAsset);
+        expect(storage.selectEntityForBundling(asset, smallerEvent)).to.equal(smallerEvent);
       });
 
-      it('extracts timestamps', () => {
-        expect(ret[0].timestamp).to.equal(assets[0].content.idData.timestamp);
-        expect(ret[1].timestamp).to.equal(assets[1].content.idData.timestamp);
-        expect(ret[2].timestamp).to.equal(assets[2].content.idData.timestamp);
-        expect(ret[3].timestamp).to.equal(events[0].content.idData.timestamp);
-        expect(ret[4].timestamp).to.equal(events[1].content.idData.timestamp);
-        expect(ret[5].timestamp).to.equal(events[2].content.idData.timestamp);
-      });
-
-      it('calculates mongoSize', () => {
-        expect(ret[0].mongoSize).to.equal(mongoObjectSize(assets[0]));
-        expect(ret[1].mongoSize).to.equal(mongoObjectSize(assets[1]));
-        expect(ret[2].mongoSize).to.equal(mongoObjectSize(assets[2]));
-        expect(ret[3].mongoSize).to.equal(mongoObjectSize(events[0]));
-        expect(ret[4].mongoSize).to.equal(mongoObjectSize(events[1]));
-        expect(ret[5].mongoSize).to.equal(mongoObjectSize(events[2]));
-      });
-    });
-
-    describe('orderEntityIds', () => {
-      let unsorted;
-      let ret;
-
-      before(() => {
-        unsorted = storage.assetsAndEventsToEntityIds(assets, events);
-        ret = storage.orderEntityIds(unsorted);
-      });
-
-      it(`doesn't change the number of entities`, () => {
-        expect(ret).to.have.length(assets.length + events.length);
-      });
-
-      it(`orders by timestamp, then by type, and then by id`, () => {
-        expect(ret[0]).to.deep.equal(unsorted[0]);
-        expect(ret[1]).to.deep.equal(unsorted[4]);
-        expect(ret[2]).to.deep.equal(unsorted[5]);
-        expect(ret[3]).to.deep.equal(unsorted[1]);
-        expect(ret[4]).to.deep.equal(unsorted[2]);
-        expect(ret[5]).to.deep.equal(unsorted[3]);
+      it('prefer assets over events when timestamp is the same', () => {
+        expect(storage.selectEntityForBundling(asset, event)).to.equal(asset);
       });
     });
   });
@@ -264,8 +199,11 @@ describe('Entity Repository', () => {
       nonBundledEvents = [
         await scenario.addEvent(0, 2, {timestamp: 2}),
         await scenario.addEvent(0, 3, {timestamp: 1}),
+        await scenario.addEvent(0, 2, {timestamp: 1}),
         await scenario.addEvent(0, 3, {timestamp: 6})
       ].map((event) => put(event, 'metadata.bundleId', null));
+
+      expect(nonBundledEvents[1].eventId.localeCompare(nonBundledEvents[2].eventId)).to.equal(1);
 
       await Promise.all([...alreadyBundledAssets, ...nonBundledAssets].map((asset) => storage.storeAsset(asset)));
       await Promise.all([...alreadyBundledEvents, ...nonBundledEvents].map((event) => storage.storeEvent(event)));
@@ -284,7 +222,7 @@ describe('Entity Repository', () => {
 
     it('considers only assets and events without a bundle', () => {
       expect(ret.assets).to.have.deep.members(nonBundledAssets);
-      expect(ret.events).to.deep.equal([nonBundledEvents[1]]);
+      expect(ret.events).to.deep.equal([nonBundledEvents[2]]);
     });
 
     it('assets and events that are not included in the bundle should be left untouched', async () => {
@@ -310,7 +248,7 @@ describe('Entity Repository', () => {
 
       for (const event of nonBundledEvents) {
         const storedEvent = await storage.getEvent(event.eventId);
-        if (event.content.idData.timestamp === 1) {
+        if (event === nonBundledEvents[2]) {
           expect(storedEvent.metadata.bundleId).to.equal(bundleId);
         } else {
           expect(storedEvent.metadata.bundleId).to.be.null;
@@ -328,7 +266,7 @@ describe('Entity Repository', () => {
 
       for (const event of nonBundledEvents) {
         const storedEvent = await storage.getEvent(event.eventId);
-        if (event.content.idData.timestamp === 1) {
+        if (event === nonBundledEvents[2]) {
           expect(storedEvent.metadata.bundleTransactionHash).to.equal(bundleTxHash);
           expect(storedEvent.metadata.bundleUploadTimestamp).to.be.equal(5);
         } else {
@@ -341,14 +279,14 @@ describe('Entity Repository', () => {
     it('second call to fetchEntitiesForBundling should include latest events and the leftovers from the previous bundling', async () => {
       const ret2 = await expect(storage.fetchEntitiesForBundling('otherId', bundleItemsCountLimit)).to.be.fulfilled;
       expect(ret2.assets).to.be.empty;
-      expect(ret2.events).to.have.deep.members([nonBundledEvents[0], nonBundledEvents[2]]);
+      expect(ret2.events).to.have.deep.members([nonBundledEvents[1], nonBundledEvents[0], nonBundledEvents[3]]);
     });
 
     it('should take the size limit into consideration', async () => {
-      const mongoSizeOfFirstEvent = mongoObjectSize(nonBundledEvents[0]);
+      const mongoSizeOfFirstEvent = mongoObjectSize(nonBundledEvents[1]);
       const ret2 = await expect(storage.fetchEntitiesForBundling('otherId', bundleItemsCountLimit, mongoSizeOfFirstEvent + 1)).to.be.fulfilled;
       expect(ret2.assets).to.be.empty;
-      expect(ret2.events).to.have.deep.members([nonBundledEvents[0]]);
+      expect(ret2.events).to.have.deep.members([nonBundledEvents[1]]);
     });
   });
 
