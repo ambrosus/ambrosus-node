@@ -46,67 +46,21 @@ export default class EntityRepository {
     return this.hideEventDataIfNecessary(event, accessLevel);
   }
 
-  assetsAndEventsToEntityIds(assets, events) {
-    return [
-      ...assets.map((asset) => ({type: 'asset', id: asset.assetId, timestamp: asset.content.idData.timestamp, mongoSize: mongoObjectSize(asset)})),
-      ...events.map((event) => ({type: 'event', id: event.eventId, timestamp: event.content.idData.timestamp, mongoSize: mongoObjectSize(event)}))
-    ];
-  }
-
-  orderEntityIds(entities) {
-    return [...entities].sort((first, second) =>
-      first.timestamp - second.timestamp ||
-      first.type.localeCompare(second.type) || // asset < event
-      first.id.localeCompare(second.id));
-  }
-
-  discardEntitiesForBundling(orderedEntities, bundleItemsCountLimit, bundleSizeInBytesLimit) {
-    let lastIndex = 0;
-    let sizeAccum = 0;
-    while (lastIndex < orderedEntities.length && lastIndex < bundleItemsCountLimit) {
-      sizeAccum += orderedEntities[lastIndex].mongoSize;
-      if (sizeAccum > bundleSizeInBytesLimit) {
-        break;
-      }
-      lastIndex++;
+  selectEntityForBundling(asset, event) {
+    if (asset === null) {
+      return event;
     }
-    return orderedEntities.slice(lastIndex);
-  }
+    if (event === null) {
+      return asset;
+    }
 
-  async updateEntities(entities, updateQuery) {
-    const assetIds = entities.filter((ent) => ent.type === 'asset').map((asset) => asset.id);
-    const eventIds = entities.filter((ent) => ent.type === 'event').map((event) => event.id);
-    await this.db.collection('assets').updateMany({
-      assetId: {
-        $in: assetIds
-      }
-    }, updateQuery);
-    await this.db.collection('events').updateMany({
-      eventId: {
-        $in: eventIds
-      }
-    }, updateQuery);
-  }
+    if (asset.content.idData.timestamp < event.content.idData.timestamp) {
+      return asset;
+    } else if (asset.content.idData.timestamp > event.content.idData.timestamp) {
+      return event;
+    }
 
-  async setEntitiesBundles(entities, bundleId) {
-    const update = {
-      $set: {
-        'metadata.bundleId': bundleId
-      },
-      $unset: {
-        'repository.bundleStubId': ''
-      }
-    };
-    await this.updateEntities(entities, update);
-  }
-
-  async unsetEntitiesBundlesStubs(entities) {
-    const update = {
-      $unset: {
-        'repository.bundleStubId': ''
-      }
-    };
-    await this.updateEntities(entities, update);
+    return asset;
   }
 
   async fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit, bundleSizeInBytesLimit = MONGO_SIZE_IN_BYTES_LIMIT) {
@@ -115,37 +69,61 @@ export default class EntityRepository {
       'repository.bundleStubId': null
     };
 
-    const setBundleStubIdUpdate = {
+    const updateBundleStubId = {
       $set: {
         'repository.bundleStubId': bundleStubId
       }
     };
 
-    await this.db.collection('assets').updateMany(notBundledQuery, setBundleStubIdUpdate);
-    await this.db.collection('events').updateMany(notBundledQuery, setBundleStubIdUpdate);
+    const selectedAssets = [];
+    const selectedEvents = [];
+    let usedSize = 0;
 
-    const thisBundleStubQuery = {
-      'repository.bundleStubId': bundleStubId
+    const assetsCursor = await this.db.collection('assets').find(notBundledQuery, {
+      projection: this.blacklistedFields,
+      sort: {'content.idData.timestamp': 1, assetId: 1}
+    });
+    const eventsCursor = await this.db.collection('events').find(notBundledQuery, {
+      projection: this.blacklistedFields,
+      sort: {'content.idData.timestamp': 1, eventId: 1}
+    });
+
+    let nextAsset = await assetsCursor.next();
+    let nextEvent = await eventsCursor.next();
+
+    const fitsIntoSizeLimit = (entity) => {
+      const size = mongoObjectSize(entity);
+      if (usedSize + size > bundleSizeInBytesLimit) {
+        return false;
+      }
+      usedSize += size;
+      return true;
     };
 
-    const assets = await this.db
-      .collection('assets')
-      .find(thisBundleStubQuery, {projection: this.blacklistedFields})
-      .toArray();
-    const events = await this.db
-      .collection('events')
-      .find(thisBundleStubQuery, {projection: this.blacklistedFields})
-      .toArray();
+    while (!(nextAsset === null && nextEvent === null) && (selectedAssets.length + selectedEvents.length < bundleItemsCountLimit)) {
+      const next = this.selectEntityForBundling(nextAsset, nextEvent);
+      if (next === nextAsset) {
+        if (!fitsIntoSizeLimit(nextAsset)) {
+          break;
+        }
 
-    const entities = this.assetsAndEventsToEntityIds(assets, events);
-    const orderedEntities = this.orderEntityIds(entities);
+        await this.db.collection('assets').updateOne({assetId: nextAsset.assetId}, updateBundleStubId);
+        selectedAssets.push(nextAsset);
+        nextAsset = await assetsCursor.next();
+      } else {
+        if (!fitsIntoSizeLimit(nextEvent)) {
+          break;
+        }
 
-    const discardedEntities = this.discardEntitiesForBundling(orderedEntities, bundleItemsCountLimit, bundleSizeInBytesLimit);
-    await this.unsetEntitiesBundlesStubs(discardedEntities);
+        await this.db.collection('events').updateOne({eventId: nextEvent.eventId}, updateBundleStubId);
+        selectedEvents.push(nextEvent);
+        nextEvent = await eventsCursor.next();
+      }
+    }
 
     return {
-      assets: assets.filter((asset) => !discardedEntities.some(({id}) => asset.assetId === id)),
-      events: events.filter((event) => !discardedEntities.some(({id}) => event.eventId === id))
+      assets: selectedAssets,
+      events: selectedEvents
     };
   }
 
@@ -154,12 +132,23 @@ export default class EntityRepository {
       'repository.bundleStubId': bundleStubId
     };
 
-    const assets = await this.db.collection('assets').find(thisBundleStubQuery)
-      .toArray();
-    const events = await this.db.collection('events').find(thisBundleStubQuery)
-      .toArray();
-    const entities = this.assetsAndEventsToEntityIds(assets, events);
-    await this.setEntitiesBundles(entities, bundleId);
+    const updateStatement = {
+      $set: {
+        'metadata.bundleId': bundleId
+      },
+      $unset: {
+        'repository.bundleStubId': ''
+      }
+    };
+
+    await this.db.collection('assets').updateMany(
+      thisBundleStubQuery,
+      updateStatement
+    );
+    await this.db.collection('events').updateMany(
+      thisBundleStubQuery,
+      updateStatement
+    );
   }
 
   async discardBundling(bundleStubId) {
@@ -167,13 +156,20 @@ export default class EntityRepository {
       'repository.bundleStubId': bundleStubId
     };
 
-    const assets = await this.db.collection('assets').find(thisBundleStubQuery)
-      .toArray();
-    const events = await this.db.collection('events').find(thisBundleStubQuery)
-      .toArray();
-    const entities = this.assetsAndEventsToEntityIds(assets, events);
+    const updateStatement = {
+      $unset: {
+        'repository.bundleStubId': ''
+      }
+    };
 
-    await this.unsetEntitiesBundlesStubs(entities);
+    await this.db.collection('assets').updateMany(
+      thisBundleStubQuery,
+      updateStatement
+    );
+    await this.db.collection('events').updateMany(
+      thisBundleStubQuery,
+      updateStatement
+    );
   }
 
   async storeBundle(bundle, storagePeriods) {
@@ -242,7 +238,7 @@ export default class EntityRepository {
   }
 
   async getBundleMetadata(bundleId) {
-    return await this.db.collection('bundle_metadata').findOne({bundleId}, {fields: this.blacklistedFields});
+    return await this.db.collection('bundle_metadata').findOne({bundleId}, {projection: this.blacklistedFields});
   }
 
   async deleteBundles(bundleIds) {
