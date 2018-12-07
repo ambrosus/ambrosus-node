@@ -51,9 +51,4 @@ describe('Worker Log Repository', () => {
     await expect(storage.storeLog(exampleLog)).to.be.fulfilled;
     expect((await storage.getLogs(3)).length).to.be.equal(3);
   });
-
-  it('creates index with correct ttl', async () => {
-    await storage.storeLog(exampleLog);
-    expect((await db.collection('workerLogs').indexes())[1].expireAfterSeconds).to.equal(config.workerLogsTTLInSeconds);
-  });
 });

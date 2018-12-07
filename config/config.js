@@ -46,5 +46,6 @@ module.exports = Object.freeze({
 
   requestSizeLimit: process.env.REQUEST_SIZE_LIMIT || '1mb',
 
-  workerLogsTTLInSeconds: process.env.WORKER_LOGS_TTL || 172800 // 2 days
+  workerLogsTTLInSeconds: process.env.WORKER_LOGS_TTL || 172800, // 2 days
+  workerTasksTTLInSeconds: process.env.WORKER_TASKS_TTL || 600 // 10 minutes
 });

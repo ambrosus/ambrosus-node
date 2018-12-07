@@ -7,7 +7,6 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-
 export default class WorkerTaskTrackingRepository {
   constructor(db) {
     this.db = db;
@@ -15,7 +14,10 @@ export default class WorkerTaskTrackingRepository {
 
   async tryToBeginWork(workType) {
     try {
-      const {insertedId} = await this.db.collection('workerTasks').insertOne({workType});
+      const {insertedId} = await this.db.collection('workerTasks').insertOne({
+        startTime: new Date(),
+        workType
+      });
       return insertedId;
     } catch (error) {
       if (error.message.includes(`duplicate key error`)) {

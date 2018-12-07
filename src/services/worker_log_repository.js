@@ -15,6 +15,7 @@ export default class WorkerLogRepository {
       _id: 0
     };
   }
+
   async storeLog(log) {
     await this.db.collection('workerLogs').insertOne({...log});
   }

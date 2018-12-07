@@ -13,21 +13,25 @@ import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
 import config from '../../config/config';
 
 import WorkerTaskTrackingRepository from '../../src/services/worker_task_tracking_repository';
+import sinon from 'sinon';
 
 const {expect} = chai;
 chai.use(chaiAsPromised);
 
-describe('Worker Log Repository', () => {
+describe('Worker Task Tracking Repository', () => {
   let db;
   let client;
   let storage;
+  let clock;
   const exampleTaskType = 'deliveringAmbrosia';
   const anotherExampleTaskType = 'castingLightnings';
   const fakeTaskId = 'hephaestusDidNotKnowAboutPompei';
+  const now = 15000000000;
 
   before(async () => {
     ({db, client} = await connectToMongo(config));
     storage = new WorkerTaskTrackingRepository(db);
+    clock = sinon.useFakeTimers(now);
   });
 
   afterEach(async () => {
@@ -35,7 +39,16 @@ describe('Worker Log Repository', () => {
   });
 
   after(async () => {
+    clock.restore();
     client.close();
+  });
+
+  it('saves task start time', async () => {
+    await expect(storage.tryToBeginWork(exampleTaskType)).to.be.fulfilled;
+    expect(await db.collection('workerTasks').findOne({}, {fields: {_id: 0}})).to.deep.equal({
+      startTime: new Date(now),
+      workType: exampleTaskType
+    });
   });
 
   it('throws if tried to begin task that is already running', async () => {
