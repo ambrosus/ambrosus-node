@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 /** @abstract */
 export default class HermesUploadStrategy {
   get workerInterval() {
-    return 1000;
+    return 1;
   }
 
   storagePeriods() {
