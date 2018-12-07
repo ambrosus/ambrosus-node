@@ -54,9 +54,7 @@ export default class EntityRepository {
       return asset;
     }
 
-    if (asset.content.idData.timestamp < event.content.idData.timestamp) {
-      return asset;
-    } else if (asset.content.idData.timestamp > event.content.idData.timestamp) {
+    if (asset.content.idData.timestamp > event.content.idData.timestamp) {
       return event;
     }
 
@@ -75,10 +73,6 @@ export default class EntityRepository {
       }
     };
 
-    const selectedAssets = [];
-    const selectedEvents = [];
-    let usedSize = 0;
-
     const assetsCursor = await this.db.collection('assets').find(notBundledQuery, {
       projection: this.blacklistedFields,
       sort: {'content.idData.timestamp': 1, assetId: 1}
@@ -88,33 +82,31 @@ export default class EntityRepository {
       sort: {'content.idData.timestamp': 1, eventId: 1}
     });
 
+    const selectedAssets = [];
+    const selectedEvents = [];
+    let usedSize = 0;
+
     let nextAsset = await assetsCursor.next();
     let nextEvent = await eventsCursor.next();
 
-    const fitsIntoSizeLimit = (entity) => {
-      const size = mongoObjectSize(entity);
-      if (usedSize + size > bundleSizeInBytesLimit) {
-        return false;
-      }
-      usedSize += size;
-      return true;
-    };
+    const candidatesLeft = () => nextAsset !== null || nextEvent !== null;
+    const itemCountLimitReached = () => selectedAssets.length + selectedEvents.length >= bundleItemsCountLimit;
 
-    while (!(nextAsset === null && nextEvent === null) && (selectedAssets.length + selectedEvents.length < bundleItemsCountLimit)) {
+    while (candidatesLeft() && !itemCountLimitReached()) {
       const next = this.selectEntityForBundling(nextAsset, nextEvent);
-      if (next === nextAsset) {
-        if (!fitsIntoSizeLimit(nextAsset)) {
-          break;
-        }
 
+      const size = mongoObjectSize(next);
+      if (usedSize + size < bundleSizeInBytesLimit) {
+        usedSize += size;
+      } else {
+        break;
+      }
+
+      if (next === nextAsset) {
         await this.db.collection('assets').updateOne({assetId: nextAsset.assetId}, updateBundleStubId);
         selectedAssets.push(nextAsset);
         nextAsset = await assetsCursor.next();
       } else {
-        if (!fitsIntoSizeLimit(nextEvent)) {
-          break;
-        }
-
         await this.db.collection('events').updateOne({eventId: nextEvent.eventId}, updateBundleStubId);
         selectedEvents.push(nextEvent);
         nextEvent = await eventsCursor.next();
