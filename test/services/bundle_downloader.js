@@ -12,15 +12,15 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import EntityDownloader from '../../src/services/entity_downloader';
+import BundleDownloader from '../../src/services/bundle_downloader';
 import {createBundle} from '../fixtures/assets_events';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-describe('Entity downloader', () => {
-  let entityDownloader;
+describe('Bundle downloader', () => {
+  let bundleDownloader;
   let mockHttpsClient;
 
   before(async () => {
@@ -28,7 +28,7 @@ describe('Entity downloader', () => {
       performHTTPSGet : sinon.stub(),
       validateIncomingStatusCode : sinon.stub()
     };
-    entityDownloader = new EntityDownloader(mockHttpsClient);
+    bundleDownloader = new BundleDownloader(mockHttpsClient);
   });
 
   describe('download bundle', () => {
@@ -41,7 +41,7 @@ describe('Entity downloader', () => {
       const OKStatusCode = 200;
       mockHttpsClient.performHTTPSGet.resolves({statusCode : OKStatusCode, body : processedBundle});
       mockHttpsClient.validateIncomingStatusCode.resolves();
-      const res = await expect(entityDownloader.downloadBundle(exampleVendorId, exampleBundleId)).to.be.fulfilled;
+      const res = await expect(bundleDownloader.downloadBundle(exampleVendorId, exampleBundleId)).to.be.fulfilled;
       expect(mockHttpsClient.performHTTPSGet).to.have.been.calledWith(exampleVendorId, examplePath);
       expect(mockHttpsClient.validateIncomingStatusCode).to.have.been.calledWith(OKStatusCode);
       expect(res).to.deep.equal(processedBundle);
@@ -51,7 +51,7 @@ describe('Entity downloader', () => {
       const failureStatusCode = 500;
       mockHttpsClient.performHTTPSGet.resolves({statusCode : failureStatusCode});
       mockHttpsClient.validateIncomingStatusCode.throws(new Error());
-      await expect(entityDownloader.downloadBundle(exampleVendorId, exampleBundleId)).to.be.rejectedWith(Error);
+      await expect(bundleDownloader.downloadBundle(exampleVendorId, exampleBundleId)).to.be.rejectedWith(Error);
       expect(mockHttpsClient.performHTTPSGet).to.have.been.calledWith(exampleVendorId, examplePath);
       expect(mockHttpsClient.validateIncomingStatusCode).to.have.been.calledWith(failureStatusCode);
     });

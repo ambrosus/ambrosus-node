@@ -22,8 +22,10 @@ import {
 } from 'ambrosus-node-contracts';
 import DataModelEngine from './services/data_model_engine';
 import EntityBuilder from './services/entity_builder';
-import EntityDownloader from './services/entity_downloader';
 import EntityRepository from './services/entity_repository';
+import BundleDownloader from './services/bundle_downloader';
+import BundleBuilder from './services/bundle_builder';
+import BundleRepository from './services/bundle_repository';
 import WorkerLogRepository from './services/worker_log_repository';
 import FindEventQueryObjectFactory from './services/find_event_query_object';
 import FindAccountQueryObjectFactory from './services/find_account_query_object';
@@ -98,13 +100,15 @@ class Builder {
     const {maximumEntityTimestampOvertake} = this.config;
     this.entityBuilder = new EntityBuilder(this.identityManager, maximumEntityTimestampOvertake);
     this.entityRepository = new EntityRepository(this.db);
+    this.bundleBuilder = new BundleBuilder(this.identityManager, this.entityBuilder);
+    this.bundleRepository = new BundleRepository(this.db);
     this.workerLogRepository = new WorkerLogRepository(this.db);
     this.workerTaskTrackingRepository = new WorkerTaskTrackingRepository(this.db);
     this.findEventQueryObjectFactory = new FindEventQueryObjectFactory(this.db);
     this.findAssetQueryObjectFactory = new FindAssetQueryObjectFactory(this.db);
     this.failedChallengesCache = new FailedChallengesCache();
     this.httpsClient = new HttpsClient();
-    this.entityDownloader = new EntityDownloader(this.httpsClient);
+    this.bundleDownloader = new BundleDownloader(this.httpsClient);
     this.accountRepository = new AccountRepository(this.db);
     this.findAccountQueryObjectFactory = new FindAccountQueryObjectFactory(this.db);
     this.accountAccessDefinitions = new AccountAccessDefinitions(this.identityManager, this.accountRepository);
@@ -113,7 +117,9 @@ class Builder {
       tokenAuthenticator: this.tokenAuthenticator,
       entityBuilder: this.entityBuilder,
       entityRepository: this.entityRepository,
-      entityDownloader: this.entityDownloader,
+      bundleDownloader: this.bundleDownloader,
+      bundleBuilder: this.bundleBuilder,
+      bundleRepository: this.bundleRepository,
       accountRepository: this.accountRepository,
       findEventQueryObjectFactory: this.findEventQueryObjectFactory,
       findAccountQueryObjectFactory: this.findAccountQueryObjectFactory,
