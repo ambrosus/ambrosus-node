@@ -317,6 +317,35 @@ describe('validation', () => {
     });
   });
 
+  describe('isConstrainedToSize', () => {
+    describe('ASCII strings', () => {
+      const exampleJson = {foo: 10}; // stringified length = 10
+
+      it('works when serialized object size is less or equals to size limit', async () => {
+        expect(() => validateAndCast(exampleJson).isConstrainedToSize(10)).to.not.throw();
+      });
+
+      it('throws when serialized object size is greater than size limit', async () => {
+        expect(() => validateAndCast(exampleJson).isConstrainedToSize(9)).to.throw(ValidationError);
+      });
+    });
+
+    describe('UTF-8 strings', () => {
+      const utf8Json = {
+        тест: '👍💯',
+        的的: true
+      }; // stringified length = 23, cyrillic characters size=2, japanese=3, emoji=4. Total size = 37
+
+      it('works when serialized object size is less or equals to size limit', async () => {
+        expect(() => validateAndCast(utf8Json).isConstrainedToSize(37)).to.not.throw();
+      });
+
+      it('throws when serialized object size is greater than size limit', async () => {
+        expect(() => validateAndCast(utf8Json).isConstrainedToSize(36)).to.throw(ValidationError);
+      });
+    });
+  });
+
   describe('validate', () => {
     const input = {one: 0, two: '2', three: false};
     const predicate = (value) => value !== '2';
