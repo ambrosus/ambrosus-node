@@ -84,9 +84,9 @@ class ValidationAndCasting {
     return this;
   }
 
-  isConstrainedToSize(maxLength, errorMsg = `Object is too large.`) {
+  isConstrainedToSize(maxSize, errorMsg = `Object is too large.`) {
     const serialized = JSON.stringify(this.params, null, 0);
-    if (serialized.length > maxLength) {
+    if (Buffer.byteLength(serialized) > maxSize) {
       throw new ValidationError(errorMsg);
     }
     return this;
