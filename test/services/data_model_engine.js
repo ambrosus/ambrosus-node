@@ -873,16 +873,13 @@ describe('Data Model Engine', () => {
 
     const exampleBundleId = '0xabcdef';
     const exampleBundle = put(createBundle(), 'bundleId', exampleBundleId);
-    const exampleBundleMetadata = {someData: 'someValue'};
 
     before(async () => {
       mockEntityRepository = {
-        getBundle: sinon.stub(),
-        getBundleMetadata: sinon.stub()
+        getBundle: sinon.stub()
       };
 
       mockEntityRepository.getBundle.resolves(exampleBundle);
-      mockEntityRepository.getBundleMetadata.resolves({bundleId: exampleBundleId, ...exampleBundleMetadata});
 
       modelEngine = new DataModelEngine({
         entityBuilder: mockEntityBuilder,
@@ -892,13 +889,12 @@ describe('Data Model Engine', () => {
       ret = await expect(modelEngine.getBundle(exampleBundleId)).to.fulfilled;
     });
 
-    it('asks the entity repository for the bundle and bundle metadata', async () => {
+    it('asks the entity repository for the bundle', async () => {
       expect(mockEntityRepository.getBundle).to.have.been.calledWith(exampleBundleId);
-      expect(mockEntityRepository.getBundleMetadata).to.have.been.calledWith(exampleBundleId);
     });
 
     it('properly assembles the result', () => {
-      expect(ret).to.deep.equal({...exampleBundle, metadata: {...exampleBundleMetadata}});
+      expect(ret).to.deep.equal(exampleBundle);
     });
 
     it('throws NotFoundError when bundle with requested id does not exist', async () => {

@@ -1039,11 +1039,6 @@ Fetches a bundle by identifier
                 + timestamp (number) - UNIX timestamp of the event creation.
                 + entriesHash (string) - Hash calculated from the entries field.
             + entries (array) - An array consisting of assets, events with public data and stubs of events with private data.
-        + metadata (object) - Bundle service data.
-            + bundleTransactionHash (string) - Identifier of the transaction on which the proof of bundle has been uploaded.
-              More info on the transaction can be found under `http://explorer-test.ambrosus.com/#/tx/{bundleTransactionHash}`
-            + proofBlock (number) - Block number in which the transaction was included
-            + bundleUploadTimestamp (number) - Timestamp of bundle upload
 
 
     + Body
@@ -1060,11 +1055,6 @@ Fetches a bundle by identifier
                     "entries" : [
                         "<assets and events stubs>"
                     ]
-                },
-                "metadata" : {
-                  "bundleTransactionHash": "0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009",
-                  "proofBlock": 142,
-                  "bundleUploadTimestamp": 1503424969
                 }
             }
 
