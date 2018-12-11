@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "2f4f9e02-55a0-4388-9dd0-d03ad1567a98",
+		"_postman_id": "e9a80721-2d71-4e40-a7dd-e7fb75f6c5f1",
 		"name": "Ambrosus",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -104,10 +104,10 @@
 					"listen": "test",
 					"script": {
 						"id": "8015e82b-7704-46e7-8aea-e29dd2cfaa59",
-						"type": "text/javascript",
 						"exec": [
 							""
-						]
+						],
+						"type": "text/javascript"
 					}
 				}
 			],
@@ -129,7 +129,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"address\": \"{{userAddress}}\",\n    \"permissions\" : [\"register_account\",\"create_entity\"],\n    \"accessLevel\" : 0\n}"
+					"raw": "{\n\t\"address\": \"{{userAddress}}\",\n    \"permissions\": [\n        \"create_asset\",\n        \"create_event\"\n    ],\n    \"accessLevel\" : 100\n}"
 				},
 				"url": {
 					"raw": "{{url}}/accounts",
@@ -215,6 +215,9 @@
 		},
 		{
 			"name": "Finding accounts",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
 			"request": {
 				"method": "GET",
 				"header": [
@@ -263,10 +266,10 @@
 					"listen": "test",
 					"script": {
 						"id": "b842d5f9-4c30-4b2c-af09-73b7be43d984",
-						"type": "text/javascript",
 						"exec": [
 							"pm.environment.set(\"assetId\", JSON.parse(responseBody).assetId);"
-						]
+						],
+						"type": "text/javascript"
 					}
 				}
 			],
@@ -374,10 +377,10 @@
 					"listen": "test",
 					"script": {
 						"id": "b1432ed1-971a-47f1-8867-7a76d1050c7d",
-						"type": "text/javascript",
 						"exec": [
 							"pm.environment.set(\"eventId\", JSON.parse(responseBody).eventId);"
-						]
+						],
+						"type": "text/javascript"
 					}
 				}
 			],
@@ -399,7 +402,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"content\": {\n        \"idData\": {\n            \"assetId\": \"{{assetId}}\",\n            \"createdBy\": \"{{userAddress}}\",\n            \"accessLevel\": 4,\n            \"timestamp\": 1503424923\n        },\n        \"data\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"demo.entrytype\",\n\t\t\t\t\t\"value\": \"some value\" \n\t\t\t\t}\n\t\t\t]\n    }\n}"
+					"raw": "{\n    \"content\": {\n        \"idData\": {\n            \"assetId\": \"{{assetId}}\",\n            \"createdBy\": \"{{userAddress}}\",\n            \"accessLevel\": 4,\n            \"timestamp\": 1503424923\n        },\n        \"data\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"demo.entrytype\",\n\t\t\t\t\t\"value\": \"some value\"\n\t\t\t\t}\n\t\t\t]\n    }\n}"
 				},
 				"url": {
 					"raw": "{{url}}/assets/{{assetId}}/events",
@@ -425,13 +428,11 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "{{url}}/assets/{{assetId}}/events/{{eventId}}",
+					"raw": "{{url}}/events/{{eventId}}",
 					"host": [
 						"{{url}}"
 					],
 					"path": [
-						"assets",
-						"{{assetId}}",
 						"events",
 						"{{eventId}}"
 					]
@@ -518,6 +519,50 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Get bundle metadata by id",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/bundle/{{bundleId}}/info",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"bundle",
+						"{{bundleId}}",
+						"info"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get nodeinfo",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/nodeinfo",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"nodeinfo"
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"variable": [
@@ -525,8 +570,7 @@
 			"id": "06441822-7877-493b-86f3-6120a28b74df",
 			"key": "url",
 			"value": "http://network.ambrosus.com",
-			"type": "string",
-			"description": ""
+			"type": "string"
 		}
 	]
 }
