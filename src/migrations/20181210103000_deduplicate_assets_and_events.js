@@ -17,10 +17,9 @@ const deduplicateEntities = async (db, collectionName, uniqueKey) => {
       }
     },
     {
-      $match:
-        {
-          count: {$gt: 1}
-        }
+      $match: {
+        count: {$gt: 1}
+      }
     }]
   );
   while (await cursor.hasNext()) {
