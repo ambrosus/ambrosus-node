@@ -308,23 +308,23 @@ describe('Entity Repository', () => {
       await scenario.addAdminAccount(adminAccountWithSecret);
 
       alreadyBundledAssets = [
-        await scenario.addAsset(0),
-        await scenario.addAsset(0)
+        await scenario.addAsset(0, {timestamp: 0}),
+        await scenario.addAsset(0, {timestamp: 1})
       ].map((asset) => put(asset, {'metadata.bundleId': 1, 'metadata.bundleTransactionHash': '0x1', 'metadata.bundleUploadTimestamp': 5}));
 
       alreadyBundledEvents = [
-        await scenario.addEvent(0, 0),
-        await scenario.addEvent(0, 1)
+        await scenario.addEvent(0, 0, {timestamp: 2}),
+        await scenario.addEvent(0, 1, {timestamp: 3})
       ].map((event) => put(event, {'metadata.bundleId': 1, 'metadata.bundleTransactionHash': '0x1', 'metadata.bundleUploadTimestamp': 5}));
 
       nonBundledAssets = [
-        await scenario.addAsset(0, {timestamp: 0}),
-        await scenario.addAsset(0, {timestamp: 1})
+        await scenario.addAsset(0, {timestamp: 4}),
+        await scenario.addAsset(0, {timestamp: 5})
       ].map((asset) => put(asset, 'metadata.bundleId', null));
 
       nonBundledEvents = [
-        await scenario.addEvent(0, 2, {timestamp: 2}),
-        await scenario.addEvent(0, 3, {timestamp: 1})
+        await scenario.addEvent(0, 2, {timestamp: 6}),
+        await scenario.addEvent(0, 3, {timestamp: 7})
       ].map((event) => put(event, 'metadata.bundleId', null));
 
       await Promise.all([...alreadyBundledAssets, ...nonBundledAssets].map((asset) => storage.storeAsset(asset)));

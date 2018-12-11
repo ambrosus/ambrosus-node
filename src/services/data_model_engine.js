@@ -173,8 +173,7 @@ export default class DataModelEngine {
     if (bundle === null) {
       throw new NotFoundError(`No bundle with id = ${bundleId} found`);
     }
-    const metadata = pick(await this.getBundleMetadata(bundleId), 'bundleId');
-    return {...bundle, metadata};
+    return bundle;
   }
 
   async getBundleMetadata(bundleId) {

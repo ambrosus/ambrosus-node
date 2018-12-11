@@ -99,8 +99,6 @@ describe('Bundles - Integrations', () => {
         .get(`/bundle/${res.bundleId}`);
       expect(response.body.content).to.deep.equal(res.content);
       expect(response.body.bundleId).to.equal(res.bundleId);
-      expect(response.body.metadata).to.have.keys(['proofBlock', 'bundleTransactionHash', 'bundleUploadTimestamp', 'storagePeriods']);
-      expect(response.body.metadata.bundleTransactionHash).to.be.properTxHash;
     });
 
     it('assets and events should have fields in metadata set up', async () => {
@@ -130,6 +128,7 @@ describe('Bundles - Integrations', () => {
         .get(`/bundle/${res.bundleId}/info`);
 
       expect(response.body).to.have.keys(['bundleId', 'proofBlock', 'bundleTransactionHash', 'bundleUploadTimestamp', 'storagePeriods']);
+      expect(response.body.bundleTransactionHash).to.be.properTxHash;
     });
 
     it('return 404 if bundle with requested id does not exist', async () => {
