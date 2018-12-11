@@ -37,8 +37,7 @@ const createUniqueIndex = async (db, collectionName, uniqueKey) => {
   if (collectionExists && await db.collection(collectionName).indexExists([`${uniqueKey}_1`])) {
     await db.collection(collectionName).dropIndex(`${uniqueKey}_1`);
   }
-  const indexObject = {};
-  indexObject[uniqueKey] = 1;
+  const indexObject = {[uniqueKey]: 1};
   await db.collection(collectionName).createIndex(indexObject, {unique: true});
 };
 
