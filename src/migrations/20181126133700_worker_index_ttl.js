@@ -9,7 +9,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 // eslint-disable-next-line import/prefer-default-export
 export const up = async (db, {workerLogsTTLInSeconds}, logger) => {
-  await db.collection('workerLogs').drop();
+  const collectionExists = (await db.listCollections({name: 'workerLogs'}).toArray()).length > 0;
+  if (collectionExists) {
+    await db.collection('workerLogs').drop();
+  }
   await db.collection('workerLogs').createIndex({timestamp: -1}, {expireAfterSeconds: workerLogsTTLInSeconds});
   logger.info(`Added index to worker logs with TTL=${workerLogsTTLInSeconds}`);
 };

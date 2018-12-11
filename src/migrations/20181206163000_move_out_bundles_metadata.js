@@ -15,12 +15,10 @@ const deduplicateBundles = async (db) => {
         dups: {$addToSet: '$_id'},
         count: {$sum: 1}
       }
-    },
-    {
-      $match:
-        {
-          count: {$gt: 1}
-        }
+    }, {
+      $match: {
+        count: {$gt: 1}
+      }
     }],
     {
       allowDiskUse: true,
@@ -41,7 +39,8 @@ export const up = async (db, config, logger) => {
   await deduplicateBundles(db);
   await db.collection('bundle_metadata').createIndex({bundleId : 1}, {unique: true});
 
-  if (await db.collection('bundles').indexExists(['bundleId_1'])) {
+  const collectionExists = (await db.listCollections({name: 'bundles'}).toArray()).length > 0;
+  if (collectionExists && await db.collection('bundles').indexExists(['bundleId_1'])) {
     await db.collection('bundles').dropIndex('bundleId_1');
   }
   await db.collection('bundles').createIndex({bundleId : 1}, {unique: true});
