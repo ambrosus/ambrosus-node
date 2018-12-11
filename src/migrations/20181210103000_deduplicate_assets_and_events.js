@@ -33,7 +33,8 @@ const deduplicateEntities = async (db, collectionName, uniqueKey) => {
 };
 
 const createUniqueIndex = async (db, collectionName, uniqueKey) => {
-  if (await db.collection(collectionName).indexExists([`${uniqueKey}_1`])) {
+  const collectionExists = (await db.listCollections({name: collectionName}).toArray()).length > 0;
+  if (collectionExists && await db.collection(collectionName).indexExists([`${uniqueKey}_1`])) {
     await db.collection(collectionName).dropIndex(`${uniqueKey}_1`);
   }
   const indexObject = {};
