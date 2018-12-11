@@ -7,11 +7,11 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-const deduplicateAssets = async (db) => {
-  const cursor = await db.collection('assets').aggregate(
+const deduplicateEntities = async (db, collectionName, uniqueKey) => {
+  const cursor = await db.collection(collectionName).aggregate(
     [{
       $group: {
-        _id: '$assetId',
+        _id: `$${uniqueKey}`,
         dups: {$addToSet: '$_id'},
         count: {$sum: 1}
       }
@@ -26,51 +26,28 @@ const deduplicateAssets = async (db) => {
   while (await cursor.hasNext()) {
     const document = await cursor.next();
     const toRemove = document.dups.slice(1);
-    await db.collection('assets').deleteMany({
+    await db.collection(collectionName).deleteMany({
       _id: {$in: toRemove}
     });
   }
 };
 
-const deduplicateEvents = async (db) => {
-  const cursor = await db.collection('events').aggregate(
-    [{
-      $group: {
-        _id: '$eventId',
-        dups: {$addToSet: '$_id'},
-        count: {$sum: 1}
-      }
-    },
-    {
-      $match:
-        {
-          count: {$gt: 1}
-        }
-    }]
-  );
-  while (await cursor.hasNext()) {
-    const document = await cursor.next();
-    const toRemove = document.dups.slice(1);
-    await db.collection('events').deleteMany({
-      _id: {$in: toRemove}
-    });
+const createUniqueIndex = async (db, collectionName, uniqueKey) => {
+  if (await db.collection(collectionName).indexExists([`${uniqueKey}_1`])) {
+    await db.collection(collectionName).dropIndex(`${uniqueKey}_1`);
   }
+  const indexObject = {};
+  indexObject[uniqueKey] = 1;
+  await db.collection(collectionName).createIndex(indexObject, {unique: true});
 };
 
 // eslint-disable-next-line import/prefer-default-export
 export const up = async (db, config, logger) => {
-  await deduplicateAssets(db);
-  await deduplicateEvents(db);
+  await deduplicateEntities(db, 'assets', 'assetId');
+  await deduplicateEntities(db, 'events', 'eventId');
 
-  if (await db.collection('assets').indexExists(['assetId_1'])) {
-    await db.collection('assets').dropIndex('assetId_1');
-  }
-  await db.collection('assets').createIndex({assetId : 1}, {unique: true});
-
-  if (await db.collection('events').indexExists(['eventId_1'])) {
-    await db.collection('events').dropIndex('eventId_1');
-  }
-  await db.collection('events').createIndex({eventId : 1}, {unique: true});
+  await createUniqueIndex(db, 'assets', 'assetId');
+  await createUniqueIndex(db, 'events', 'eventId');
 
   logger.info(`Created unique indexes on assets and events`);
 };
