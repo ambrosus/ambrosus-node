@@ -25,26 +25,47 @@ export default class UploadRepository {
     this.lowFundsWarningAmount = lowFundsWarningAmount;
   }
 
-  async uploadBundle(bundleId, storagePeriods) {
-    const uploaderRole = new Role(await this.rolesWrapper.onboardedRole(this.identityManager.nodeAddress()));
-    if (!uploaderRole.is(Role.HERMES)) {
-      throw new Error('Node is not onboarded as a HERMES');
-    }
+  async ensureBundleIsUploaded(bundleId, storagePeriods) {
+    await this.validateNodeIsOnboardedAsHermes();
+    await this.validateEnoughFundsForUploadFee(storagePeriods);
 
+    const previousUploader = await this.shelteringWrapper.getBundleUploader(bundleId);
+    if (this.isEmptyAddress(previousUploader)) {
+      return this.receiptWithResult(this.uploadsActions.uploadBundle(bundleId, storagePeriods), 'Bundle was uploaded');
+    }
+    if (this.identityManager.nodeAddress() === previousUploader) {
+      return this.receiptWithResult(this.uploadsActions.getBundleUploadData(bundleId), 'Bundle was already uploaded, updated metadata from chain');
+    }
+    throw new Error('Bundle was already uploaded by a different HERMES node');
+  }
+
+  async receiptWithResult(uploadReceiptPromise, uploadResult) {
+    const uploadReceipt = await uploadReceiptPromise;
+    return {
+      ...uploadReceipt,
+      uploadResult
+    };
+  }
+
+  isEmptyAddress(address) {
+    const emptyAddressRegex = /^0x0+$/gi;
+    return emptyAddressRegex.test(address);
+  }
+
+  async validateEnoughFundsForUploadFee(storagePeriods) {
     const fee = await this.feesWrapper.feeForUpload(storagePeriods);
     if (!await this.checkIfEnoughFunds(fee)) {
       const err = new Error(`Insufficient funds: need at least ${fee} to upload the bundle`);
       Sentry.captureException(err);
       throw err;
     }
+  }
 
-    const previousUploader = await this.shelteringWrapper.getBundleUploader(bundleId);
-    const emptyAddressRegex = /^0x0+$/gi;
-    if (!emptyAddressRegex.test(previousUploader)) {
-      throw new Error(`Bundle was already uploaded`);
+  async validateNodeIsOnboardedAsHermes() {
+    const uploaderRole = new Role(await this.rolesWrapper.onboardedRole(this.identityManager.nodeAddress()));
+    if (!uploaderRole.is(Role.HERMES)) {
+      throw new Error('Node is not onboarded as a HERMES');
     }
-
-    return this.uploadsActions.uploadBundle(bundleId, storagePeriods);
   }
 
   async getBundleChainData(bundleId) {
