@@ -64,7 +64,7 @@ describe('Upload repository', () => {
     });
 
     it('calls wrappers methods with correct arguments', async () => {
-      await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.deep.equal({...exampleUploadData, uploadResult: 'Bundle was uploaded'});
+      await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.deep.equal({...exampleUploadData, uploadResult: 'Bundle has been uploaded'});
       expect(feesWrapperMock.feeForUpload).to.be.calledOnceWith(storagePeriods);
       expect(web3Mock.eth.getBalance).to.be.calledOnceWith(exampleAddress);
       expect(rolesWrapperMock.onboardedRole).to.be.calledOnceWith(exampleAddress);

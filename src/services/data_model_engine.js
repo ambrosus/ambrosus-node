@@ -206,14 +206,14 @@ export default class DataModelEngine {
   async uploadAcceptedBundleCandidates() {
     const waitingBundles = await this.entityRepository.findBundlesWaitingForUpload();
     const summary = {
-      ok: [],
+      ok: {},
       failed: {}
     };
     for (const waitingBundle of waitingBundles) {
       try {
         const {blockNumber, transactionHash, uploadResult} = await this.uploadRepository.ensureBundleIsUploaded(waitingBundle.bundleId, waitingBundle.storagePeriods);
         await this.entityRepository.storeBundleProofMetadata(waitingBundle.bundleId, blockNumber, transactionHash);
-        summary.ok.push({bundleId:waitingBundle.bundleId, uploadResult});
+        summary.ok[waitingBundle.bundleId] = {uploadResult};
       } catch (err) {
         summary.failed[waitingBundle.bundleId] = err;
       }

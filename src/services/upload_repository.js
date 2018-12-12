@@ -31,7 +31,7 @@ export default class UploadRepository {
 
     const previousUploader = await this.shelteringWrapper.getBundleUploader(bundleId);
     if (this.isEmptyAddress(previousUploader)) {
-      return this.receiptWithResult(this.uploadsActions.uploadBundle(bundleId, storagePeriods), 'Bundle was uploaded');
+      return this.receiptWithResult(this.uploadsActions.uploadBundle(bundleId, storagePeriods), 'Bundle has been uploaded');
     }
     if (this.identityManager.nodeAddress() === previousUploader) {
       return this.receiptWithResult(this.uploadsActions.getBundleUploadData(bundleId), 'Bundle was already uploaded, updated metadata from chain');

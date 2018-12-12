@@ -49,7 +49,7 @@ describe('Hermes Worker', () => {
       rejectBundleCandidate: sinon.stub().resolves(),
       acceptBundleCandidate: sinon.stub().resolves(mockResult),
       uploadAcceptedBundleCandidates: sinon.stub().resolves({
-        ok: [{bundleId, uploadResult: 'Bundle was uploaded'}],
+        ok: [{bundleId, uploadResult: 'Bundle has been uploaded'}],
         failed: {}
       })
     };
@@ -139,7 +139,7 @@ describe('Hermes Worker', () => {
     it('is requested and summary is logged', async () => {
       await hermesWorker.periodicWork();
       expect(mockDataModelEngine.uploadAcceptedBundleCandidates).to.have.been.calledOnce;
-      expect(mockLogger.info).to.have.been.calledWith({message:'Bundle was uploaded', bundleId, stacktrace:undefined});
+      expect(mockLogger.info).to.have.been.calledWith({message:'Bundle has been uploaded', bundleId, stacktrace:undefined});
     });
   });
 

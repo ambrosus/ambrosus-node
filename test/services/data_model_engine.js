@@ -1195,7 +1195,7 @@ describe('Data Model Engine', () => {
 
     it('returns a summary', async () => {
       const result = await modelEngine.uploadAcceptedBundleCandidates();
-      expect(result.ok).to.deep.equal([{bundleId: 'bundle1', uploadResult: 'Success'}]);
+      expect(result.ok.bundle1.uploadResult).to.equal('Success');
       expect(result.failed.bundle3.message).to.equal('An error');
       expect(result.failed.bundle3.stack).to.exist;
     });
