@@ -9,12 +9,12 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
-import chaiAsPromissed from 'chai-as-promised';
+import chaiAsPromised from 'chai-as-promised';
 import ChallengesRepository from '../../src/services/challenges_repository';
 import sinon from 'sinon';
 
 chai.use(sinonChai);
-chai.use(chaiAsPromissed);
+chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Challenges repository', () => {

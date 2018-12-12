@@ -213,8 +213,7 @@ export default class DataModelEngine {
     };
     for (const waitingBundle of waitingBundles) {
       try {
-        const {blockNumber, transactionHash, uploadResult} = await this.uploadRepository.ensureBundleIsUploaded(waitingBundle.bundleId, waitingBundle.storagePeriods);
-        const timestamp = getTimestamp();
+        const {blockNumber, transactionHash, timestamp, uploadResult} = await this.uploadRepository.ensureBundleIsUploaded(waitingBundle.bundleId, waitingBundle.storagePeriods);
         await this.entityRepository.storeBundleProofMetadata(waitingBundle.bundleId, blockNumber, timestamp, transactionHash);
         await this.bundleRepository.storeBundleProofMetadata(waitingBundle.bundleId, blockNumber, timestamp, transactionHash);
         summary.ok[waitingBundle.bundleId] = {uploadResult};

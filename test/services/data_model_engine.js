@@ -1147,15 +1147,9 @@ describe('Data Model Engine', () => {
     let mockUploadRepository;
     let modelEngine;
 
-    let clock;
-
     const blockNumber = 10;
     const txHash = '0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009';
     const now = 50;
-
-    before(() => {
-      clock = sinon.useFakeTimers(now * 1000);
-    });
 
     beforeEach(() => {
       mockEntityRepository = {
@@ -1178,7 +1172,7 @@ describe('Data Model Engine', () => {
       mockUploadRepository = {
         ensureBundleIsUploaded: sinon.stub().resolves({})
       };
-      mockUploadRepository.ensureBundleIsUploaded.withArgs('bundle1', 2).resolves({blockNumber, transactionHash: txHash, uploadResult: 'Success'});
+      mockUploadRepository.ensureBundleIsUploaded.withArgs('bundle1', 2).resolves({blockNumber, transactionHash: txHash, timestamp: now, uploadResult: 'Success'});
       mockUploadRepository.ensureBundleIsUploaded.withArgs('bundle3', 6).rejects(new Error('An error'));
       mockEntityRepository.storeBundleProofMetadata.resolves();
       mockBundleRepository.storeBundleProofMetadata.resolves();
@@ -1188,10 +1182,6 @@ describe('Data Model Engine', () => {
         bundleRepository: mockBundleRepository,
         uploadRepository: mockUploadRepository
       });
-    });
-
-    after(() => {
-      clock.restore();
     });
 
     it('asks the bundle repository for waiting candidates', async () => {

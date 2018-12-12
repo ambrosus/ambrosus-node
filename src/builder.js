@@ -18,7 +18,8 @@ import {
   RolesWrapper,
   ShelteringWrapper,
   UploadActions,
-  UploadsWrapper
+  UploadsWrapper,
+  BlockchainStateWrapper
 } from 'ambrosus-node-contracts';
 import DataModelEngine from './services/data_model_engine';
 import EntityBuilder from './services/entity_builder';
@@ -80,7 +81,8 @@ class Builder {
     this.challengesWrapper = new ChallengesWrapper(this.headWrapper, this.web3, defaultAddress);
     this.shelteringWrapper = new ShelteringWrapper(this.headWrapper, this.web3, defaultAddress);
     this.kycWhitelistWrapper = new KycWhitelistWrapper(this.headWrapper, this.web3, defaultAddress);
-    this.uploadActions = new UploadActions(this.uploadsWrapper, this.feesWrapper, this.shelteringWrapper);
+    this.blockChainStateWrapper = new BlockchainStateWrapper(this.web3);
+    this.uploadActions = new UploadActions(this.uploadsWrapper, this.feesWrapper, this.shelteringWrapper, this.blockChainStateWrapper);
 
     this.rolesRepository = new RolesRepository(this.rolesWrapper, this.configWrapper);
     const {lowFundsWarningAmount} = this.config;
