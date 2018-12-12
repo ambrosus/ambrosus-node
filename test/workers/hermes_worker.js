@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import chaiAsPromissed from 'chai-as-promised';
+import chaiAsPromised from 'chai-as-promised';
 import chaiHttp from 'chai-http';
 import HermesWorker from '../../src/workers/hermes_worker';
 import HermesUploadStrategy from '../../src/workers/hermes_strategies/upload_strategy';
@@ -19,7 +19,7 @@ import config from '../../config/config';
 
 chai.use(chaiHttp);
 chai.use(sinonChai);
-chai.use(chaiAsPromissed);
+chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Hermes Worker', () => {
@@ -49,7 +49,7 @@ describe('Hermes Worker', () => {
       rejectBundleCandidate: sinon.stub().resolves(),
       acceptBundleCandidate: sinon.stub().resolves(mockResult),
       uploadAcceptedBundleCandidates: sinon.stub().resolves({
-        ok: [{bundleId, uploadResult: 'Bundle has been uploaded'}],
+        ok: {[bundleId]: {uploadResult: 'Bundle has been uploaded'}},
         failed: {}
       })
     };
