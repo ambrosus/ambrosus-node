@@ -13,7 +13,25 @@ import {pick, put} from '../utils/dict_utils';
 import allPermissions from '../utils/all_permissions';
 
 export default class DataModelEngine {
-  constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, bundleDownloader, bundleBuilder, bundleRepository, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, uploadRepository, rolesRepository, workerLogRepository}) {
+  constructor({
+    identityManager,
+    tokenAuthenticator,
+    entityBuilder,
+    entityRepository,
+    bundleDownloader,
+    bundleBuilder,
+    bundleRepository,
+    accountRepository,
+    findEventQueryObjectFactory,
+    findAccountQueryObjectFactory,
+    findAssetQueryObjectFactory,
+    accountAccessDefinitions,
+    mongoClient,
+    uploadRepository,
+    rolesRepository,
+    workerLogRepository,
+    logger
+  }) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
@@ -30,6 +48,7 @@ export default class DataModelEngine {
     this.uploadRepository = uploadRepository;
     this.rolesRepository = rolesRepository;
     this.workerLogRepository = workerLogRepository;
+    this.logger = logger;
   }
 
   async addAdminAccount(address = this.identityManager.nodeAddress()) {
@@ -217,8 +236,18 @@ export default class DataModelEngine {
         await this.entityRepository.storeBundleProofMetadata(waitingBundle.bundleId, blockNumber, timestamp, transactionHash);
         await this.bundleRepository.storeBundleProofMetadata(waitingBundle.bundleId, blockNumber, timestamp, transactionHash);
         summary.ok[waitingBundle.bundleId] = {uploadResult};
+        this.logger.info({
+          message: 'Successfully uploaded bundle',
+          bundleId: waitingBundle.bundleId,
+          transactionHash
+        });
       } catch (err) {
         summary.failed[waitingBundle.bundleId] = err;
+        this.logger.error({
+          message: 'Failed to upload bundle',
+          error: err,
+          bundleId: waitingBundle.bundleId
+        });
       }
     }
     return summary;

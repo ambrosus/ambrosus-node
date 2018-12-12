@@ -47,7 +47,7 @@ export default class ServerApparatus extends Builder {
       this.config = Object.freeze({...this.config, headContractAddress});
     }
 
-    await this.build(this.config, {web3});
+    await this.build(this.config, {web3, logger: this.logger});
     await this.cleanDB();
     await this.ensureAdminAccountExist();
     this.worker = new ServerWorker(

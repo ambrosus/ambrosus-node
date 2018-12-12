@@ -62,7 +62,7 @@ class Builder {
 
   async build(config, dependencies = {}) {
     this.config = config;
-    const {web3} = dependencies;
+    const {web3, logger} = dependencies;
     const {db, client} = await connectToMongo(this.config);
     this.db = db;
     this.client = client;
@@ -130,7 +130,8 @@ class Builder {
       mongoClient: this.client,
       uploadRepository: this.uploadRepository,
       rolesRepository: this.rolesRepository,
-      workerLogRepository: this.workerLogRepository
+      workerLogRepository: this.workerLogRepository,
+      logger
     });
     return {dataModelEngine: this.dataModelEngine, client: this.client, kycWhitelistWrapper: this.kycWhitelistWrapper};
   }

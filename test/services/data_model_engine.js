@@ -26,6 +26,7 @@ import ScenarioBuilder from '../fixtures/scenario_builder';
 import createTokenFor from '../fixtures/create_token_for';
 import resetHistory from '../helpers/reset_history';
 import allPermissions from '../../src/utils/all_permissions';
+import EmptyLogger from '../helpers/empty_logger.js';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -1180,7 +1181,8 @@ describe('Data Model Engine', () => {
       modelEngine = new DataModelEngine({
         entityRepository: mockEntityRepository,
         bundleRepository: mockBundleRepository,
-        uploadRepository: mockUploadRepository
+        uploadRepository: mockUploadRepository,
+        logger: new EmptyLogger()
       });
     });
 

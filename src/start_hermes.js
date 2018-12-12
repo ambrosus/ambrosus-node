@@ -16,7 +16,7 @@ import {waitForChainSync} from './utils/web3_tools';
 
 async function start(logger) {
   const builder = new Builder();
-  await builder.build(config);
+  await builder.build(config, {logger});
   if (await builder.migrator.isMigrationNeccesary()) {
     await builder.migrator.migrate(logger);
   }
