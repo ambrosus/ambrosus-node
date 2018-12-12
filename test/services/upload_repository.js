@@ -35,10 +35,13 @@ describe('Upload repository', () => {
     const fee = '100';
     const tooSmallBalance = '99';
     const exampleAddress = '0xdeadface';
+    const exampleUploadData = {blockNumber: 34, transactionHash: '0x1ae35c49aa2423'};
+
 
     beforeEach(async () => {
       uploadsActionsMock = {
-        uploadBundle: sinon.stub()
+        uploadBundle: sinon.stub().resolves(exampleUploadData),
+        getBundleUploadData: sinon.stub().resolves(exampleUploadData)
       };
       rolesWrapperMock = {
         onboardedRole: sinon.stub().resolves('2')
@@ -61,7 +64,7 @@ describe('Upload repository', () => {
     });
 
     it('calls wrappers methods with correct arguments', async () => {
-      await uploadRepository.uploadBundle(bundleId, storagePeriods);
+      await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.deep.equal({...exampleUploadData, uploadResult: 'Bundle has been uploaded'});
       expect(feesWrapperMock.feeForUpload).to.be.calledOnceWith(storagePeriods);
       expect(web3Mock.eth.getBalance).to.be.calledOnceWith(exampleAddress);
       expect(rolesWrapperMock.onboardedRole).to.be.calledOnceWith(exampleAddress);
@@ -72,17 +75,22 @@ describe('Upload repository', () => {
 
     it('throws if not enough funds', async () => {
       web3Mock.eth.getBalance.resolves(tooSmallBalance);
-      await expect(uploadRepository.uploadBundle(bundleId, storagePeriods)).to.be.eventually.rejected;
+      await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.rejected;
     });
 
     it('throws if not onboarded as hermes', async () => {
       rolesWrapperMock.onboardedRole.resolves('1');
-      await expect(uploadRepository.uploadBundle(bundleId, storagePeriods)).to.be.eventually.rejected;
+      await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.rejected;
     });
 
-    it('throws if bundle was already uploaded', async () => {
+    it('throws if bundle was already uploaded by a different Hermes', async () => {
       shelteringWrapperMock.getBundleUploader.resolves('0x1234');
-      await expect(uploadRepository.uploadBundle(bundleId, storagePeriods)).to.be.eventually.rejected;
+      await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.rejected;
+    });
+
+    it('fetches chain data if bundle was already uploaded by self', async () => {
+      shelteringWrapperMock.getBundleUploader.resolves(exampleAddress);
+      await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.deep.equal({...exampleUploadData, uploadResult: 'Bundle was already uploaded, updated metadata from chain'});
     });
   });
 

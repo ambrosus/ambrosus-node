@@ -1165,10 +1165,10 @@ describe('Data Model Engine', () => {
       };
 
       mockUploadRepository = {
-        uploadBundle: sinon.stub()
+        ensureBundleIsUploaded: sinon.stub().resolves({})
       };
-      mockUploadRepository.uploadBundle.withArgs('bundle1', 2).resolves({blockNumber, transactionHash: txHash});
-      mockUploadRepository.uploadBundle.withArgs('bundle3', 6).rejects(new Error('An error'));
+      mockUploadRepository.ensureBundleIsUploaded.withArgs('bundle1', 2).resolves({blockNumber, transactionHash: txHash, uploadResult: 'Success'});
+      mockUploadRepository.ensureBundleIsUploaded.withArgs('bundle3', 6).rejects(new Error('An error'));
 
       modelEngine = new DataModelEngine({
         entityRepository: mockEntityRepository,
@@ -1183,9 +1183,9 @@ describe('Data Model Engine', () => {
 
     it('for each candidate calls the uploadBundle method on the upload repository', async () => {
       await expect(modelEngine.uploadAcceptedBundleCandidates()).to.eventually.be.fulfilled;
-      expect(mockUploadRepository.uploadBundle).to.be.have.been.calledWith('bundle1', 2);
-      expect(mockUploadRepository.uploadBundle).to.be.have.been.calledWith('bundle3', 6);
-      expect(mockUploadRepository.uploadBundle).to.have.callCount(2);
+      expect(mockUploadRepository.ensureBundleIsUploaded).to.be.have.been.calledWith('bundle1', 2);
+      expect(mockUploadRepository.ensureBundleIsUploaded).to.be.have.been.calledWith('bundle3', 6);
+      expect(mockUploadRepository.ensureBundleIsUploaded).to.have.callCount(2);
     });
 
     it('for each uploaded candidate stores bundle proof metadata in the entity repository', async () => {
@@ -1195,7 +1195,7 @@ describe('Data Model Engine', () => {
 
     it('returns a summary', async () => {
       const result = await modelEngine.uploadAcceptedBundleCandidates();
-      expect(result.ok).to.deep.equal(['bundle1']);
+      expect(result.ok.bundle1.uploadResult).to.equal('Success');
       expect(result.failed.bundle3.message).to.equal('An error');
       expect(result.failed.bundle3.stack).to.exist;
     });

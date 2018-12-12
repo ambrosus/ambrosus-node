@@ -25,6 +25,7 @@ const {expect} = chai;
 describe('Hermes Worker', () => {
   const storagePeriods = 1;
   const exampleWorkId = 'workid';
+  const bundleId = '0xc0ffee';
   let mockDataModelEngine;
   let mockWorkerLogRepository;
   let mockWorkerTaskTrackingRepository;
@@ -33,10 +34,9 @@ describe('Hermes Worker', () => {
   let mockResult;
   let hermesWorker;
   let bundleSequenceNumber;
-
   beforeEach(async () => {
     mockResult = {
-      bundleId: '0xc0ffee'
+      bundleId
     };
     mockDataModelEngine = {
       identityManager: {
@@ -49,7 +49,7 @@ describe('Hermes Worker', () => {
       rejectBundleCandidate: sinon.stub().resolves(),
       acceptBundleCandidate: sinon.stub().resolves(mockResult),
       uploadAcceptedBundleCandidates: sinon.stub().resolves({
-        ok: [],
+        ok: [{bundleId, uploadResult: 'Bundle has been uploaded'}],
         failed: {}
       })
     };
@@ -66,7 +66,8 @@ describe('Hermes Worker', () => {
     };
     mockStrategy = sinon.createStubInstance(HermesUploadStrategy);
 
-    const {client: mongoClient} = await connectToMongo(config); hermesWorker = new HermesWorker(
+    const {client: mongoClient} = await connectToMongo(config);
+    hermesWorker = new HermesWorker(
       mockDataModelEngine,
       mockWorkerLogRepository,
       mockWorkerTaskTrackingRepository,
@@ -135,9 +136,10 @@ describe('Hermes Worker', () => {
   });
 
   describe('Bundle candidate upload', () => {
-    it('is requested', async () => {
+    it('is requested and summary is logged', async () => {
       await hermesWorker.periodicWork();
       expect(mockDataModelEngine.uploadAcceptedBundleCandidates).to.have.been.calledOnce;
+      expect(mockLogger.info).to.have.been.calledWith({message:'Bundle has been uploaded', bundleId, stacktrace:undefined});
     });
   });
 

@@ -76,8 +76,8 @@ export default class HermesWorker extends PeriodicWorker {
 
   async uploadWaitingCandidates() {
     const results = await this.dataModelEngine.uploadAcceptedBundleCandidates();
-    for (const bundleId of results.ok) {
-      await this.addLog(`Bundle was uploaded`, {bundleId});
+    for (const {bundleId, uploadResult} of results.ok) {
+      await this.addLog(uploadResult, {bundleId});
     }
     for (const [bundleId, error] of Object.entries(results.failed)) {
       await this.addLog(`Bundle failed to upload`, {bundleId, errorMsg: error.message || error}, error.stack);

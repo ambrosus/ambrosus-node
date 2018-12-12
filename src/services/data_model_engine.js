@@ -189,9 +189,7 @@ export default class DataModelEngine {
     const notBundled = await this.entityRepository.fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit);
 
     const nodeSecret = await this.identityManager.nodePrivateKey();
-    const newBundle = this.entityBuilder.assembleBundle(notBundled.assets, notBundled.events, getTimestamp(), nodeSecret);
-
-    return newBundle;
+    return this.entityBuilder.assembleBundle(notBundled.assets, notBundled.events, getTimestamp(), nodeSecret);
   }
 
   async acceptBundleCandidate(newBundle, bundleStubId, storagePeriods) {
@@ -208,14 +206,14 @@ export default class DataModelEngine {
   async uploadAcceptedBundleCandidates() {
     const waitingBundles = await this.entityRepository.findBundlesWaitingForUpload();
     const summary = {
-      ok: [],
+      ok: {},
       failed: {}
     };
     for (const waitingBundle of waitingBundles) {
       try {
-        const {blockNumber, transactionHash} = await this.uploadRepository.uploadBundle(waitingBundle.bundleId, waitingBundle.storagePeriods);
+        const {blockNumber, transactionHash, uploadResult} = await this.uploadRepository.ensureBundleIsUploaded(waitingBundle.bundleId, waitingBundle.storagePeriods);
         await this.entityRepository.storeBundleProofMetadata(waitingBundle.bundleId, blockNumber, transactionHash);
-        summary.ok.push(waitingBundle.bundleId);
+        summary.ok[waitingBundle.bundleId] = {uploadResult};
       } catch (err) {
         summary.failed[waitingBundle.bundleId] = err;
       }
