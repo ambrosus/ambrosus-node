@@ -13,12 +13,14 @@ import {pick, put} from '../utils/dict_utils';
 import allPermissions from '../utils/all_permissions';
 
 export default class DataModelEngine {
-  constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, entityDownloader, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, uploadRepository, rolesRepository, workerLogRepository}) {
+  constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, bundleDownloader, bundleBuilder, bundleRepository, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, uploadRepository, rolesRepository, workerLogRepository}) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
     this.entityRepository = entityRepository;
-    this.entityDownloader = entityDownloader;
+    this.bundleDownloader = bundleDownloader;
+    this.bundleBuilder = bundleBuilder;
+    this.bundleRepository = bundleRepository;
     this.accountRepository = accountRepository;
     this.findEventQueryObjectFactory = findEventQueryObjectFactory;
     this.findAccountQueryObjectFactory = findAccountQueryObjectFactory;
@@ -169,7 +171,7 @@ export default class DataModelEngine {
   }
 
   async getBundle(bundleId) {
-    const bundle = await this.entityRepository.getBundle(bundleId);
+    const bundle = await this.bundleRepository.getBundle(bundleId);
     if (bundle === null) {
       throw new NotFoundError(`No bundle with id = ${bundleId} found`);
     }
@@ -177,7 +179,7 @@ export default class DataModelEngine {
   }
 
   async getBundleMetadata(bundleId) {
-    const metadata = await this.entityRepository.getBundleMetadata(bundleId);
+    const metadata = await this.bundleRepository.getBundleMetadata(bundleId);
     if (metadata === null) {
       throw new NotFoundError(`No metadata found for bundleId = ${bundleId}`);
     }
@@ -189,11 +191,11 @@ export default class DataModelEngine {
     const notBundled = await this.entityRepository.fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit);
 
     const nodeSecret = await this.identityManager.nodePrivateKey();
-    return this.entityBuilder.assembleBundle(notBundled.assets, notBundled.events, getTimestamp(), nodeSecret);
+    return this.bundleBuilder.assembleBundle(notBundled.assets, notBundled.events, getTimestamp(), nodeSecret);
   }
 
   async acceptBundleCandidate(newBundle, bundleStubId, storagePeriods) {
-    await this.entityRepository.storeBundle(newBundle, storagePeriods);
+    await this.bundleRepository.storeBundle(newBundle, storagePeriods);
     await this.entityRepository.markEntitiesAsBundled(bundleStubId, newBundle.bundleId);
 
     return newBundle;
@@ -204,7 +206,7 @@ export default class DataModelEngine {
   }
 
   async uploadAcceptedBundleCandidates() {
-    const waitingBundles = await this.entityRepository.findBundlesWaitingForUpload();
+    const waitingBundles = await this.bundleRepository.findBundlesWaitingForUpload();
     const summary = {
       ok: {},
       failed: {}
@@ -212,7 +214,9 @@ export default class DataModelEngine {
     for (const waitingBundle of waitingBundles) {
       try {
         const {blockNumber, transactionHash, uploadResult} = await this.uploadRepository.ensureBundleIsUploaded(waitingBundle.bundleId, waitingBundle.storagePeriods);
-        await this.entityRepository.storeBundleProofMetadata(waitingBundle.bundleId, blockNumber, transactionHash);
+        const timestamp = getTimestamp();
+        await this.entityRepository.storeBundleProofMetadata(waitingBundle.bundleId, blockNumber, timestamp, transactionHash);
+        await this.bundleRepository.storeBundleProofMetadata(waitingBundle.bundleId, blockNumber, timestamp, transactionHash);
         summary.ok[waitingBundle.bundleId] = {uploadResult};
       } catch (err) {
         summary.failed[waitingBundle.bundleId] = err;
@@ -223,19 +227,19 @@ export default class DataModelEngine {
 
   async downloadBundle(bundleId, sheltererId) {
     const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
-    const bundle = await this.entityDownloader.downloadBundle(nodeUrl, bundleId);
+    const bundle = await this.bundleDownloader.downloadBundle(nodeUrl, bundleId);
     if (!bundle) {
       throw new Error('Could not fetch the bundle from the shelterer');
     }
-    this.entityBuilder.validateBundle(bundle);
+    this.bundleBuilder.validateBundle(bundle);
     await this.uploadRepository.verifyBundle(bundle);
-    await this.entityRepository.storeBundle(bundle);
+    await this.bundleRepository.storeBundle(bundle);
     return bundle;
   }
 
   async updateShelteringExpirationDate(bundleId) {
     const expirationDate = await this.uploadRepository.expirationDate(bundleId);
-    await this.entityRepository.storeBundleShelteringExpirationDate(bundleId, expirationDate);
+    await this.bundleRepository.storeBundleShelteringExpirationDate(bundleId, expirationDate);
   }
 
   async getWorkerLogs(logsCount = 10) {

@@ -127,7 +127,7 @@ describe('Bundles - Integrations', () => {
       const response = await apparatus.request()
         .get(`/bundle/${res.bundleId}/info`);
 
-      expect(response.body).to.have.keys(['bundleId', 'proofBlock', 'bundleTransactionHash', 'bundleUploadTimestamp', 'storagePeriods']);
+      expect(response.body).to.have.keys(['bundleId', 'bundleProofBlock', 'bundleTransactionHash', 'bundleUploadTimestamp', 'storagePeriods']);
       expect(response.body.bundleTransactionHash).to.be.properTxHash;
     });
 

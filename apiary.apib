@@ -612,7 +612,8 @@ Fetches asset with provided assetId in the system.
             + bundleId (string) - If the asset has already been added to a bundle, Id of the bundle holding the event
             + bundleTransactionHash (string) - If the asset has already been added to a bundle, identifier of the transaction on which the proof of bundle has been uploaded.
               More info on the transaction can be found under `http://explorer-test.ambrosus.com/#/tx/{bundleTransactionHash}`
-
+            + bundleProofBlock (number) - If the asset has already been added to a bundle, block number in which the proof of the bundle has been included
+            + bundleUploadTimestamp (number) - If the asset has already been added to a bundle, timestamp of bundle proof upload
 
 
     + Body
@@ -630,6 +631,8 @@ Fetches asset with provided assetId in the system.
                 "metadata": {
                     "bundleId": "0x85a427a3.....cd1d38ebbd",
                     "bundleTransactionHash": "0x21ab....1cdf8e55b37"
+                    "bundleUploadTimestamp": 1503424969,
+                    "bundleProofBlock": 3221
                 }
             }
 
@@ -676,6 +679,8 @@ Finds assets satisfying provided criteria.
                     + bundleId (string) - If the asset has already been added to a bundle, Id of the bundle holding the event
                     + bundleTransactionHash (string) - If the asset has already been added to a bundle, identifier of the transaction on which the proof of bundle has been uploaded.
                       More info on the transaction can be found under `http://explorer-test.ambrosus.com/#/tx/{bundleTransactionHash}`
+                    + bundleProofBlock (number) - If the asset has already been added to a bundle, block number in which the proof of the bundle has been included
+                    + bundleUploadTimestamp (number) - If the asset has already been added to a bundle, timestamp of bundle proof upload
 
         + resultCount (number) - Total number of assets.
 
@@ -696,7 +701,9 @@ Finds assets satisfying provided criteria.
                         },
                         "metadata": {
                             "bundleId": "0x85a427a3.....cd1d38ebbd",
-                            "bundleTransactionHash": "0x21ab....1cdf8e55b37"
+                            "bundleTransactionHash": "0x21ab....1cdf8e55b37",
+                            "bundleUploadTimestamp": 1503424969,
+                            "bundleProofBlock": 3221
                         }
                     }
                 ],
@@ -901,7 +908,8 @@ Fetches an event by identifier
             + bundleId (string) - If the event has already been added to a bundle, Id of the bundle holding the event
             + bundleTransactionHash (string) - If the event has already been added to a bundle, identifier of the transaction on which the proof of bundle has been uploaded.
               More info on the transaction can be found under `http://explorer-test.ambrosus.com/#/tx/{bundleTransactionHash}`
-
+            + bundleProofBlock (number) - If the event has already been added to a bundle, block number in which the proof of the bundle has been included
+            + bundleUploadTimestamp (number) - If the event has already been added to a bundle, timestamp of bundle proof upload
 
     + Body
 
@@ -1040,7 +1048,6 @@ Fetches a bundle by identifier
                 + entriesHash (string) - Hash calculated from the entries field.
             + entries (array) - An array consisting of assets, events with public data and stubs of events with private data.
 
-
     + Body
 
             {
@@ -1083,8 +1090,8 @@ Fetches a bundle metadata by identifier
         + bundleId (string) - Content-addressable identifier of the bundle.
         + bundleTransactionHash (string) - Identifier of the transaction on which the proof of bundle has been uploaded.
           More info on the transaction can be found under `http://explorer-test.ambrosus.com/#/tx/{bundleTransactionHash}`
-        + proofBlock (number) - Block number in which the transaction was included
-        + bundleUploadTimestamp (number) - Timestamp of bundle upload
+        + bundleProofBlock (number) - Block number in which the proof of the bundle has been included
+        + bundleUploadTimestamp (number) - Timestamp of bundle proof upload
 
 
     + Body
@@ -1092,7 +1099,7 @@ Fetches a bundle metadata by identifier
             {
                 "bundleId" : "0xa9bfd34.....30795ed11",
                 "bundleTransactionHash": "0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009",
-                "proofBlock": 142,
+                "bundleProofBlock": 142,
                 "bundleUploadTimestamp": 1503424969
             }
 

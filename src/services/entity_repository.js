@@ -8,7 +8,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {pick} from '../utils/dict_utils';
-import {getTimestamp} from '../utils/time_utils';
 import {mongoObjectSize} from '../utils/db_utils';
 
 const MONGO_SIZE_IN_BYTES_LIMIT = 15000000; // 15 Mb
@@ -164,26 +163,7 @@ export default class EntityRepository {
     );
   }
 
-  async storeBundle(bundle, storagePeriods) {
-    if (await this.db.collection('bundles').findOne({bundleId: bundle.bundleId}) === null) {
-      await this.db.collection('bundles').insertOne({...bundle});
-    }
-    if (await this.db.collection('bundle_metadata').findOne({bundleId: bundle.bundleId}) === null) {
-      await this.db.collection('bundle_metadata').insertOne({bundleId: bundle.bundleId, storagePeriods});
-    }
-  }
-
-  async storeBundleProofMetadata(bundleId, proofBlock, txHash) {
-    const currentTimestamp = getTimestamp();
-
-    await this.db.collection('bundle_metadata').updateOne({bundleId}, {
-      $set: {
-        bundleTransactionHash: txHash,
-        proofBlock,
-        bundleUploadTimestamp: currentTimestamp
-      }
-    });
-
+  async storeBundleProofMetadata(bundleId, proofBlock, timestamp, txHash) {
     const thisBundleQuery = {
       'metadata.bundleId': bundleId
     };
@@ -191,49 +171,12 @@ export default class EntityRepository {
     const update = {
       $set: {
         'metadata.bundleTransactionHash': txHash,
-        'metadata.bundleUploadTimestamp': currentTimestamp
+        'metadata.bundleProofBlock': proofBlock,
+        'metadata.bundleUploadTimestamp': timestamp
       }
     };
 
     await this.db.collection('assets').updateMany(thisBundleQuery, update);
     await this.db.collection('events').updateMany(thisBundleQuery, update);
-  }
-
-  async storeBundleShelteringExpirationDate(bundleId, expirationDate) {
-    await this.db.collection('bundles').updateOne({bundleId}, {
-      $set: {
-        'repository.holdUntil': expirationDate
-      }
-    });
-  }
-
-  async findBundlesWaitingForUpload() {
-    return await this.db.collection('bundle_metadata')
-      .find({proofBlock: {$exists: false}})
-      .toArray();
-  }
-
-  async getExpiredBundleIds() {
-    const now = getTimestamp();
-    return this.db.collection('bundles').find({
-      $or: [
-        {'repository.holdUntil': {$not: {$type: 'int'}}},
-        {'repository.holdUntil': {$lt: now}}
-      ]
-    }, {projection: {bundleId: 1}})
-      .map(({bundleId}) => bundleId)
-      .toArray();
-  }
-
-  async getBundle(bundleId) {
-    return await this.db.collection('bundles').findOne({bundleId}, {projection: this.blacklistedFields});
-  }
-
-  async getBundleMetadata(bundleId) {
-    return await this.db.collection('bundle_metadata').findOne({bundleId}, {projection: this.blacklistedFields});
-  }
-
-  async deleteBundles(bundleIds) {
-    return this.db.collection('bundles').deleteMany({bundleId: {$in: bundleIds}});
   }
 }

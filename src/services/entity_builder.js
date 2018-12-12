@@ -107,13 +107,6 @@ export default class EntityBuilder {
     return getTimestamp() + this.maximumEntityTimestampOvertake >= timestamp;
   }
 
-  prepareEventForBundlePublication(event) {
-    if (event.content.idData.accessLevel === 0) {
-      return event;
-    }
-    return pick(event, 'content.data');
-  }
-
   setBundle(entity, bundle) {
     return put(entity, 'metadata.bundleId', bundle);
   }
@@ -131,63 +124,11 @@ export default class EntityBuilder {
     return afterRemoval;
   }
 
-  assembleBundle(assets, events, timestamp, secret) {
-    const createdBy = this.identityManager.addressFromSecret(secret);
-    const preparedEvents = events.map((event) => this.prepareEventForBundlePublication(event));
-    const entries = [
-      ...assets,
-      ...preparedEvents
-    ].map((entry) => this.removeBundle(entry));
-    const entriesHash = this.identityManager.calculateHash(entries);
-    const idData = {
-      createdBy,
-      entriesHash,
-      timestamp
-    };
-    const signature = this.identityManager.sign(secret, idData);
-    const content = {
-      signature,
-      idData,
-      entries
-    };
-    const bundleId = this.identityManager.calculateHash(content);
-
-    return {
-      bundleId,
-      content
-    };
-  }
-
-  validateBundle(bundle) {
-    validateAndCast(bundle)
-      .required([
-        'bundleId',
-        'content.signature',
-        'content.idData',
-        'content.idData.createdBy',
-        'content.idData.timestamp',
-        'content.idData.entriesHash',
-        'content.entries'
-      ])
-      .fieldsConstrainedToSet(['content', 'bundleId', 'metadata'])
-      .fieldsConstrainedToSet(['idData', 'entries', 'signature'], 'content')
-      .isNonNegativeInteger(['content.idData.timestamp'])
-      .validate(
-        ['bundleId'],
-        (hash) => this.identityManager.checkHashMatches(hash, bundle.content),
-        `bundleId value doesn't match the content hash`
-      )
-      .validate(
-        ['content.idData.entriesHash'],
-        (hash) => this.identityManager.checkHashMatches(hash, bundle.content.entries),
-        `entriesHash value doesn't match the entries hash`
-      );
-
-    this.identityManager.validateSignature(
-      bundle.content.idData.createdBy,
-      bundle.content.signature,
-      bundle.content.idData
-    );
+  prepareEventForBundlePublication(event) {
+    if (event.content.idData.accessLevel === 0) {
+      return event;
+    }
+    return pick(event, 'content.data');
   }
 
   validateAndCastFindEventsParams(params) {
