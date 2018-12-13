@@ -25,7 +25,7 @@ export default (logger) => {
     requestHeaders: tokens['req-head'](req, res),
     responseHeaders: tokens['res-head'](req, res),
     responseTime: `${tokens['response-time'](req, res)}ms`
-  }, null, 4), {
+  }), {
     stream: {write: (message) => logger.info(message)},
     skip: (req) => ['/health', '/metrics'].includes(req.url)
   });

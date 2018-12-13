@@ -42,7 +42,7 @@ describe('Logger middleware', () => {
     });
 
     await flushAllPromises();
-    expect(mockLogger.info).to.have.been.calledWithMatch('"url": "/some"');
+    expect(mockLogger.info.args[0][0]).to.include('"url":"/some"');
   });
 
   [
