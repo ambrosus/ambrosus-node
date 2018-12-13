@@ -78,10 +78,10 @@ describe('Bundle Repository', () => {
         await cleanDatabase(db);
       });
 
-      it('storeBundleShelteringExpirationDate sets holdUntil field in repository dict', async () => {
+      it('storeBundleShelteringExpirationDate sets holdUntil field in the metadata', async () => {
         await storage.storeBundleShelteringExpirationDate(bundleId, expirationDate);
-        const bundle = await storage.db.collection('bundles').findOne({bundleId});
-        expect(bundle.repository.holdUntil).to.equal(expirationDate);
+        const metadata = await storage.db.collection('bundle_metadata').findOne({bundleId});
+        expect(metadata.holdUntil).to.equal(expirationDate);
       });
     });
   });

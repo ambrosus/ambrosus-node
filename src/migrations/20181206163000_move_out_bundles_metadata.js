@@ -21,7 +21,11 @@ const deduplicateBundles = async (db) => {
         {
           count: {$gt: 1}
         }
-    }]
+    }],
+    {
+      allowDiskUse: true,
+      cursor: {}
+    }
   );
   while (await cursor.hasNext()) {
     const document = await cursor.next();
@@ -63,5 +67,5 @@ export const up = async (db, config, logger) => {
     await performMetadataMigration(await existingBundlesWithMetadata.next());
   }
 
-  logger.info(`Moved metadata of ${migrationsCount} bundles`);
+  logger.info(`Moved metadata dict for ${migrationsCount} bundles`);
 };

@@ -20,7 +20,11 @@ const deduplicateEntities = async (db, collectionName, uniqueKey) => {
       $match: {
         count: {$gt: 1}
       }
-    }]
+    }],
+    {
+      allowDiskUse: true,
+      cursor: {}
+    }
   );
   while (await cursor.hasNext()) {
     const document = await cursor.next();

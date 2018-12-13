@@ -42,9 +42,9 @@ export default class BundleRepository {
   }
 
   async storeBundleShelteringExpirationDate(bundleId, expirationDate) {
-    await this.db.collection('bundles').updateOne({bundleId}, {
+    await this.db.collection('bundle_metadata').updateOne({bundleId}, {
       $set: {
-        'repository.holdUntil': expirationDate
+        holdUntil: expirationDate
       }
     });
   }
