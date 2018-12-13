@@ -8,8 +8,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 const deduplicateEntities = async (db, collectionName, uniqueKey) => {
-  const cursor = await db.collection(collectionName).aggregate(
-    [{
+  const pipeline = [
+    {
       $group: {
         _id: `$${uniqueKey}`,
         dups: {$addToSet: '$_id'},
@@ -20,8 +20,9 @@ const deduplicateEntities = async (db, collectionName, uniqueKey) => {
       $match: {
         count: {$gt: 1}
       }
-    }]
-  );
+    }
+  ];
+  const cursor = await db.collection(collectionName).aggregate(pipeline, {allowDiskUse: true});
   while (await cursor.hasNext()) {
     const document = await cursor.next();
     const toRemove = document.dups.slice(1);
