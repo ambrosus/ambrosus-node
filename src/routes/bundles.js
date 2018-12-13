@@ -11,10 +11,9 @@ import express from 'express';
 import asyncMiddleware from '../middlewares/async_middleware';
 
 export const getBundleHandler = (modelEngine) => async (req, res) => {
-  const result = await modelEngine.getBundle(req.params.bundleId);
-  res.status(200)
-    .type('json')
-    .send(JSON.stringify(result));
+  const bundleStream = await modelEngine.getBundleStream(req.params.bundleId);
+  res.status(200).type('json');
+  bundleStream.pipe(res);
 };
 
 export const getBundleMetadataHandler = (modelEngine) => async (req, res) => {

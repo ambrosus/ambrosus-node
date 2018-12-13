@@ -8,7 +8,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {expect} from 'chai';
-import {createMongoUrl, mongoObjectSize} from '../../src/utils/db_utils';
+import {createMongoUrl, mongoObjectSize, uploadJSONToGridFSBucket, connectToMongo, cleanDatabase, downloadJSONFromGridFSBucket, isFileInGridFSBucket} from '../../src/utils/db_utils';
+import {GridFSBucket} from 'mongodb';
+import config from '../../config/config';
+
 
 describe('createMongoUrl', () => {
   it('parses config with credentials and replica set', () => {
@@ -55,5 +58,42 @@ describe('createMongoUrl', () => {
 describe('mongoObjectSize', () => {
   it('returns size of an object', async () => {
     expect(mongoObjectSize({foo: 1, bar: 3})).to.equal(23);
+  });
+});
+
+describe('GridFS helper functions', () => {
+  let db;
+  let client;
+  const exampleJsonObject = {
+    fidget: {
+      foo: 'bar'
+    },
+    spinners: [
+      5, 'a string', true
+    ]
+  };
+  const exampleFilename = 'test-file';
+
+  before(async () => {
+    ({db, client} = await connectToMongo(config));
+  });
+
+  afterEach(async () => {
+    await cleanDatabase(db);
+  });
+
+  after(async () => {
+    client.close();
+  });
+
+  it('reads stored object', async () => {
+    const testBucket = new GridFSBucket(db, {bucketName: 'testbucket'});
+    expect(isFileInGridFSBucket(exampleFilename, testBucket)).to.eventually.be.false;
+
+    await uploadJSONToGridFSBucket(exampleFilename, exampleJsonObject, testBucket);
+    const returnedJsonObject = await downloadJSONFromGridFSBucket(exampleFilename, testBucket);
+
+    expect(isFileInGridFSBucket(exampleFilename, testBucket)).to.eventually.be.true;
+    expect(returnedJsonObject).to.deep.equal(exampleJsonObject);
   });
 });

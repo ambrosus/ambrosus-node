@@ -178,6 +178,14 @@ export default class DataModelEngine {
     return bundle;
   }
 
+  async getBundleStream(bundleId) {
+    const bundle = await this.bundleRepository.getBundleStream(bundleId);
+    if (bundle === null) {
+      throw new NotFoundError(`No bundle with id = ${bundleId} found`);
+    }
+    return bundle;
+  }
+
   async getBundleMetadata(bundleId) {
     const metadata = await this.bundleRepository.getBundleMetadata(bundleId);
     if (metadata === null) {

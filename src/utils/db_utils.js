@@ -10,6 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {MongoClient} from 'mongodb';
 import querystring from 'querystring';
 import bson from 'bson';
+import StringReadStream from './string_read_stream';
+import StringWriteStream from './string_write_stream';
 
 const createMongoUrl = (config) => {
   const query = {};
@@ -33,7 +35,7 @@ const createMongoUrl = (config) => {
 
 const connectToMongo = async (config) => {
   const url = createMongoUrl(config);
-  const client = await MongoClient.connect(url,  {useNewUrlParser: true});
+  const client = await MongoClient.connect(url, {useNewUrlParser: true});
   const db = await client.db(config.mongoDBName);
   return {client, db};
 };
@@ -45,6 +47,41 @@ const cleanDatabase = async (db) => {
   }
 };
 
+const asyncPipe = async (readStream, writeStream) => new Promise((resolve, reject) => {
+  writeStream.on('finish', () => resolve());
+  writeStream.on('error', (err) => reject(err));
+  readStream.pipe(writeStream);
+});
+
+const isFileInGridFSBucket = async (filename, bucket) => {
+  const gridFSCursor = await bucket.find({filename});
+  return await gridFSCursor.count() > 0;
+};
+
+const uploadJSONToGridFSBucket = async (filename, json, bucket) => {
+  const writeStream = bucket.openUploadStream(
+    filename,
+    {
+      contentType: 'application/json'
+    }
+  );
+
+  const serializedJSON = JSON.stringify(json);
+  const readStream = new StringReadStream(serializedJSON);
+
+  await asyncPipe(readStream, writeStream);
+};
+
+const downloadJSONFromGridFSBucket = async (filename, bucket) => {
+  const readStream = bucket.openDownloadStreamByName(filename);
+  const writeStream = new StringWriteStream();
+
+  await asyncPipe(readStream, writeStream);
+
+  const serializedJSON = writeStream.get();
+  return JSON.parse(serializedJSON);
+};
+
 const mongoObjectSize = new bson.BSON().calculateObjectSize;
 
-export {connectToMongo, cleanDatabase, createMongoUrl, mongoObjectSize};
+export {connectToMongo, cleanDatabase, createMongoUrl, mongoObjectSize, isFileInGridFSBucket, uploadJSONToGridFSBucket, downloadJSONFromGridFSBucket};

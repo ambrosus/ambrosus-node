@@ -30,6 +30,7 @@ describe('Bundle Repository', () => {
   });
 
   after(async () => {
+    await cleanDatabase(db);
     client.close();
   });
 
@@ -62,6 +63,24 @@ describe('Bundle Repository', () => {
       const otherBundleId = '0x33333';
       await expect(storage.getBundle(otherBundleId)).to.eventually.be.equal(null);
       await expect(storage.getBundleMetadata(otherBundleId)).to.eventually.be.equal(null);
+    });
+
+    describe('getBundleStream', () => {
+      const exampleBundleId = '0xabcdef';
+
+      afterEach(async () => {
+        await cleanDatabase(db);
+      });
+
+      it('returns the stream if the bundle exists', async () => {
+        const exampleBundle = put(createBundle(), 'bundleId', exampleBundleId);
+        await storage.storeBundle(exampleBundle, storagePeriods);
+        await expect(storage.getBundleStream(exampleBundleId)).to.eventually.be.not.null;
+      });
+
+      it(`returns null if the bundle doesn't exist`, async () => {
+        await expect(storage.getBundleStream(exampleBundleId)).to.eventually.be.null;
+      });
     });
   });
 
