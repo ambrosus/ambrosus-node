@@ -9,7 +9,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import path from 'path';
 import fs from 'fs';
-import {getTimestamp} from '../utils/time_utils';
 
 class Migrator {
   constructor(db, config, directory = path.dirname(__filename)) {
@@ -20,8 +19,8 @@ class Migrator {
 
   getVersionFromPath(name) {
     const filename = path.basename(name);
-    const splitted = filename.split('_');
-    return parseInt(splitted[0], 10);
+    const split = filename.split('_');
+    return parseInt(split[0], 10);
   }
 
   isMigrationPath(file) {
@@ -33,7 +32,7 @@ class Migrator {
     return result ? result.version : 0;
   }
 
-  async isMigrationNeccesary() {
+  async isMigrationNecessary() {
     const latestMigrationVersion = this.getVersionFromPath((await this.migrationFiles()).pop());
     return await this.getCurrentVersion() < latestMigrationVersion;
   }
@@ -51,26 +50,40 @@ class Migrator {
     }
   }
 
-  async waitForOpenWindowAndStartMigration(logger) {
+  async waitForOtherMigrationsAndMarkAsStarted(logger, iterationCallback) {
     const sleep = async (timeout) => new Promise((resolve) => {
       setTimeout(resolve, timeout * 1000);
+      if (iterationCallback) {
+        iterationCallback();
+      }
     });
-    let migrationStartTime;
 
-    do {
-      const {modifiedCount} = await this.db.collection('migrations').updateOne({migrationStartTime: {$exists: false}}, {$set: {migrationStartTime: getTimestamp()}});
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const {modifiedCount} = await this.db.collection('migrations')
+        .updateOne({$or: [{migrationRunning: false}, {migrationRunning: {$exists: false}}]},
+          {$set: {migrationRunning: true}});
+
       if (modifiedCount > 0) {
         return;
       }
-      logger.info('Another migration is running. Waiting for it to end');
-      await sleep(this.config.migrationSleepTime);
-      ({migrationStartTime} = (await this.db.collection('migrations').findOne({})));
-    } while (migrationStartTime + this.config.migrationTaskTimeout > getTimestamp());
+
+      logger.info('Another migration is running. Waiting for it to end.');
+      await sleep(this.config.migrationSleepTimeInSeconds);
+    }
+  }
+
+  async initMigrationsCollection() {
+    await this.db.collection('migrations').findOneAndUpdate({}, {$setOnInsert: {version: 0, migrationRunning: false}}, {upsert: true});
   }
 
   async initMigrations(logger) {
-    await this.db.collection('migrations').findOneAndUpdate({}, {$setOnInsert: {version: 0}}, {upsert: true});
-    await this.waitForOpenWindowAndStartMigration(logger);
+    await this.initMigrationsCollection();
+    await this.waitForOtherMigrationsAndMarkAsStarted(logger);
+  }
+
+  async markMigrationAsDone() {
+    await this.db.collection('migrations').updateOne({}, {$set: {migrationRunning: false}});
   }
 
   async migrate(logger) {
@@ -84,7 +97,7 @@ class Migrator {
         }
       }
     } finally {
-      await this.db.collection('migrations').updateOne({}, {$unset: {migrationStartTime: ''}});
+      await this.markMigrationAsDone();
     }
   }
 
