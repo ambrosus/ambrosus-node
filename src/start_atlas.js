@@ -7,12 +7,12 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {WinstonConsoleLogger} from './utils/loggers';
 import AtlasWorker from './workers/atlas_worker';
 import config from '../config/config';
 import Builder from './builder';
 import {Role} from './services/roles_repository';
 import {waitForChainSync} from './utils/web3_tools';
+import {setup} from './utils/instrument_process';
 
 async function start(logger) {
   const builder = new Builder();
@@ -43,10 +43,4 @@ function loadStrategy(strategyName) {
   return new ChallengeResolutionStrategy();
 }
 
-const logger = new WinstonConsoleLogger();
-
-start(logger)
-  .catch((err) => {
-    logger.error(err);
-    process.exit(1);
-  });
+setup(start);
