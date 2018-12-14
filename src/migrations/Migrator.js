@@ -9,18 +9,20 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import path from 'path';
 import fs from 'fs';
+import {sleep} from '../utils/time_utils';
 
 class Migrator {
-  constructor(db, config, directory = path.dirname(__filename)) {
+  constructor(db, config, sleepFunction = sleep, directory = path.dirname(__filename)) {
     this.db = db;
     this.config = config;
+    this.sleepFunction = sleepFunction;
     this.directory = directory;
   }
 
   getVersionFromPath(name) {
     const filename = path.basename(name);
-    const split = filename.split('_');
-    return parseInt(split[0], 10);
+    const splitParts = filename.split('_');
+    return parseInt(splitParts[0], 10);
   }
 
   isMigrationPath(file) {
@@ -50,14 +52,7 @@ class Migrator {
     }
   }
 
-  async waitForOtherMigrationsAndMarkAsStarted(logger, iterationCallback) {
-    const sleep = async (timeout) => new Promise((resolve) => {
-      setTimeout(resolve, timeout * 1000);
-      if (iterationCallback) {
-        iterationCallback();
-      }
-    });
-
+  async waitForOtherMigrationsAndMarkAsStarted(logger) {
     // eslint-disable-next-line no-constant-condition
     while (true) {
       const {modifiedCount} = await this.db.collection('migrations')
@@ -69,7 +64,7 @@ class Migrator {
       }
 
       logger.info('Another migration is running. Waiting for it to end.');
-      await sleep(this.config.migrationSleepTimeInSeconds);
+      await this.sleepFunction(this.config.migrationSleepTimeInSeconds);
     }
   }
 

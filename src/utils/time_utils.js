@@ -9,3 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 // eslint-disable-next-line import/prefer-default-export
 export const getTimestamp = () => Math.floor(Date.now() / 1000);
+
+export const sleep = async (timeout) => new Promise((resolve) => {
+  setTimeout(resolve, timeout * 1000);
+});

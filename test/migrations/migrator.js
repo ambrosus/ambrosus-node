@@ -26,13 +26,13 @@ describe('Migrator', () => {
   let migrator;
   let logger;
   let clock;
-  const migrationSleepTimeInSeconds = 1;
+  const migrationSleepTimeInSeconds = 3;
   const now = 1500000;
 
   before(async () => {
     ({db, client} = await connectToMongo(config));
     migrator = new Migrator(db, {
-      migrationSleepTimeInSeconds,
+      migrationSleepTimeInSeconds
     });
     logger = new EmptyLogger();
   });
@@ -82,14 +82,18 @@ describe('Migrator', () => {
     });
 
     it('waits until the other migration is finished', async () => {
+      const expectedIterationsCount = 5;
+      migrator.sleepFunction = async () => {
+        callCount++;
+        if (callCount === expectedIterationsCount) {
+          await migrator.markMigrationAsDone();
+        }
+        clock.tick(migrationSleepTimeInSeconds * 1000);
+      };
       await migrator.initMigrations(logger);
       let callCount = 0;
-      await migrator.waitForOtherMigrationsAndMarkAsStarted(logger, async () => {
-        callCount++;
-        await migrator.markMigrationAsDone();
-        clock.tick(migrationSleepTimeInSeconds * 1000);
-      });
-      expect(callCount).to.equal(1);
+      await migrator.waitForOtherMigrationsAndMarkAsStarted(logger);
+      expect(callCount).to.equal(expectedIterationsCount);
       expect(await db.collection('migrations').findOne({})).to.include({version: 0, migrationRunning: true});
     });
   });
