@@ -56,4 +56,34 @@ describe('Bundle downloader', () => {
       expect(mockHttpsClient.validateIncomingStatusCode).to.have.been.calledWith(failureStatusCode);
     });
   });
+
+  describe('download bundle metadata', () => {
+    const exampleVendorId = '0x123';
+    const exampleBundleId = '0x321';
+    const examplePath = `/bundle/${exampleBundleId}/info`;
+    const processedBundleMetadata = {
+      bundleId: exampleBundleId,
+      storagePeriods: 1,
+      bundleProofBlock: 100
+    };
+
+    it('returns downloaded bundle metadata', async () => {
+      const OKStatusCode = 200;
+      mockHttpsClient.performHTTPSGet.resolves({statusCode : OKStatusCode, body : processedBundleMetadata});
+      mockHttpsClient.validateIncomingStatusCode.resolves();
+      const res = await expect(bundleDownloader.downloadBundleMetadata(exampleVendorId, exampleBundleId)).to.be.fulfilled;
+      expect(mockHttpsClient.performHTTPSGet).to.have.been.calledWith(exampleVendorId, examplePath);
+      expect(mockHttpsClient.validateIncomingStatusCode).to.have.been.calledWith(OKStatusCode);
+      expect(res).to.deep.equal(processedBundleMetadata);
+    });
+
+    it(`throws if download wasn't successful`, async () => {
+      const failureStatusCode = 500;
+      mockHttpsClient.performHTTPSGet.resolves({statusCode : failureStatusCode});
+      mockHttpsClient.validateIncomingStatusCode.throws(new Error());
+      await expect(bundleDownloader.downloadBundleMetadata(exampleVendorId, exampleBundleId)).to.be.rejectedWith(Error);
+      expect(mockHttpsClient.performHTTPSGet).to.have.been.calledWith(exampleVendorId, examplePath);
+      expect(mockHttpsClient.validateIncomingStatusCode).to.have.been.calledWith(failureStatusCode);
+    });
+  });
 });

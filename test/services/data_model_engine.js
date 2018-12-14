@@ -1215,6 +1215,12 @@ describe('Data Model Engine', () => {
     const sheltererId = '0x789';
     const nodeUrl = '0.0.0.0';
     const downloadedBundle = createBundle();
+    const downloadedBundleMetadata = {
+      storagePeriods: 1,
+      bundleProofBlock: 1,
+      bundleUploadTimestamp: 100000,
+      bundleTransactionHash: '0xdeadface'
+    };
     let mockBundleRepository;
     let mockBundleDownloader;
     let mockBundleBuilder;
@@ -1224,7 +1230,8 @@ describe('Data Model Engine', () => {
 
     beforeEach(() => {
       mockBundleRepository = {
-        storeBundle: sinon.stub()
+        storeBundle: sinon.stub(),
+        storeBundleProofMetadata: sinon.stub()
       };
 
       mockRolesRepository = {
@@ -1236,7 +1243,8 @@ describe('Data Model Engine', () => {
       };
 
       mockBundleDownloader = {
-        downloadBundle: sinon.stub().resolves(downloadedBundle)
+        downloadBundle: sinon.stub().resolves(downloadedBundle),
+        downloadBundleMetadata: sinon.stub().resolves(downloadedBundleMetadata)
       };
 
       mockBundleBuilder = {
@@ -1256,14 +1264,36 @@ describe('Data Model Engine', () => {
       expect(await modelEngine.downloadBundle(bundleId, sheltererId)).to.equal(downloadedBundle);
       expect(mockRolesRepository.nodeUrl).to.be.calledWith(sheltererId);
       expect(mockBundleDownloader.downloadBundle).to.be.calledWith(nodeUrl, bundleId);
+      expect(mockBundleDownloader.downloadBundleMetadata).to.be.calledWith(nodeUrl, bundleId);
       expect(mockBundleBuilder.validateBundle).to.be.calledWith(downloadedBundle);
-      expect(mockBundleRepository.storeBundle).to.be.calledWith(downloadedBundle);
+      expect(mockBundleRepository.storeBundle).to.be.calledWith(downloadedBundle, downloadedBundleMetadata.storagePeriods);
+      expect(mockBundleRepository.storeBundleProofMetadata).to.be.calledOnce;
+    });
+
+    it('passes despite incomplete bundle metadata', async () => {
+      const incompleteBundleMetadata = {bundleId};
+      mockBundleDownloader.downloadBundleMetadata.resolves({bundleId});
+      expect(await modelEngine.downloadBundle(bundleId, sheltererId)).to.equal(downloadedBundle);
+      expect(mockRolesRepository.nodeUrl).to.be.calledWith(sheltererId);
+      expect(mockBundleDownloader.downloadBundle).to.be.calledWith(nodeUrl, bundleId);
+      expect(mockBundleDownloader.downloadBundleMetadata).to.be.calledWith(nodeUrl, bundleId);
+      expect(mockBundleBuilder.validateBundle).to.be.calledWith(downloadedBundle);
+      expect(mockBundleRepository.storeBundle).to.be.calledWith(downloadedBundle, incompleteBundleMetadata.storagePeriods);
+      expect(mockBundleRepository.storeBundleProofMetadata).to.be.calledOnce;
+    });
+
+    it('throws if downloaded empty bundle metadata', async () => {
+      mockBundleDownloader.downloadBundleMetadata.resolves(null);
+      await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejectedWith(Error, 'Could not fetch the bundle metadata from the shelterer');
+      expect(mockBundleRepository.storeBundle).to.be.not.called;
+      expect(mockBundleRepository.storeBundleProofMetadata).to.be.not.called;
     });
 
     it('throws if downloaded empty bundle', async () => {
       mockBundleDownloader.downloadBundle.resolves(null);
       await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejectedWith(Error, 'Could not fetch the bundle from the shelterer');
       expect(mockBundleRepository.storeBundle).to.be.not.called;
+      expect(mockBundleRepository.storeBundleProofMetadata).to.be.not.called;
     });
 
     it('does not store bundle if validation failed', async () => {

@@ -226,13 +226,28 @@ export default class DataModelEngine {
 
   async downloadBundle(bundleId, sheltererId) {
     const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
+
+    const bundleMetadata = await this.bundleDownloader.downloadBundleMetadata(nodeUrl, bundleId);
+    if (!bundleMetadata) {
+      throw new Error('Could not fetch the bundle metadata from the shelterer');
+    }
+
     const bundle = await this.bundleDownloader.downloadBundle(nodeUrl, bundleId);
     if (!bundle) {
       throw new Error('Could not fetch the bundle from the shelterer');
     }
+
     this.bundleBuilder.validateBundle(bundle);
     await this.uploadRepository.verifyBundle(bundle);
-    await this.bundleRepository.storeBundle(bundle);
+
+    await this.bundleRepository.storeBundle(bundle, bundleMetadata.storagePeriods);
+    await this.bundleRepository.storeBundleProofMetadata(
+      bundleMetadata.bundleId,
+      bundleMetadata.bundleProofBlock,
+      bundleMetadata.bundleUploadTimestamp,
+      bundleMetadata.bundleTransactionHash
+    );
+
     return bundle;
   }
 
