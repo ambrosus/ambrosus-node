@@ -7,44 +7,14 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-const deduplicateBundles = async (db) => {
-  const cursor = await db.collection('bundles').aggregate(
-    [{
-      $group: {
-        _id: '$bundleId',
-        dups: {$addToSet: '$_id'},
-        count: {$sum: 1}
-      }
-    },
-    {
-      $match:
-        {
-          count: {$gt: 1}
-        }
-    }],
-    {
-      allowDiskUse: true,
-      cursor: {}
-    }
-  );
-  while (await cursor.hasNext()) {
-    const document = await cursor.next();
-    const toRemove = document.dups.slice(1);
-    await db.collection('bundles').deleteMany({
-      _id: {$in: toRemove}
-    });
-  }
-};
+import {deduplicateDocuments, safeCreateUniqueIndex} from './migration_helpers';
 
 // eslint-disable-next-line import/prefer-default-export
 export const up = async (db, config, logger) => {
-  await deduplicateBundles(db);
-  await db.collection('bundle_metadata').createIndex({bundleId : 1}, {unique: true});
+  await deduplicateDocuments(db, 'bundles', 'bundleId');
 
-  if (await db.collection('bundles').indexExists(['bundleId_1'])) {
-    await db.collection('bundles').dropIndex('bundleId_1');
-  }
-  await db.collection('bundles').createIndex({bundleId : 1}, {unique: true});
+  await safeCreateUniqueIndex(db, 'bundle_metadata', 'bundleId');
+  await safeCreateUniqueIndex(db, 'bundles', 'bundleId');
 
   const extractMetadata = (bundle) => {
     const {metadata, bundleId} = bundle;

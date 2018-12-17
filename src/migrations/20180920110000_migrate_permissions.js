@@ -19,6 +19,7 @@ export const up = async (db, config, logger) => {
       }
     }
   )).modifiedCount;
+
   await db.collection('accounts').updateMany(
     {permissions: 'register_account'},
     {
@@ -26,8 +27,10 @@ export const up = async (db, config, logger) => {
         permissions: 'register_account'
       }
     }
+
   );
   logger.info(`Replaced ${registerCount} 'register_account' permissions`);
+
   const createEntityCount = (await db.collection('accounts').updateMany(
     {permissions: 'create_entity'},
     {
@@ -38,6 +41,7 @@ export const up = async (db, config, logger) => {
       }
     }
   )).modifiedCount;
+
   await db.collection('accounts').updateMany(
     {permissions: 'create_entity'},
     {
@@ -46,5 +50,6 @@ export const up = async (db, config, logger) => {
       }
     }
   );
+
   logger.info(`Replaced ${createEntityCount} 'create_entity' permissions`);
 };

@@ -7,9 +7,12 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+import {safeDropIndex} from './migration_helpers';
+
 // eslint-disable-next-line import/prefer-default-export
 export const up = async (db, {workerLogsTTLInSeconds}, logger) => {
-  await db.collection('workerLogs').drop();
+  await safeDropIndex(db, 'workerLogs', 'timestamp_-1');
   await db.collection('workerLogs').createIndex({timestamp: -1}, {expireAfterSeconds: workerLogsTTLInSeconds});
+
   logger.info(`Added index to worker logs with TTL=${workerLogsTTLInSeconds}`);
 };
