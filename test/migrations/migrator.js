@@ -25,25 +25,23 @@ describe('Migrator', () => {
   let client;
   let migrator;
   let logger;
-  let clock;
+  let sleepStub;
   const migrationSleepTimeInSeconds = 3;
-  const now = 1500000;
 
   before(async () => {
     ({db, client} = await connectToMongo(config));
-    migrator = new Migrator(db, {
-      migrationSleepTimeInSeconds
-    });
+    sleepStub = sinon.stub();
+    migrator = new Migrator(db, {migrationSleepTimeInSeconds}, sleepStub);
     logger = new EmptyLogger();
   });
 
   beforeEach(() => {
-    clock = sinon.useFakeTimers(now * 1000);
+    sleepStub.resetBehavior();
+    sleepStub.resolves();
   });
 
   afterEach(async () => {
     await cleanDatabase(db);
-    clock.restore();
   });
 
   after(() => {
@@ -82,18 +80,12 @@ describe('Migrator', () => {
     });
 
     it('waits until the other migration is finished', async () => {
-      const expectedIterationsCount = 5;
-      migrator.sleepFunction = async () => {
-        callCount++;
-        if (callCount === expectedIterationsCount) {
-          await migrator.markMigrationAsDone();
-        }
-        clock.tick(migrationSleepTimeInSeconds * 1000);
-      };
+      sleepStub.onThirdCall().callsFake(async () => {
+        await migrator.markMigrationAsDone();
+      });
       await migrator.initMigrations(logger);
-      let callCount = 0;
       await migrator.waitForOtherMigrationsAndMarkAsStarted(logger);
-      expect(callCount).to.equal(expectedIterationsCount);
+      expect(sleepStub).to.be.calledThrice;
       expect(await db.collection('migrations').findOne({})).to.include({version: 0, migrationRunning: true});
     });
   });
