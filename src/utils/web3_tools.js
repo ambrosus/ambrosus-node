@@ -143,7 +143,7 @@ export async function getBalance(web3, address) {
 }
 
 export async function checkIfEnoughFundsToPayForGas(web3, address) {
-  const maximalGasPrice = new BN(DEFAULT_GAS).mul(web3.utils.toWei(new BN(config.defaultGasPrice), 'gwei'));
-  return new BN(await getBalance(web3, address)).gte(maximalGasPrice);
+  const maximalGasCost = new BN(DEFAULT_GAS).mul(web3.utils.toWei(new BN(config.defaultGasPrice), 'gwei'));
+  return new BN(await getBalance(web3, address)).gte(maximalGasCost);
 }
 

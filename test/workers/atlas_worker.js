@@ -25,7 +25,7 @@ const {expect} = chai;
 
 describe('Atlas Worker', () => {
   const defaultAccount = '0x123';
-  const exampleBalance = '10000000000000000000';
+  const enoughFunds = '10000000000000000000';
   const fetchedBundle = {bundleId: 'fetchedBundle'};
   const exampleWorkId = 'workid';
   const workerInterval = 10;
@@ -47,7 +47,7 @@ describe('Atlas Worker', () => {
     mockWeb3 = {
       eth: {
         defaultAccount,
-        getBalance: sinon.stub().resolves(exampleBalance),
+        getBalance: sinon.stub().resolves(enoughFunds),
         getNodeInfo: () => Promise.resolve()
       },
       utils
@@ -242,45 +242,56 @@ describe('Atlas Worker', () => {
     });
 
     describe('isEnoughFundsToPayForGas', () => {
-      it('isOutOfFunds property is false after atlas worker was initialized', async () => {
-        expect(atlasWorker.isOutOfFunds).to.be.false;
-      });
+      function setupAccountWithNoFunds() {
+        mockWeb3.eth.getBalance.withArgs(defaultAccount).resolves(0);
+      }
+
+      async function checkWithNoFunds() {
+        setupAccountWithNoFunds();
+        await atlasWorker.isEnoughFundsToPayForGas();
+      }
+
+      async function checkWithEnoughFunds() {
+        mockWeb3.eth.getBalance.withArgs(defaultAccount).resolves(enoughFunds);
+        await atlasWorker.isEnoughFundsToPayForGas();
+      }
 
       it('returns true when account has enough funds to pay for gas', async () => {
+        mockWeb3.eth.getBalance.withArgs(defaultAccount).resolves(enoughFunds);
         expect(await atlasWorker.isEnoughFundsToPayForGas()).to.be.true;
-        expect(mockWeb3.eth.getBalance).to.be.calledWith(defaultAccount);
-      });
-
-      it('sets isOutOfFunds property to false when account has enough funds', async () => {
-        atlasWorker.isOutOfFunds = undefined;
-        await atlasWorker.isEnoughFundsToPayForGas();
-        expect(atlasWorker.isOutOfFunds).to.be.false;
       });
 
       it('returns false when account does not have enough funds to pay for gas', async () => {
-        mockWeb3.eth.getBalance.resolves('23123');
+        setupAccountWithNoFunds();
         expect(await atlasWorker.isEnoughFundsToPayForGas()).to.be.false;
       });
 
-      it('sets isOutOfFunds property to true when account does not have enough funds to pay for gas', async () => {
-        mockWeb3.eth.getBalance.resolves('23123');
-        atlasWorker.isOutOfFunds = undefined;
-        await atlasWorker.isEnoughFundsToPayForGas();
-        expect(atlasWorker.isOutOfFunds).to.be.true;
+      it('returns true when account has enough funds after it was out of funds', async () => {
+        await checkWithNoFunds();
+        mockWeb3.eth.getBalance.withArgs(defaultAccount).resolves(enoughFunds);
+
+        expect(await atlasWorker.isEnoughFundsToPayForGas()).to.be.true;
       });
 
       it('writes message to log when outOfFunds is raised for the first time in a row', async () => {
-        mockWeb3.eth.getBalance.resolves('23123');
-        atlasWorker.isOutOfFunds = false;
-        expect(await atlasWorker.isEnoughFundsToPayForGas()).to.be.false;
+        await checkWithNoFunds();
         expect(loggerMock.info).to.be.calledOnce;
+
+        await checkWithEnoughFunds();
+        expect(loggerMock.info).to.be.calledOnce;
+
+        await checkWithNoFunds();
+        expect(loggerMock.info).to.be.calledTwice;
       });
 
       it('does not write message to log when outOfFunds is raised the second or more time in a row', async () => {
-        mockWeb3.eth.getBalance.resolves('23123');
-        atlasWorker.isOutOfFunds = true;
-        expect(await atlasWorker.isEnoughFundsToPayForGas()).to.be.false;
-        expect(loggerMock.info).to.be.not.called;
+        setupAccountWithNoFunds();
+
+        await atlasWorker.isEnoughFundsToPayForGas();
+        await atlasWorker.isEnoughFundsToPayForGas();
+        await atlasWorker.isEnoughFundsToPayForGas();
+
+        expect(loggerMock.info).to.be.calledOnce;
       });
     });
 
