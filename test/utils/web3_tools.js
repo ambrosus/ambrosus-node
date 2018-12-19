@@ -56,8 +56,12 @@ describe('Web3 tools', () => {
     const timeout = 3;
     let clock;
 
-    beforeEach(() => {
+    before(() => {
       clock = sinon.useFakeTimers();
+    });
+
+    after(() => {
+      clock.restore();
     });
 
     it('checks if chain is not in sync mode every `timeout` seconds', async () => {
