@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import Web3 from 'web3';
 import config from '../../config/config';
+import BN from 'bn.js';
 
 export const DEFAULT_GAS = 4700000;
 
@@ -136,3 +137,13 @@ export async function waitForChainSync(web3, timeoutInSeconds, iterationCallback
     await sleep(timeoutInSeconds);
   }
 }
+
+export async function getBalance(web3, address) {
+  return await web3.eth.getBalance(address);
+}
+
+export async function checkIfEnoughFundsToPayForGas(web3, address) {
+  const maximalGasCost = new BN(DEFAULT_GAS).mul(web3.utils.toWei(new BN(config.defaultGasPrice), 'gwei'));
+  return new BN(await getBalance(web3, address)).gte(maximalGasCost);
+}
+

@@ -10,12 +10,13 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import chaiAsPromised from 'chai-as-promised';
 import chaiHttp from 'chai-http';
+import chaiAsPromised from 'chai-as-promised';
 import AtlasWorker from '../../src/workers/atlas_worker';
 import AtlasChallengeParticipationStrategy from '../../src/workers/atlas_strategies/atlas_challenge_resolution_strategy';
 import {connectToMongo} from '../../src/utils/db_utils';
 import config from '../../config/config';
+import Web3 from 'web3';
 
 chai.use(chaiHttp);
 chai.use(sinonChai);
@@ -23,27 +24,33 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Atlas Worker', () => {
+  const defaultAccount = '0x123';
+  const enoughFunds = '10000000000000000000';
   const fetchedBundle = {bundleId: 'fetchedBundle'};
   const exampleWorkId = 'workid';
   const workerInterval = 10;
   const retryTimeout = 14;
+  const {utils} = new Web3();
   let atlasWorker;
   let challengesRepositoryMock;
   let workerTaskTrackingRepositoryMock;
   let failedChallengesMock;
   let dataModelEngineMock;
   let mockWorkerLogRepository;
+  let mockWeb3;
   let strategyMock;
   let loggerMock;
   let shouldFetchBundleStub;
   let shouldResolveChallengeStub;
 
   beforeEach(async () => {
-    const mockWeb3 = {
+    mockWeb3 = {
       eth: {
-        defaultAccount: '0x123',
+        defaultAccount,
+        getBalance: sinon.stub().resolves(enoughFunds),
         getNodeInfo: () => Promise.resolve()
-      }
+      },
+      utils
     };
     const {client: mongoClient} = await connectToMongo(config);
     challengesRepositoryMock = {
@@ -232,6 +239,56 @@ describe('Atlas Worker', () => {
         await expect(atlasWorker.periodicWork()).to.be.rejected;
         expect(workerTaskTrackingRepositoryMock.finishWork).to.be.calledOnceWith(exampleWorkId);
       });
+    });
+
+    describe('isEnoughFundsToPayForGas', () => {
+      async function checkWithNoFunds() {
+        mockWeb3.eth.getBalance.withArgs(defaultAccount).resolves(0);
+        return await atlasWorker.isEnoughFundsToPayForGas();
+      }
+
+      async function checkWithEnoughFunds() {
+        mockWeb3.eth.getBalance.withArgs(defaultAccount).resolves(enoughFunds);
+        return await atlasWorker.isEnoughFundsToPayForGas();
+      }
+
+      it('returns true when account has enough funds to pay for gas', async () => {
+        await expect(checkWithEnoughFunds()).to.eventually.be.true;
+      });
+
+      it('returns false when account does not have enough funds to pay for gas', async () => {
+        await expect(checkWithNoFunds()).to.eventually.be.false;
+      });
+
+      it('returns true when account has enough funds after it was out of funds', async () => {
+        await checkWithNoFunds();
+        await expect(checkWithEnoughFunds()).to.eventually.be.true;
+      });
+
+      it('writes message to log when outOfFunds is raised for the first time in a row', async () => {
+        await checkWithNoFunds();
+        expect(loggerMock.info).to.be.calledOnce;
+
+        await checkWithEnoughFunds();
+        expect(loggerMock.info).to.be.calledOnce;
+
+        await checkWithNoFunds();
+        expect(loggerMock.info).to.be.calledTwice;
+      });
+
+      it('does not write message to log again until still out of funds', async () => {
+        await checkWithNoFunds();
+        await checkWithNoFunds();
+        await checkWithNoFunds();
+
+        expect(loggerMock.info).to.be.calledOnce;
+      });
+    });
+
+    it('periodicWork does not do anything when account does not have enough funds to pay for gas', async () => {
+      mockWeb3.eth.getBalance.resolves('10');
+      await expect(atlasWorker.periodicWork()).to.be.eventually.fulfilled;
+      await expect(challengesRepositoryMock.ongoingChallenges).to.be.not.called;
     });
   });
 
