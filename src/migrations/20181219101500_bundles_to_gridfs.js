@@ -15,6 +15,7 @@ export const up = async (db, config, logger) => {
   const bundlesBucket = new GridFSBucket(db, {bucketName: 'bundles'});
 
   const bundleMetadataCursor = await db.collection('bundle_metadata').find({});
+
   const totalCount = await bundleMetadataCursor.count();
   let movedCount = 0;
   let skippedCount = 0;
@@ -28,7 +29,13 @@ export const up = async (db, config, logger) => {
 
     const inGridFS = await isFileInGridFSBucket(bundleId, bundlesBucket);
 
-    const bundle = await db.collection('bundles').findOne({bundleId});
+    const bundleProjectionSettings = {
+      _id: 0,
+      repository: 0,
+      metadata: 0
+    };
+
+    const bundle = await db.collection('bundles').findOne({bundleId}, {projection: bundleProjectionSettings});
     if (bundle === null) {
       if (inGridFS) {
         logger.info(`[${inx}/${totalCount}]: ${bundleId} is missing in the collection but is present in GridFS bucket. Skipping`);
