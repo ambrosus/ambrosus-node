@@ -6,10 +6,13 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
+import {uploadJSONToGridFSBucket, downloadJSONFromGridFSBucket, isFileInGridFSBucket} from '../utils/db_utils';
+import {GridFSBucket} from 'mongodb';
 
 export default class BundleRepository {
   constructor(db) {
     this.db = db;
+    this.bundlesBucket = new GridFSBucket(this.db, {bucketName: 'bundles'});
     this.blacklistedFields = {
       _id: 0,
       repository: 0
@@ -17,8 +20,8 @@ export default class BundleRepository {
   }
 
   async storeBundle(bundle, storagePeriods) {
-    if (await this.db.collection('bundles').findOne({bundleId: bundle.bundleId}) === null) {
-      await this.db.collection('bundles').insertOne({...bundle});
+    if (!await isFileInGridFSBucket(bundle.bundleId, this.bundlesBucket)) {
+      await uploadJSONToGridFSBucket(bundle.bundleId, bundle, this.bundlesBucket);
     }
     if (await this.db.collection('bundle_metadata').findOne({bundleId: bundle.bundleId}) === null) {
       await this.db.collection('bundle_metadata').insertOne({bundleId: bundle.bundleId, storagePeriods});
@@ -49,8 +52,18 @@ export default class BundleRepository {
     });
   }
 
+  async getBundleStream(bundleId) {
+    if (!await isFileInGridFSBucket(bundleId, this.bundlesBucket)) {
+      return null;
+    }
+    return this.bundlesBucket.openDownloadStreamByName(bundleId);
+  }
+
   async getBundle(bundleId) {
-    return await this.db.collection('bundles').findOne({bundleId}, {projection: this.blacklistedFields});
+    if (!await isFileInGridFSBucket(bundleId, this.bundlesBucket)) {
+      return null;
+    }
+    return await downloadJSONFromGridFSBucket(bundleId, this.bundlesBucket);
   }
 
   async getBundleMetadata(bundleId) {

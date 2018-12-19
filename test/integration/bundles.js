@@ -77,14 +77,6 @@ describe('Bundles - Integrations', () => {
     });
 
     it('should upload the proof to ethereum, and emit an event', async () => {
-      const uploadsContract = await apparatus.uploadActions.uploadsWrapper.contract();
-      const emittedEvents = await uploadsContract.getPastEvents('BundleUploaded');
-
-      const expectedEvent = emittedEvents.filter((value) => value.returnValues.bundleId === res.bundleId);
-      expect(expectedEvent).to.have.length(1);
-    });
-
-    it('should upload the proof to ethereum, and emit an event', async () => {
       const uploadsContract = await apparatus.uploadsWrapper.contract();
       const emittedEvents = await uploadsContract.getPastEvents('BundleUploaded');
 

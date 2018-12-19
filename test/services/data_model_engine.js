@@ -22,6 +22,7 @@ import {account, accountWithSecret, addAccountRequest, adminAccount, adminAccoun
 import {createWeb3} from '../../src/utils/web3_tools';
 import IdentityManager from '../../src/services/identity_manager';
 import ScenarioBuilder from '../fixtures/scenario_builder';
+import StringReadStream from '../../src/utils/string_read_stream';
 
 import createTokenFor from '../fixtures/create_token_for';
 import resetHistory from '../helpers/reset_history';
@@ -864,43 +865,60 @@ describe('Data Model Engine', () => {
     });
   });
 
-  describe('Getting a bundle by id', () => {
+  describe('Getting a bundle', () => {
     let mockBundleRepository;
     let modelEngine;
 
-    let ret;
-
     const exampleBundleId = '0xabcdef';
     const exampleBundle = put(createBundle(), 'bundleId', exampleBundleId);
+    const exampleBundleStream = new StringReadStream(JSON.stringify(exampleBundle));
 
-    before(async () => {
+    beforeEach(async () => {
       mockBundleRepository = {
-        getBundle: sinon.stub()
+        getBundle: sinon.stub(),
+        getBundleStream: sinon.stub()
       };
 
       mockBundleRepository.getBundle.resolves(exampleBundle);
+      mockBundleRepository.getBundleStream.resolves(exampleBundleStream);
 
       modelEngine = new DataModelEngine({
         bundleRepository: mockBundleRepository
       });
-
-      ret = await expect(modelEngine.getBundle(exampleBundleId)).to.fulfilled;
     });
 
-    it('asks the entity repository for the bundle', async () => {
-      expect(mockBundleRepository.getBundle).to.have.been.calledWith(exampleBundleId);
+    describe('document by id', () => {
+      it('returns the bundle document fetched from the repository if it exists', async () => {
+        await expect(modelEngine.getBundle(exampleBundleId)).to.eventually.be.fulfilled.and.equal(exampleBundle);
+
+        expect(mockBundleRepository.getBundle).to.have.been.calledWith(exampleBundleId);
+      });
+
+      it('throws NotFoundError if the bundle with requested id does not exist in the repository', async () => {
+        mockBundleRepository.getBundle.resolves(null);
+
+        await expect(modelEngine.getBundle(exampleBundleId)).to.be.rejectedWith(NotFoundError);
+
+        expect(mockBundleRepository.getBundle).to.have.been.calledWith(exampleBundleId);
+      });
     });
 
-    it('properly assembles the result', () => {
-      expect(ret).to.deep.equal(exampleBundle);
-    });
+    describe('stream by id', () => {
+      it('returns the bundle stream fetched from the repository if it exists', async () => {
+        await expect(modelEngine.getBundleStream(exampleBundleId)).to.eventually.be.fulfilled.and.equal(exampleBundleStream);
 
-    it('throws NotFoundError when bundle with requested id does not exist', async () => {
-      mockBundleRepository.getBundle.resolves(null);
-      await expect(modelEngine.getBundle(exampleBundleId)).to.be.rejectedWith(NotFoundError);
+        expect(mockBundleRepository.getBundleStream).to.have.been.calledWith(exampleBundleId);
+      });
+
+      it('throws NotFoundError if the bundle with requested id does not exist in the repository', async () => {
+        mockBundleRepository.getBundleStream.resolves(null);
+
+        await expect(modelEngine.getBundleStream(exampleBundleId)).to.be.rejectedWith(NotFoundError);
+
+        expect(mockBundleRepository.getBundleStream).to.have.been.calledWith(exampleBundleId);
+      });
     });
   });
-
 
   describe('Getting a bundle metadata by id', () => {
     let mockBundleRepository;
