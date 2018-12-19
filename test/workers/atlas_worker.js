@@ -242,35 +242,27 @@ describe('Atlas Worker', () => {
     });
 
     describe('isEnoughFundsToPayForGas', () => {
-      function setupAccountWithNoFunds() {
-        mockWeb3.eth.getBalance.withArgs(defaultAccount).resolves(0);
-      }
-
       async function checkWithNoFunds() {
-        setupAccountWithNoFunds();
-        await atlasWorker.isEnoughFundsToPayForGas();
+        mockWeb3.eth.getBalance.withArgs(defaultAccount).resolves(0);
+        return await atlasWorker.isEnoughFundsToPayForGas();
       }
 
       async function checkWithEnoughFunds() {
         mockWeb3.eth.getBalance.withArgs(defaultAccount).resolves(enoughFunds);
-        await atlasWorker.isEnoughFundsToPayForGas();
+        return await atlasWorker.isEnoughFundsToPayForGas();
       }
 
       it('returns true when account has enough funds to pay for gas', async () => {
-        mockWeb3.eth.getBalance.withArgs(defaultAccount).resolves(enoughFunds);
-        expect(await atlasWorker.isEnoughFundsToPayForGas()).to.be.true;
+        await expect(checkWithEnoughFunds()).to.eventually.be.true;
       });
 
       it('returns false when account does not have enough funds to pay for gas', async () => {
-        setupAccountWithNoFunds();
-        expect(await atlasWorker.isEnoughFundsToPayForGas()).to.be.false;
+        await expect(checkWithNoFunds()).to.eventually.be.false;
       });
 
       it('returns true when account has enough funds after it was out of funds', async () => {
         await checkWithNoFunds();
-        mockWeb3.eth.getBalance.withArgs(defaultAccount).resolves(enoughFunds);
-
-        expect(await atlasWorker.isEnoughFundsToPayForGas()).to.be.true;
+        await expect(checkWithEnoughFunds()).to.eventually.be.true;
       });
 
       it('writes message to log when outOfFunds is raised for the first time in a row', async () => {
@@ -284,12 +276,10 @@ describe('Atlas Worker', () => {
         expect(loggerMock.info).to.be.calledTwice;
       });
 
-      it('does not write message to log when outOfFunds is raised the second or more time in a row', async () => {
-        setupAccountWithNoFunds();
-
-        await atlasWorker.isEnoughFundsToPayForGas();
-        await atlasWorker.isEnoughFundsToPayForGas();
-        await atlasWorker.isEnoughFundsToPayForGas();
+      it('does not write message to log again until still out of funds', async () => {
+        await checkWithNoFunds();
+        await checkWithNoFunds();
+        await checkWithNoFunds();
 
         expect(loggerMock.info).to.be.calledOnce;
       });
