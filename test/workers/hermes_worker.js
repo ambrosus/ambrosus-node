@@ -48,9 +48,8 @@ describe('Hermes Worker', () => {
       prepareBundleCandidate: sinon.stub().resolves(mockResult),
       rejectBundleCandidate: sinon.stub().resolves(),
       acceptBundleCandidate: sinon.stub().resolves(mockResult),
-      uploadAcceptedBundleCandidates: sinon.stub().resolves({
-        ok: {[bundleId]: {uploadResult: 'Bundle has been uploaded'}},
-        failed: {}
+      uploadAcceptedBundleCandidates: sinon.stub().callsFake(async (callbacks) => {
+        await callbacks.success(bundleId, 'Bundle has been uploaded');
       })
     };
     mockWorkerTaskTrackingRepository = {
