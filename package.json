@@ -34,7 +34,9 @@
     "ajv": "^6.5.5",
     "ambrosus-node-contracts": "0.0.22",
     "base64url": "^2.0.0",
+    "bn.js": "^4.11.0",
     "body-parser": "^1.18.2",
+    "bson": "^1.1.0",
     "command-line-args": "^5.0.2",
     "cors": "^2.8.4",
     "express": "^4.16.2",
@@ -42,6 +44,7 @@
     "morgan": "^1.9.0",
     "pkginfo": "^0.4.1",
     "prom-client": "^11.1.1",
+    "sha3": "^1.2.2",
     "web3": "1.0.0-beta.34",
     "winston": "^3.0.0"
   },
