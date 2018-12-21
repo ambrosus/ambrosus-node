@@ -1168,6 +1168,7 @@ describe('Data Model Engine', () => {
     const blockNumber = 10;
     const txHash = '0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009';
     const now = 50;
+    const bundle3Error = new Error('An error');
 
     beforeEach(() => {
       mockEntityRepository = {
@@ -1191,7 +1192,7 @@ describe('Data Model Engine', () => {
         ensureBundleIsUploaded: sinon.stub().resolves({})
       };
       mockUploadRepository.ensureBundleIsUploaded.withArgs('bundle1', 2).resolves({blockNumber, transactionHash: txHash, timestamp: now, uploadResult: 'Success'});
-      mockUploadRepository.ensureBundleIsUploaded.withArgs('bundle3', 6).rejects(new Error('An error'));
+      mockUploadRepository.ensureBundleIsUploaded.withArgs('bundle3', 6).rejects(bundle3Error);
       mockEntityRepository.storeBundleProofMetadata.resolves();
       mockBundleRepository.storeBundleProofMetadata.resolves();
 
@@ -1220,11 +1221,14 @@ describe('Data Model Engine', () => {
       expect(mockBundleRepository.storeBundleProofMetadata).to.be.have.been.calledOnceWith('bundle1', blockNumber, now, txHash);
     });
 
-    it('returns a summary', async () => {
-      const result = await modelEngine.uploadAcceptedBundleCandidates();
-      expect(result.ok.bundle1.uploadResult).to.equal('Success');
-      expect(result.failed.bundle3.message).to.equal('An error');
-      expect(result.failed.bundle3.stack).to.exist;
+    it('calls the progress callbacks', async () => {
+      const progressCallbacks = {
+        success : sinon.spy(),
+        fail: sinon.spy()
+      };
+      await modelEngine.uploadAcceptedBundleCandidates(progressCallbacks);
+      expect(progressCallbacks.success).to.have.been.calledOnceWith('bundle1', 'Success');
+      expect(progressCallbacks.fail).to.have.been.calledOnceWith('bundle3', bundle3Error);
     });
   });
 

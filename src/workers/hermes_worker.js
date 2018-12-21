@@ -67,7 +67,7 @@ export default class HermesWorker extends PeriodicWorker {
     if (await this.strategy.shouldBundle(bundle)) {
       await this.dataModelEngine.acceptBundleCandidate(bundle, sequenceNumber, storagePeriods);
       await this.strategy.bundlingSucceeded();
-      await this.addLog('Bundle candidate accepted');
+      await this.addLog('Bundle candidate accepted', {bundleId: bundle.bundleId});
     } else {
       await this.dataModelEngine.rejectBundleCandidate(sequenceNumber);
       await this.addLog('Bundle candidate discarded');
@@ -75,13 +75,10 @@ export default class HermesWorker extends PeriodicWorker {
   }
 
   async uploadWaitingCandidates() {
-    const results = await this.dataModelEngine.uploadAcceptedBundleCandidates();
-    for (const [bundleId, confirmationObject] of Object.entries(results.ok)) {
-      await this.addLog(confirmationObject.uploadResult, {bundleId});
-    }
-    for (const [bundleId, error] of Object.entries(results.failed)) {
-      await this.addLog(`Bundle failed to upload`, {bundleId, errorMsg: error.message || error}, error.stack);
-    }
+    await this.dataModelEngine.uploadAcceptedBundleCandidates({
+      success: async (bundleId, uploadResult) => this.addLog(uploadResult, {bundleId}),
+      fail: async (bundleId, error) => this.addLog(`Bundle failed to upload`, {bundleId, errorMsg: error.message || error}, error.stack)
+    });
   }
 
   async addLog(message, additionalFields, stacktrace) {
