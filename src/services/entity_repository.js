@@ -62,8 +62,8 @@ export default class EntityRepository {
 
   async fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit, bundleSizeInBytesLimit = MONGO_SIZE_IN_BYTES_LIMIT) {
     const notBundledQuery = {
-      'metadata.bundleId': null,
-      'repository.bundleStubId': null
+      'repository.bundleStubId': null,
+      'metadata.bundleId': null
     };
 
     const updateBundleStubId = {
@@ -72,15 +72,22 @@ export default class EntityRepository {
       }
     };
 
-    const assetsCursor = await this.db.collection('assets').find(notBundledQuery, {
-      projection: this.blacklistedFields,
-      sort: {'content.idData.timestamp': 1, assetId: 1}
-    });
-    const eventsCursor = await this.db.collection('events').find(notBundledQuery, {
-      projection: this.blacklistedFields,
-      sort: {'content.idData.timestamp': 1, eventId: 1}
-    });
-
+    const assetsCursor = await this.db.collection('assets').find(
+      notBundledQuery,
+      {
+        projection: this.blacklistedFields,
+        sort: {'content.idData.timestamp': 1, assetId: 1},
+        limit: bundleItemsCountLimit
+      }
+    );
+    const eventsCursor = await this.db.collection('events').find(
+      notBundledQuery,
+      {
+        projection: this.blacklistedFields,
+        sort: {'content.idData.timestamp': 1, eventId: 1},
+        limit: bundleItemsCountLimit
+      }
+    );
     const selectedAssets = [];
     const selectedEvents = [];
     let usedSize = 0;

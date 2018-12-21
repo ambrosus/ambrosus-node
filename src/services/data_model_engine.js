@@ -195,7 +195,7 @@ export default class DataModelEngine {
   }
 
   async prepareBundleCandidate(bundleStubId) {
-    const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
+    const bundleItemsCountLimit = parseInt(await this.uploadRepository.bundleItemsCountLimit(), 10);
     const notBundled = await this.entityRepository.fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit);
 
     const nodeSecret = await this.identityManager.nodePrivateKey();
