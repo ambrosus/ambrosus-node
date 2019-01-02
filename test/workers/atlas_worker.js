@@ -42,6 +42,7 @@ describe('Atlas Worker', () => {
   let loggerMock;
   let shouldFetchBundleStub;
   let shouldResolveChallengeStub;
+  let port;
 
   beforeEach(async () => {
     mockWeb3 = {
@@ -100,6 +101,7 @@ describe('Atlas Worker', () => {
     );
 
     atlasWorker.beforeWorkLoop();
+    ({port} = atlasWorker.server.address());
   });
 
   afterEach(async () => {
@@ -294,8 +296,85 @@ describe('Atlas Worker', () => {
   });
 
   it('health checks', async () => {
-    const {port} = atlasWorker.server.address();
     const {status} = await chai.request(`http://localhost:${port}`).get('/health');
     expect(status).to.eql(200);
   });
+
+  describe('prometheus metrics', () => {
+    beforeEach(async () => {
+      challengesRepositoryMock.ongoingChallenges.resolves([
+        {sheltererId: 5, bundleId: 6, challengeId: 2, bundleNumber: 3}
+      ]);
+      const metrics = await readMetrics(port);
+      expect(metrics).to.not.include('atlas_challenges_total{status="resolved"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="failed"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="should_not_fetch"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="should_not_resolve"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="failed_recently"}');
+    });
+
+    it('records metrics on resolved challenges', async () => {
+      await atlasWorker.periodicWork();
+      const metrics = await readMetrics(port);
+      expect(metrics).to.include('atlas_challenges_total{status="resolved"} 1');
+      expect(metrics).to.not.include('atlas_challenges_total{status="failed"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="should_not_fetch"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="should_not_resolve"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="failed_recently"}');
+    });
+
+    it('records metrics on failed challenges', async () => {
+      sinon.stub(atlasWorker, 'tryToResolve');
+      atlasWorker.tryToResolve.rejects();
+
+      await atlasWorker.periodicWork();
+      const metrics = await readMetrics(port);
+      expect(metrics).to.include('atlas_challenges_total{status="failed"} 1');
+      expect(metrics).to.not.include('atlas_challenges_total{status="resolved"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="should_not_fetch"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="should_not_resolve"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="failed_recently"}');
+    });
+
+    it('records metrics on challenges that should not be fetched', async () => {
+      atlasWorker.strategy.shouldFetchBundle.returns(false);
+
+      await atlasWorker.periodicWork();
+      const metrics = await readMetrics(port);
+      expect(metrics).to.include('atlas_challenges_total{status="should_not_fetch"} 1');
+      expect(metrics).to.not.include('atlas_challenges_total{status="resolved"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="failed"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="should_not_resolve"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="failed_recently"}');
+    });
+
+    it('records metrics on challenges that should not be resolved', async () => {
+      atlasWorker.strategy.shouldResolveChallenge.returns(false);
+
+      await atlasWorker.periodicWork();
+      const metrics = await readMetrics(port);
+      expect(metrics).to.include('atlas_challenges_total{status="should_not_resolve"} 1');
+      expect(metrics).to.not.include('atlas_challenges_total{status="resolved"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="failed"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="should_not_fetch"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="failed_recently"}');
+    });
+
+    it('records metrics on challenges that failed recently', async () => {
+      atlasWorker.failedChallengesCache.didChallengeFailRecently.returns(true);
+
+      await atlasWorker.periodicWork();
+      const metrics = await readMetrics(port);
+      expect(metrics).to.include('atlas_challenges_total{status="failed_recently"} 1');
+      expect(metrics).to.not.include('atlas_challenges_total{status="resolved"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="failed"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="should_not_fetch"}');
+      expect(metrics).to.not.include('atlas_challenges_total{status="should_not_resolve"}');
+    });
+  });
 });
+
+const readMetrics = async (port) => {
+  const {text} = await chai.request(`http://localhost:${port}`).get('/metrics');
+  return text;
+};
