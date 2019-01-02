@@ -40,13 +40,17 @@ export default class ServerWorker extends Worker {
   async work() {
     this.logger.info('starting server');
 
-    this.collectMetricsInterval = promClient.collectDefaultMetrics({timeout: 10000});
+    const registry = new promClient.Registry();
+    this.collectMetricsInterval = promClient.collectDefaultMetrics({
+      register: registry,
+      timeout: 10000
+    });
     const app = express();
 
     app.set('json spaces', 2);
     app.use(Sentry.Handlers.requestHandler());
     app.use(loggerMiddleware(this.logger));
-    app.use(prometheusMiddleware(promClient));
+    app.use(prometheusMiddleware(promClient, registry));
     app.use(cors({
       origin : true,
       credentials: true
@@ -57,7 +61,7 @@ export default class ServerWorker extends Worker {
     app.use('/nodeinfo', nodeInfoRouter(this.modelEngine, this.modelEngine.identityManager, this.config.gitCommit));
     app.use('/bundle', bundlesRouter(this.modelEngine));
     app.get('/health', asyncMiddleware(healthCheckHandler(this.modelEngine.mongoClient, this.web3)));
-    app.get('/metrics', prometheusMetricsHandler(promClient));
+    app.get('/metrics', prometheusMetricsHandler(registry));
 
     if (this.role.is(Role.HERMES)) {
       app.use('/accounts', accountsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine, this.config));

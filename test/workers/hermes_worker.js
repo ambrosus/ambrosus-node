@@ -34,6 +34,8 @@ describe('Hermes Worker', () => {
   let mockResult;
   let hermesWorker;
   let bundleSequenceNumber;
+  let serverAddress;
+
   beforeEach(async () => {
     mockResult = {
       bundleId
@@ -76,7 +78,8 @@ describe('Hermes Worker', () => {
       config.serverPort
     );
     await hermesWorker.beforeWorkLoop();
-
+    const {port} = hermesWorker.server.address();
+    serverAddress = `http://localhost:${port}`;
     ({bundleSequenceNumber} = hermesWorker);
   });
 
@@ -159,8 +162,31 @@ describe('Hermes Worker', () => {
   });
 
   it('health checks', async () => {
-    const {port} = hermesWorker.server.address();
-    const {status} = await chai.request(`http://localhost:${port}`).get('/health');
+    const {status} = await chai.request(serverAddress).get('/health');
     expect(status).to.eql(200);
+  });
+
+  it('records prometheus metrics on successful uploads', async () => {
+    const {text: textBefore} = await chai.request(serverAddress).get('/metrics');
+    expect(textBefore).to.include('hermes_bundle_uploads_total 0');
+
+    await hermesWorker.periodicWork();
+
+    const {text: textAfter} = await chai.request(serverAddress).get('/metrics');
+    expect(textAfter).to.include('hermes_bundle_uploads_total 1');
+  });
+
+  it('records prometheus metrics on failed uploads', async () => {
+    mockDataModelEngine.uploadAcceptedBundleCandidates = sinon.stub().callsFake(async (callbacks) => {
+      await callbacks.fail(bundleId, new Error());
+    });
+
+    const {text: textBefore} = await chai.request(serverAddress).get('/metrics');
+    expect(textBefore).to.include('hermes_bundle_upload_failures_total 0');
+
+    await hermesWorker.periodicWork();
+
+    const {text: textAfter} = await chai.request(serverAddress).get('/metrics');
+    expect(textAfter).to.include('hermes_bundle_upload_failures_total 1');
   });
 });
