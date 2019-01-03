@@ -138,12 +138,7 @@ describe('Hermes Worker', () => {
     it('is requested and summary is logged', async () => {
       await hermesWorker.periodicWork();
       expect(mockDataModelEngine.uploadAcceptedBundleCandidates).to.have.been.calledOnce;
-      expect(mockLogger.info).to.have.been.calledWith({message:'Bundle has been uploaded', bundleId, stacktrace:undefined});
-    });
-
-    it('will stop on first error', async () => {
-      await hermesWorker.periodicWork();
-      expect(mockDataModelEngine.uploadAcceptedBundleCandidates).to.have.been.calledWith(sinon.match({stopOnFail: true}));
+      expect(mockLogger.info).to.have.been.calledWith({message: 'Bundle has been uploaded', bundleId, stacktrace: undefined});
     });
   });
 

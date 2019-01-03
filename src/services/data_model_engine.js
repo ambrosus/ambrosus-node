@@ -213,19 +213,17 @@ export default class DataModelEngine {
     await this.entityRepository.discardBundling(bundleStubId);
   }
 
-  async uploadAcceptedBundleCandidates(uploadProgressControls = {success: async () => {}, fail: async () => {}, stopOnFail: false}) {
+  async uploadAcceptedBundleCandidates(uploadProgressCallbacks = {success: async () => {}, fail: async () => {}}) {
     const waitingBundlesMetadata = await this.bundleRepository.findBundlesWaitingForUpload();
     for (const {bundleId, storagePeriods} of waitingBundlesMetadata) {
       try {
         const {blockNumber, transactionHash, timestamp, uploadResult} = await this.uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods);
         await this.entityRepository.storeBundleProofMetadata(bundleId, blockNumber, timestamp, transactionHash);
         await this.bundleRepository.storeBundleProofMetadata(bundleId, blockNumber, timestamp, transactionHash);
-        await uploadProgressControls.success(bundleId, uploadResult);
+        await uploadProgressCallbacks.success(bundleId, uploadResult);
       } catch (err) {
-        await uploadProgressControls.fail(bundleId, err);
-        if (uploadProgressControls.stopOnFail) {
-          break;
-        }
+        await uploadProgressCallbacks.fail(bundleId, err);
+        break;
       }
     }
   }
