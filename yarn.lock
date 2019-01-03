@@ -6427,7 +6427,7 @@ sha.js@^2.4.0, sha.js@^2.4.8:
     inherits "^2.0.1"
     safe-buffer "^5.0.1"
 
-sha3@^1.1.0, sha3@^1.2.2:
+sha3@^1.1.0:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/sha3/-/sha3-1.2.2.tgz#a66c5098de4c25bc88336ec8b4817d005bca7ba9"
   integrity sha1-pmxQmN5MJbyIM27ItIF9AFvKe6k=
