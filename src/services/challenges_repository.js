@@ -7,7 +7,6 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {put} from '../utils/dict_utils';
 
 export default class ChallengesRepository {
   constructor(challengesWrapper, configWrapper) {
@@ -17,23 +16,35 @@ export default class ChallengesRepository {
 
   filterOutFinishedChallenges(allChallenges, resolvedChallenges, timedOutChallenges, ownAddress) {
     const timedOutSet = new Set(timedOutChallenges.map(({challengeId}) => challengeId));
-    const startedCount = allChallenges.reduce((acc, {challengeId, count}) => put(acc, challengeId, count), {});
+    const startedCount = allChallenges.reduce(
+      (acc, {challengeId, count}) => {
+        acc[challengeId] = count;
+        return acc;
+      },
+      {}
+    );
     const unresolvedCount = resolvedChallenges.reduce(
       (acc, {challengeId, resolverId}) => {
         if (resolverId === ownAddress) {
-          return put(acc, challengeId, 0);
+          acc[challengeId] = 0;
+        } else {
+          acc[challengeId] -= 1;
         }
-        return put(acc, challengeId, acc[challengeId] - 1);
+        return acc;
       },
       startedCount
     );
-    return allChallenges.filter(({challengeId}) => unresolvedCount[challengeId] > 0 && !timedOutSet.has(challengeId));
+    const filtered = allChallenges.filter(({challengeId}) => unresolvedCount[challengeId] > 0 && !timedOutSet.has(challengeId));
+    return filtered;
   }
 
   extractChallengeFromEvent(challengeEvents, outputFields) {
     return challengeEvents.map(
       ({blockNumber, returnValues}) => outputFields.reduce(
-        (acc, fieldName) => put(acc, fieldName, returnValues[fieldName]),
+        (acc, fieldName) => {
+          acc[fieldName] = returnValues[fieldName];
+          return acc;
+        },
         {blockNumber}
       )
     );
@@ -50,14 +61,19 @@ export default class ChallengesRepository {
     const resolvedChallengeEvents = await this.challengesWrapper.resolvedChallenges(fromBlock);
     const timedOutChallengeEvents = await this.challengesWrapper.timedOutChallenges(fromBlock);
 
-    return this.sortChallenges(
-      this.filterOutFinishedChallenges(
-        this.extractChallengeFromEvent(allChallengeEvents, ['challengeId', 'sheltererId', 'bundleId', 'count']),
-        this.extractChallengeFromEvent(resolvedChallengeEvents, ['challengeId', 'resolverId']),
-        this.extractChallengeFromEvent(timedOutChallengeEvents, ['challengeId']),
-        this.challengesWrapper.defaultAddress
-      )
+    const startedChallenges = this.extractChallengeFromEvent(allChallengeEvents, ['challengeId', 'sheltererId', 'bundleId', 'count']);
+    const resolvedChallenges = this.extractChallengeFromEvent(resolvedChallengeEvents, ['challengeId', 'resolverId']);
+    const timedOutChallenges = this.extractChallengeFromEvent(timedOutChallengeEvents, ['challengeId']);
+    const filtered = this.filterOutFinishedChallenges(
+      startedChallenges,
+      resolvedChallenges,
+      timedOutChallenges,
+      this.challengesWrapper.defaultAddress
     );
+    const sorted = this.sortChallenges(
+      filtered
+    );
+    return sorted;
   }
 
   async resolveChallenge(challengeId) {
