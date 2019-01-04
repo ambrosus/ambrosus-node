@@ -1,4 +1,5 @@
---require babel-register
+--require @babel/register
 --require test/mocha_env.js
---timeout 5000
+--timeout 10000
 --recursive
+--exit
