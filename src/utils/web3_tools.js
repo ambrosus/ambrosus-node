@@ -33,7 +33,9 @@ function createGanacheProvider(secretKey) {
       ...Array(9).fill({balance: '1000000000000000000000'})
     ]
   };
-  return Ganache.provider(ganacheOptions);
+  const provider = Ganache.provider(ganacheOptions);
+  provider.setMaxListeners(500);
+  return provider;
 }
 
 async function ganacheTopUpDefaultAccount(web3) {
