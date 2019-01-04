@@ -1290,11 +1290,13 @@ describe('Data Model Engine', () => {
       };
 
       mockUploadRepository = {
-        verifyBundle: sinon.stub().resolves()
+        verifyBundle: sinon.stub().resolves(),
+        verifyBundleMetadata: sinon.stub().resolves()
       };
 
       mockBundleBuilder = {
-        validateBundle: sinon.stub()
+        validateBundle: sinon.stub(),
+        validateBundleMetadata: sinon.stub()
       };
 
       mockBundleDownloader = {
@@ -1316,6 +1318,7 @@ describe('Data Model Engine', () => {
       expect(mockRolesRepository.nodeUrl).to.be.calledWith(sheltererId);
       expect(mockBundleDownloader.downloadBundleMetadata).to.be.calledWith(nodeUrl, bundleId);
       expect(mockBundleDownloader.openBundleDownloadStream).to.be.calledWith(nodeUrl, bundleId);
+      expect(mockBundleBuilder.validateBundleMetadata).to.be.calledWith(downloadedBundleMetadata);
       expect(mockBundleRepository.openBundleWriteStream).to.be.calledWith(bundleId, downloadedBundleMetadata.storagePeriods);
       expect(JSON.parse(mockWriteStream.get())).to.be.deep.equal(downloadedBundle);
       expect(mockBundleRepository.storeBundleProofMetadata).to.be.calledOnce;
@@ -1361,12 +1364,24 @@ describe('Data Model Engine', () => {
       expect(mockBundleRepository.removeBundle).to.have.been.calledOnceWith(bundleId);
     });
 
+    it('does not store bundle if metadata validation failed', async () => {
+      mockBundleBuilder.validateBundleMetadata.throws();
+      await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejected;
+      expect(mockBundleRepository.storeBundle).to.be.not.called;
+    });
+
     it('removes the bundle if verification against chain fails', async () => {
       mockUploadRepository.verifyBundle.rejects();
       await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejected;
       expect(mockBundleRepository.getBundle).to.have.been.calledOnceWith(bundleId);
       expect(mockUploadRepository.verifyBundle).to.have.been.calledOnceWith(downloadedBundle);
       expect(mockBundleRepository.removeBundle).to.have.been.calledOnceWith(bundleId);
+    });
+
+    it('does not store bundle if metadata verification against chain failed', async () => {
+      mockUploadRepository.verifyBundleMetadata.rejects();
+      await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejected;
+      expect(mockBundleRepository.storeBundle).to.be.not.called;
     });
   });
 

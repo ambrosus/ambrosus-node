@@ -73,4 +73,18 @@ export default class BundleBuilder {
       bundle.content.idData
     );
   }
+
+  validateBundleMetadata(bundleMetadata) {
+    validateAndCast(bundleMetadata)
+      .required([
+        'bundleId',
+        'bundleTransactionHash',
+        'bundleProofBlock',
+        'bundleUploadTimestamp',
+        'storagePeriods'
+      ])
+      .isCorrectId(['bundleId'])
+      .isTransactionHash(['bundleTransactionHash'])
+      .isNonNegativeInteger(['bundleProofBlock', 'bundleUploadTimestamp', 'storagePeriods']);
+  }
 }

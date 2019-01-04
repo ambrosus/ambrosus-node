@@ -236,6 +236,8 @@ export default class DataModelEngine {
     if (!bundleMetadata) {
       throw new Error('Could not fetch the bundle metadata from the shelterer');
     }
+    this.bundleBuilder.validateBundleMetadata(bundleMetadata);
+    await this.uploadRepository.verifyBundleMetadata(bundleMetadata);
 
     try {
       const downloadStream = await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);

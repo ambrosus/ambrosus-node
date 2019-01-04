@@ -91,6 +91,22 @@ export default class UploadRepository {
     }
   }
 
+  async verifyBundleMetadata(bundleMetadata) {
+    const bundleUploadData = await this.uploadsActions.getBundleUploadData(bundleMetadata.bundleId);
+    if (bundleUploadData === null) {
+      throw new ValidationError(`Bundle with id=${bundleMetadata.bundleId} has not been uploaded`);
+    }
+    if (bundleMetadata.bundleTransactionHash !== bundleUploadData.transactionHash) {
+      throw new ValidationError('bundleTransactionHash in metadata does not match bundle upload transaction hash');
+    }
+    if (bundleMetadata.bundleProofBlock !== bundleUploadData.blockNumber) {
+      throw new ValidationError('bundleProofBlock in metadata does not match bundle upload block number');
+    }
+    if (bundleMetadata.bundleUploadTimestamp !== bundleUploadData.timestamp) {
+      throw new ValidationError('bundleUploadTimestamp in metadata does not match bundle upload timestamp');
+    }
+  }
+
   async checkIfEnoughFunds(requiredBalance) {
     const balance = new BN(await this.web3.eth.getBalance(this.identityManager.nodeAddress()));
     if (balance.lte(new BN(this.lowFundsWarningAmount))) {

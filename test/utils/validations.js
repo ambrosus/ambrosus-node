@@ -277,6 +277,159 @@ describe('validation', () => {
     });
   });
 
+  describe('isCorrectId', () => {
+    const input = {
+      correctId: '0x978f69298ba7940c11b16c4a778c7ad1a4e8c6ed3c90c35f36cfec1b20fc53d2',
+      lower: '0x978f69298ba7940c11b16c4a778c7ad1a4e8c6ed3c90c35f36cfec1b20fc53d2',
+      upper: '0X978F69298BA7940C11B16C4A778C7AD1A4E8C6ED3C90C35F36CFEC1B20FC53D2',
+      tooShort: '0x978f69298ba7940c11b16c4a778c7ad1a4e8c6ed3c90c35f36cfec1b20fc53d',
+      tooLong: '0x978f69298ba7940c11b16c4a778c7ad1a4e8c6ed3c90c35f36cfec1b20fc53d21',
+      noPrefix: '978f69298ba7940c11b16c4a778c7ad1a4e8c6ed3c90c35f36cfec1b20fc53d2',
+      notHex: '0x978f69298ba7940c11b16c4a778c7ad1a4e8c6ed3c90c35f36cfec1b20fc5xyz'
+    };
+
+    beforeEach(() => {
+      validator = validateAndCast(input);
+    });
+
+    it('returns self', async () => {
+      expect(validator.isCorrectId([])).to.deep.equal(validator);
+    });
+
+    it('does not throw with valid addresses', async () => {
+      expect(() => validator.isCorrectId(['correctId'])).to.not.throw();
+    });
+
+    it('is case insensitive', async () => {
+      expect(() => validator.isCorrectId(['upper', 'lower'])).to.not.throw();
+    });
+
+    it('throws if address has wrong length', async () => {
+      expect(() => validator.isCorrectId(['tooShort'])).to.throw(ValidationError);
+      expect(() => validator.isCorrectId(['tooLong'])).to.throw(ValidationError);
+    });
+
+    it('throws if address has no prefix', async () => {
+      expect(() => validator.isCorrectId(['noPrefix'])).to.throw(ValidationError);
+    });
+
+    it('throws if not hex value', async () => {
+      expect(() => validator.isCorrectId(['notHex'])).to.throw(ValidationError);
+    });
+
+    it('does not throw if undefined', async () => {
+      expect(() => validator.isCorrectId(['undefined'])).to.not.throw();
+    });
+
+    describe('Nested fields', () => {
+      beforeEach(() => {
+        validator = validateAndCast({wrap: input});
+      });
+
+      it('does not throw with valid addresses', async () => {
+        expect(() => validator.isCorrectId(['wrap.correctId'])).to.not.throw();
+      });
+
+      it('is case insensitive', async () => {
+        expect(() => validator.isCorrectId(['wrap.upper', 'wrap.lower'])).to.not.throw();
+      });
+
+      it('throws if address has wrong length', async () => {
+        expect(() => validator.isCorrectId(['wrap.tooShort'])).to.throw(ValidationError);
+        expect(() => validator.isCorrectId(['wrap.tooLong'])).to.throw(ValidationError);
+      });
+
+      it('throws if address has no prefix', async () => {
+        expect(() => validator.isCorrectId(['wrap.noPrefix'])).to.throw(ValidationError);
+      });
+
+      it('throws if not hex value', async () => {
+        expect(() => validator.isCorrectId(['wrap.notHex'])).to.throw(ValidationError);
+      });
+
+      it('does not throw if undefined', async () => {
+        expect(() => validator.isCorrectId(['wrap.undefined'])).to.not.throw();
+      });
+    });
+  });
+
+  describe('isTransactionHash', () => {
+    const input = {
+      correctTxHash: '0xbfa90258fe2badae4cce5316161cdc1f6eccb5d47f0904adafca120e142c9c3e',
+      lower: '0xbfa90258fe2badae4cce5316161cdc1f6eccb5d47f0904adafca120e142c9c3e',
+      upper: '0XBFA90258FE2BADAE4CCE5316161CDC1F6ECCB5D47F0904ADAFCA120E142C9C3E',
+      tooShort: '0xbfa90258fe2badae4cce5316161cdc1f6eccb5d47f0904adafca120e142c9c3',
+      tooLong: '0xbfa90258fe2badae4cce5316161cdc1f6eccb5d47f0904adafca120e142c9c3e1',
+      noPrefix: 'bfa90258fe2badae4cce5316161cdc1f6eccb5d47f0904adafca120e142c9c3e',
+      notHex: '0xbfa90258fe2badae4cce5316161cdc1f6eccb5d47f0904adafca120e142c9xyz'
+    };
+
+    beforeEach(() => {
+      validator = validateAndCast(input);
+    });
+
+    it('returns self', async () => {
+      expect(validator.isTransactionHash([])).to.deep.equal(validator);
+    });
+
+    it('does not throw with valid addresses', async () => {
+      expect(() => validator.isTransactionHash(['correctTxHash'])).to.not.throw();
+    });
+
+    it('is case insensitive', async () => {
+      expect(() => validator.isTransactionHash(['upper', 'lower'])).to.not.throw();
+    });
+
+    it('throws if address has wrong length', async () => {
+      expect(() => validator.isTransactionHash(['tooShort'])).to.throw(ValidationError);
+      expect(() => validator.isTransactionHash(['tooLong'])).to.throw(ValidationError);
+    });
+
+    it('throws if address has no prefix', async () => {
+      expect(() => validator.isTransactionHash(['noPrefix'])).to.throw(ValidationError);
+    });
+
+    it('throws if not hex value', async () => {
+      expect(() => validator.isTransactionHash(['notHex'])).to.throw(ValidationError);
+    });
+
+    it('does not throw if undefined', async () => {
+      expect(() => validator.isTransactionHash(['undefined'])).to.not.throw();
+    });
+
+    describe('Nested fields', () => {
+      beforeEach(() => {
+        validator = validateAndCast({wrap: input});
+      });
+
+      it('does not throw with valid addresses', async () => {
+        expect(() => validator.isTransactionHash(['wrap.correctTxHash'])).to.not.throw();
+      });
+
+      it('is case insensitive', async () => {
+        expect(() => validator.isTransactionHash(['wrap.upper', 'wrap.lower'])).to.not.throw();
+      });
+
+      it('throws if address has wrong length', async () => {
+        expect(() => validator.isTransactionHash(['wrap.tooShort'])).to.throw(ValidationError);
+        expect(() => validator.isTransactionHash(['wrap.tooLong'])).to.throw(ValidationError);
+      });
+
+      it('throws if address has no prefix', async () => {
+        expect(() => validator.isTransactionHash(['wrap.noPrefix'])).to.throw(ValidationError);
+      });
+
+      it('throws if not hex value', async () => {
+        expect(() => validator.isTransactionHash(['wrap.notHex'])).to.throw(ValidationError);
+      });
+
+      it('does not throw if undefined', async () => {
+        expect(() => validator.isTransactionHash(['wrap.undefined'])).to.not.throw();
+      });
+    });
+  });
+
+
   describe('isUrl', () => {
     const input = {
       correctUrl1: 'http://ambrosusnode.com',

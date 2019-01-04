@@ -19,7 +19,7 @@ import IdentityManager from '../../src/services/identity_manager';
 import BundleBuilder from '../../src/services/bundle_builder';
 
 import {adminAccountWithSecret} from '../fixtures/account';
-import {createFullAsset, createFullEvent, createFullBundle} from '../fixtures/assets_events';
+import {createFullAsset, createFullBundle, createFullEvent} from '../fixtures/assets_events';
 
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {getTimestamp} from '../../src/utils/time_utils';
@@ -31,6 +31,7 @@ describe('Bundle Builder', () => {
   let exampleAsset;
   let exampleEvent;
   let exampleBundle;
+  let bundleBuilder;
 
   before(async () => {
     identityManager = new IdentityManager(await createWeb3());
@@ -41,7 +42,6 @@ describe('Bundle Builder', () => {
 
   describe('validating', () => {
     let mockIdentityManager;
-    let bundleBuilder;
 
     before(() => {
       mockIdentityManager = {
@@ -81,13 +81,16 @@ describe('Bundle Builder', () => {
     it('checks if bundleId matches the hash of content (delegated to IdentityManager)', () => {
       mockIdentityManager.checkHashMatches.withArgs(exampleBundle.bundleId, exampleBundle.content).returns(false);
       expect(() => bundleBuilder.validateBundle(exampleBundle)).to.throw(ValidationError);
-      expect(mockIdentityManager.checkHashMatches).to.have.been.calledWith(exampleBundle.bundleId, exampleBundle.content);
+      expect(mockIdentityManager.checkHashMatches).to.have.been
+        .calledWith(exampleBundle.bundleId, exampleBundle.content);
     });
 
     it('checks if entriesHash matches the hash of entries (delegated to IdentityManager)', () => {
-      mockIdentityManager.checkHashMatches.withArgs(exampleBundle.content.idData.entriesHash, exampleBundle.content.entries).returns(false);
+      mockIdentityManager.checkHashMatches.withArgs(exampleBundle.content.idData.entriesHash,
+        exampleBundle.content.entries).returns(false);
       expect(() => bundleBuilder.validateBundle(exampleBundle)).to.throw(ValidationError);
-      expect(mockIdentityManager.checkHashMatches).to.have.been.calledWith(exampleBundle.content.idData.entriesHash, exampleBundle.content.entries);
+      expect(mockIdentityManager.checkHashMatches).to.have.been
+        .calledWith(exampleBundle.content.idData.entriesHash, exampleBundle.content.entries);
     });
 
     it('checks if signature is correct (delegated to IdentityManager)', () => {
@@ -118,11 +121,81 @@ describe('Bundle Builder', () => {
     });
   });
 
+  describe('validating metadata', () => {
+    const exampleBundleMetadata = {
+      bundleId: '0x978f69298ba7940c11b16c4a778c7ad1a4e8c6ed3c90c35f36cfec1b20fc53d2',
+      bundleUploadTimestamp: 1544171039,
+      bundleProofBlock: 120,
+      bundleTransactionHash: '0xbfa90258fe2badae4cce5316161cdc1f6eccb5d47f0904adafca120e142c9c3e',
+      storagePeriods: 3
+    };
+
+    before(() => {
+      bundleBuilder = new BundleBuilder();
+    });
+
+    it('passes for proper bundle metadata', () => {
+      expect(() => bundleBuilder.validateBundleMetadata(exampleBundleMetadata)).to.not.throw();
+    });
+
+    for (const field of [
+      'bundleId',
+      'bundleTransactionHash',
+      'bundleProofBlock',
+      'bundleUploadTimestamp',
+      'storagePeriods']) {
+      // eslint-disable-next-line no-loop-func
+      it(`throws if the ${field} field is missing`, () => {
+        const brokenMetadata = pick(exampleBundleMetadata, field);
+        expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
+      });
+    }
+
+    it('throws if bundleId does not have the correct format', async () => {
+      const brokenMetadata = {...exampleBundleMetadata, bundleId: '0xIncorrectValue'};
+      expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
+    });
+
+    it('throws if bundleTransactionHash does not have the correct format', async () => {
+      const brokenMetadata = {...exampleBundleMetadata, bundleTransactionHash: '0xIncorrectValue'};
+      expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
+    });
+
+    it('throws if bundleProofBlock is not a number', async () => {
+      const brokenMetadata = {...exampleBundleMetadata, bundleProofBlock: 'string'};
+      expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
+    });
+
+    it('throws if bundleProofBlock is not an integer', async () => {
+      const brokenMetadata = {...exampleBundleMetadata, bundleProofBlock: 3.14};
+      expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
+    });
+
+    it('throws if bundleUploadTimestamp is not a number', async () => {
+      const brokenMetadata = {...exampleBundleMetadata, bundleUploadTimestamp: 'string'};
+      expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
+    });
+
+    it('throws if bundleUploadTimestamp is not an integer', async () => {
+      const brokenMetadata = {...exampleBundleMetadata, bundleUploadTimestamp: 3.14};
+      expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
+    });
+
+    it('throws if storagePeriods is not a number', async () => {
+      const brokenMetadata = {...exampleBundleMetadata, storagePeriods: 'string'};
+      expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
+    });
+
+    it('throws if storagePeriods is not an integer', async () => {
+      const brokenMetadata = {...exampleBundleMetadata, storagePeriods: 3.14};
+      expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
+    });
+  });
+
   describe('Assembling', () => {
     let mockIdentityManager;
     let mockEntityBuilder;
 
-    let bundleBuilder;
     let scenario;
 
     let inAssets;
