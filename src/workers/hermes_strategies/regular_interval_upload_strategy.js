@@ -20,7 +20,9 @@ export default class RegularIntervalUploadStrategy extends HermesUploadStrategy 
 
   async shouldBundle(bundle) {
     const minimumItemsInBundle = process.env.WORKER_MINIMUM_ITEMS || 1;
-    return bundle.content.entries.length >= minimumItemsInBundle;
+    const result = bundle.content.entries.length >= minimumItemsInBundle;
+    const reason = result ? null : 'Too few entities to bundle';
+    return {result, reason};
   }
 
   async bundlingSucceeded() {

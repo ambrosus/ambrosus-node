@@ -77,14 +77,14 @@ export default class HermesWorker extends PeriodicWorker {
 
     const sequenceNumber = this.bundleSequenceNumber++;
     const bundle = await this.dataModelEngine.prepareBundleCandidate(sequenceNumber);
-
-    if (await this.strategy.shouldBundle(bundle)) {
+    const bundlingDecision = await this.strategy.shouldBundle(bundle);
+    if (bundlingDecision.result) {
       await this.dataModelEngine.acceptBundleCandidate(bundle, sequenceNumber, storagePeriods);
       await this.strategy.bundlingSucceeded();
       await this.addLog('Bundle candidate accepted', {bundleId: bundle.bundleId});
     } else {
       await this.dataModelEngine.rejectBundleCandidate(sequenceNumber);
-      await this.addLog('Bundle candidate discarded');
+      await this.addLog(`Bundle candidate discarded. ${bundlingDecision.reason}`);
     }
   }
 
