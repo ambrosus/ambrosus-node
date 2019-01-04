@@ -76,15 +76,7 @@ export default class BundleBuilder {
 
   validateBundleMetadata(bundleMetadata) {
     validateAndCast(bundleMetadata)
-      .required([
-        'bundleId',
-        'bundleTransactionHash',
-        'bundleProofBlock',
-        'bundleUploadTimestamp',
-        'storagePeriods'
-      ])
-      .isCorrectId(['bundleId'])
-      .isTransactionHash(['bundleTransactionHash'])
-      .isNonNegativeInteger(['bundleProofBlock', 'bundleUploadTimestamp', 'storagePeriods']);
+      .required(['bundleId'])
+      .isCorrectId(['bundleId']);
   }
 }

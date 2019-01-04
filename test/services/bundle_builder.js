@@ -138,56 +138,17 @@ describe('Bundle Builder', () => {
       expect(() => bundleBuilder.validateBundleMetadata(exampleBundleMetadata)).to.not.throw();
     });
 
-    for (const field of [
-      'bundleId',
-      'bundleTransactionHash',
-      'bundleProofBlock',
-      'bundleUploadTimestamp',
-      'storagePeriods']) {
-      // eslint-disable-next-line no-loop-func
-      it(`throws if the ${field} field is missing`, () => {
-        const brokenMetadata = pick(exampleBundleMetadata, field);
-        expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
-      });
-    }
+    it('passes for bundle metadata that contains only bundleId', async () => {
+      expect(() => bundleBuilder.validateBundleMetadata({bundleId: exampleBundleMetadata.bundleId})).to.not.throw();
+    });
+
+    it('throws if the bundleId field is missing', () => {
+      const brokenMetadata = pick(exampleBundleMetadata, 'bundleId');
+      expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
+    });
 
     it('throws if bundleId does not have the correct format', async () => {
       const brokenMetadata = {...exampleBundleMetadata, bundleId: '0xIncorrectValue'};
-      expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
-    });
-
-    it('throws if bundleTransactionHash does not have the correct format', async () => {
-      const brokenMetadata = {...exampleBundleMetadata, bundleTransactionHash: '0xIncorrectValue'};
-      expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
-    });
-
-    it('throws if bundleProofBlock is not a number', async () => {
-      const brokenMetadata = {...exampleBundleMetadata, bundleProofBlock: 'string'};
-      expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
-    });
-
-    it('throws if bundleProofBlock is not an integer', async () => {
-      const brokenMetadata = {...exampleBundleMetadata, bundleProofBlock: 3.14};
-      expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
-    });
-
-    it('throws if bundleUploadTimestamp is not a number', async () => {
-      const brokenMetadata = {...exampleBundleMetadata, bundleUploadTimestamp: 'string'};
-      expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
-    });
-
-    it('throws if bundleUploadTimestamp is not an integer', async () => {
-      const brokenMetadata = {...exampleBundleMetadata, bundleUploadTimestamp: 3.14};
-      expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
-    });
-
-    it('throws if storagePeriods is not a number', async () => {
-      const brokenMetadata = {...exampleBundleMetadata, storagePeriods: 'string'};
-      expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
-    });
-
-    it('throws if storagePeriods is not an integer', async () => {
-      const brokenMetadata = {...exampleBundleMetadata, storagePeriods: 3.14};
       expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
     });
   });

@@ -1260,6 +1260,10 @@ describe('Data Model Engine', () => {
     const nodeUrl = '0.0.0.0';
     const downloadedBundle = createBundle();
     const downloadedBundleMetadata = {
+      bundleId: '0xbeef'
+    };
+    const complementedBundleMetadata = {
+      bundleId: '0xbeef',
       storagePeriods: 1,
       bundleProofBlock: 1,
       bundleUploadTimestamp: 100000,
@@ -1291,7 +1295,7 @@ describe('Data Model Engine', () => {
 
       mockUploadRepository = {
         verifyBundle: sinon.stub().resolves(),
-        verifyBundleMetadata: sinon.stub().resolves()
+        complementBundleMetadata: sinon.stub().resolves(complementedBundleMetadata)
       };
 
       mockBundleBuilder = {
@@ -1319,7 +1323,21 @@ describe('Data Model Engine', () => {
       expect(mockBundleDownloader.downloadBundleMetadata).to.be.calledWith(nodeUrl, bundleId);
       expect(mockBundleDownloader.openBundleDownloadStream).to.be.calledWith(nodeUrl, bundleId);
       expect(mockBundleBuilder.validateBundleMetadata).to.be.calledWith(downloadedBundleMetadata);
-      expect(mockBundleRepository.openBundleWriteStream).to.be.calledWith(bundleId, downloadedBundleMetadata.storagePeriods);
+      expect(mockUploadRepository.complementBundleMetadata).to.be.calledWith(downloadedBundleMetadata);
+      expect(mockBundleRepository.openBundleWriteStream).to.be.calledWith(bundleId, complementedBundleMetadata.storagePeriods);
+      expect(mockBundleRepository.storeBundleProofMetadata).to.be.calledOnce;
+    });
+
+    it('passes despite incomplete bundle metadata', async () => {
+      const incompleteBundleMetadata = {bundleId};
+      mockBundleDownloader.downloadBundleMetadata.resolves({bundleId});
+      expect(await modelEngine.downloadBundle(bundleId, sheltererId)).to.equal(downloadedBundle);
+      expect(mockRolesRepository.nodeUrl).to.be.calledWith(sheltererId);
+      expect(mockBundleDownloader.downloadBundle).to.be.calledWith(nodeUrl, bundleId);
+      expect(mockBundleDownloader.downloadBundleMetadata).to.be.calledWith(nodeUrl, bundleId);
+      expect(mockBundleBuilder.validateBundle).to.be.calledWith(downloadedBundle);
+      expect(mockUploadRepository.complementBundleMetadata).to.be.calledWith(incompleteBundleMetadata);
+      expect(mockBundleRepository.storeBundle).to.be.calledWith(downloadedBundle, complementedBundleMetadata.storagePeriods);
       expect(JSON.parse(mockWriteStream.get())).to.be.deep.equal(downloadedBundle);
       expect(mockBundleRepository.storeBundleProofMetadata).to.be.calledOnce;
     });
@@ -1379,7 +1397,7 @@ describe('Data Model Engine', () => {
     });
 
     it('does not store bundle if metadata verification against chain failed', async () => {
-      mockUploadRepository.verifyBundleMetadata.rejects();
+      mockUploadRepository.complementBundleMetadata.rejects();
       await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejected;
       expect(mockBundleRepository.storeBundle).to.be.not.called;
     });

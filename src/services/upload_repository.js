@@ -91,20 +91,19 @@ export default class UploadRepository {
     }
   }
 
-  async verifyBundleMetadata(bundleMetadata) {
+  async complementBundleMetadata(bundleMetadata) {
     const bundleUploadData = await this.uploadsActions.getBundleUploadData(bundleMetadata.bundleId);
     if (bundleUploadData === null) {
       throw new ValidationError(`Bundle with id=${bundleMetadata.bundleId} has not been uploaded`);
     }
-    if (bundleMetadata.bundleTransactionHash !== bundleUploadData.transactionHash) {
-      throw new ValidationError('bundleTransactionHash in metadata does not match bundle upload transaction hash');
-    }
-    if (bundleMetadata.bundleProofBlock !== bundleUploadData.blockNumber) {
-      throw new ValidationError('bundleProofBlock in metadata does not match bundle upload block number');
-    }
-    if (bundleMetadata.bundleUploadTimestamp !== bundleUploadData.timestamp) {
-      throw new ValidationError('bundleUploadTimestamp in metadata does not match bundle upload timestamp');
-    }
+    const bundleStoragePeriods = await this.shelteringWrapper.bundleStoragePeriods(bundleMetadata.bundleId);
+    return {
+      ...bundleMetadata,
+      bundleTransactionHash: bundleUploadData.transactionHash,
+      bundleProofBlock: bundleUploadData.blockNumber,
+      bundleUploadTimestamp: bundleUploadData.timestamp,
+      storagePeriods: bundleStoragePeriods
+    };
   }
 
   async checkIfEnoughFunds(requiredBalance) {

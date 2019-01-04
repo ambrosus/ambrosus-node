@@ -237,11 +237,11 @@ export default class DataModelEngine {
       throw new Error('Could not fetch the bundle metadata from the shelterer');
     }
     this.bundleBuilder.validateBundleMetadata(bundleMetadata);
-    await this.uploadRepository.verifyBundleMetadata(bundleMetadata);
+    const complementedMetadata = await this.uploadRepository.verifyBundleMetadata(bundleMetadata);
 
     try {
       const downloadStream = await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
-      const writeStream = await this.bundleRepository.openBundleWriteStream(bundleId, bundleMetadata.storagePeriods);
+      const writeStream = await this.bundleRepository.openBundleWriteStream(bundleId, complementedMetadata.storagePeriods);
       downloadStream.on('error', (err) => {
         writeStream.abort(err);
       });
@@ -260,13 +260,13 @@ export default class DataModelEngine {
     }
 
     await this.bundleRepository.storeBundleProofMetadata(
-      bundleMetadata.bundleId,
-      bundleMetadata.bundleProofBlock,
-      bundleMetadata.bundleUploadTimestamp,
-      bundleMetadata.bundleTransactionHash
+      complementedMetadata.bundleId,
+      complementedMetadata.bundleProofBlock,
+      complementedMetadata.bundleUploadTimestamp,
+      complementedMetadata.bundleTransactionHash
     );
 
-    return bundleMetadata;
+    return complementedMetadata;
   }
 
   async updateShelteringExpirationDate(bundleId) {

@@ -171,6 +171,7 @@ describe('Upload repository', () => {
     it('passes for proper bundle', async () => {
       configWrapperMock.bundleSizeLimit.resolves(5);
       await expect(uploadRepository.verifyBundle(downloadedBundle)).to.be.fulfilled;
+      await expect(uploadRepository.verifyBundle(downloadedBundle)).to.be.fulfilled;
     });
 
     it('throws if downloaded bundle is too big', async () => {
@@ -179,40 +180,39 @@ describe('Upload repository', () => {
     });
   });
 
-  describe('Verifying bundle metadata', () => {
-    const bundleMetadata = {
-      bundleId: '0x978f69298ba7940c11b16c4a778c7ad1a4e8c6ed3c90c35f36cfec1b20fc53d2',
-      bundleUploadTimestamp: 1544171039,
-      bundleProofBlock: 120,
-      bundleTransactionHash: '0xbfa90258fe2badae4cce5316161cdc1f6eccb5d47f0904adafca120e142c9c3e'
-    };
+  describe('Complementing bundle metadata', () => {
+    const bundleId = '0x978f69298ba7940c11b16c4a778c7ad1a4e8c6ed3c90c35f36cfec1b20fc53d2';
+    const exampleStoragePeriods = 12;
     const exampleUploadData = {
-      blockNumber: bundleMetadata.bundleProofBlock,
-      transactionHash: bundleMetadata.bundleTransactionHash,
-      timestamp: bundleMetadata.bundleUploadTimestamp
+      blockNumber: 120,
+      transactionHash: '0xbfa90258fe2badae4cce5316161cdc1f6eccb5d47f0904adafca120e142c9c3e',
+      timestamp: 1544171039
+    };
+    const bundleMetadata = {
+      bundleId,
+      bundleUploadTimestamp: exampleUploadData.timestamp,
+      bundleProofBlock: exampleUploadData.blockNumber,
+      bundleTransactionHash: exampleUploadData.transactionHash,
+      storagePeriods: exampleStoragePeriods
     };
 
     beforeEach(() => {
       uploadsActionsMock = {
-        getBundleUploadData: sinon.stub()
-          .resolves(null)
-          .withArgs(bundleMetadata.bundleId)
-          .resolves(exampleUploadData)
+        getBundleUploadData: sinon.stub().resolves(null)
       };
-
-      uploadRepository = new UploadRepository({}, {}, uploadsActionsMock);
+      uploadsActionsMock.getBundleUploadData.withArgs(bundleId).resolves(exampleUploadData);
+      shelteringWrapperMock = {
+        bundleStoragePeriods: sinon.stub().resolves(exampleStoragePeriods)
+      };
+      uploadRepository = new UploadRepository({}, {}, uploadsActionsMock, shelteringWrapperMock);
     });
 
-    it('does not throw when metadata matches exampleUploadData', async () => {
-      await expect(uploadRepository.verifyBundleMetadata(bundleMetadata)).to.be.fulfilled;
+    it('substitutes metadata fields with data loaded from blockchain', async () => {
+      expect(await uploadRepository.complementBundleMetadata({bundleId})).to.deep.equal(bundleMetadata);
     });
 
-    for (const field of ['bundleUploadTimestamp', 'bundleProofBlock', 'bundleTransactionHash']) {
-      // eslint-disable-next-line no-loop-func
-      it(`throws when ${field} in metadata is not correct`, async () => {
-        const brokenMetadata = {...bundleMetadata, [field]: 'wrongValue'};
-        await expect(uploadRepository.verifyBundleMetadata(brokenMetadata)).to.be.rejectedWith(ValidationError);
-      });
-    }
+    it('throws ValidationError when bundle with given ID does not exist on chain', async () => {
+      await expect(uploadRepository.complementBundleMetadata({bundleId: 'unknownId'})).to.be.rejectedWith(ValidationError);
+    });
   });
 });
