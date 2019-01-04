@@ -223,6 +223,7 @@ export default class DataModelEngine {
         await uploadProgressCallbacks.success(bundleId, uploadResult);
       } catch (err) {
         await uploadProgressCallbacks.fail(bundleId, err);
+        break;
       }
     }
   }

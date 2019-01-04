@@ -48,8 +48,8 @@ describe('Hermes Worker', () => {
       prepareBundleCandidate: sinon.stub().resolves(mockResult),
       rejectBundleCandidate: sinon.stub().resolves(),
       acceptBundleCandidate: sinon.stub().resolves(mockResult),
-      uploadAcceptedBundleCandidates: sinon.stub().callsFake(async (callbacks) => {
-        await callbacks.success(bundleId, 'Bundle has been uploaded');
+      uploadAcceptedBundleCandidates: sinon.stub().callsFake(async (controls) => {
+        await controls.success(bundleId, 'Bundle has been uploaded');
       })
     };
     mockWorkerTaskTrackingRepository = {
@@ -138,7 +138,7 @@ describe('Hermes Worker', () => {
     it('is requested and summary is logged', async () => {
       await hermesWorker.periodicWork();
       expect(mockDataModelEngine.uploadAcceptedBundleCandidates).to.have.been.calledOnce;
-      expect(mockLogger.info).to.have.been.calledWith({message:'Bundle has been uploaded', bundleId, stacktrace:undefined});
+      expect(mockLogger.info).to.have.been.calledWith({message: 'Bundle has been uploaded', bundleId, stacktrace: undefined});
     });
   });
 

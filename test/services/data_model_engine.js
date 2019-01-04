@@ -1230,6 +1230,34 @@ describe('Data Model Engine', () => {
       expect(progressCallbacks.success).to.have.been.calledOnceWith('bundle1', 'Success');
       expect(progressCallbacks.fail).to.have.been.calledOnceWith('bundle3', bundle3Error);
     });
+
+    it('stops uploading when error encountered and fail stop on fail requested', async () => {
+      mockEntityRepository = {
+        findBundlesWaitingForUpload: sinon.stub().resolves([
+          {
+            bundleId: 'bundle1',
+            metadata: {storagePeriods: 2}
+          },
+          {
+            bundleId: 'bundle2',
+            metadata: {storagePeriods: 2}
+          }
+
+        ]),
+        storeBundleProofMetadata: sinon.stub()
+      };
+
+      mockUploadRepository = {ensureBundleIsUploaded: sinon.stub().rejects(new Error())};
+      modelEngine = new DataModelEngine({
+        entityRepository: mockEntityRepository,
+        uploadRepository: mockUploadRepository,
+        bundleRepository: mockBundleRepository
+      });
+
+      await modelEngine.uploadAcceptedBundleCandidates({success: async() => {}, fail: async() => {}});
+      expect(mockUploadRepository.ensureBundleIsUploaded).to.have.callCount(1);
+      expect(mockEntityRepository.storeBundleProofMetadata).not.to.be.have.been.calledWith('bundle2', blockNumber, txHash);
+    });
   });
 
   describe('Downloading a bundle', () => {
