@@ -8,16 +8,18 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 const excludedPaths = ['/health', '/metrics'];
 
-const prometheusMiddleware = (promClient) => {
+const prometheusMiddleware = (promClient, registry) => {
   const httpRequestDurationSeconds = new promClient.Histogram({
     name: 'http_request_duration_seconds',
     help: 'Request duration in seconds',
-    buckets: promClient.linearBuckets(0.1, 0.2, 15)
+    buckets: promClient.linearBuckets(0.1, 0.2, 15),
+    registers: [registry]
   });
   const httpRequestsTotal = new promClient.Counter({
     name: 'http_requests_total',
     help: 'Total number of HTTP requests',
-    labelNames: ['status']
+    labelNames: ['status'],
+    registers: [registry]
   });
 
   return (req, res, next) => {

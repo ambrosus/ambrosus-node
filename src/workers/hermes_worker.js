@@ -8,6 +8,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import express from 'express';
+import promClient from 'prom-client';
+import prometheusMetricsHandler from '../routes/prometheus_metrics.js';
 import asyncMiddleware from '../middlewares/async_middleware';
 import healthCheckHandler from '../routes/health_check';
 import PeriodicWorker from './periodic_worker';
@@ -37,6 +39,18 @@ export default class HermesWorker extends PeriodicWorker {
     this.expressApp.get('/health', asyncMiddleware(
       healthCheckHandler(mongoClient, dataModelEngine.identityManager.web3)
     ));
+    const registry = new promClient.Registry();
+    this.expressApp.get('/metrics', prometheusMetricsHandler(registry));
+    this.totalBundlesUploaded = new promClient.Counter({
+      name: 'hermes_bundle_uploads_total',
+      help: 'Total number of successfully uploaded bundles',
+      registers: [registry]
+    });
+    this.totalBundleUploadFailures = new promClient.Counter({
+      name: 'hermes_bundle_upload_failures_total',
+      help: 'Total number of failed bundle upload attempts',
+      registers: [registry]
+    });
 
     if (!(this.strategy instanceof HermesUploadStrategy)) {
       throw new Error('A valid strategy must be provided');
@@ -76,8 +90,14 @@ export default class HermesWorker extends PeriodicWorker {
 
   async uploadWaitingCandidates() {
     await this.dataModelEngine.uploadAcceptedBundleCandidates({
-      success: async (bundleId, uploadResult) => this.addLog(uploadResult, {bundleId}),
-      fail: async (bundleId, error) => this.addLog(`Bundle failed to upload`, {bundleId, errorMsg: error.message || error}, error.stack)
+      success: async (bundleId, uploadResult) => {
+        this.totalBundlesUploaded.inc();
+        await this.addLog(uploadResult, {bundleId});
+      },
+      fail: async (bundleId, error) => {
+        this.totalBundleUploadFailures.inc();
+        await this.addLog(`Bundle failed to upload`, {bundleId, errorMsg: error.message || error}, error.stack);
+      }
     });
   }
 
