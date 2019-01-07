@@ -20,12 +20,28 @@ export default class BundleRepository {
   }
 
   async storeBundle(bundle, storagePeriods) {
-    if (!await isFileInGridFSBucket(bundle.bundleId, this.bundlesBucket)) {
-      await uploadJSONToGridFSBucket(bundle.bundleId, bundle, this.bundlesBucket);
+    const {bundleId} = bundle;
+    if (!await isFileInGridFSBucket(bundleId, this.bundlesBucket)) {
+      await uploadJSONToGridFSBucket(bundleId, bundle, this.bundlesBucket);
     }
-    if (await this.db.collection('bundle_metadata').findOne({bundleId: bundle.bundleId}) === null) {
-      await this.db.collection('bundle_metadata').insertOne({bundleId: bundle.bundleId, storagePeriods});
+    if (await this.db.collection('bundle_metadata').findOne({bundleId}) === null) {
+      await this.db.collection('bundle_metadata').insertOne({bundleId, storagePeriods});
     }
+  }
+
+  async openBundleWriteStream(bundleId, storagePeriods) {
+    const uploadStream = this.bundlesBucket.openUploadStream(
+      bundleId,
+      {
+        contentType: 'application/json'
+      }
+    );
+    uploadStream.on('finish', async () => {
+      if (await this.db.collection('bundle_metadata').findOne({bundleId}) === null) {
+        await this.db.collection('bundle_metadata').insertOne({bundleId, storagePeriods});
+      }
+    });
+    return uploadStream;
   }
 
   async storeBundleProofMetadata(bundleId, proofBlock, timestamp, txHash) {

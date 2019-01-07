@@ -15,9 +15,16 @@ import {createBundle} from '../fixtures/assets_events';
 import config from '../../config/config';
 
 import BundleRepository from '../../src/services/bundle_repository';
+import StringReadStream from '../../src/utils/string_read_stream';
 
 const {expect} = chai;
 chai.use(chaiAsPromised);
+
+const asyncPipe = async (readStream, writeStream) => new Promise((resolve, reject) => {
+  writeStream.on('finish', () => resolve());
+  writeStream.on('error', (err) => reject(err));
+  readStream.pipe(writeStream);
+});
 
 describe('Bundle Repository', () => {
   let db;
@@ -80,6 +87,30 @@ describe('Bundle Repository', () => {
 
       it(`returns null if the bundle doesn't exist`, async () => {
         await expect(storage.getBundleStream(exampleBundleId)).to.eventually.be.null;
+      });
+    });
+
+    describe('openBundleWriteStream', () => {
+      const exampleBundleId = '0xabcdef';
+
+      afterEach(async () => {
+        await cleanDatabase(db);
+      });
+
+      it('stores the streamed bundle', async () => {
+        const exampleBundle = put(createBundle(), 'bundleId', exampleBundleId);
+        const exampleBundleReadStream = new StringReadStream(JSON.stringify(exampleBundle));
+        const writeStream = await storage.openBundleWriteStream(exampleBundleId, storagePeriods);
+        await asyncPipe(exampleBundleReadStream, writeStream);
+        await expect(storage.getBundle(exampleBundleId)).to.eventually.deep.equal(exampleBundle);
+        await expect(storage.getBundleMetadata(exampleBundleId)).to.eventually.deep.equal({bundleId: exampleBundleId, storagePeriods});
+      });
+
+      it(`discards the bundle if the write stream gets aborted`, async () => {
+        const writeStream = await storage.openBundleWriteStream(exampleBundleId, storagePeriods);
+        await writeStream.abort();
+        await expect(storage.getBundle(exampleBundleId)).to.eventually.be.null;
+        await expect(storage.getBundleMetadata(exampleBundleId)).to.eventually.be.null;
       });
     });
   });

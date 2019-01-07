@@ -50,10 +50,10 @@ export default class AtlasWorker extends PeriodicWorker {
     }
   }
 
-  async tryToResolve(bundle, {challengeId}) {
+  async tryToResolve({bundleId}, {challengeId}) {
     await this.challengesRepository.resolveChallenge(challengeId);
-    await this.dataModelEngine.updateShelteringExpirationDate(bundle.bundleId);
-    await this.addLog('🍾 Yahoo! The bundle is ours.', {bundleId: bundle.bundleId});
+    await this.dataModelEngine.updateShelteringExpirationDate(bundleId);
+    await this.addLog('🍾 Yahoo! The bundle is ours.', {bundleId});
   }
 
   async tryToDownload({sheltererId, bundleId, challengeId}) {
@@ -70,13 +70,13 @@ export default class AtlasWorker extends PeriodicWorker {
         await this.addLog('Decided not to download bundle', challenge);
         return false;
       }
-      const bundle = await this.tryToDownload(challenge);
-      if (!await this.strategy.shouldResolveChallenge(bundle)) {
+      const bundleMetadata = await this.tryToDownload(challenge);
+      if (!await this.strategy.shouldResolveChallenge(bundleMetadata)) {
         await this.addLog('Challenge resolution cancelled', challenge);
         return false;
       }
-      await this.tryToResolve(bundle, challenge);
-      await this.strategy.afterChallengeResolution(bundle);
+      await this.tryToResolve(bundleMetadata, challenge);
+      await this.strategy.afterChallengeResolution(challenge);
       return true;
     } catch (err) {
       this.failedChallengesCache.rememberFailedChallenge(challenge.challengeId, this.strategy.retryTimeout);

@@ -12,11 +12,11 @@ export default class BundleDownloader {
     this.httpsClient = httpsClient;
   }
 
-  async downloadBundle(vendorUrl, bundleId) {
+  async openBundleDownloadStream(vendorUrl, bundleId) {
     const fullPath = `/bundle/${bundleId}`;
-    const res = await this.httpsClient.performHTTPSGet(vendorUrl, fullPath);
-    await this.httpsClient.validateIncomingStatusCode(res.statusCode, vendorUrl);
-    return res.body;
+    const {response, statusCode} = await this.httpsClient.openHTTPSGetStream(vendorUrl, fullPath);
+    await this.httpsClient.validateIncomingStatusCode(statusCode, vendorUrl);
+    return response;
   }
 
   async downloadBundleMetadata(vendorUrl, bundleId) {

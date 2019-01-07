@@ -16,7 +16,7 @@ export default class ResolveAllStrategy extends AtlasChallengeParticipationStrat
   }
 
   // eslint-disable-next-line no-unused-vars
-  async shouldResolveChallenge(bundle) {
+  async shouldResolveChallenge(bundleMetadata) {
     return true;
   }
 }
