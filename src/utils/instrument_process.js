@@ -19,7 +19,7 @@ const serialiseError = (error) => Object.getOwnPropertyNames(error).reduce(
   {name: error.name});
 
 const reportAndExit = async (sentryClient, logger, message, error) => {
-  logger.error({message, error: serialiseError(error)});
+  logger.error({message, error: serializeError(error)});
   sentryClient.captureException(error);
   await sentryClient.getCurrentHub().getClient()
     .close(2000);
