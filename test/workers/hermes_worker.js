@@ -66,6 +66,8 @@ describe('Hermes Worker', () => {
       error: sinon.stub()
     };
     mockStrategy = sinon.createStubInstance(HermesUploadStrategy);
+    mockStrategy.shouldBundle.resolves({result: true});
+    mockStrategy.storagePeriods.returns(storagePeriods);
 
     const {client: mongoClient} = await connectToMongo(config);
     hermesWorker = new HermesWorker(
@@ -109,11 +111,6 @@ describe('Hermes Worker', () => {
     });
 
     describe('if valid', () => {
-      beforeEach(() => {
-        mockStrategy.shouldBundle.resolves(true);
-        mockStrategy.storagePeriods.returns(storagePeriods);
-      });
-
       it('stores the bundle candidate', async () => {
         await hermesWorker.periodicWork();
         expect(mockDataModelEngine.acceptBundleCandidate).to.have.been.calledOnceWith(mockResult, bundleSequenceNumber, storagePeriods);
@@ -126,11 +123,9 @@ describe('Hermes Worker', () => {
     });
 
     describe('if invalid', () => {
-      beforeEach(() => {
-        mockStrategy.shouldBundle.resolves(false);
-      });
-
       it('discards the bundle candidate', async () => {
+        mockStrategy.shouldBundle.resolves({result: false, reason: 'Rejection reason'});
+
         await hermesWorker.periodicWork();
         expect(mockDataModelEngine.rejectBundleCandidate).to.have.been.calledOnceWith(bundleSequenceNumber);
       });
