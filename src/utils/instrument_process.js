@@ -11,7 +11,7 @@ import * as Sentry from '@sentry/node';
 import {WinstonConsoleLogger} from './loggers';
 import config from '../../config/config';
 
-const serialiseError = (error) => Object.getOwnPropertyNames(error).reduce(
+const serializeError = (error) => Object.getOwnPropertyNames(error).reduce(
   (accum, key) => {
     accum[key] = error[key];
     return accum;
