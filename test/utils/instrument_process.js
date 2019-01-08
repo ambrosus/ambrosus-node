@@ -8,10 +8,14 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 import chai from 'chai';
 import * as sinon from 'sinon';
-import {instrumentProcess} from '../../src/utils/instrument_process';
+import {instrumentProcess, serializeError} from '../../src/utils/instrument_process';
 import config from '../../config/config';
 
 const {expect} = chai;
+
+const waitUntilEventsProcessed = async () => new Promise((resolve) => {
+  setImmediate(resolve);
+});
 
 describe('#instrumentProcess', () => {
   let sandbox;
@@ -70,20 +74,21 @@ describe('#instrumentProcess', () => {
     expect(startFn).to.have.been.calledOnceWith(logger);
   });
 
-  it('on unhanledRejection reports errors', () => {
+  it('on unhanledRejection reports errors', async () => {
     const err = new Error('hodovic');
     const startFn = () => {
       Promise.reject(err);
     };
     instrumentProcess(startFn, sentry, logger);
+
     // wait after the pending events have been processed
-    setImmediate(() => {
-      expect(logger.error).to.have.been.calledOnceWith({
-        message: 'unhandledRejection bubbled up to the process',
-        error: err
-      });
-      expect(sentry.captureException).to.have.been.calledOnceWith(err);
-      expect(sentryClose).to.have.been.calledOnceWith(2000);
+    await waitUntilEventsProcessed();
+
+    expect(logger.error).to.have.been.calledOnceWith({
+      message: 'unhandledRejection bubbled up to the process',
+      error: serializeError(err)
     });
+    expect(sentry.captureException).to.have.been.calledOnceWith(err);
+    expect(sentryClose).to.have.been.calledOnceWith(2000);
   });
 });

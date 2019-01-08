@@ -11,8 +11,15 @@ import * as Sentry from '@sentry/node';
 import {WinstonConsoleLogger} from './loggers';
 import config from '../../config/config';
 
+export const serializeError = (error) => Object.getOwnPropertyNames(error).reduce(
+  (accum, key) => {
+    accum[key] = error[key];
+    return accum;
+  },
+  {name: error.name});
+
 const reportAndExit = async (sentryClient, logger, message, error) => {
-  logger.error({message, error});
+  logger.error({message, error: serializeError(error)});
   sentryClient.captureException(error);
   await sentryClient.getCurrentHub().getClient()
     .close(2000);
