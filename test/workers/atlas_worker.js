@@ -60,7 +60,8 @@ describe('Atlas Worker', () => {
     failedChallengesMock = {
       rememberFailedChallenge: sinon.spy(),
       didChallengeFailRecently: sinon.stub().returns(false),
-      clearOutdatedChallenges: sinon.spy()
+      clearOutdatedChallenges: sinon.spy(),
+      failedChallengesEndTime: {}
     };
     workerTaskTrackingRepositoryMock = {
       tryToBeginWork: sinon.stub().resolves(exampleWorkId),
