@@ -43,12 +43,12 @@ class Migrator {
     const version = this.getVersionFromPath(fullPath);
     const getCurrentVersion = await this.getCurrentVersion();
     if (version > getCurrentVersion) {
-      logger.info(`Migrating: ${path.basename(fullPath)}`);
+      logger.info({message: `Migrating: ${path.basename(fullPath)}`});
       const imported = require(fullPath);
       await imported.up(this.db, this.config, logger);
       await this.db.collection('migrations').findOneAndReplace({}, {version});
     } else {
-      logger.info(`Ignoring migration: ${path.basename(fullPath)}`);
+      logger.info({message: `Ignoring migration: ${path.basename(fullPath)}`});
     }
   }
 
@@ -63,7 +63,9 @@ class Migrator {
         return;
       }
 
-      logger.info('Another migration is running. Waiting for it to end.');
+      logger.info({
+        message: 'Another migration is running. Waiting for it to end.'
+      });
       await this.sleepFunction(this.config.migrationSleepTimeInSeconds);
     }
   }

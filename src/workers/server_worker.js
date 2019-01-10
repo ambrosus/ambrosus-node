@@ -38,7 +38,7 @@ export default class ServerWorker extends Worker {
   }
 
   async work() {
-    this.logger.info('starting server');
+    this.logger.info({message: 'Starting server'});
 
     const registry = new promClient.Registry();
     this.collectMetricsInterval = promClient.collectDefaultMetrics({
