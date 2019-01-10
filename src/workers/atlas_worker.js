@@ -97,7 +97,9 @@ export default class AtlasWorker extends PeriodicWorker {
         return;
       }
       const challenges = await this.challengesRepository.ongoingChallenges();
-      await this.addLog(`Challenges preselected for resolution: ${challenges.length}`);
+      const recentlyFailedChallenges = challenges.filter(({challengeId}) => challengeId in this.failedChallengesCache.failedChallengesEndTime);
+      await this.addLog(`Challenges preselected for resolution: ${challenges.length} (out of which ${recentlyFailedChallenges.length} have failed recently)`);
+
       for (const challenge of challenges) {
         const successful = await this.tryWithChallenge(challenge);
         if (successful) {
