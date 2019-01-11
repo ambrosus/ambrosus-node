@@ -254,7 +254,7 @@ export default class DataModelEngine {
       await this.uploadRepository.verifyBundle(bundle);
     } catch (err) {
       await this.bundleRepository.removeBundle(bundleId);
-      throw new Error(err);
+      throw new Error(`Bundle failed to validate: ${err.message || err}`);
     }
 
     await this.bundleRepository.storeBundleProofMetadata(
