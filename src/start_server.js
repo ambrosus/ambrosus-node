@@ -21,7 +21,9 @@ async function start(logger) {
     throw new Error('Migration needs to be done');
   }
   await builder.ensureAdminAccountExist();
-  await waitForChainSync(builder.web3, 5, () => logger.info('Ethereum client is not in sync. Retrying in 5 seconds'));
+  await waitForChainSync(builder.web3, 5, () => logger.info({
+    message: 'Ethereum client is not in sync. Retrying in 5 seconds'
+  }));
   const role = await builder.ensureAccountIsOnboarded([Role.ATLAS, Role.HERMES]);
   const worker = new ServerWorker(
     builder.dataModelEngine,

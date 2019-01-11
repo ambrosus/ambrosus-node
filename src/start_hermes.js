@@ -20,7 +20,9 @@ async function start(logger) {
   if (await builder.migrator.isMigrationNecessary()) {
     throw new Error('Migration needs to be done');
   }
-  await waitForChainSync(builder.web3, 5, () => logger.info('Ethereum client is not in sync. Retrying in 5 seconds'));
+  await waitForChainSync(builder.web3, 5, () => logger.info({
+    message: 'Ethereum client is not in sync. Retrying in 5 seconds'
+  }));
   await builder.ensureAccountIsOnboarded([Role.HERMES]);
   const strategy = loadStrategy(config.uploadStrategy);
   const worker = new HermesWorker(
