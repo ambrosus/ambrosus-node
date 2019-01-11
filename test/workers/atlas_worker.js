@@ -26,7 +26,7 @@ const {expect} = chai;
 describe('Atlas Worker', () => {
   const defaultAccount = '0x123';
   const enoughFunds = '10000000000000000000';
-  const fetchedBundle = {bundleId: 'fetchedBundle'};
+  const fetchedBundleMetadata = {bundleId: 'fetchedBundle'};
   const exampleWorkId = 'workid';
   const workerInterval = 10;
   const retryTimeout = 14;
@@ -68,7 +68,7 @@ describe('Atlas Worker', () => {
       finishWork: sinon.spy()
     };
     dataModelEngineMock = {
-      downloadBundle: sinon.stub().resolves(fetchedBundle),
+      downloadBundle: sinon.stub().resolves(fetchedBundleMetadata),
       cleanupBundles: sinon.spy(),
       updateShelteringExpirationDate: sinon.stub()
     };
@@ -124,27 +124,27 @@ describe('Atlas Worker', () => {
     ];
 
     it('tryToDownload downloads the bundle', async () => {
-      expect(await atlasWorker.tryToDownload(challenge1)).to.equal(fetchedBundle);
+      expect(await atlasWorker.tryToDownload(challenge1)).to.equal(fetchedBundleMetadata);
       expect(dataModelEngineMock.downloadBundle).to.be.calledWith(bundleId, sheltererId);
     });
 
     it('tryToResolve resolves a challenge and sets expiration date', async () => {
-      await atlasWorker.tryToResolve(fetchedBundle, challenge1);
+      await atlasWorker.tryToResolve(fetchedBundleMetadata, challenge1);
       expect(challengesRepositoryMock.resolveChallenge).to.be.calledWith(challengeId);
-      expect(dataModelEngineMock.updateShelteringExpirationDate).to.be.calledWith(fetchedBundle.bundleId);
+      expect(dataModelEngineMock.updateShelteringExpirationDate).to.be.calledWith(fetchedBundleMetadata.bundleId);
     });
 
     describe('tryWithChallenge', () => {
       let tryToDownloadMock;
       let tryToResolveMock;
-      const bundle = 'bundle';
+      const bundleMetadata = 'bundleMetadata';
 
       beforeEach(() => {
         tryToDownloadMock = sinon.stub(atlasWorker, 'tryToDownload');
         tryToResolveMock = sinon.stub(atlasWorker, 'tryToResolve');
 
         shouldFetchBundleStub.resolves(true);
-        tryToDownloadMock.resolves(bundle);
+        tryToDownloadMock.resolves(bundleMetadata);
         shouldResolveChallengeStub.returns(true);
         tryToResolveMock.resolves();
       });
@@ -178,7 +178,7 @@ describe('Atlas Worker', () => {
       it('returns false if the strategy disqualifies the challenge after downloaded the bundle', async () => {
         shouldResolveChallengeStub.returns(false);
         expect(await atlasWorker.tryWithChallenge(challenge1)).to.equal(false);
-        expect(shouldResolveChallengeStub).to.have.been.calledWith('bundle');
+        expect(shouldResolveChallengeStub).to.have.been.calledWith('bundleMetadata');
         expect(tryToResolveMock).to.not.have.been.called;
         expect(failedChallengesMock.rememberFailedChallenge).to.not.have.been.called;
       });
@@ -186,13 +186,13 @@ describe('Atlas Worker', () => {
       it('returns false and marks challenge as failed if the resolution attempt fails', async () => {
         tryToResolveMock.rejects();
         expect(await atlasWorker.tryWithChallenge(challenge1)).to.equal(false);
-        expect(tryToResolveMock).to.have.been.calledWith(bundle, challenge1);
+        expect(tryToResolveMock).to.have.been.calledWith(bundleMetadata, challenge1);
         expect(failedChallengesMock.rememberFailedChallenge).to.be.calledOnceWith(challenge1.challengeId, retryTimeout);
       });
 
       it('returns true if everything goes ok', async () => {
         expect(await atlasWorker.tryWithChallenge(challenge1)).to.equal(true);
-        expect(strategyMock.afterChallengeResolution).to.have.been.calledWith(bundle);
+        expect(strategyMock.afterChallengeResolution).to.have.been.calledWith(challenge1);
       });
     });
 

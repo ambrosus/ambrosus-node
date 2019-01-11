@@ -23,10 +23,10 @@ export default class AtlasChallengeParticipationStrategy {
   }
 
   // eslint-disable-next-line no-unused-vars
-  async shouldResolveChallenge(bundle) {
+  async shouldResolveChallenge(bundleMetadata) {
     throw new Error('Should be implemented');
   }
 
   // eslint-disable-next-line no-unused-vars
-  async afterChallengeResolution(bundle) { }
+  async afterChallengeResolution(challenge) { }
 }

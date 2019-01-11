@@ -27,6 +27,7 @@ import StringReadStream from '../../src/utils/string_read_stream';
 import createTokenFor from '../fixtures/create_token_for';
 import resetHistory from '../helpers/reset_history';
 import allPermissions from '../../src/utils/all_permissions';
+import StringWriteStream from '../../src/utils/string_write_stream';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -1099,19 +1100,14 @@ describe('Data Model Engine', () => {
       };
 
       mockEntityRepository = {
-        markEntitiesAsBundled: sinon.stub(),
-        storeBundleProofMetadata: sinon.stub()
+        markEntitiesAsBundled: sinon.stub().resolves(),
+        storeBundleProofMetadata: sinon.stub().resolves()
       };
 
       mockBundleRepository = {
-        storeBundle: sinon.stub(),
-        storeBundleProofMetadata: sinon.stub()
+        storeBundle: sinon.stub().resolves(),
+        storeBundleProofMetadata: sinon.stub().resolves()
       };
-
-      mockEntityRepository.markEntitiesAsBundled.resolves();
-      mockEntityRepository.storeBundleProofMetadata.resolves();
-      mockBundleRepository.storeBundle.resolves();
-      mockBundleRepository.storeBundleProofMetadata.resolves();
 
       modelEngine = new DataModelEngine({
         entityRepository: mockEntityRepository,
@@ -1172,7 +1168,7 @@ describe('Data Model Engine', () => {
 
     beforeEach(() => {
       mockEntityRepository = {
-        storeBundleProofMetadata: sinon.stub()
+        storeBundleProofMetadata: sinon.stub().resolves()
       };
       mockBundleRepository = {
         findBundlesWaitingForUpload: sinon.stub().resolves([
@@ -1185,7 +1181,7 @@ describe('Data Model Engine', () => {
             storagePeriods: 6
           }
         ]),
-        storeBundleProofMetadata: sinon.stub()
+        storeBundleProofMetadata: sinon.stub().resolves()
       };
 
       mockUploadRepository = {
@@ -1193,8 +1189,6 @@ describe('Data Model Engine', () => {
       };
       mockUploadRepository.ensureBundleIsUploaded.withArgs('bundle1', 2).resolves({blockNumber, transactionHash: txHash, timestamp: now, uploadResult: 'Success'});
       mockUploadRepository.ensureBundleIsUploaded.withArgs('bundle3', 6).rejects(bundle3Error);
-      mockEntityRepository.storeBundleProofMetadata.resolves();
-      mockBundleRepository.storeBundleProofMetadata.resolves();
 
       modelEngine = new DataModelEngine({
         entityRepository: mockEntityRepository,
@@ -1223,7 +1217,7 @@ describe('Data Model Engine', () => {
 
     it('calls the progress callbacks', async () => {
       const progressCallbacks = {
-        success : sinon.spy(),
+        success: sinon.spy(),
         fail: sinon.spy()
       };
       await modelEngine.uploadAcceptedBundleCandidates(progressCallbacks);
@@ -1244,7 +1238,7 @@ describe('Data Model Engine', () => {
           }
 
         ]),
-        storeBundleProofMetadata: sinon.stub()
+        storeBundleProofMetadata: sinon.stub().resolves()
       };
 
       mockUploadRepository = {ensureBundleIsUploaded: sinon.stub().rejects(new Error())};
@@ -1254,7 +1248,7 @@ describe('Data Model Engine', () => {
         bundleRepository: mockBundleRepository
       });
 
-      await modelEngine.uploadAcceptedBundleCandidates({success: async() => {}, fail: async() => {}});
+      await modelEngine.uploadAcceptedBundleCandidates({success: async () => {}, fail: async () => {}});
       expect(mockUploadRepository.ensureBundleIsUploaded).to.have.callCount(1);
       expect(mockEntityRepository.storeBundleProofMetadata).not.to.be.have.been.calledWith('bundle2', blockNumber, txHash);
     });
@@ -1273,15 +1267,22 @@ describe('Data Model Engine', () => {
     };
     let mockBundleRepository;
     let mockBundleDownloader;
-    let mockBundleBuilder;
     let mockRolesRepository;
     let mockUploadRepository;
+    let mockBundleBuilder;
     let modelEngine;
+    let mockWriteStream;
+    let mockReadStream;
 
     beforeEach(() => {
+      mockWriteStream = new StringWriteStream();
+      mockReadStream = new StringReadStream(JSON.stringify(downloadedBundle), 10);
+
       mockBundleRepository = {
-        storeBundle: sinon.stub(),
-        storeBundleProofMetadata: sinon.stub()
+        getBundle: sinon.stub().resolves(downloadedBundle),
+        openBundleWriteStream: sinon.stub().resolves(mockWriteStream),
+        storeBundleProofMetadata: sinon.stub().resolves(),
+        removeBundle: sinon.stub().resolves()
       };
 
       mockRolesRepository = {
@@ -1292,13 +1293,13 @@ describe('Data Model Engine', () => {
         verifyBundle: sinon.stub().resolves()
       };
 
-      mockBundleDownloader = {
-        downloadBundle: sinon.stub().resolves(downloadedBundle),
-        downloadBundleMetadata: sinon.stub().resolves(downloadedBundleMetadata)
-      };
-
       mockBundleBuilder = {
         validateBundle: sinon.stub()
+      };
+
+      mockBundleDownloader = {
+        openBundleDownloadStream: sinon.stub().resolves(mockReadStream),
+        downloadBundleMetadata: sinon.stub().resolves(downloadedBundleMetadata)
       };
 
       modelEngine = new DataModelEngine({
@@ -1310,52 +1311,62 @@ describe('Data Model Engine', () => {
       });
     });
 
-    it('validates and returns the downloaded bundle', async () => {
-      expect(await modelEngine.downloadBundle(bundleId, sheltererId)).to.equal(downloadedBundle);
+    it('stores the bundle into the repository and returns the metadata', async () => {
+      expect(await modelEngine.downloadBundle(bundleId, sheltererId)).to.equal(downloadedBundleMetadata);
       expect(mockRolesRepository.nodeUrl).to.be.calledWith(sheltererId);
-      expect(mockBundleDownloader.downloadBundle).to.be.calledWith(nodeUrl, bundleId);
       expect(mockBundleDownloader.downloadBundleMetadata).to.be.calledWith(nodeUrl, bundleId);
-      expect(mockBundleBuilder.validateBundle).to.be.calledWith(downloadedBundle);
-      expect(mockBundleRepository.storeBundle).to.be.calledWith(downloadedBundle, downloadedBundleMetadata.storagePeriods);
+      expect(mockBundleDownloader.openBundleDownloadStream).to.be.calledWith(nodeUrl, bundleId);
+      expect(mockBundleRepository.openBundleWriteStream).to.be.calledWith(bundleId, downloadedBundleMetadata.storagePeriods);
+      expect(JSON.parse(mockWriteStream.get())).to.be.deep.equal(downloadedBundle);
       expect(mockBundleRepository.storeBundleProofMetadata).to.be.calledOnce;
     });
 
     it('passes despite incomplete bundle metadata', async () => {
       const incompleteBundleMetadata = {bundleId};
-      mockBundleDownloader.downloadBundleMetadata.resolves({bundleId});
-      expect(await modelEngine.downloadBundle(bundleId, sheltererId)).to.equal(downloadedBundle);
+      mockBundleDownloader.downloadBundleMetadata.resolves(incompleteBundleMetadata);
+      expect(await modelEngine.downloadBundle(bundleId, sheltererId)).to.equal(incompleteBundleMetadata);
       expect(mockRolesRepository.nodeUrl).to.be.calledWith(sheltererId);
-      expect(mockBundleDownloader.downloadBundle).to.be.calledWith(nodeUrl, bundleId);
       expect(mockBundleDownloader.downloadBundleMetadata).to.be.calledWith(nodeUrl, bundleId);
-      expect(mockBundleBuilder.validateBundle).to.be.calledWith(downloadedBundle);
-      expect(mockBundleRepository.storeBundle).to.be.calledWith(downloadedBundle, incompleteBundleMetadata.storagePeriods);
+      expect(mockBundleDownloader.openBundleDownloadStream).to.be.calledWith(nodeUrl, bundleId);
+      expect(mockBundleRepository.openBundleWriteStream).to.be.calledWith(bundleId, undefined);
       expect(mockBundleRepository.storeBundleProofMetadata).to.be.calledOnce;
     });
 
-    it('throws if downloaded empty bundle metadata', async () => {
+    it('throws if bundle metadata download fails', async () => {
       mockBundleDownloader.downloadBundleMetadata.resolves(null);
       await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejectedWith(Error, 'Could not fetch the bundle metadata from the shelterer');
-      expect(mockBundleRepository.storeBundle).to.be.not.called;
+      expect(mockBundleRepository.openBundleWriteStream).to.be.not.called;
       expect(mockBundleRepository.storeBundleProofMetadata).to.be.not.called;
     });
 
-    it('throws if downloaded empty bundle', async () => {
-      mockBundleDownloader.downloadBundle.resolves(null);
+    it('aborts the write and throws if the bundle download fails', async () => {
+      mockWriteStream.abort = sinon.stub().callsFake((err) => {
+        mockWriteStream.emit('error', err);
+      });
+      mockWriteStream.once('pipe', () => {
+        mockReadStream.once('data', () => {
+          mockReadStream.destroy(new Error('Download failed')); // simulate read stream failure
+        });
+      });
       await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejectedWith(Error, 'Could not fetch the bundle from the shelterer');
-      expect(mockBundleRepository.storeBundle).to.be.not.called;
       expect(mockBundleRepository.storeBundleProofMetadata).to.be.not.called;
+      expect(mockWriteStream.abort).to.have.been.calledOnce;
     });
 
-    it('does not store bundle if validation failed', async () => {
+    it('removes the bundle if validation fails', async () => {
       mockBundleBuilder.validateBundle.throws();
       await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejected;
-      expect(mockBundleRepository.storeBundle).to.be.not.called;
+      expect(mockBundleRepository.getBundle).to.have.been.calledOnceWith(bundleId);
+      expect(mockBundleBuilder.validateBundle).to.have.been.calledOnceWith(downloadedBundle);
+      expect(mockBundleRepository.removeBundle).to.have.been.calledOnceWith(bundleId);
     });
 
-    it('does not store bundle if verification against chain failed', async () => {
+    it('removes the bundle if verification against chain fails', async () => {
       mockUploadRepository.verifyBundle.rejects();
       await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejected;
-      expect(mockBundleRepository.storeBundle).to.be.not.called;
+      expect(mockBundleRepository.getBundle).to.have.been.calledOnceWith(bundleId);
+      expect(mockUploadRepository.verifyBundle).to.have.been.calledOnceWith(downloadedBundle);
+      expect(mockBundleRepository.removeBundle).to.have.been.calledOnceWith(bundleId);
     });
   });
 

@@ -14,6 +14,42 @@ import {NotFoundError, PermissionError, ValidationError, AuthenticationError} fr
 
 export default class HttpsClient {
   async performHTTPSGet(uri, path) {
+    const {agent, options} = this.prepareRequest(uri, path);
+    return new Promise((resolve, reject) => {
+      try {
+        agent.get(options, (response) => {
+          let rawData = '';
+          let parsedData;
+          response.on('data', (chunk) => rawData += chunk);
+          response.on('end', () => {
+            try {
+              parsedData = JSON.parse(rawData);
+            } catch (error) {
+              reject(error);
+            }
+            resolve({body: parsedData, statusCode: response.statusCode});
+          });
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  async openHTTPSGetStream(uri, path) {
+    const {agent, options} = this.prepareRequest(uri, path);
+    return new Promise((resolve, reject) => {
+      try {
+        agent.get(options, (response) => {
+          resolve({response, statusCode: response.statusCode});
+        });
+      } catch (error) {
+        reject({error});
+      }
+    });
+  }
+
+  prepareRequest(uri, path) {
     const {protocol, hostname, port} = URL.parse(uri);
     const agent = this.getAgentFromProtocol(protocol);
     const options = {
@@ -21,25 +57,7 @@ export default class HttpsClient {
       path,
       port
     };
-    return new Promise((resolve, reject) => {
-      try {
-        agent.get(options, (res) => {
-          let rawData = '';
-          let parsedData;
-          res.on('data', (chunk) => rawData += chunk);
-          res.on('end', () => {
-            try {
-              parsedData = JSON.parse(rawData);
-            } catch (error) {
-              reject(error);
-            }
-            resolve({body: parsedData, statusCode: res.statusCode});
-          });
-        });
-      } catch (error) {
-        reject(error);
-      }
-    });
+    return {agent, options};
   }
 
   getAgentFromProtocol(protocol) {

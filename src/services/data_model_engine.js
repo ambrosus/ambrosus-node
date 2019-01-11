@@ -11,6 +11,7 @@ import {NotFoundError, PermissionError, ValidationError} from '../errors/errors'
 import {getTimestamp} from '../utils/time_utils';
 import {pick, put} from '../utils/dict_utils';
 import allPermissions from '../utils/all_permissions';
+const pipeline = require('util').promisify(require('stream').pipeline);
 
 export default class DataModelEngine {
   constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, bundleDownloader, bundleBuilder, bundleRepository, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, uploadRepository, rolesRepository, workerLogRepository}) {
@@ -236,15 +237,26 @@ export default class DataModelEngine {
       throw new Error('Could not fetch the bundle metadata from the shelterer');
     }
 
-    const bundle = await this.bundleDownloader.downloadBundle(nodeUrl, bundleId);
-    if (!bundle) {
+    try {
+      const downloadStream = await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
+      const writeStream = await this.bundleRepository.openBundleWriteStream(bundleId, bundleMetadata.storagePeriods);
+      downloadStream.on('error', (err) => {
+        writeStream.abort(err);
+      });
+      await pipeline(downloadStream, writeStream);
+    } catch {
       throw new Error('Could not fetch the bundle from the shelterer');
     }
 
-    this.bundleBuilder.validateBundle(bundle);
-    await this.uploadRepository.verifyBundle(bundle);
+    try {
+      const bundle = await this.bundleRepository.getBundle(bundleId);
+      this.bundleBuilder.validateBundle(bundle);
+      await this.uploadRepository.verifyBundle(bundle);
+    } catch (err) {
+      await this.bundleRepository.removeBundle(bundleId);
+      throw new Error(`Bundle failed to validate: ${err.message || err}`);
+    }
 
-    await this.bundleRepository.storeBundle(bundle, bundleMetadata.storagePeriods);
     await this.bundleRepository.storeBundleProofMetadata(
       bundleMetadata.bundleId,
       bundleMetadata.bundleProofBlock,
@@ -252,7 +264,7 @@ export default class DataModelEngine {
       bundleMetadata.bundleTransactionHash
     );
 
-    return bundle;
+    return bundleMetadata;
   }
 
   async updateShelteringExpirationDate(bundleId) {

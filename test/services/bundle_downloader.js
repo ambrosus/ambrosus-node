@@ -14,6 +14,7 @@ import chaiAsPromised from 'chai-as-promised';
 
 import BundleDownloader from '../../src/services/bundle_downloader';
 import {createBundle} from '../fixtures/assets_events';
+import StringReadStream from '../../src/utils/string_read_stream';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -26,33 +27,35 @@ describe('Bundle downloader', () => {
   before(async () => {
     mockHttpsClient = {
       performHTTPSGet : sinon.stub(),
+      openHTTPSGetStream: sinon.stub(),
       validateIncomingStatusCode : sinon.stub()
     };
     bundleDownloader = new BundleDownloader(mockHttpsClient);
   });
 
-  describe('download bundle', () => {
+  describe('download bundle using stream', () => {
     const exampleVendorId = '0x123';
     const exampleBundleId = '0x321';
     const examplePath = `/bundle/${exampleBundleId}`;
     const processedBundle = createBundle();
+    const bundleStream = new StringReadStream(JSON.stringify(processedBundle));
 
     it('returns downloaded bundle', async () => {
       const OKStatusCode = 200;
-      mockHttpsClient.performHTTPSGet.resolves({statusCode : OKStatusCode, body : processedBundle});
+      mockHttpsClient.openHTTPSGetStream.resolves({statusCode : OKStatusCode, response : bundleStream});
       mockHttpsClient.validateIncomingStatusCode.resolves();
-      const res = await expect(bundleDownloader.downloadBundle(exampleVendorId, exampleBundleId)).to.be.fulfilled;
-      expect(mockHttpsClient.performHTTPSGet).to.have.been.calledWith(exampleVendorId, examplePath);
+      const res = await expect(bundleDownloader.openBundleDownloadStream(exampleVendorId, exampleBundleId)).to.be.fulfilled;
+      expect(mockHttpsClient.openHTTPSGetStream).to.have.been.calledWith(exampleVendorId, examplePath);
       expect(mockHttpsClient.validateIncomingStatusCode).to.have.been.calledWith(OKStatusCode);
-      expect(res).to.deep.equal(processedBundle);
+      expect(res).to.deep.equal(bundleStream);
     });
 
     it(`throws if download wasn't successful`, async () => {
       const failureStatusCode = 500;
-      mockHttpsClient.performHTTPSGet.resolves({statusCode : failureStatusCode});
+      mockHttpsClient.openHTTPSGetStream.resolves({statusCode : failureStatusCode});
       mockHttpsClient.validateIncomingStatusCode.throws(new Error());
-      await expect(bundleDownloader.downloadBundle(exampleVendorId, exampleBundleId)).to.be.rejectedWith(Error);
-      expect(mockHttpsClient.performHTTPSGet).to.have.been.calledWith(exampleVendorId, examplePath);
+      await expect(bundleDownloader.openBundleDownloadStream(exampleVendorId, exampleBundleId)).to.be.rejectedWith(Error);
+      expect(mockHttpsClient.openHTTPSGetStream).to.have.been.calledWith(exampleVendorId, examplePath);
       expect(mockHttpsClient.validateIncomingStatusCode).to.have.been.calledWith(failureStatusCode);
     });
   });
