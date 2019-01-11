@@ -85,4 +85,13 @@ export default class BundleRepository {
   async getBundleMetadata(bundleId) {
     return await this.db.collection('bundle_metadata').findOne({bundleId}, {projection: this.blacklistedFields});
   }
+
+  async removeBundle(bundleId) {
+    await this.db.collection('bundle_metadata').deleteMany({bundleId});
+    const cursor = await this.bundlesBucket.find({filename: bundleId});
+    while (await cursor.hasNext()) {
+      const {_id: id} = await cursor.next();
+      await this.bundlesBucket.delete(id);
+    }
+  }
 }

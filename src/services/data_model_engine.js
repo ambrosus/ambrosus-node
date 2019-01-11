@@ -248,9 +248,14 @@ export default class DataModelEngine {
       throw new Error('Could not fetch the bundle from the shelterer');
     }
 
-    // TODO: implement validators using streaming and uncomment when ready
-    // this.bundleBuilder.validateBundle(bundle);
-    // await this.uploadRepository.verifyBundle(bundle);
+    try {
+      const bundle = await this.bundleRepository.getBundle(bundleId);
+      this.bundleBuilder.validateBundle(bundle);
+      await this.uploadRepository.verifyBundle(bundle);
+    } catch (err) {
+      await this.bundleRepository.removeBundle(bundleId);
+      throw new Error(err);
+    }
 
     await this.bundleRepository.storeBundleProofMetadata(
       bundleMetadata.bundleId,
