@@ -171,7 +171,6 @@ describe('Upload repository', () => {
     it('passes for proper bundle', async () => {
       configWrapperMock.bundleSizeLimit.resolves(5);
       await expect(uploadRepository.verifyBundle(downloadedBundle)).to.be.fulfilled;
-      await expect(uploadRepository.verifyBundle(downloadedBundle)).to.be.fulfilled;
     });
 
     it('throws if downloaded bundle is too big', async () => {

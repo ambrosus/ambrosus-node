@@ -62,26 +62,23 @@ class ValidationAndCasting {
     return this;
   }
 
-  isAddress(valueNames) {
-    const addressRegex = /^0x[0-9a-f]{40}$/i;
+  isHexOfLength(valueNames, length) {
+    const hexRegex = new RegExp(`^0x[0-9a-f]{${length}}$`, 'i');
     for (const valueName of valueNames) {
       const value = get(this.params, valueName);
-      if (value !== undefined && !addressRegex.exec(value)) {
-        throw new ValidationError(`${valueName} = ${value} is not a valid ethereum address`);
+      if (value !== undefined && !hexRegex.exec(value)) {
+        throw new ValidationError(`${valueName} = ${value} is not a hex of length ${length}`);
       }
     }
     return this;
   }
 
-  isCorrectId(valueNames) {
-    const keccakHashRegex = /^0x[0-9a-f]{64}$/i;
-    for (const valueName of valueNames) {
-      const value = get(this.params, valueName);
-      if (value !== undefined && !keccakHashRegex.exec(value)) {
-        throw new ValidationError(`${valueName} = ${value} is not a valid id`);
-      }
-    }
-    return this;
+  isAddress(valueNames) {
+    return this.isHexOfLength(valueNames, 40);
+  }
+
+  isHash(valueNames) {
+    return this.isHexOfLength(valueNames, 64);
   }
 
   isUrl(valueNames) {

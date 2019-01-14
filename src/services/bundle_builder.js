@@ -77,6 +77,6 @@ export default class BundleBuilder {
   validateBundleMetadata(bundleMetadata) {
     validateAndCast(bundleMetadata)
       .required(['bundleId'])
-      .isCorrectId(['bundleId']);
+      .isHash(['bundleId']);
   }
 }
