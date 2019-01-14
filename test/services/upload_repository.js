@@ -29,6 +29,7 @@ describe('Upload repository', () => {
   let uploadRepository;
   let identityManagerMock;
   let web3Mock;
+  let sentryMock;
 
   describe('Upload bundle', () => {
     const storagePeriods = 3;
@@ -60,13 +61,18 @@ describe('Upload repository', () => {
           getBalance: sinon.stub().resolves(fee)
         }
       };
-      uploadRepository = new UploadRepository(web3Mock, identityManagerMock, uploadsActionsMock, shelteringWrapperMock, rolesWrapperMock, feesWrapperMock);
+      sentryMock = {
+        captureException: sinon.stub(),
+        captureMessage: sinon.stub(),
+        Severity: {
+          Warning: 1
+        }
+      };
+      uploadRepository = new UploadRepository(web3Mock, identityManagerMock, uploadsActionsMock, shelteringWrapperMock, rolesWrapperMock, feesWrapperMock, null, null, sentryMock);
     });
 
     it('calls wrappers methods with correct arguments', async () => {
       await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.deep.equal({...exampleUploadData, uploadResult: 'Bundle has been uploaded'});
-      expect(feesWrapperMock.feeForUpload).to.be.calledOnceWith(storagePeriods);
-      expect(web3Mock.eth.getBalance).to.be.calledOnceWith(exampleAddress);
       expect(rolesWrapperMock.onboardedRole).to.be.calledOnceWith(exampleAddress);
       expect(identityManagerMock.nodeAddress).to.have.been.called;
       expect(shelteringWrapperMock.getBundleUploader).to.have.been.calledOnceWith(bundleId);
@@ -74,8 +80,15 @@ describe('Upload repository', () => {
     });
 
     it('throws if not enough funds', async () => {
-      web3Mock.eth.getBalance.resolves(tooSmallBalance);
+      uploadsActionsMock.uploadBundle = sinon.stub().resolves({warning: '', error: `Insufficient funds: need at least 500 to upload the bundle`});
       await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.rejected;
+      expect(sentryMock.captureException).to.be.calledOnce;
+    });
+
+    it('sentry log if low balance', async () => {
+      uploadsActionsMock.uploadBundle = sinon.stub().resolves({warning: 'Hermes low balance warning triggered. Balance: 500', error: ''});
+      await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.fulfilled;
+      expect(sentryMock.captureMessage).to.be.calledOnce;
     });
 
     it('throws if not onboarded as hermes', async () => {

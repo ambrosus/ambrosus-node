@@ -42,6 +42,7 @@ import ChallengesRepository from './services/challenges_repository';
 import Migrator from './migrations/Migrator';
 import FailedChallengesCache from './services/failed_challenges_cache';
 import WorkerTaskTrackingRepository from './services/worker_task_tracking_repository';
+import * as Sentry from '@sentry/node';
 
 class Builder {
   async ensureAdminAccountExist() {
@@ -94,7 +95,8 @@ class Builder {
       this.rolesWrapper,
       this.feesWrapper,
       this.configWrapper,
-      lowFundsWarningAmount
+      lowFundsWarningAmount,
+      Sentry
     );
     this.challengesRepository = new ChallengesRepository(this.challengesWrapper,
       this.configWrapper);
