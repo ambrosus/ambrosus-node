@@ -8,6 +8,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import express from 'express';
+import promClient from 'prom-client';
+import prometheusMetricsHandler from '../routes/prometheus_metrics.js';
 import asyncMiddleware from '../middlewares/async_middleware';
 import healthCheckHandler from '../routes/health_check';
 import PeriodicWorker from './periodic_worker';
@@ -15,6 +17,13 @@ import AtlasChallengeParticipationStrategy from './atlas_strategies/atlas_challe
 import {checkIfEnoughFundsToPayForGas, getDefaultAddress} from '../utils/web3_tools';
 
 const ATLAS_RESOLUTION_WORK_TYPE = 'AtlasChallengeResolution';
+const atlasChallengeStatus = {
+  resolved: 'resolved',
+  failed: 'failed',
+  shouldNotFetch: 'should_not_fetch',
+  shouldNotResolve: 'should_not_resolve',
+  failedRecently: 'failed_recently'
+};
 
 export default class AtlasWorker extends PeriodicWorker {
   constructor(
@@ -44,6 +53,15 @@ export default class AtlasWorker extends PeriodicWorker {
     this.expressApp.get('/health', asyncMiddleware(
       healthCheckHandler(mongoClient, web3)
     ));
+    const registry = new promClient.Registry();
+    this.expressApp.get('/metrics', prometheusMetricsHandler(registry));
+    this.atlasChallengeMetrics = new promClient.Counter({
+      name: 'atlas_challenges_total',
+      help: 'Total number of challenges. ' +
+            `Status label is one of [${Object.values(atlasChallengeStatus)}]`,
+      labelNames: ['status'],
+      registers: [registry]
+    });
 
     if (!(this.strategy instanceof AtlasChallengeParticipationStrategy)) {
       throw new Error('A valid strategy must be provided');
@@ -64,23 +82,29 @@ export default class AtlasWorker extends PeriodicWorker {
   async tryWithChallenge(challenge) {
     try {
       if (this.failedChallengesCache.didChallengeFailRecently(challenge.challengeId)) {
+        this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.failedRecently});
+        await this.addLog('Challenge failed recently', challenge);
         return false;
       }
       if (!await this.strategy.shouldFetchBundle(challenge)) {
+        this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.shouldNotFetch});
         await this.addLog('Decided not to download bundle', challenge);
         return false;
       }
       const bundleMetadata = await this.tryToDownload(challenge);
       if (!await this.strategy.shouldResolveChallenge(bundleMetadata)) {
+        this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.shouldNotResolve});
         await this.addLog('Challenge resolution cancelled', challenge);
         return false;
       }
       await this.tryToResolve(bundleMetadata, challenge);
       await this.strategy.afterChallengeResolution(challenge);
+      this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.resolved});
       return true;
     } catch (err) {
       this.failedChallengesCache.rememberFailedChallenge(challenge.challengeId, this.strategy.retryTimeout);
       await this.addLog(`Failed to resolve challenge: ${err.message || err}`, challenge, err.stack);
+      this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.failed});
       return false;
     }
   }
