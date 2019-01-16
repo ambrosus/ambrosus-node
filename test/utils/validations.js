@@ -8,10 +8,13 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import chai from 'chai';
+import sinon from 'sinon';
+import sinonChai from 'sinon-chai';
 import validateAndCast from '../../src/utils/validations';
 import {ValidationError} from '../../src/errors/errors';
 
 const {expect} = chai;
+chai.use(sinonChai);
 
 describe('validation', () => {
   let validator;
@@ -201,11 +204,12 @@ describe('validation', () => {
     });
   });
 
-  describe('isAddress', () => {
+  describe('isHexOfLength', () => {
+    const length = 40;
     const input = {
-      correctAddress: '0x074976a8D5F07dA5DADa1Eb248AD369a764bB373',
-      lower: '0x074976a8d5f07da5dada1eb248ad369a764bb373',
-      upper: '0X074976A8D5F07DA5DADA1EB248AD369A764BB373',
+      correctValue: '0x074976a8D5F07dA5DADa1Eb248AD369a764bB373',
+      correctLowercase: '0x074976a8d5f07da5dada1eb248ad369a764bb373',
+      correctUppercase: '0X074976A8D5F07DA5DADA1EB248AD369A764BB373',
       tooShort: '0x074976a8D5F07dA5DADa1Eb248AD369a764bB37',
       tooLong: '0x074976a8D5F07dA5DADa1Eb248AD369a764bB3731',
       noPrefix: '074976a8D5F07dA5DADa1Eb248AD369a764bB373',
@@ -217,32 +221,32 @@ describe('validation', () => {
     });
 
     it('returns self', async () => {
-      expect(validator.isAddress([])).to.deep.equal(validator);
+      expect(validator.isHexOfLength([], length)).to.deep.equal(validator);
     });
 
-    it('does not throw with valid addresses', async () => {
-      expect(() => validator.isAddress(['correctAddress'])).to.not.throw();
+    it('does not throw with valid values', async () => {
+      expect(() => validator.isHexOfLength(['correctValue'], length)).to.not.throw();
     });
 
     it('is case insensitive', async () => {
-      expect(() => validator.isAddress(['upper', 'lower'])).to.not.throw();
+      expect(() => validator.isHexOfLength(['correctLowercase', 'correctUppercase'], length)).to.not.throw();
     });
 
-    it('throws if address has wrong length', async () => {
-      expect(() => validator.isAddress(['tooShort'])).to.throw(ValidationError);
-      expect(() => validator.isAddress(['tooLong'])).to.throw(ValidationError);
+    it('throws if hex number has wrong length', async () => {
+      expect(() => validator.isHexOfLength(['tooShort'], length)).to.throw(ValidationError);
+      expect(() => validator.isHexOfLength(['tooLong'], length)).to.throw(ValidationError);
     });
 
-    it('throws if address has no prefix', async () => {
-      expect(() => validator.isAddress(['noPrefix'])).to.throw(ValidationError);
+    it('throws if value has no prefix', async () => {
+      expect(() => validator.isHexOfLength(['noPrefix'], length)).to.throw(ValidationError);
     });
 
-    it('throws if not hex value', async () => {
-      expect(() => validator.isAddress(['notHex'])).to.throw(ValidationError);
+    it('throws if not a hex value', async () => {
+      expect(() => validator.isHexOfLength(['notHex'], length)).to.throw(ValidationError);
     });
 
     it('does not throw if undefined', async () => {
-      expect(() => validator.isAddress(['undefined'])).to.not.throw();
+      expect(() => validator.isHexOfLength(['undefined'], length)).to.not.throw();
     });
 
     describe('Nested fields', () => {
@@ -250,30 +254,80 @@ describe('validation', () => {
         validator = validateAndCast({wrap: input});
       });
 
-      it('does not throw with valid addresses', async () => {
-        expect(() => validator.isAddress(['wrap.correctAddress'])).to.not.throw();
+      it('does not throw with valid values', async () => {
+        expect(() => validator.isHexOfLength(['wrap.correctValue'], length)).to.not.throw();
       });
 
       it('is case insensitive', async () => {
-        expect(() => validator.isAddress(['wrap.upper', 'wrap.lower'])).to.not.throw();
+        expect(() => validator.isHexOfLength(['wrap.correctLowercase', 'wrap.correctUppercase'], length)).to.not.throw();
       });
 
-      it('throws if address has wrong length', async () => {
-        expect(() => validator.isAddress(['wrap.tooShort'])).to.throw(ValidationError);
-        expect(() => validator.isAddress(['wrap.tooLong'])).to.throw(ValidationError);
+      it('throws if hex number has wrong length', async () => {
+        expect(() => validator.isHexOfLength(['wrap.tooShort'], length)).to.throw(ValidationError);
+        expect(() => validator.isHexOfLength(['wrap.tooLong'], length)).to.throw(ValidationError);
       });
 
-      it('throws if address has no prefix', async () => {
-        expect(() => validator.isAddress(['wrap.noPrefix'])).to.throw(ValidationError);
+      it('throws if value has no prefix', async () => {
+        expect(() => validator.isHexOfLength(['wrap.noPrefix'], length)).to.throw(ValidationError);
       });
 
-      it('throws if not hex value', async () => {
-        expect(() => validator.isAddress(['wrap.notHex'])).to.throw(ValidationError);
+      it('throws if not a hex value', async () => {
+        expect(() => validator.isHexOfLength(['wrap.notHex'], length)).to.throw(ValidationError);
       });
 
       it('does not throw if undefined', async () => {
-        expect(() => validator.isAddress(['wrap.undefined'])).to.not.throw();
+        expect(() => validator.isHexOfLength(['wrap.undefined'], length)).to.not.throw();
       });
+    });
+  });
+
+  describe('isAddress', () => {
+    let isHexSpy;
+    const input = {
+      address: '0x074976a8D5F07dA5DADa1Eb248AD369a764bB373'
+    };
+
+    beforeEach(() => {
+      validator = validateAndCast(input);
+      isHexSpy = sinon.spy(validator, 'isHexOfLength');
+    });
+
+    it('returns self', async () => {
+      expect(validator.isAddress([])).to.deep.equal(validator);
+    });
+
+    it('calls isHexOfLength with length=40', async () => {
+      validator.isAddress(['address']);
+      expect(isHexSpy).to.be.calledOnceWith(['address'], 40);
+    });
+
+    afterEach(() => {
+      isHexSpy.restore();
+    });
+  });
+
+  describe('isHash', () => {
+    let isHexSpy;
+    const input = {
+      hash: '0x978f69298ba7940c11b16c4a778c7ad1a4e8c6ed3c90c35f36cfec1b20fc53d2'
+    };
+
+    beforeEach(() => {
+      validator = validateAndCast(input);
+      isHexSpy = sinon.spy(validator, 'isHexOfLength');
+    });
+
+    it('returns self', async () => {
+      expect(validator.isHash([])).to.deep.equal(validator);
+    });
+
+    it('calls isHexOfLength with length=64', async () => {
+      validator.isHash(['hash']);
+      expect(isHexSpy).to.be.calledOnceWith(['hash'], 64);
+    });
+
+    afterEach(() => {
+      isHexSpy.restore();
     });
   });
 

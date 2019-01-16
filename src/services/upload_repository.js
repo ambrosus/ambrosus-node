@@ -91,6 +91,21 @@ export default class UploadRepository {
     }
   }
 
+  async complementBundleMetadata(bundleMetadata) {
+    const bundleUploadData = await this.uploadsActions.getBundleUploadData(bundleMetadata.bundleId);
+    if (bundleUploadData === null) {
+      throw new ValidationError(`Bundle with id=${bundleMetadata.bundleId} has not been uploaded`);
+    }
+    const bundleStoragePeriods = await this.shelteringWrapper.bundleStoragePeriods(bundleMetadata.bundleId);
+    return {
+      ...bundleMetadata,
+      bundleTransactionHash: bundleUploadData.transactionHash,
+      bundleProofBlock: bundleUploadData.blockNumber,
+      bundleUploadTimestamp: bundleUploadData.timestamp,
+      storagePeriods: bundleStoragePeriods
+    };
+  }
+
   async checkIfEnoughFunds(requiredBalance) {
     const balance = new BN(await this.web3.eth.getBalance(this.identityManager.nodeAddress()));
     if (balance.lte(new BN(this.lowFundsWarningAmount))) {

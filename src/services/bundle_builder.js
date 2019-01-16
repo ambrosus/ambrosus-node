@@ -73,4 +73,10 @@ export default class BundleBuilder {
       bundle.content.idData
     );
   }
+
+  validateBundleMetadata(bundleMetadata) {
+    validateAndCast(bundleMetadata)
+      .required(['bundleId'])
+      .isHash(['bundleId']);
+  }
 }

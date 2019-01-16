@@ -30,15 +30,15 @@ describe('Upload repository', () => {
   let identityManagerMock;
   let web3Mock;
 
-  describe('Upload bundle', async () => {
+  describe('Upload bundle', () => {
     const storagePeriods = 3;
     const fee = '100';
     const tooSmallBalance = '99';
     const exampleAddress = '0xdeadface';
-    const exampleUploadData = {blockNumber: 34, transactionHash: '0x1ae35c49aa2423'};
+    const exampleUploadData = {blockNumber: 34, transactionHash: '0x1ae35c49aa2423', timestamp: 420};
 
 
-    beforeEach(async () => {
+    beforeEach(() => {
       uploadsActionsMock = {
         uploadBundle: sinon.stub().resolves(exampleUploadData),
         getBundleUploadData: sinon.stub().resolves(exampleUploadData)
@@ -110,8 +110,8 @@ describe('Upload repository', () => {
     });
   });
 
-  describe('isSheltering', async () => {
-    beforeEach(async () => {
+  describe('isSheltering', () => {
+    beforeEach(() => {
       shelteringWrapperMock = {
         isSheltering: sinon.stub().resolves(true)
       };
@@ -124,10 +124,10 @@ describe('Upload repository', () => {
     });
   });
 
-  describe('expirationDate', async () => {
+  describe('expirationDate', () => {
     const expirationDate = 123;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       shelteringWrapperMock = {
         shelteringExpirationDate: sinon.stub().resolves(expirationDate)
       };
@@ -140,10 +140,10 @@ describe('Upload repository', () => {
     });
   });
 
-  describe('bundleItemsCountLimit', async () => {
+  describe('bundleItemsCountLimit', () => {
     const sizeLimit = 42;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       configWrapperMock = {
         bundleSizeLimit: sinon.stub().resolves(sizeLimit)
       };
@@ -156,7 +156,7 @@ describe('Upload repository', () => {
     });
   });
 
-  describe('Verifying a bundle', async () => {
+  describe('Verifying a bundle', () => {
     const downloadedBundle = createBundle({}, ['first', 'second', 'third']);
     let uploadRepository;
 
@@ -176,6 +176,42 @@ describe('Upload repository', () => {
     it('throws if downloaded bundle is too big', async () => {
       configWrapperMock.bundleSizeLimit.resolves(2);
       await expect(uploadRepository.verifyBundle(downloadedBundle)).to.be.rejectedWith(ValidationError, 'Bundle size surpasses the limit');
+    });
+  });
+
+  describe('Complementing bundle metadata', () => {
+    const bundleId = '0x978f69298ba7940c11b16c4a778c7ad1a4e8c6ed3c90c35f36cfec1b20fc53d2';
+    const exampleStoragePeriods = 12;
+    const exampleUploadData = {
+      blockNumber: 120,
+      transactionHash: '0xbfa90258fe2badae4cce5316161cdc1f6eccb5d47f0904adafca120e142c9c3e',
+      timestamp: 1544171039
+    };
+    const bundleMetadata = {
+      bundleId,
+      bundleUploadTimestamp: exampleUploadData.timestamp,
+      bundleProofBlock: exampleUploadData.blockNumber,
+      bundleTransactionHash: exampleUploadData.transactionHash,
+      storagePeriods: exampleStoragePeriods
+    };
+
+    beforeEach(() => {
+      uploadsActionsMock = {
+        getBundleUploadData: sinon.stub().resolves(null)
+      };
+      uploadsActionsMock.getBundleUploadData.withArgs(bundleId).resolves(exampleUploadData);
+      shelteringWrapperMock = {
+        bundleStoragePeriods: sinon.stub().resolves(exampleStoragePeriods)
+      };
+      uploadRepository = new UploadRepository({}, {}, uploadsActionsMock, shelteringWrapperMock);
+    });
+
+    it('substitutes metadata fields with data loaded from blockchain', async () => {
+      expect(await uploadRepository.complementBundleMetadata({bundleId})).to.deep.equal(bundleMetadata);
+    });
+
+    it('throws ValidationError when bundle with given ID does not exist on chain', async () => {
+      await expect(uploadRepository.complementBundleMetadata({bundleId: 'unknownId'})).to.be.rejectedWith(ValidationError);
     });
   });
 });
