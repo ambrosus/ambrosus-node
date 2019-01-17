@@ -10,7 +10,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {ValidationError} from '../errors/errors';
 import {Role} from './roles_repository';
-import BN from 'bn.js';
 
 export default class UploadRepository {
   constructor(web3, identityManager, uploadsActions, shelteringWrapper, rolesWrapper, feesWrapper, configWrapper, lowFundsWarningAmount, sentry) {
@@ -133,5 +132,4 @@ export default class UploadRepository {
       storagePeriods: bundleStoragePeriods
     };
   }
-
 }
