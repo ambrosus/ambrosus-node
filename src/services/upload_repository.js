@@ -10,13 +10,13 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {ValidationError} from '../errors/errors';
 import {Role} from './roles_repository';
+import {InsufficientFundsToUploadBundleError} from 'ambrosus-node-contracts';
 
 export default class UploadRepository {
-  constructor(web3, identityManager, uploadsActions, shelteringWrapper, rolesWrapper, feesWrapper, configWrapper, lowFundsWarningAmount, sentry) {
+  constructor(web3, identityManager, uploadsActions, shelteringWrapper, rolesWrapper, configWrapper, lowFundsWarningAmount, sentry) {
     this.web3 = web3;
     this.identityManager = identityManager;
     this.uploadsActions = uploadsActions;
-    this.feesWrapper = feesWrapper;
     this.shelteringWrapper = shelteringWrapper;
     this.configWrapper = configWrapper;
     this.rolesWrapper = rolesWrapper;
@@ -38,27 +38,25 @@ export default class UploadRepository {
   }
 
   async receiptWithResult(uploadReceiptPromise, uploadResult) {
-    const uploadReceipt = await uploadReceiptPromise;
-    this.handleErrors(uploadReceipt);
-    this.handleWarnings(uploadReceipt);
-    return {
-      ...uploadReceipt,
-      uploadResult
-    };
-  }
-
-  handleErrors(uploadReceipt) {
-    if (uploadReceipt.error) {
-      const err = new Error(uploadReceipt.error);
-      this.sentry.captureException(err);
-      throw err;
+    try {
+      const uploadReceipt = await uploadReceiptPromise;
+      this.handleLowBalanceWarning(uploadReceipt);
+      return {
+        ...uploadReceipt,
+        uploadResult
+      };
+    } catch (error) {
+      if (error instanceof InsufficientFundsToUploadBundleError) {
+        this.sentry.captureException(error);
+        throw error;
+      }
     }
   }
 
-  handleWarnings(uploadReceipt) {
-    if (uploadReceipt.warning) {
+  handleLowBalanceWarning(uploadReceipt) {
+    if (uploadReceipt.lowBalanceWarning) {
       this.sentry.captureMessage(
-        uploadReceipt.warning,
+        `Hermes low balance warning triggered. Balance: ${uploadReceipt.approximateBalanceAfterUpload}`,
         this.sentry.Severity.Warning
       );
     }
@@ -68,15 +66,6 @@ export default class UploadRepository {
     const emptyAddressRegex = /^0x0+$/gi;
     return emptyAddressRegex.test(address);
   }
-
-  // async validateEnoughFundsForUploadFee(storagePeriods) {
-  //   const fee = await this.feesWrapper.feeForUpload(storagePeriods);
-  //   if (!await this.checkIfEnoughFunds(fee)) {
-  //     const err = new Error(`Insufficient funds: need at least ${fee} to upload the bundle`);
-  //     this.sentry.captureException(err);
-  //     throw err;
-  //   }
-  // }
 
   async validateNodeIsOnboardedAsHermes() {
     const uploaderRole = new Role(await this.rolesWrapper.onboardedRole(this.identityManager.nodeAddress()));
@@ -108,16 +97,6 @@ export default class UploadRepository {
     }
   }
 
-  // async checkIfEnoughFunds(requiredBalance) {
-  //   const balance = new BN(await this.web3.eth.getBalance(this.identityManager.nodeAddress()));
-  //   if (balance.lte(new BN(this.lowFundsWarningAmount))) {
-  //     this.sentry.captureMessage(
-  //       `Hermes low balance warning triggered. Balance: ${balance}`,
-  //       sentry.Severity.Warning
-  //     );
-  //   }
-  //   return balance.gte(new BN(requiredBalance));
-  // }
   async complementBundleMetadata(bundleMetadata) {
     const bundleUploadData = await this.uploadsActions.getBundleUploadData(bundleMetadata.bundleId);
     if (bundleUploadData === null) {

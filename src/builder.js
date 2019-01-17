@@ -93,7 +93,6 @@ class Builder {
       this.uploadActions,
       this.shelteringWrapper,
       this.rolesWrapper,
-      this.feesWrapper,
       this.configWrapper,
       lowFundsWarningAmount,
       Sentry
