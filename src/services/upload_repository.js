@@ -13,14 +13,13 @@ import {Role} from './roles_repository';
 import {InsufficientFundsToUploadBundleError} from 'ambrosus-node-contracts';
 
 export default class UploadRepository {
-  constructor(web3, identityManager, uploadsActions, shelteringWrapper, rolesWrapper, configWrapper, lowFundsWarningAmount, sentry) {
+  constructor(web3, identityManager, uploadsActions, shelteringWrapper, rolesWrapper, configWrapper, sentry) {
     this.web3 = web3;
     this.identityManager = identityManager;
     this.uploadsActions = uploadsActions;
     this.shelteringWrapper = shelteringWrapper;
-    this.configWrapper = configWrapper;
     this.rolesWrapper = rolesWrapper;
-    this.lowFundsWarningAmount = lowFundsWarningAmount;
+    this.configWrapper = configWrapper;
     this.sentry = sentry;
   }
 
@@ -29,7 +28,7 @@ export default class UploadRepository {
 
     const previousUploader = await this.shelteringWrapper.getBundleUploader(bundleId);
     if (this.isEmptyAddress(previousUploader)) {
-      return this.receiptWithResult(this.uploadsActions.uploadBundle(bundleId, storagePeriods, this.lowFundsWarningAmount), 'Bundle has been uploaded');
+      return this.receiptWithResult(this.uploadsActions.uploadBundle(bundleId, storagePeriods), 'Bundle has been uploaded');
     }
     if (this.identityManager.nodeAddress() === previousUploader) {
       return this.receiptWithResult(this.uploadsActions.getBundleUploadData(bundleId), 'Bundle was already uploaded, updated metadata from chain');
@@ -48,8 +47,8 @@ export default class UploadRepository {
     } catch (error) {
       if (error instanceof InsufficientFundsToUploadBundleError) {
         this.sentry.captureException(error);
-        throw error;
       }
+      throw error;
     }
   }
 

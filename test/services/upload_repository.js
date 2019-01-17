@@ -65,7 +65,7 @@ describe('Upload repository', () => {
           Warning: 1
         }
       };
-      uploadRepository = new UploadRepository(web3Mock, identityManagerMock, uploadsActionsMock, shelteringWrapperMock, rolesWrapperMock, {}, '0', sentryMock);
+      uploadRepository = new UploadRepository(web3Mock, identityManagerMock, uploadsActionsMock, shelteringWrapperMock, rolesWrapperMock, {}, sentryMock);
     });
 
     it('calls wrappers methods with correct arguments', async () => {
@@ -76,13 +76,19 @@ describe('Upload repository', () => {
       expect(uploadsActionsMock.uploadBundle).to.be.calledOnceWith(bundleId, storagePeriods);
     });
 
-    it('throws if not enough funds', async () => {
-      uploadsActionsMock.uploadBundle = sinon.stub().rejects(new InsufficientFundsToUploadBundleError(fee, tooSmallBalance));
+    it('throws and captures in Sentry if not enough funds', async () => {
+      uploadsActionsMock.uploadBundle.rejects(new InsufficientFundsToUploadBundleError(fee, tooSmallBalance));
       await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.rejected;
       expect(sentryMock.captureException).to.be.calledOnce;
     });
 
-    it('sentry log if low balance', async () => {
+    it('throws other errors', async () => {
+      uploadsActionsMock.uploadBundle.rejects(new Error('something else happened'));
+      await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.rejected;
+      expect(sentryMock.captureException).to.have.not.been.called;
+    });
+
+    it('logs low balance warning to Sentry', async () => {
       uploadsActionsMock.uploadBundle = sinon.stub().resolves({lowBalanceWarning: true, approximateBalanceAfterUpload: '11111111'});
       await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.fulfilled;
       expect(sentryMock.captureMessage).to.be.calledOnce;

@@ -70,7 +70,7 @@ class Builder {
     this.web3 = web3 || await createWeb3(this.config);
     this.migrator = new Migrator(db, this.config);
     this.identityManager = new IdentityManager(this.web3);
-    const {headContractAddress} = this.config;
+    const {headContractAddress, lowFundsWarningAmount} = this.config;
 
     const defaultAddress = await getDefaultAddress(this.web3);
 
@@ -83,10 +83,9 @@ class Builder {
     this.shelteringWrapper = new ShelteringWrapper(this.headWrapper, this.web3, defaultAddress);
     this.kycWhitelistWrapper = new KycWhitelistWrapper(this.headWrapper, this.web3, defaultAddress);
     this.blockChainStateWrapper = new BlockchainStateWrapper(this.web3);
-    this.uploadActions = new UploadActions(this.uploadsWrapper, this.feesWrapper, this.shelteringWrapper, this.blockChainStateWrapper);
+    this.uploadActions = new UploadActions(this.uploadsWrapper, this.feesWrapper, this.shelteringWrapper, this.blockChainStateWrapper, lowFundsWarningAmount);
 
     this.rolesRepository = new RolesRepository(this.rolesWrapper, this.configWrapper);
-    const {lowFundsWarningAmount} = this.config;
     this.uploadRepository = new UploadRepository(
       this.web3,
       this.identityManager,
@@ -94,7 +93,6 @@ class Builder {
       this.shelteringWrapper,
       this.rolesWrapper,
       this.configWrapper,
-      lowFundsWarningAmount,
       Sentry
     );
     this.challengesRepository = new ChallengesRepository(this.challengesWrapper,

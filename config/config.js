@@ -26,7 +26,7 @@ module.exports = Object.freeze({
   mongoUser: process.env.MONGO_USER,
   mongoPassword: process.env.MONGO_PASSWORD,
 
-  lowFundsWarningAmount: process.env.LOW_FUNDS_WARNING || 1000,
+  lowFundsWarningAmount: process.env.LOW_FUNDS_WARNING || '1000',
 
   headContractAddress: process.env.HEAD_CONTRACT_ADDRESS,
   challengeResolutionStrategy: process.env.CHALLENGE_RESOLUTION_STRATEGY || 'resolve_all_strategy',
