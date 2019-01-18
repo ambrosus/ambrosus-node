@@ -14,6 +14,7 @@ import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import {createBundle} from '../fixtures/assets_events';
 import {ValidationError} from '../../src/errors/errors';
+import {InsufficientFundsToUploadBundleError} from 'ambrosus-node-contracts';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -21,7 +22,6 @@ const {expect} = chai;
 
 describe('Upload repository', () => {
   const bundleId = '0xc0ffee';
-  let feesWrapperMock;
   let uploadsActionsMock;
   let shelteringWrapperMock;
   let rolesWrapperMock;
@@ -29,6 +29,7 @@ describe('Upload repository', () => {
   let uploadRepository;
   let identityManagerMock;
   let web3Mock;
+  let sentryMock;
 
   describe('Upload bundle', () => {
     const storagePeriods = 3;
@@ -46,9 +47,6 @@ describe('Upload repository', () => {
       rolesWrapperMock = {
         onboardedRole: sinon.stub().resolves('2')
       };
-      feesWrapperMock = {
-        feeForUpload: sinon.stub().resolves(fee)
-      };
       shelteringWrapperMock = {
         getBundleUploader: sinon.stub().resolves('0x0')
       };
@@ -60,22 +58,40 @@ describe('Upload repository', () => {
           getBalance: sinon.stub().resolves(fee)
         }
       };
-      uploadRepository = new UploadRepository(web3Mock, identityManagerMock, uploadsActionsMock, shelteringWrapperMock, rolesWrapperMock, feesWrapperMock);
+      sentryMock = {
+        captureException: sinon.stub(),
+        captureMessage: sinon.stub(),
+        Severity: {
+          Warning: 1
+        }
+      };
+      uploadRepository = new UploadRepository(web3Mock, identityManagerMock, uploadsActionsMock, shelteringWrapperMock, rolesWrapperMock, {}, sentryMock);
     });
 
     it('calls wrappers methods with correct arguments', async () => {
       await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.deep.equal({...exampleUploadData, uploadResult: 'Bundle has been uploaded'});
-      expect(feesWrapperMock.feeForUpload).to.be.calledOnceWith(storagePeriods);
-      expect(web3Mock.eth.getBalance).to.be.calledOnceWith(exampleAddress);
       expect(rolesWrapperMock.onboardedRole).to.be.calledOnceWith(exampleAddress);
       expect(identityManagerMock.nodeAddress).to.have.been.called;
       expect(shelteringWrapperMock.getBundleUploader).to.have.been.calledOnceWith(bundleId);
       expect(uploadsActionsMock.uploadBundle).to.be.calledOnceWith(bundleId, storagePeriods);
     });
 
-    it('throws if not enough funds', async () => {
-      web3Mock.eth.getBalance.resolves(tooSmallBalance);
+    it('captures in Sentry if not enough funds and rethrows', async () => {
+      uploadsActionsMock.uploadBundle.rejects(new InsufficientFundsToUploadBundleError(fee, tooSmallBalance));
       await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.rejected;
+      expect(sentryMock.captureException).to.be.calledOnce;
+    });
+
+    it('throws other errors', async () => {
+      uploadsActionsMock.uploadBundle.rejects(new Error('something else happened'));
+      await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.rejected;
+      expect(sentryMock.captureException).to.have.not.been.called;
+    });
+
+    it('logs low balance warning to Sentry', async () => {
+      uploadsActionsMock.uploadBundle = sinon.stub().resolves({lowBalanceWarning: true, approximateBalanceAfterUpload: '11111111'});
+      await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.fulfilled;
+      expect(sentryMock.captureMessage).to.be.calledOnce;
     });
 
     it('throws if not onboarded as hermes', async () => {
@@ -147,7 +163,7 @@ describe('Upload repository', () => {
       configWrapperMock = {
         bundleSizeLimit: sinon.stub().resolves(sizeLimit)
       };
-      uploadRepository = new UploadRepository({}, {}, {}, {}, {}, {}, configWrapperMock);
+      uploadRepository = new UploadRepository({}, {}, {}, {}, {}, configWrapperMock);
     });
 
     it('calls wrappers methods with correct arguments', async () => {
@@ -165,7 +181,7 @@ describe('Upload repository', () => {
         bundleSizeLimit: sinon.stub()
       };
 
-      uploadRepository = new UploadRepository({}, {}, {}, {}, {}, {}, configWrapperMock);
+      uploadRepository = new UploadRepository({}, {}, {}, {}, {}, configWrapperMock);
     });
 
     it('passes for proper bundle', async () => {

@@ -42,6 +42,7 @@ import ChallengesRepository from './services/challenges_repository';
 import Migrator from './migrations/Migrator';
 import FailedChallengesCache from './services/failed_challenges_cache';
 import WorkerTaskTrackingRepository from './services/worker_task_tracking_repository';
+import * as Sentry from '@sentry/node';
 
 class Builder {
   async ensureAdminAccountExist() {
@@ -69,7 +70,7 @@ class Builder {
     this.web3 = web3 || await createWeb3(this.config);
     this.migrator = new Migrator(db, this.config);
     this.identityManager = new IdentityManager(this.web3);
-    const {headContractAddress} = this.config;
+    const {headContractAddress, lowFundsWarningAmount} = this.config;
 
     const defaultAddress = await getDefaultAddress(this.web3);
 
@@ -82,19 +83,17 @@ class Builder {
     this.shelteringWrapper = new ShelteringWrapper(this.headWrapper, this.web3, defaultAddress);
     this.kycWhitelistWrapper = new KycWhitelistWrapper(this.headWrapper, this.web3, defaultAddress);
     this.blockChainStateWrapper = new BlockchainStateWrapper(this.web3);
-    this.uploadActions = new UploadActions(this.uploadsWrapper, this.feesWrapper, this.shelteringWrapper, this.blockChainStateWrapper);
+    this.uploadActions = new UploadActions(this.uploadsWrapper, this.feesWrapper, this.shelteringWrapper, this.blockChainStateWrapper, web3.utils.toWei(lowFundsWarningAmount, 'ether'));
 
     this.rolesRepository = new RolesRepository(this.rolesWrapper, this.configWrapper);
-    const {lowFundsWarningAmount} = this.config;
     this.uploadRepository = new UploadRepository(
       this.web3,
       this.identityManager,
       this.uploadActions,
       this.shelteringWrapper,
       this.rolesWrapper,
-      this.feesWrapper,
       this.configWrapper,
-      lowFundsWarningAmount
+      Sentry
     );
     this.challengesRepository = new ChallengesRepository(this.challengesWrapper,
       this.configWrapper);
