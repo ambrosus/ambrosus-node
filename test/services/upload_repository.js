@@ -76,7 +76,7 @@ describe('Upload repository', () => {
       expect(uploadsActionsMock.uploadBundle).to.be.calledOnceWith(bundleId, storagePeriods);
     });
 
-    it('throws and captures in Sentry if not enough funds', async () => {
+    it('captures in Sentry if not enough funds and rethrows', async () => {
       uploadsActionsMock.uploadBundle.rejects(new InsufficientFundsToUploadBundleError(fee, tooSmallBalance));
       await expect(uploadRepository.ensureBundleIsUploaded(bundleId, storagePeriods)).to.be.eventually.rejected;
       expect(sentryMock.captureException).to.be.calledOnce;
