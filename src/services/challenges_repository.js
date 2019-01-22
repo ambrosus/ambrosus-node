@@ -17,40 +17,33 @@ export default class ChallengesRepository {
     this.lastSavedBlock = 0;
   }
 
-  extractChallengeFromEvent(challengeEvents, outputFields) {
+  prepareChallengeEvent(challengeEvents, outputFields) {
     return challengeEvents.map(
-      ({blockNumber, returnValues}) => outputFields.reduce(
+      ({blockNumber, logIndex, returnValues}) => outputFields.reduce(
         (acc, fieldName) => {
           acc[fieldName] = returnValues[fieldName];
           return acc;
         },
-        {blockNumber}
+        {blockNumber, logIndex}
       )
     );
   }
 
-  sortChallenges(challenges) {
-    return challenges.sort((left, right) => left.blockNumber - right.blockNumber);
-  }
-
   async ongoingChallenges() {
     const {fromBlock, currentBlock} = await this.updateBlockInfo();
-    await this.updateActiveBlockCache(fromBlock, currentBlock);
-    return this.sortChallenges(this.activeChallengesCache.activeChallenges);
+    await this.updateActiveChallengesCache(fromBlock, currentBlock);
+    return this.activeChallengesCache.activeChallenges;
   }
 
-  async updateActiveBlockCache(fromBlock, currentBlock) {
-    const allChallengeEvents = await this.challengesWrapper.challenges(fromBlock, currentBlock);
+  async updateActiveChallengesCache(fromBlock, currentBlock) {
+    const issuedChallengeEvents = await this.challengesWrapper.challenges(fromBlock, currentBlock);
     const resolvedChallengeEvents = await this.challengesWrapper.resolvedChallenges(fromBlock, currentBlock);
     const timedOutChallengeEvents = await this.challengesWrapper.timedOutChallenges(fromBlock, currentBlock);
 
-    const startedChallenges = this.extractChallengeFromEvent(allChallengeEvents, ['challengeId', 'sheltererId', 'bundleId', 'count']);
-    const resolvedChallenges = this.extractChallengeFromEvent(resolvedChallengeEvents, ['challengeId', 'resolverId']);
-    const timedOutChallenges = this.extractChallengeFromEvent(timedOutChallengeEvents, ['challengeId']);
-    
-    this.activeChallengesCache.add(startedChallenges);
-    this.activeChallengesCache.decreaseActiveCount(resolvedChallenges);
-    this.activeChallengesCache.expire(timedOutChallenges);
+    const startedChallenges = this.prepareChallengeEvent(issuedChallengeEvents, ['challengeId', 'sheltererId', 'bundleId', 'count']);
+    const resolvedChallenges = this.prepareChallengeEvent(resolvedChallengeEvents, ['challengeId']);
+    const timedOutChallenges = this.prepareChallengeEvent(timedOutChallengeEvents, ['challengeId']);
+    this.activeChallengesCache.applyIncomingChallengeEvents(startedChallenges, resolvedChallenges, timedOutChallenges);
   }
 
   async updateBlockInfo() {
