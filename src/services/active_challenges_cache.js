@@ -20,7 +20,7 @@ export default class ActiveChallengesCache {
 
   add(challenge) {
     if (!this.has(challenge.challengeId)) {
-      this.activeChallengesDict[challenge.challengeId] = pick(this.removeType(challenge), 'challengeId');
+      this.activeChallengesDict[challenge.challengeId] = pick(challenge, 'challengeId');
     }
   }
 
@@ -40,53 +40,31 @@ export default class ActiveChallengesCache {
     if (this.has(challenge.challengeId)) {
       this.activeChallengesDict[challenge.challengeId].count --;
       if (this.get(challenge.challengeId).count <= 0) {
-        delete this.activeChallengesDict[challenge.challengeId];
+        this.expire(challenge);
       }
     }
   }
 
   applyIncomingChallengeEvents(startedChallenges, resolvedChallenges, timedOutChallenges) {
-    const startedChallengesActions = startedChallenges.map((challengeAction) => this.addType(challengeAction, 'issued'));
-    const resolvedChallengesActions = resolvedChallenges.map((challengeAction) => this.addType(challengeAction, 'resolved'));
-    const timedOutChallengesActions = timedOutChallenges.map((challengeAction) => this.addType(challengeAction, 'expired'));
+    const startedChallengesWithAction = startedChallenges.map((challenge) => this.addAction(challenge, () => this.add(challenge)));
+    const resolvedChallengesWithAction = resolvedChallenges.map((challenge) => this.addAction(challenge, () => this.decreaseActiveCount(challenge)));
+    const timedOutChallengesWithAction = timedOutChallenges.map((challenge) => this.addAction(challenge, () => this.expire(challenge)));
 
-    const challengeActionList = this.sortChronologically([...startedChallengesActions, ...resolvedChallengesActions, ...timedOutChallengesActions]);
+    const challengesWithActionList = this.sortChronologically([...startedChallengesWithAction, ...resolvedChallengesWithAction, ...timedOutChallengesWithAction]);
 
-    challengeActionList.forEach((challengeAction) => {
-      if (challengeAction.type === 'issued') {
-        this.add(challengeAction);
-      }
-      if (challengeAction.type === 'resolved') {
-        this.decreaseActiveCount(challengeAction);
-      }
-      if (challengeAction.type === 'expired') {
-        this.expire(challengeAction);
-      }
-    });
+    challengesWithActionList.forEach((challenge) => challenge.action());
   }
 
   sortChronologically(challenges) {
     return challenges.sort((left, right) => {
-      if  (left.blockNumber < right.blockNumber) {
-        return -1;
+      if  (left.blockNumber !== right.blockNumber) {
+        return left.blockNumber - right.blockNumber;
       }
-      if  (left.blockNumber > right.blockNumber) {
-        return 1;
-      }
-      if  (left.logIndex < right.logIndex) {
-        return -1;
-      }
-      if  (left.logIndex > right.logIndex) {
-        return 1;
-      }
-      return 0;
+      return left.logIndex - right.logIndex;
     });
   }
 
-  addType(challengeAction, type) {
-    return {...challengeAction, type};
-  }
-  removeType(challengeAction) {
-    return pick(challengeAction, 'type');
+  addAction(challenge, action) {
+    return {...challenge, action};
   }
 }

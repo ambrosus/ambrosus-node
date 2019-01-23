@@ -32,9 +32,7 @@ export default class ChallengesRepository {
   async ongoingChallenges() {
     const {fromBlock, currentBlock} = await this.updateBlockInfo();
     await this.updateActiveChallengesCache(fromBlock, currentBlock);
-    const active = this.activeChallengesCache.activeChallenges;
-    console.log(active);
-    return active;
+    return this.activeChallengesCache.activeChallenges;
   }
 
   async updateActiveChallengesCache(fromBlock, currentBlock) {
