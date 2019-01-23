@@ -174,7 +174,7 @@ describe('Challenges repository', () => {
       expect(challengesRepository.lastSavedBlock).to.equal(latestBlock + 3);
     });
 
-    it('adds new challenges to cache, decreases active count on resolved and removes timeouted', async () => {
+    it('adds new challenges to cache, decreases active count on resolved and removes timed out', async () => {
       await challengesRepository.ongoingChallenges();
       expect(activeChallengesCacheMock.applyIncomingChallengeEvents).to.be.calledOnceWithExactly(
         challengesRepository.prepareChallengeEvent(events, ['challengeId', 'sheltererId', 'bundleId', 'count']),

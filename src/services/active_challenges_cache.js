@@ -32,23 +32,23 @@ export default class ActiveChallengesCache {
     return this.activeChallengesDict[challengeId];
   }
 
-  expire(challenge) {
-    delete this.activeChallengesDict[challenge.challengeId];
+  expire(challengeId) {
+    delete this.activeChallengesDict[challengeId];
   }
 
-  decreaseActiveCount(challenge) {
-    if (this.has(challenge.challengeId)) {
-      this.activeChallengesDict[challenge.challengeId].count --;
-      if (this.get(challenge.challengeId).count <= 0) {
-        this.expire(challenge);
+  decreaseActiveCount(challengeId) {
+    if (this.has(challengeId)) {
+      this.activeChallengesDict[challengeId].count --;
+      if (this.get(challengeId).count <= 0) {
+        this.expire(challengeId);
       }
     }
   }
 
   applyIncomingChallengeEvents(startedChallenges, resolvedChallenges, timedOutChallenges) {
     const startedChallengesWithAction = startedChallenges.map((challenge) => this.addAction(challenge, () => this.add(challenge)));
-    const resolvedChallengesWithAction = resolvedChallenges.map((challenge) => this.addAction(challenge, () => this.decreaseActiveCount(challenge)));
-    const timedOutChallengesWithAction = timedOutChallenges.map((challenge) => this.addAction(challenge, () => this.expire(challenge)));
+    const resolvedChallengesWithAction = resolvedChallenges.map((challenge) => this.addAction(challenge, () => this.decreaseActiveCount(challenge.challengeId)));
+    const timedOutChallengesWithAction = timedOutChallenges.map((challenge) => this.addAction(challenge, () => this.expire(challenge.challengeId)));
 
     const challengesWithActionList = this.sortChronologically([...startedChallengesWithAction, ...resolvedChallengesWithAction, ...timedOutChallengesWithAction]);
 
