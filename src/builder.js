@@ -98,7 +98,7 @@ class Builder {
     );
     this.activeChallengesCache = new ActiveChallengesCache();
     this.challengesRepository = new ChallengesRepository(this.challengesWrapper,
-      this.configWrapper, this.activeChallengesCache);
+      this.configWrapper, this.blockChainStateWrapper, this.activeChallengesCache);
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
     const {maximumEntityTimestampOvertake} = this.config;
     this.entityBuilder = new EntityBuilder(this.identityManager, maximumEntityTimestampOvertake);
