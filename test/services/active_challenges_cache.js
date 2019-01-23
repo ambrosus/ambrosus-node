@@ -128,8 +128,10 @@ describe('Active Challenges Cache', () => {
 
       activeChallengesCache.decreaseActiveCount('0xc0ffee');
 
-      expect(activeChallengesCache.get('0xc0ffee')).to.deep.equal(aChallengeWith({challengeId: '0xc0ffee', count: 11}));
-      expect(activeChallengesCache.get('0xc0ffee2')).to.deep.equal(aChallengeWith({challengeId: '0xc0ffee2', count: 43}));
+      expect(activeChallengesCache.activeChallenges).to.deep.include.members([
+        aChallengeWith({challengeId: '0xc0ffee', count: 11}),
+        aChallengeWith({challengeId: '0xc0ffee2', count: 43})
+      ]);
     });
 
     it('for same challenge many times', () => {
@@ -139,7 +141,7 @@ describe('Active Challenges Cache', () => {
       activeChallengesCache.decreaseActiveCount('0xc0ffee');
       activeChallengesCache.decreaseActiveCount('0xc0ffee');
 
-      expect(activeChallengesCache.get('0xc0ffee')).to.deep.equal(aChallengeWith({challengeId: '0xc0ffee', count: 9}));
+      expect(activeChallengesCache.activeChallenges).to.deep.eq([aChallengeWith({challengeId: '0xc0ffee', count: 9})]);
     });
 
     it('does not throw if tried to decrease active count of not existing challenge', () => {
