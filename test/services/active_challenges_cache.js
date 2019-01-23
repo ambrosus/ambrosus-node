@@ -98,13 +98,13 @@ describe('Active Challenges Cache', () => {
     });
 
     it('deletes challenge', () => {
-      activeChallengesCache.expire({challengeId: '0xc0ffee'});
+      activeChallengesCache.expire('0xc0ffee');
       expect(activeChallengesCache.has('0xc0ffee')).to.be.false;
       expect(activeChallengesCache.has('0xc0ffee2')).to.be.true;
     });
 
     it('does not throw if tried to delete not existing challenge', () => {
-      activeChallengesCache.expire({challengeId: '0xdeadface'});
+      activeChallengesCache.expire('0xdeadface');
       expect(activeChallengesCache.has('0xc0ffee')).to.be.true;
       expect(activeChallengesCache.has('0xc0ffee2')).to.be.true;
     });
@@ -117,7 +117,7 @@ describe('Active Challenges Cache', () => {
     });
 
     it('decreases active count for different challenges', () => {
-      activeChallengesCache.decreaseActiveCount({challengeId: '0xc0ffee'});
+      activeChallengesCache.decreaseActiveCount('0xc0ffee');
       expect(activeChallengesCache.get('0xc0ffee')).to.deep.equal({
         sheltererId: '0xbeef',
         bundleId: '0xdeadbeef',
@@ -135,9 +135,9 @@ describe('Active Challenges Cache', () => {
     });
 
     it('decreases active count for same challenge many times', () => {
-      activeChallengesCache.decreaseActiveCount({challengeId: '0xc0ffee'});
-      activeChallengesCache.decreaseActiveCount({challengeId: '0xc0ffee'});
-      activeChallengesCache.decreaseActiveCount({challengeId: '0xc0ffee'});
+      activeChallengesCache.decreaseActiveCount('0xc0ffee');
+      activeChallengesCache.decreaseActiveCount('0xc0ffee');
+      activeChallengesCache.decreaseActiveCount('0xc0ffee');
       expect(activeChallengesCache.get('0xc0ffee')).to.deep.equal({
         sheltererId: '0xbeef',
         bundleId: '0xdeadbeef',
@@ -155,7 +155,7 @@ describe('Active Challenges Cache', () => {
 
     it('removes challenge when active count falls to 0', () => {
       for (let ind = 0; ind < 12; ind++) {
-        activeChallengesCache.decreaseActiveCount({challengeId: '0xc0ffee'});
+        activeChallengesCache.decreaseActiveCount('0xc0ffee');
       }
       expect(activeChallengesCache.has('0xc0ffee')).to.be.false;
     });
