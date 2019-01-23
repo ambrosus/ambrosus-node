@@ -145,9 +145,9 @@ describe('Challenges repository', () => {
         activeChallenges: ['activeChallenges']
       };
       blockchainStateWrapperMock = {
-        getCurrentBlock: sinon.stub()
+        getCurrentBlockNumber: sinon.stub()
       };
-      blockchainStateWrapperMock.getCurrentBlock.onFirstCall()
+      blockchainStateWrapperMock.getCurrentBlockNumber.onFirstCall()
         .resolves(latestBlock)
         .onSecondCall()
         .resolves(latestBlock + 3);

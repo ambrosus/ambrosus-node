@@ -51,7 +51,7 @@ export default class ChallengesRepository {
   async updateBlockInfo() {
     const challengeDuration = await this.configWrapper.challengeDuration();
     const fromBlock = this.lastSavedBlock ? this.lastSavedBlock + 1 : await this.challengesWrapper.earliestMeaningfulBlock(challengeDuration);
-    const currentBlock = await this.blockchainStateWrapper.getCurrentBlock();
+    const currentBlock = await this.blockchainStateWrapper.getCurrentBlockNumber();
     this.lastSavedBlock = currentBlock;
     return {fromBlock, currentBlock};
   }
