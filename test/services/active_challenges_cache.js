@@ -40,6 +40,21 @@ describe('Active Challenges Cache', () => {
     activeChallengesCache = new ActiveChallengesCache();
   });
 
+  function aChallenge() {
+    return {
+      challengeId: '0xc0ffee',
+      sheltererId: '0xbeef',
+      bundleId: '0xdeadbeef',
+      count: 12,
+      blockNumber: 1,
+      logIndex: 0
+    };
+  }
+
+  function aChallengeWith(params) {
+    return {...aChallenge(), ...params};
+  }
+
   describe('Add challenge', () => {
     beforeEach(() => {
       activeChallengesCache.add(exampleChallenge);
@@ -50,13 +65,7 @@ describe('Active Challenges Cache', () => {
     });
 
     it('get added challenge', () => {
-      expect(activeChallengesCache.get('0xc0ffee')).to.deep.equal({
-        sheltererId: '0xbeef',
-        bundleId: '0xdeadbeef',
-        count: 12,
-        blockNumber: 1,
-        logIndex: 0
-      });
+      expect(activeChallengesCache.get('0xc0ffee')).to.deep.equal(exampleChallenge);
     });
 
     it('does not overwrite challenges added previously', () => {
@@ -67,6 +76,7 @@ describe('Active Challenges Cache', () => {
         count: 1239
       }]);
       expect(activeChallengesCache.get('0xc0ffee')).to.deep.equal({
+        challengeId: '0xc0ffee',
         sheltererId: '0xbeef',
         bundleId: '0xdeadbeef',
         count: 12,
@@ -84,6 +94,7 @@ describe('Active Challenges Cache', () => {
       });
       expect(activeChallengesCache.has('0xc0ffee')).to.be.true;
       expect(activeChallengesCache.get('0xc0ffeedad')).to.deep.equal({
+        challengeId: '0xc0ffeedad',
         sheltererId: '0x123',
         bundleId: '0x54',
         count: 69
@@ -110,58 +121,44 @@ describe('Active Challenges Cache', () => {
     });
   });
 
-  describe('Decrease active count', () => {
-    beforeEach(() => {
-      activeChallengesCache.add(exampleChallenge);
-      activeChallengesCache.add(exampleChallenge2);
+  describe('can decrease active count', () => {
+    it('for the right challenge', () => {
+      activeChallengesCache.add(aChallengeWith({challengeId: '0xc0ffee', count: 12}));
+      activeChallengesCache.add(aChallengeWith({challengeId: '0xc0ffee2', count: 43}));
+
+      activeChallengesCache.decreaseActiveCount('0xc0ffee');
+
+      expect(activeChallengesCache.get('0xc0ffee')).to.deep.equal(aChallengeWith({challengeId: '0xc0ffee', count: 11}));
+      expect(activeChallengesCache.get('0xc0ffee2')).to.deep.equal(aChallengeWith({challengeId: '0xc0ffee2', count: 43}));
     });
 
-    it('decreases active count for different challenges', () => {
+    it('for same challenge many times', () => {
+      activeChallengesCache.add(aChallengeWith({challengeId: '0xc0ffee', count: 12}));
+
       activeChallengesCache.decreaseActiveCount('0xc0ffee');
-      expect(activeChallengesCache.get('0xc0ffee')).to.deep.equal({
-        sheltererId: '0xbeef',
-        bundleId: '0xdeadbeef',
-        count: 11,
-        blockNumber: 1,
-        logIndex: 0
-      });
-      expect(activeChallengesCache.get('0xc0ffee2')).to.deep.equal({
-        sheltererId: '0xbeef2',
-        bundleId: '0xdeadbeef2',
-        count: 43,
-        blockNumber: 2,
-        logIndex: 1
-      });
+      activeChallengesCache.decreaseActiveCount('0xc0ffee');
+      activeChallengesCache.decreaseActiveCount('0xc0ffee');
+
+      expect(activeChallengesCache.get('0xc0ffee')).to.deep.equal(aChallengeWith({challengeId: '0xc0ffee', count: 9}));
     });
 
-    it('decreases active count for same challenge many times', () => {
-      activeChallengesCache.decreaseActiveCount('0xc0ffee');
-      activeChallengesCache.decreaseActiveCount('0xc0ffee');
-      activeChallengesCache.decreaseActiveCount('0xc0ffee');
-      expect(activeChallengesCache.get('0xc0ffee')).to.deep.equal({
-        sheltererId: '0xbeef',
-        bundleId: '0xdeadbeef',
-        count: 9,
-        blockNumber: 1,
-        logIndex: 0
-      });
-    });
+    it('does not throw if tried to decrease active count of not existing challenge', () => {
+      activeChallengesCache.add(aChallengeWith({challengeId: '0xc0ffee'}));
 
-    it('does not throw if tried to decreases active count of not existing challenge', () => {
       activeChallengesCache.decreaseActiveCount([{challengeId: '0xdeadface'}]);
       expect(activeChallengesCache.has('0xc0ffee')).to.be.true;
-      expect(activeChallengesCache.has('0xc0ffee2')).to.be.true;
     });
 
     it('removes challenge when active count falls to 0', () => {
-      for (let ind = 0; ind < 12; ind++) {
-        activeChallengesCache.decreaseActiveCount('0xc0ffee');
-      }
+      activeChallengesCache.add(aChallengeWith({challengeId: '0xc0ffee', count: 1}));
+
+      activeChallengesCache.decreaseActiveCount('0xc0ffee');
+
       expect(activeChallengesCache.has('0xc0ffee')).to.be.false;
     });
   });
 
-  describe('Active challenges getter', () => {
+  describe('stores active challenges', () => {
     beforeEach(() => {
       activeChallengesCache.add(exampleChallenge);
       activeChallengesCache.add(exampleChallenge2);
@@ -173,7 +170,7 @@ describe('Active Challenges Cache', () => {
     });
   });
 
-  describe('Sorts chronogically', () => {
+  describe('sorts chronogically', () => {
     const events = [
       {blockNumber: 5, logIndex: 2},
       {blockNumber: 9, logIndex: 4},
@@ -181,33 +178,57 @@ describe('Active Challenges Cache', () => {
     ];
 
     it('in increasing blockNumber and logIndex order', () => {
-      expect(activeChallengesCache.sortChronologically(events)).to.deep.equal([{blockNumber: 5, logIndex: 2}, {blockNumber: 5, logIndex: 7}, {blockNumber: 9, logIndex: 4}]);
+      expect(activeChallengesCache.sortChronologically(events)).to.deep.equal([{blockNumber: 5, logIndex: 2}, {blockNumber: 5, logIndex: 7}, {
+        blockNumber: 9,
+        logIndex: 4
+      }]);
     });
   });
 
-  describe('Applies multiple changes', () => {
-    it('Applies in correct order', () => {
-      activeChallengesCache.applyIncomingChallengeEvents([
-        {...exampleChallenge, blockNumber: 1, count: 7},
-        {...exampleChallenge2, blockNumber: 3, count: 16},
-        {...exampleChallenge, blockNumber: 4, count: 12},
-        {...exampleChallenge2, blockNumber: 1, count: 4}
-      ], [
-        {...exampleChallenge, blockNumber: 2},
-        {...exampleChallenge2, blockNumber: 5},
-        {...exampleChallenge2, blockNumber: 3},
-        {...exampleChallenge, blockNumber: 3},
-        {...exampleChallenge2, blockNumber: 2},
-        {...exampleChallenge2, blockNumber: 4}
-      ], [
-        {...exampleChallenge, blockNumber: 0},
-        {...exampleChallenge2, blockNumber: 2}
-      ]);
+  describe('applies multiple changes', () => {
+    it('adding started challenges', () => {
+      activeChallengesCache.applyIncomingChallengeEvents([aChallenge()], [], []);
 
-      expect(activeChallengesCache.activeChallenges).to.deep.equal([
-        {...exampleChallenge, count: 5, blockNumber: 1},
-        {...exampleChallenge2, count: 13, blockNumber: 3}
-      ]);
+      expect(activeChallengesCache.activeChallenges).to.deep.eq([aChallenge()]);
+    });
+
+
+    it('removing timed out challenges', () => {
+      activeChallengesCache.applyIncomingChallengeEvents([aChallengeWith({blockNumber: 1})], [], [aChallengeWith({blockNumber: 2})]);
+
+      expect(activeChallengesCache.activeChallenges).to.be.empty;
+    });
+
+    it('reducing count for resolved challenges', () => {
+      activeChallengesCache.applyIncomingChallengeEvents([aChallengeWith({blockNumber: 1, count: 5})], [aChallengeWith({blockNumber: 2})], []);
+
+      expect(activeChallengesCache.activeChallenges).to.deep.eq([aChallengeWith({blockNumber: 1, count: 4})]); // is it ok that the blockNumber is 1 not 2?
+    });
+
+    it('respecting events order', () => {
+      activeChallengesCache.applyIncomingChallengeEvents([aChallengeWith({blockNumber: 2})], [], [aChallengeWith({blockNumber: 1})]);
+
+      expect(activeChallengesCache.activeChallenges).to.deep.eq([aChallengeWith({blockNumber: 2})]);
+    });
+
+    it('applying multiple changes to one challenge', () => {
+      activeChallengesCache.applyIncomingChallengeEvents(
+        [aChallengeWith({blockNumber: 1, count: 5})],
+        [aChallengeWith({blockNumber: 3}), aChallengeWith({blockNumber: 2})],
+        []
+      );
+
+      expect(activeChallengesCache.activeChallenges).to.deep.eq([aChallengeWith({blockNumber: 1, count: 3})]);
+    });
+
+    it('applying changes to different challenges', () => {
+      activeChallengesCache.applyIncomingChallengeEvents(
+        [aChallengeWith({challengeId: '1', blockNumber: 1, count: 5}), aChallengeWith({challengeId: '2', blockNumber: 1, count: 3})],
+        [aChallengeWith({challengeId: '2', blockNumber: 3})],
+        [aChallengeWith({challengeId: '1', blockNumber: 10})]
+      );
+
+      expect(activeChallengesCache.activeChallenges).to.deep.eq([aChallengeWith({challengeId: '2', blockNumber: 1, count: 2})]);
     });
   });
 });

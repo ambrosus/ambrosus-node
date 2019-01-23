@@ -29,7 +29,7 @@ export default class ActiveChallengesCache {
   }
 
   get(challengeId) {
-    return this.activeChallengesDict[challengeId];
+    return {...this.activeChallengesDict[challengeId], challengeId};
   }
 
   expire(challengeId) {
