@@ -40,6 +40,10 @@ describe('Bundle Builder', () => {
     exampleBundle = createFullBundle(identityManager, {}, [exampleAsset, exampleEvent]);
   });
 
+  it('extractIdsFromEntries returns an array of entry ids', () => {
+    expect(new BundleBuilder().extractIdsFromEntries(exampleBundle.content.entries)).to.deep.equal([exampleAsset.assetId, exampleEvent.eventId]);
+  });
+
   describe('validating', () => {
     let mockIdentityManager;
 
@@ -48,7 +52,7 @@ describe('Bundle Builder', () => {
         validateSignature: sinon.stub(),
         checkHashMatches: sinon.stub()
       };
-      bundleBuilder = new BundleBuilder(mockIdentityManager);
+      bundleBuilder = new BundleBuilder(mockIdentityManager, {}, 2);
     });
 
     beforeEach(() => {
@@ -79,18 +83,18 @@ describe('Bundle Builder', () => {
     }
 
     it('checks if bundleId matches the hash of content (delegated to IdentityManager)', () => {
-      mockIdentityManager.checkHashMatches.withArgs(exampleBundle.bundleId, exampleBundle.content).returns(false);
+      mockIdentityManager.checkHashMatches.withArgs(exampleBundle.bundleId, exampleBundle.content.idData).returns(false);
       expect(() => bundleBuilder.validateBundle(exampleBundle)).to.throw(ValidationError);
       expect(mockIdentityManager.checkHashMatches).to.have.been
-        .calledWith(exampleBundle.bundleId, exampleBundle.content);
+        .calledWith(exampleBundle.bundleId, exampleBundle.content.idData);
     });
 
     it('checks if entriesHash matches the hash of entries (delegated to IdentityManager)', () => {
       mockIdentityManager.checkHashMatches.withArgs(exampleBundle.content.idData.entriesHash,
-        exampleBundle.content.entries).returns(false);
+        bundleBuilder.extractIdsFromEntries(exampleBundle.content.entries)).returns(false);
       expect(() => bundleBuilder.validateBundle(exampleBundle)).to.throw(ValidationError);
       expect(mockIdentityManager.checkHashMatches).to.have.been
-        .calledWith(exampleBundle.content.idData.entriesHash, exampleBundle.content.entries);
+        .calledWith(exampleBundle.content.idData.entriesHash, bundleBuilder.extractIdsFromEntries(exampleBundle.content.entries));
     });
 
     it('checks if signature is correct (delegated to IdentityManager)', () => {
@@ -98,7 +102,7 @@ describe('Bundle Builder', () => {
       expect(mockIdentityManager.validateSignature).to.have.been.calledOnce;
     });
 
-    it('checks if signature is incorrect (delegated to IdentityManager)', () => {
+    it('throws if signature is incorrect (delegated to IdentityManager)', () => {
       mockIdentityManager.validateSignature.throws(new ValidationError('Signature is invalid'));
 
       expect(() => bundleBuilder.validateBundle(exampleBundle)).to.throw(ValidationError);
@@ -118,6 +122,12 @@ describe('Bundle Builder', () => {
     it(`doesn't allow content fields other than idData, and signature`, () => {
       const brokenBundle = put(exampleBundle, 'content.extraField', 'abc');
       expect(() => bundleBuilder.validateBundle(brokenBundle)).to.throw(ValidationError);
+    });
+
+    it(`doesn't check hashes if bundle has no version set`, async () => {
+      const oldschoolBundle = pick(exampleBundle, 'content.idData.version');
+      bundleBuilder.validateBundle(oldschoolBundle);
+      expect(mockIdentityManager.checkHashMatches).to.be.not.called;
     });
   });
 
@@ -238,7 +248,7 @@ describe('Bundle Builder', () => {
     });
 
     it('orders the identity manager to calculate the entriesHash and put it into idData', () => {
-      expect(mockIdentityManager.calculateHash).to.have.been.calledWith(ret.content.entries);
+      expect(mockIdentityManager.calculateHash).to.have.been.calledWith(bundleBuilder.extractIdsFromEntries(ret.content.entries));
       expect(ret.content.idData.entriesHash).to.be.equal(mockHash1);
     });
 
@@ -248,7 +258,7 @@ describe('Bundle Builder', () => {
     });
 
     it('orders the identity manager to calculate the bundleId', () => {
-      expect(mockIdentityManager.calculateHash).to.have.been.calledWith(ret.content);
+      expect(mockIdentityManager.calculateHash).to.have.been.calledWith(ret.content.idData);
       expect(ret.bundleId).to.be.equal(mockHash2);
     });
   });
