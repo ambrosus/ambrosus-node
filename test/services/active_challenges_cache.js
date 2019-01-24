@@ -19,7 +19,6 @@ describe('Active Challenges Cache', () => {
     blockNumber: 1,
     logIndex: 0
   };
-  const anotherChallengeId = {challengeId: 'anotherChallengeId'};
 
   beforeEach(() => {
     activeChallengesCache = new ActiveChallengesCache();
@@ -50,11 +49,10 @@ describe('Active Challenges Cache', () => {
     });
 
     it('stores another challenge alongside existing one', () => {
-      activeChallengesCache.add(aChallengeWith(anotherChallengeId));
-
+      activeChallengesCache.add(aChallengeWith({challengeId: '0xbeef'}));
       expect(activeChallengesCache.activeChallenges).to.deep.include.members([
         aChallenge(),
-        aChallengeWith(anotherChallengeId)
+        aChallengeWith({challengeId: '0xbeef'})
       ]);
     });
   });
@@ -62,14 +60,14 @@ describe('Active Challenges Cache', () => {
   describe('when deleting', () => {
     beforeEach(() => {
       activeChallengesCache.add(aChallengeWith({challengeId: '0xc0ffee'}));
-      activeChallengesCache.add(aChallengeWith(anotherChallengeId));
+      activeChallengesCache.add(aChallengeWith({challengeId: '0xbeef'}));
     });
 
     it('deletes the right challenge', () => {
       activeChallengesCache.expire('0xc0ffee');
 
       expect(activeChallengesCache.activeChallenges).not.to.deep.include(aChallenge());
-      expect(activeChallengesCache.activeChallenges).to.deep.include(aChallengeWith(anotherChallengeId));
+      expect(activeChallengesCache.activeChallenges).to.deep.include(aChallengeWith({challengeId: '0xbeef'}));
     });
 
     it('does not throw if tried to delete not existing challenge', () => {
@@ -77,7 +75,7 @@ describe('Active Challenges Cache', () => {
 
       expect(activeChallengesCache.activeChallenges).to.deep.include.members([
         aChallenge(),
-        aChallengeWith(anotherChallengeId)
+        aChallengeWith({challengeId: '0xbeef'})
       ]);
     });
   });
