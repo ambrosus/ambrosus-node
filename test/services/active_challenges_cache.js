@@ -120,18 +120,24 @@ describe('Active Challenges Cache', () => {
   });
 
   it('returns active challenges as a sorted array', () => {
-    activeChallengesCache.add(aChallengeWith({challengeId: '0xbaddad', blockNumber: 4}));
-    activeChallengesCache.add(aChallengeWith({challengeId: '0xc0ffee', blockNumber: 1}));
-    activeChallengesCache.add(aChallengeWith({challengeId: '0xbeef', blockNumber: 3}));
-    activeChallengesCache.add(aChallengeWith({challengeId: '0xdeadface', blockNumber: 2, logIndex: 1}));
-    activeChallengesCache.add(aChallengeWith({challengeId: '0xcafebabe', blockNumber: 2, logIndex: 0}));
+    const challenge10 = aChallengeWith({challengeId: '0xc0ffee', blockNumber: 1, logIndex: 0});
+    const challenge20 = aChallengeWith({challengeId: '0xcafebabe', blockNumber: 2, logIndex: 0});
+    const challenge21 = aChallengeWith({challengeId: '0xdeadface', blockNumber: 2, logIndex: 1});
+    const challenge30 = aChallengeWith({challengeId: '0xbeef', blockNumber: 3, logIndex: 0});
+    const challenge40 = aChallengeWith({challengeId: '0xbaddad', blockNumber: 4, logIndex: 0});
+
+    activeChallengesCache.add(challenge30);
+    activeChallengesCache.add(challenge10);
+    activeChallengesCache.add(challenge40);
+    activeChallengesCache.add(challenge21);
+    activeChallengesCache.add(challenge20);
 
     expect(activeChallengesCache.activeChallenges).to.deep.equal([
-      aChallengeWith({challengeId: '0xc0ffee', blockNumber: 1}),
-      aChallengeWith({challengeId: '0xcafebabe', blockNumber: 2, logIndex: 0}),
-      aChallengeWith({challengeId: '0xdeadface', blockNumber: 2, logIndex: 1}),
-      aChallengeWith({challengeId: '0xbeef', blockNumber: 3}),
-      aChallengeWith({challengeId: '0xbaddad', blockNumber: 4})
+      challenge10,
+      challenge20,
+      challenge21,
+      challenge30,
+      challenge40
     ]);
   });
 
