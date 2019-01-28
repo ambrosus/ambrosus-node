@@ -1039,13 +1039,13 @@ Fetches a bundle by identifier
     The requested bundle
 
     + Attributes (object)
-        + bundleId (string) - Content-addressable identifier of the bundle.
+        + bundleId (string) - Content-addressable identifier of the bundle (keccak hash of content.idData field).
         + content (object) - All meaningful content of the bundle, base of bundleId.
             + signature (string) - elliptic-curve signature of the idData field signed with the creator's private address.
             + idData (object) - Information about an event.
                 + createdBy (string) - Public address of the event creator.
                 + timestamp (number) - UNIX timestamp of the event creation.
-                + entriesHash (string) - Hash calculated from the entries field.
+                + entriesHash (string) - Keccak hash calculated from an array of assetId/eventId of elements from entries array preserving initial order.
             + entries (array) - An array consisting of assets, events with public data and stubs of events with private data.
 
     + Body

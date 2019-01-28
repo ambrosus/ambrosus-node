@@ -60,7 +60,7 @@ export default class BundleBuilder {
         'content.entries'
       ])
       .fieldsConstrainedToSet(['content', 'bundleId', 'metadata'])
-      .fieldsConstrainedToSet(['idData', 'entries', 'signature', 'version'], 'content')
+      .fieldsConstrainedToSet(['idData', 'entries', 'signature'], 'content')
       .isNonNegativeInteger(['content.idData.timestamp']);
 
     if (bundle.content.idData.version) {
