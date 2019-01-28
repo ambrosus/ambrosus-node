@@ -23,13 +23,10 @@ export default class PeriodicWorker extends Worker {
   }
 
   async periodicWorkInternal() {
-    try {
-      await this.periodicWork();
-    } catch (err) {
-      this.logger.error(err);
-    }
+    const elapsedTimeInMilliseconds = await this.executeAndMeasureTime(this.periodicWork);
     if (this.started) {
-      this.timerId = setTimeout(() => this.periodicWorkInternal(), this.interval * 1000);
+      const interval = Math.max(1000, (this.interval * 1000) - elapsedTimeInMilliseconds);
+      this.timerId = setTimeout(() => this.periodicWorkInternal(), interval);
     }
   }
 
@@ -47,9 +44,18 @@ export default class PeriodicWorker extends Worker {
   }
 
   async beforeWorkLoop() {
-
   }
 
   async afterWorkLoop() {
+  }
+
+  async executeAndMeasureTime(functionToExecute) {
+    const startTime = Date.now();
+    try {
+      await functionToExecute();
+    } catch (err) {
+      this.logger.error(err);
+    }
+    return Date.now() - startTime;
   }
 }
