@@ -41,6 +41,7 @@ import UploadRepository from './services/upload_repository';
 import ChallengesRepository from './services/challenges_repository';
 import Migrator from './migrations/Migrator';
 import FailedChallengesCache from './services/failed_challenges_cache';
+import ActiveChallengesCache from './services/active_challenges_cache';
 import WorkerTaskTrackingRepository from './services/worker_task_tracking_repository';
 import * as Sentry from '@sentry/node';
 
@@ -95,8 +96,9 @@ class Builder {
       this.configWrapper,
       Sentry
     );
+    this.activeChallengesCache = new ActiveChallengesCache();
     this.challengesRepository = new ChallengesRepository(this.challengesWrapper,
-      this.configWrapper);
+      this.configWrapper, this.blockChainStateWrapper, this.activeChallengesCache);
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
     const {maximumEntityTimestampOvertake} = this.config;
     this.entityBuilder = new EntityBuilder(this.identityManager, maximumEntityTimestampOvertake);

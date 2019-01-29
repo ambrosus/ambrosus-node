@@ -9,71 +9,60 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 
 export default class ChallengesRepository {
-  constructor(challengesWrapper, configWrapper) {
+  constructor(challengesWrapper, configWrapper, blockchainStateWrapper, activeChallengesCache) {
     this.challengesWrapper = challengesWrapper;
     this.configWrapper = configWrapper;
+    this.blockchainStateWrapper = blockchainStateWrapper;
+    this.activeChallengesCache = activeChallengesCache;
+    this.lastSavedBlock = 0;
   }
 
-  filterOutFinishedChallenges(allChallenges, resolvedChallenges, timedOutChallenges, ownAddress) {
-    const timedOutSet = new Set(timedOutChallenges.map(({challengeId}) => challengeId));
-    const startedCount = allChallenges.reduce(
-      (acc, {challengeId, count}) => {
-        acc[challengeId] = count;
-        return acc;
-      },
-      {}
-    );
-    const unresolvedCount = resolvedChallenges.reduce(
-      (acc, {challengeId, resolverId}) => {
-        if (resolverId === ownAddress) {
-          acc[challengeId] = 0;
-        } else {
-          acc[challengeId] -= 1;
-        }
-        return acc;
-      },
-      startedCount
-    );
-    const filtered = allChallenges.filter(({challengeId}) => unresolvedCount[challengeId] > 0 && !timedOutSet.has(challengeId));
-    return filtered;
-  }
-
-  extractChallengeFromEvent(challengeEvents, outputFields) {
+  prepareChallengeEvent(challengeEvents, outputFields) {
     return challengeEvents.map(
-      ({blockNumber, returnValues}) => outputFields.reduce(
+      ({blockNumber, logIndex, returnValues}) => outputFields.reduce(
         (acc, fieldName) => {
           acc[fieldName] = returnValues[fieldName];
           return acc;
         },
-        {blockNumber}
+        {blockNumber, logIndex}
       )
     );
   }
 
-  sortChallenges(challenges) {
-    return challenges.sort((left, right) => left.blockNumber - right.blockNumber);
+  async ongoingChallenges() {
+    const {fromBlock, currentBlock} = await this.getBlockInfo();
+    await this.updateActiveChallengesCache(fromBlock, currentBlock);
+    this.updateBlockInfo(currentBlock);
+    return this.activeChallengesCache.activeChallenges;
   }
 
-  async ongoingChallenges() {
-    const challengeDuration = await this.configWrapper.challengeDuration();
-    const fromBlock = await this.challengesWrapper.earliestMeaningfulBlock(challengeDuration);
-    const allChallengeEvents = await this.challengesWrapper.challenges(fromBlock);
-    const resolvedChallengeEvents = await this.challengesWrapper.resolvedChallenges(fromBlock);
-    const timedOutChallengeEvents = await this.challengesWrapper.timedOutChallenges(fromBlock);
+  async updateActiveChallengesCache(fromBlock, currentBlock) {
+    const issuedChallengeEvents = await this.challengesWrapper.challenges(fromBlock, currentBlock);
+    const resolvedChallengeEvents = await this.challengesWrapper.resolvedChallenges(fromBlock, currentBlock);
+    const timedOutChallengeEvents = await this.challengesWrapper.timedOutChallenges(fromBlock, currentBlock);
 
-    const startedChallenges = this.extractChallengeFromEvent(allChallengeEvents, ['challengeId', 'sheltererId', 'bundleId', 'count']);
-    const resolvedChallenges = this.extractChallengeFromEvent(resolvedChallengeEvents, ['challengeId', 'resolverId']);
-    const timedOutChallenges = this.extractChallengeFromEvent(timedOutChallengeEvents, ['challengeId']);
-    const filtered = this.filterOutFinishedChallenges(
-      startedChallenges,
-      resolvedChallenges,
-      timedOutChallenges,
-      this.challengesWrapper.defaultAddress
-    );
-    const sorted = this.sortChallenges(
-      filtered
-    );
-    return sorted;
+    const startedChallenges = this.prepareChallengeEvent(issuedChallengeEvents, ['challengeId', 'sheltererId', 'bundleId', 'count']);
+    const resolvedChallenges = this.prepareChallengeEvent(resolvedChallengeEvents, ['challengeId']);
+    const timedOutChallenges = this.prepareChallengeEvent(timedOutChallengeEvents, ['challengeId']);
+    this.activeChallengesCache.applyIncomingChallengeEvents(startedChallenges, resolvedChallenges, timedOutChallenges);
+  }
+
+  async getBlockInfo() {
+    const fromBlock = await this.getFromBlock();
+    const currentBlock = await this.blockchainStateWrapper.getCurrentBlockNumber();
+    return {fromBlock, currentBlock};
+  }
+
+  async getFromBlock() {
+    if (this.lastSavedBlock > 0) {
+      return this.lastSavedBlock + 1;
+    }
+    const challengeDuration = await this.configWrapper.challengeDuration();
+    return this.challengesWrapper.earliestMeaningfulBlock(challengeDuration);
+  }
+
+  async updateBlockInfo(currentBlock) {
+    this.lastSavedBlock = currentBlock;
   }
 
   async resolveChallenge(challengeId) {
