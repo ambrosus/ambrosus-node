@@ -48,15 +48,17 @@ export default class ChallengesRepository {
   }
 
   async getBlockInfo() {
-    let fromBlock;
-    if (this.lastSavedBlock > 0) {
-      fromBlock = this.lastSavedBlock + 1;
-    } else {
-      const challengeDuration = await this.configWrapper.challengeDuration();
-      fromBlock = await this.challengesWrapper.earliestMeaningfulBlock(challengeDuration);
-    }
+    const fromBlock = await this.getFromBlock();
     const currentBlock = await this.blockchainStateWrapper.getCurrentBlockNumber();
     return {fromBlock, currentBlock};
+  }
+
+  async getFromBlock() {
+    if (this.lastSavedBlock > 0) {
+      return this.lastSavedBlock + 1;
+    }
+    const challengeDuration = await this.configWrapper.challengeDuration();
+    return this.challengesWrapper.earliestMeaningfulBlock(challengeDuration);
   }
 
   async updateBlockInfo(currentBlock) {
