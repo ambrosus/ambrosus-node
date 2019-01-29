@@ -22,17 +22,18 @@ describe('Periodic Worker', () => {
   let beforeWorkLoopSpy;
   let afterWorkLoopSpy;
   let periodicWorkStub;
-  const interval = 10;
+  let periodicWorkDuration;
+  const interval = 10000;
 
   before(() => {
     clock = sinon.useFakeTimers();
   });
 
   beforeEach(() => {
-    worker = new PeriodicWorker(interval, new EmptyLogger());
+    worker = new PeriodicWorker((interval / 1000), new EmptyLogger());
     beforeWorkLoopSpy = sinon.spy(worker, 'beforeWorkLoop');
     afterWorkLoopSpy = sinon.spy(worker, 'afterWorkLoop');
-    periodicWorkStub = sinon.stub(worker, 'periodicWork');
+    periodicWorkStub = sinon.stub(worker, 'periodicWork').callsFake(() => clock.tick(periodicWorkDuration));
   });
 
   afterEach(() => {
@@ -70,17 +71,45 @@ describe('Periodic Worker', () => {
   describe('periodicWorkInternal', () => {
     beforeEach(async () => {
       worker.started = true;
-      await worker.periodicWorkInternal();
     });
 
     it('calls periodicWork', async () => {
+      await worker.periodicWorkInternal();
       expect(periodicWorkStub).to.be.calledOnce;
     });
 
     it('calls itself after interval has passed', async () => {
+      periodicWorkDuration = 0;
+      await worker.periodicWorkInternal();
       const periodicWorkInternalStub = sinon.stub(worker, 'periodicWorkInternal');
+
       expect(periodicWorkInternalStub).to.be.not.called;
-      clock.tick((interval * 1000) - 1);
+      clock.tick(interval - 1);
+      expect(periodicWorkInternalStub).to.be.not.called;
+      clock.tick(1);
+      expect(periodicWorkInternalStub).to.be.calledOnce;
+    });
+
+    it('work duration is subtracted from interval length', async () => {
+      const intervalPart = (worker.minimumInterval + 1);
+      periodicWorkDuration = interval - intervalPart;
+      await worker.periodicWorkInternal();
+      const periodicWorkInternalStub = sinon.stub(worker, 'periodicWorkInternal');
+
+      expect(periodicWorkInternalStub).to.be.not.called;
+      clock.tick(intervalPart - 1);
+      expect(periodicWorkInternalStub).to.be.not.called;
+      clock.tick(1);
+      expect(periodicWorkInternalStub).to.be.calledOnce;
+    });
+
+    it('even if work duration is significant, interval do not drop below configured minimum', async () => {
+      periodicWorkDuration = interval;
+      await worker.periodicWorkInternal();
+      const periodicWorkInternalStub = sinon.stub(worker, 'periodicWorkInternal');
+
+      expect(periodicWorkInternalStub).to.be.not.called;
+      clock.tick(worker.minimumInterval - 1);
       expect(periodicWorkInternalStub).to.be.not.called;
       clock.tick(1);
       expect(periodicWorkInternalStub).to.be.calledOnce;

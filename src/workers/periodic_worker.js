@@ -15,6 +15,7 @@ export default class PeriodicWorker extends Worker {
     super(logger);
     this.interval = interval;
     this.timerId = null;
+    this.minimumInterval = 1000;
   }
 
   async work() {
@@ -25,7 +26,7 @@ export default class PeriodicWorker extends Worker {
   async periodicWorkInternal() {
     const elapsedTimeInMilliseconds = await this.executeAndMeasureTime(this.periodicWork);
     if (this.started) {
-      const interval = Math.max(1000, (this.interval * 1000) - elapsedTimeInMilliseconds);
+      const interval = Math.max(this.minimumInterval, (this.interval * 1000) - elapsedTimeInMilliseconds);
       this.timerId = setTimeout(() => this.periodicWorkInternal(), interval);
     }
   }
