@@ -20,6 +20,8 @@ import StringReadStream from '../../src/utils/string_read_stream';
 const {expect} = chai;
 chai.use(chaiAsPromised);
 
+const BUNDLE_VERSION = 2;
+
 const asyncPipe = async (readStream, writeStream) => new Promise((resolve, reject) => {
   writeStream.on('finish', () => resolve());
   writeStream.on('error', (err) => reject(err));
@@ -54,14 +56,15 @@ describe('Bundle Repository', () => {
       const exampleBundle = put(createBundle(), 'bundleId', exampleBundleId);
       await storage.storeBundle(exampleBundle, storagePeriods);
       await expect(storage.getBundle(exampleBundleId)).to.eventually.deep.equal(exampleBundle);
-      await expect(storage.getBundleMetadata(exampleBundleId)).to.eventually.deep.equal({bundleId: exampleBundleId, storagePeriods});
-      await storage.storeBundleProofMetadata(exampleBundleId, 10, 50, txHash);
+      await expect(storage.getBundleMetadata(exampleBundleId)).to.eventually.deep.equal({bundleId: exampleBundleId, storagePeriods, version: BUNDLE_VERSION});
+      await storage.storeBundleProofMetadata(exampleBundleId, 10, 50, txHash, BUNDLE_VERSION);
       await expect(storage.getBundle(exampleBundleId), 'bundle after proof').to.eventually.deep.equal(exampleBundle);
       await expect(storage.getBundleMetadata(exampleBundleId), 'bundle metadata after proof').to.eventually.deep.equal({
         bundleId: exampleBundleId,
         bundleProofBlock: 10,
         bundleTransactionHash: txHash,
         bundleUploadTimestamp: 50,
+        version: BUNDLE_VERSION,
         storagePeriods
       });
     });

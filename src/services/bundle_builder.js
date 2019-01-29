@@ -8,12 +8,12 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import validateAndCast from '../utils/validations';
+import {ValidationError} from '../errors/errors';
 
 export default class BundleBuilder {
-  constructor(identityManager, entityBuilder, bundleVersion) {
+  constructor(identityManager, entityBuilder) {
     this.identityManager = identityManager;
     this.entityBuilder = entityBuilder;
-    this.bundleVersion = bundleVersion;
   }
 
   extractIdsFromEntries(entries) {
@@ -31,8 +31,7 @@ export default class BundleBuilder {
     const idData = {
       createdBy,
       entriesHash,
-      timestamp,
-      version: this.bundleVersion
+      timestamp
     };
     const signature = this.identityManager.sign(secret, idData);
     const content = {
@@ -48,7 +47,7 @@ export default class BundleBuilder {
     };
   }
 
-  validateBundle(bundle) {
+  validateBundle(bundle, version) {
     const validator = validateAndCast(bundle)
       .required([
         'bundleId',
@@ -63,22 +62,33 @@ export default class BundleBuilder {
       .fieldsConstrainedToSet(['idData', 'entries', 'signature'], 'content')
       .isNonNegativeInteger(['content.idData.timestamp']);
 
-    if (bundle.content.idData.version) {
-      validator.validate(
-        ['bundleId'],
-        (hash) => this.identityManager.checkHashMatches(hash, bundle.content.idData),
-        `bundleId value doesn't match the content hash`
-      ).validate(
-        ['content.idData.entriesHash'],
-        (hash) => this.identityManager.checkHashMatches(hash, this.extractIdsFromEntries(bundle.content.entries)),
-        `entriesHash value doesn't match the entries hash`
-      );
+    switch (version) {
+      case 1:
+        this.validateBundleHashes(validator, bundle.content, bundle.content.entries);
+        break;
+      case 2:
+        this.validateBundleHashes(validator, bundle.content.idData, this.extractIdsFromEntries(bundle.content.entries));
+        break;
+      default:
+        throw new ValidationError(`Unexpected bundle version: ${version}`);
     }
 
     this.identityManager.validateSignature(
       bundle.content.idData.createdBy,
       bundle.content.signature,
       bundle.content.idData
+    );
+  }
+
+  validateBundleHashes(validator, bundleIdHashedData, entriesHashedData) {
+    validator.validate(
+      ['bundleId'],
+      (hash) => this.identityManager.checkHashMatches(hash, bundleIdHashedData),
+      `bundleId value doesn't match the content hash`
+    ).validate(
+      ['content.idData.entriesHash'],
+      (hash) => this.identityManager.checkHashMatches(hash, entriesHashedData),
+      `entriesHash value doesn't match the entries hash`
     );
   }
 

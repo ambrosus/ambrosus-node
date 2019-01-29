@@ -9,6 +9,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {uploadJSONToGridFSBucket, downloadJSONFromGridFSBucket, isFileInGridFSBucket} from '../utils/db_utils';
 import {GridFSBucket} from 'mongodb';
 
+const BUNDLE_VERSION = 2;
+
 export default class BundleRepository {
   constructor(db) {
     this.db = db;
@@ -25,7 +27,7 @@ export default class BundleRepository {
       await uploadJSONToGridFSBucket(bundleId, bundle, this.bundlesBucket);
     }
     if (await this.db.collection('bundle_metadata').findOne({bundleId}) === null) {
-      await this.db.collection('bundle_metadata').insertOne({bundleId, storagePeriods});
+      await this.db.collection('bundle_metadata').insertOne({bundleId, storagePeriods, version: BUNDLE_VERSION});
     }
   }
 
@@ -44,12 +46,13 @@ export default class BundleRepository {
     return uploadStream;
   }
 
-  async storeBundleProofMetadata(bundleId, proofBlock, timestamp, txHash) {
+  async storeBundleProofMetadata(bundleId, proofBlock, timestamp, txHash, version) {
     await this.db.collection('bundle_metadata').updateOne({bundleId}, {
       $set: {
         bundleTransactionHash: txHash,
         bundleProofBlock: proofBlock,
-        bundleUploadTimestamp: timestamp
+        bundleUploadTimestamp: timestamp,
+        version
       }
     });
   }

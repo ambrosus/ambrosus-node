@@ -40,7 +40,6 @@ export const createBundle = (fields, entries = []) => ({
     idData: {
       createdBy: pkPair.address,
       timestamp: 1548345376,
-      version: 2,
       ...fields
     },
     entries: [

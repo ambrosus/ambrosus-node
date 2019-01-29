@@ -252,7 +252,7 @@ export default class DataModelEngine {
 
     try {
       const bundle = await this.bundleRepository.getBundle(bundleId);
-      this.bundleBuilder.validateBundle(bundle);
+      this.bundleBuilder.validateBundle(bundle, complementedMetadata.version);
       await this.uploadRepository.verifyBundle(bundle);
     } catch (err) {
       await this.bundleRepository.removeBundle(bundleId);
@@ -263,7 +263,8 @@ export default class DataModelEngine {
       complementedMetadata.bundleId,
       complementedMetadata.bundleProofBlock,
       complementedMetadata.bundleUploadTimestamp,
-      complementedMetadata.bundleTransactionHash
+      complementedMetadata.bundleTransactionHash,
+      complementedMetadata.version
     );
 
     return complementedMetadata;
