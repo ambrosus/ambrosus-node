@@ -119,7 +119,7 @@ describe('Periodic Worker', () => {
   describe('stop', () => {
     beforeEach(async () => {
       await worker.start();
-      clock.tick(interval * 1000);
+      clock.tick(interval);
       await worker.stop();
     });
 
@@ -133,8 +133,8 @@ describe('Periodic Worker', () => {
 
     it('stops execution of the periodicWork method', () => {
       expect(periodicWorkStub).to.have.been.calledTwice;
-      clock.tick(interval * 1000);
-      clock.tick(interval * 1000);
+      clock.tick(interval);
+      clock.tick(interval);
       expect(periodicWorkStub).to.have.been.calledTwice;
     });
   });
