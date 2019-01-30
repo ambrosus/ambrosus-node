@@ -31,7 +31,7 @@ export default class BundleRepository {
     }
   }
 
-  async openBundleWriteStream(bundleId, storagePeriods) {
+  async openBundleWriteStream(bundleId, storagePeriods, version) {
     const uploadStream = this.bundlesBucket.openUploadStream(
       bundleId,
       {
@@ -40,19 +40,18 @@ export default class BundleRepository {
     );
     uploadStream.on('finish', async () => {
       if (await this.db.collection('bundle_metadata').findOne({bundleId}) === null) {
-        await this.db.collection('bundle_metadata').insertOne({bundleId, storagePeriods});
+        await this.db.collection('bundle_metadata').insertOne({bundleId, storagePeriods, version});
       }
     });
     return uploadStream;
   }
 
-  async storeBundleProofMetadata(bundleId, proofBlock, timestamp, txHash, version) {
+  async storeBundleProofMetadata(bundleId, proofBlock, timestamp, txHash) {
     await this.db.collection('bundle_metadata').updateOne({bundleId}, {
       $set: {
         bundleTransactionHash: txHash,
         bundleProofBlock: proofBlock,
-        bundleUploadTimestamp: timestamp,
-        version
+        bundleUploadTimestamp: timestamp
       }
     });
   }

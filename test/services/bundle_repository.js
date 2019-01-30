@@ -33,6 +33,7 @@ describe('Bundle Repository', () => {
   let client;
   let storage;
   const storagePeriods = 5;
+  const version = 2;
 
   before(async () => {
     ({db, client} = await connectToMongo(config));
@@ -57,7 +58,7 @@ describe('Bundle Repository', () => {
       await storage.storeBundle(exampleBundle, storagePeriods);
       await expect(storage.getBundle(exampleBundleId)).to.eventually.deep.equal(exampleBundle);
       await expect(storage.getBundleMetadata(exampleBundleId)).to.eventually.deep.equal({bundleId: exampleBundleId, storagePeriods, version: BUNDLE_VERSION});
-      await storage.storeBundleProofMetadata(exampleBundleId, 10, 50, txHash, BUNDLE_VERSION);
+      await storage.storeBundleProofMetadata(exampleBundleId, 10, 50, txHash);
       await expect(storage.getBundle(exampleBundleId), 'bundle after proof').to.eventually.deep.equal(exampleBundle);
       await expect(storage.getBundleMetadata(exampleBundleId), 'bundle metadata after proof').to.eventually.deep.equal({
         bundleId: exampleBundleId,
@@ -104,10 +105,10 @@ describe('Bundle Repository', () => {
     it('stores the streamed bundle', async () => {
       const exampleBundle = put(createBundle(), 'bundleId', exampleBundleId);
       const exampleBundleReadStream = new StringReadStream(JSON.stringify(exampleBundle));
-      const writeStream = await storage.openBundleWriteStream(exampleBundleId, storagePeriods);
+      const writeStream = await storage.openBundleWriteStream(exampleBundleId, storagePeriods, version);
       await asyncPipe(exampleBundleReadStream, writeStream);
       await expect(storage.getBundle(exampleBundleId)).to.eventually.deep.equal(exampleBundle);
-      await expect(storage.getBundleMetadata(exampleBundleId)).to.eventually.deep.equal({bundleId: exampleBundleId, storagePeriods});
+      await expect(storage.getBundleMetadata(exampleBundleId)).to.eventually.deep.equal({bundleId: exampleBundleId, storagePeriods, version});
     });
 
     it(`discards the bundle if the write stream gets aborted`, async () => {

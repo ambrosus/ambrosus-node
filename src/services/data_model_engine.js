@@ -241,7 +241,7 @@ export default class DataModelEngine {
 
     try {
       const downloadStream = await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
-      const writeStream = await this.bundleRepository.openBundleWriteStream(bundleId, complementedMetadata.storagePeriods);
+      const writeStream = await this.bundleRepository.openBundleWriteStream(bundleId, complementedMetadata.storagePeriods, complementedMetadata.version);
       downloadStream.on('error', (err) => {
         writeStream.abort(err);
       });
@@ -263,8 +263,7 @@ export default class DataModelEngine {
       complementedMetadata.bundleId,
       complementedMetadata.bundleProofBlock,
       complementedMetadata.bundleUploadTimestamp,
-      complementedMetadata.bundleTransactionHash,
-      complementedMetadata.version
+      complementedMetadata.bundleTransactionHash
     );
 
     return complementedMetadata;
