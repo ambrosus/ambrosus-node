@@ -87,32 +87,24 @@ describe('Bundle Builder', () => {
       it('checks if bundleId matches the hash of content (delegated to IdentityManager)', () => {
         mockIdentityManager.checkHashMatches.withArgs(exampleBundle.bundleId, exampleBundle.content).returns(false);
         expect(() => bundleBuilder.validateBundle(exampleBundle, 1)).to.throw(ValidationError);
-        expect(mockIdentityManager.checkHashMatches).to.have.been
-          .calledWith(exampleBundle.bundleId, exampleBundle.content);
       });
 
       it('checks if entriesHash matches the hash of entries (delegated to IdentityManager)', () => {
         mockIdentityManager.checkHashMatches.withArgs(exampleBundle.content.idData.entriesHash, exampleBundle.content.entries).returns(false);
         expect(() => bundleBuilder.validateBundle(exampleBundle, 1)).to.throw(ValidationError);
-        expect(mockIdentityManager.checkHashMatches).to.have.been
-          .calledWith(exampleBundle.content.idData.entriesHash, exampleBundle.content.entries);
       });
     });
 
     describe('Version 2', () => {
-      it('checks if bundleId matches the hash of content (delegated to IdentityManager)', () => {
+      it('checks if bundleId matches the hash of idData (delegated to IdentityManager)', () => {
         mockIdentityManager.checkHashMatches.withArgs(exampleBundle.bundleId, exampleBundle.content.idData).returns(false);
         expect(() => bundleBuilder.validateBundle(exampleBundle, 2)).to.throw(ValidationError);
-        expect(mockIdentityManager.checkHashMatches).to.have.been
-          .calledWith(exampleBundle.bundleId, exampleBundle.content.idData);
       });
 
-      it('checks if entriesHash matches the hash of entries (delegated to IdentityManager)', () => {
+      it(`checks if entriesHash matches the hash of entries' ids (delegated to IdentityManager)`, () => {
         mockIdentityManager.checkHashMatches.withArgs(exampleBundle.content.idData.entriesHash,
           bundleBuilder.extractIdsFromEntries(exampleBundle.content.entries)).returns(false);
         expect(() => bundleBuilder.validateBundle(exampleBundle, 2)).to.throw(ValidationError);
-        expect(mockIdentityManager.checkHashMatches).to.have.been
-          .calledWith(exampleBundle.content.idData.entriesHash, bundleBuilder.extractIdsFromEntries(exampleBundle.content.entries));
       });
     });
 
