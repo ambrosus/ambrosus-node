@@ -91,19 +91,18 @@ describe('Periodic Worker', () => {
     });
 
     it('work duration is subtracted from interval length', async () => {
-      const intervalPart = (worker.minimumInterval + 1);
-      periodicWorkDuration = interval - intervalPart;
+      periodicWorkDuration = 8999;
       await worker.periodicWorkInternal();
       const periodicWorkInternalStub = sinon.stub(worker, 'periodicWorkInternal');
 
       expect(periodicWorkInternalStub).to.be.not.called;
-      clock.tick(intervalPart - 1);
+      clock.tick(1000);
       expect(periodicWorkInternalStub).to.be.not.called;
       clock.tick(1);
       expect(periodicWorkInternalStub).to.be.calledOnce;
     });
 
-    it('even if work duration is significant, interval do not drop below configured minimum', async () => {
+    it('even if work duration is significant, interval does not drop below configured minimum', async () => {
       periodicWorkDuration = interval;
       await worker.periodicWorkInternal();
       const periodicWorkInternalStub = sinon.stub(worker, 'periodicWorkInternal');
