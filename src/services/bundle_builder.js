@@ -47,7 +47,7 @@ export default class BundleBuilder {
     };
   }
 
-  validateBundle(bundle, version) {
+  validateBundle(bundle, bundleVersion, bundleItemsCountLimit) {
     const validator = validateAndCast(bundle)
       .required([
         'bundleId',
@@ -60,9 +60,10 @@ export default class BundleBuilder {
       ])
       .fieldsConstrainedToSet(['content', 'bundleId', 'metadata'])
       .fieldsConstrainedToSet(['idData', 'entries', 'signature'], 'content')
-      .isNonNegativeInteger(['content.idData.timestamp']);
+      .isNonNegativeInteger(['content.idData.timestamp'])
+      .validate(['content.entries'], (entries) => entries.length <= bundleItemsCountLimit, 'Bundle size surpasses the limit'); // TODO: test
 
-    switch (version) {
+    switch (bundleVersion) {
       case 1:
         this.validateBundleHashes(validator, bundle.content, bundle.content.entries);
         break;
@@ -70,7 +71,7 @@ export default class BundleBuilder {
         this.validateBundleHashes(validator, bundle.content.idData, this.extractIdsFromEntries(bundle.content.entries));
         break;
       default:
-        throw new ValidationError(`Unexpected bundle version: ${version}`);
+        throw new ValidationError(`Unexpected bundle version: ${bundleVersion}`);
     }
 
     this.identityManager.validateSignature(

@@ -16,7 +16,7 @@ import {pick, put} from '../../src/utils/dict_utils';
 import DataModelEngine from '../../src/services/data_model_engine';
 import {NotFoundError, PermissionError, ValidationError} from '../../src/errors/errors';
 
-import {createAsset, createBundle, createEvent} from '../fixtures/assets_events';
+import {createAsset, createBundle, createEvent, createFullBundle} from '../fixtures/assets_events';
 import {account, accountWithSecret, addAccountRequest, adminAccount, adminAccountWithSecret} from '../fixtures/account';
 
 import {createWeb3} from '../../src/utils/web3_tools';
@@ -28,6 +28,11 @@ import createTokenFor from '../fixtures/create_token_for';
 import resetHistory from '../helpers/reset_history';
 import allPermissions from '../../src/utils/all_permissions';
 import StringWriteStream from '../../src/utils/string_write_stream';
+import BundleRepository from '../../src/services/bundle_repository';
+import {connectToMongo} from '../../src/utils/db_utils';
+import config from '../../config/config';
+import BundleBuilder from '../../src/services/bundle_builder';
+import EntityBuilder from '../../src/services/entity_builder';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -1187,7 +1192,12 @@ describe('Data Model Engine', () => {
       mockUploadRepository = {
         ensureBundleIsUploaded: sinon.stub().resolves({})
       };
-      mockUploadRepository.ensureBundleIsUploaded.withArgs('bundle1', 2).resolves({blockNumber, transactionHash: txHash, timestamp: now, uploadResult: 'Success'});
+      mockUploadRepository.ensureBundleIsUploaded.withArgs('bundle1', 2).resolves({
+        blockNumber,
+        transactionHash: txHash,
+        timestamp: now,
+        uploadResult: 'Success'
+      });
       mockUploadRepository.ensureBundleIsUploaded.withArgs('bundle3', 6).rejects(bundle3Error);
 
       modelEngine = new DataModelEngine({
@@ -1248,7 +1258,11 @@ describe('Data Model Engine', () => {
         bundleRepository: mockBundleRepository
       });
 
-      await modelEngine.uploadAcceptedBundleCandidates({success: async () => {}, fail: async () => {}});
+      await modelEngine.uploadAcceptedBundleCandidates({
+        success: async () => {
+        }, fail: async () => {
+        }
+      });
       expect(mockUploadRepository.ensureBundleIsUploaded).to.have.callCount(1);
       expect(mockEntityRepository.storeBundleProofMetadata).not.to.be.have.been.calledWith('bundle2', blockNumber, txHash);
     });
@@ -1295,7 +1309,8 @@ describe('Data Model Engine', () => {
 
       mockUploadRepository = {
         verifyBundle: sinon.stub().resolves(),
-        complementBundleMetadata: sinon.stub().resolves(complementedBundleMetadata)
+        complementBundleMetadata: sinon.stub().resolves(complementedBundleMetadata),
+        bundleItemsCountLimit: sinon.stub().resolves(1000)
       };
 
       mockBundleBuilder = {
@@ -1374,6 +1389,81 @@ describe('Data Model Engine', () => {
       expect(mockBundleRepository.getBundle).to.have.been.calledOnceWith(bundleId);
       expect(mockUploadRepository.verifyBundle).to.have.been.calledOnceWith(downloadedBundle);
       expect(mockBundleRepository.removeBundle).to.have.been.calledOnceWith(bundleId);
+    });
+  });
+
+  describe('downloading with db', () => {
+    let db;
+    let client;
+    let mockBundleDownloader;
+    let modelEngine;
+    let bundleRepository;
+    let complementedBundleMetadata;
+    let downloadedBundle;
+
+    beforeEach(async () => {
+      ({db, client} = await connectToMongo(config));
+
+      downloadedBundle = createFullBundle(identityManager, {}, []);
+
+      const downloadedBundleMetadata = {
+        bundleId: downloadedBundle.bundleId
+      };
+
+      complementedBundleMetadata = {
+        bundleId: downloadedBundle.bundleId,
+        storagePeriods: 1,
+        bundleProofBlock: 1,
+        bundleUploadTimestamp: 100000,
+        bundleTransactionHash: '0xdeadface',
+        version: 2
+      };
+
+      const mockReadStream = new StringReadStream(JSON.stringify(downloadedBundle), 10);
+      const mockUploadRepository = {
+        verifyBundle: sinon.stub().resolves(),
+        complementBundleMetadata: sinon.stub().resolves(complementedBundleMetadata),
+        bundleItemsCountLimit: sinon.stub().resolves(1000)
+      };
+      mockBundleDownloader = {
+        openBundleDownloadStream: sinon.stub().resolves(mockReadStream),
+        downloadBundleMetadata: sinon.stub().resolves(downloadedBundleMetadata)
+      };
+      const mockRolesRepository = {
+        nodeUrl: sinon.stub().resolves('')
+      };
+      bundleRepository = new BundleRepository(db);
+
+
+      const bundleBuilder = new BundleBuilder(identityManager, new EntityBuilder(identityManager, 1));
+      modelEngine = new DataModelEngine({
+        bundleDownloader: mockBundleDownloader,
+        bundleRepository,
+        uploadRepository: mockUploadRepository,
+        rolesRepository: mockRolesRepository,
+        bundleBuilder
+      });
+    });
+
+    after(async () => {
+      client.close();
+    });
+
+    it('save to db', async () => {
+      const metadata = await modelEngine.downloadBundle(downloadedBundle.bundleId, '');
+
+      const bundleInDb = await bundleRepository.getBundle(downloadedBundle.bundleId);
+      expect(metadata).to.deep.eq(complementedBundleMetadata);
+      expect(bundleInDb).to.deep.eq(downloadedBundle);
+    });
+
+    it('validate', async () => {
+      const mockReadStream = new StringReadStream(JSON.stringify(pick(downloadedBundle, 'content.idData.timestamp'), 10));
+      mockBundleDownloader.openBundleDownloadStream.resolves(mockReadStream);
+      await expect(modelEngine.downloadBundle(downloadedBundle.bundleId, '')).be.rejectedWith(Error, 'Bundle failed to validate: Invalid data: content.idData.timestamp should not be empty');
+
+      const bundleInDb = await bundleRepository.getBundle(downloadedBundle.bundleId);
+      expect(bundleInDb).to.be.null;
     });
   });
 

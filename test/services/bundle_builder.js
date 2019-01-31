@@ -33,6 +33,7 @@ describe('Bundle Builder', () => {
   let exampleBundle;
   let bundleBuilder;
   const exampleVersion = 2;
+  const bundleItemsCountLimit = 1000;
 
   before(async () => {
     identityManager = new IdentityManager(await createWeb3());
@@ -64,7 +65,7 @@ describe('Bundle Builder', () => {
     });
 
     it('passes for proper bundle', () => {
-      expect(() => bundleBuilder.validateBundle(exampleBundle, exampleVersion)).to.not.throw();
+      expect(() => bundleBuilder.validateBundle(exampleBundle, exampleVersion, bundleItemsCountLimit)).to.not.throw();
     });
 
     for (const field of [
@@ -79,60 +80,60 @@ describe('Bundle Builder', () => {
       // eslint-disable-next-line no-loop-func
       it(`throws if the ${field} field is missing`, () => {
         const brokenBundle = pick(exampleBundle, field);
-        expect(() => bundleBuilder.validateBundle(brokenBundle, exampleVersion)).to.throw(ValidationError);
+        expect(() => bundleBuilder.validateBundle(brokenBundle, exampleVersion, bundleItemsCountLimit)).to.throw(ValidationError);
       });
     }
 
     describe('Version 1', () => {
       it('checks if bundleId matches the hash of content (delegated to IdentityManager)', () => {
         mockIdentityManager.checkHashMatches.withArgs(exampleBundle.bundleId, exampleBundle.content).returns(false);
-        expect(() => bundleBuilder.validateBundle(exampleBundle, 1)).to.throw(ValidationError);
+        expect(() => bundleBuilder.validateBundle(exampleBundle, 1, bundleItemsCountLimit)).to.throw(ValidationError);
       });
 
       it('checks if entriesHash matches the hash of entries (delegated to IdentityManager)', () => {
         mockIdentityManager.checkHashMatches.withArgs(exampleBundle.content.idData.entriesHash, exampleBundle.content.entries).returns(false);
-        expect(() => bundleBuilder.validateBundle(exampleBundle, 1)).to.throw(ValidationError);
+        expect(() => bundleBuilder.validateBundle(exampleBundle, 1, bundleItemsCountLimit)).to.throw(ValidationError);
       });
     });
 
     describe('Version 2', () => {
       it('checks if bundleId matches the hash of idData (delegated to IdentityManager)', () => {
         mockIdentityManager.checkHashMatches.withArgs(exampleBundle.bundleId, exampleBundle.content.idData).returns(false);
-        expect(() => bundleBuilder.validateBundle(exampleBundle, 2)).to.throw(ValidationError);
+        expect(() => bundleBuilder.validateBundle(exampleBundle, 2, bundleItemsCountLimit)).to.throw(ValidationError);
       });
 
       it(`checks if entriesHash matches the hash of entries' ids (delegated to IdentityManager)`, () => {
         mockIdentityManager.checkHashMatches.withArgs(exampleBundle.content.idData.entriesHash,
           bundleBuilder.extractIdsFromEntries(exampleBundle.content.entries)).returns(false);
-        expect(() => bundleBuilder.validateBundle(exampleBundle, 2)).to.throw(ValidationError);
+        expect(() => bundleBuilder.validateBundle(exampleBundle, 2, bundleItemsCountLimit)).to.throw(ValidationError);
       });
     });
 
     it('checks if signature is correct (delegated to IdentityManager)', () => {
-      expect(() => bundleBuilder.validateBundle(exampleBundle, exampleVersion)).to.not.throw();
+      expect(() => bundleBuilder.validateBundle(exampleBundle, exampleVersion, bundleItemsCountLimit)).to.not.throw();
       expect(mockIdentityManager.validateSignature).to.have.been.calledOnce;
     });
 
     it('throws if signature is incorrect (delegated to IdentityManager)', () => {
       mockIdentityManager.validateSignature.throws(new ValidationError('Signature is invalid'));
 
-      expect(() => bundleBuilder.validateBundle(exampleBundle, exampleVersion)).to.throw(ValidationError);
+      expect(() => bundleBuilder.validateBundle(exampleBundle, exampleVersion, bundleItemsCountLimit)).to.throw(ValidationError);
       expect(mockIdentityManager.validateSignature).to.have.been.calledOnce;
     });
 
     it(`allow metadata field`, () => {
       const exampleBundleWithMetadata = put(exampleBundle, 'metadata', 'abc');
-      expect(() => bundleBuilder.validateBundle(exampleBundleWithMetadata, exampleVersion)).not.to.throw();
+      expect(() => bundleBuilder.validateBundle(exampleBundleWithMetadata, exampleVersion, bundleItemsCountLimit)).not.to.throw();
     });
 
     it(`doesn't allow root-level fields other than content, metadata and bundleId`, () => {
       const brokenBundle = put(exampleBundle, 'extraField', 'abc');
-      expect(() => bundleBuilder.validateBundle(brokenBundle, exampleVersion)).to.throw(ValidationError);
+      expect(() => bundleBuilder.validateBundle(brokenBundle, exampleVersion, bundleItemsCountLimit)).to.throw(ValidationError);
     });
 
     it(`doesn't allow content fields other than idData, and signature`, () => {
       const brokenBundle = put(exampleBundle, 'content.extraField', 'abc');
-      expect(() => bundleBuilder.validateBundle(brokenBundle, exampleVersion)).to.throw(ValidationError);
+      expect(() => bundleBuilder.validateBundle(brokenBundle, exampleVersion, bundleItemsCountLimit)).to.throw(ValidationError);
     });
 
     it('throws if bundle has hash we do not expect', async () => {

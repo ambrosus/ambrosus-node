@@ -63,7 +63,7 @@ export const addEntriesHashToBundle = (identityManager, bundle) => {
   const hash = identityManager.calculateHash(entriesIds);
   return put(bundle, 'content.idData.entriesHash', hash);
 };
-export const addBundleId = (identityManager, bundle) => addHash(identityManager, bundle, 'content', 'bundleId');
+export const addBundleId = (identityManager, bundle) => addHash(identityManager, bundle, 'content.idData', 'bundleId');
 
 export const createFullAsset = (identityManager, idDataFields = {}, secret = pkPair.secret) =>
   addAssetId(
