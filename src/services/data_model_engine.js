@@ -12,6 +12,7 @@ import {getTimestamp} from '../utils/time_utils';
 import {pick, put} from '../utils/dict_utils';
 import allPermissions from '../utils/all_permissions';
 import Filter from 'stream-json/filters/Filter';
+import {parser} from 'stream-json';
 import Asm from 'stream-json/Assembler';
 import {PassThrough} from 'stream';
 const pipeline = require('util').promisify(require('stream').pipeline);
@@ -231,18 +232,25 @@ export default class DataModelEngine {
       }
     }
   }
-  async extractBundleDataNecessaryForValidationFromStream(readableStream) {
+
+  async extractBundleDataNecessaryForValidationFromStream(readableStream, bundleVersion) {
     return new Promise(((resolve, reject) => {
-      /**
-       * Matches with:
-       * - all fields in root path
-       * - all fields in content path
-       * - full content.idData object
-       * - assetId fields in content.entries
-       * - eventId fields in content.entries
-       */
-      const filterRegex = /^(content\.)?[^.]+$|^content\.idData|^content\.entries\.\d+\.(assetId|eventId)$/;
-      const pipeline = readableStream.pipe(Filter.withParser({filter: filterRegex}));
+      let pipeline;
+      if (bundleVersion === 1) {
+        pipeline = readableStream.pipe(parser());
+      }
+      if (bundleVersion === 2) {
+        /**
+         * Matches with:
+         * - all fields in root path
+         * - all fields in content path
+         * - full content.idData object
+         * - assetId fields in content.entries
+         * - eventId fields in content.entries
+         */
+        const filterRegex = /^(content\.)?[^.]+$|^content\.idData|^content\.entries\.\d+\.(assetId|eventId)$/;
+        pipeline = readableStream.pipe(Filter.withParser({filter: filterRegex}));
+      }
       Asm.connectTo(pipeline).on('done', (asm) => resolve(asm.current));
       pipeline.on('error', (err) => reject(new ValidationError(err.message)));
     }));
@@ -268,10 +276,7 @@ export default class DataModelEngine {
       downloadStream.on('error', (err) => {
         writeStream.abort(err);
       });
-      downloadStream.on('data', (chunk) => {
-        console.log(chunk.toString());
-      });
-      const [minimalBundle] = await Promise.all([this.extractBundleDataNecessaryForValidationFromStream(validateAssemblyPipe), pipeline(dbWritePipe, writeStream)]);
+      const [minimalBundle] = await Promise.all([this.extractBundleDataNecessaryForValidationFromStream(validateAssemblyPipe, complementedMetadata.version), pipeline(dbWritePipe, writeStream)]);
       const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
       this.bundleBuilder.validateBundle(minimalBundle, complementedMetadata.version, bundleItemsCountLimit);
     } catch (err) {
@@ -282,21 +287,11 @@ export default class DataModelEngine {
       throw new Error('Could not fetch the bundle from the shelterer');
     }
 
-    try {
-      const bundle = await this.bundleRepository.getBundle(bundleId);
-      const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
-      this.bundleBuilder.validateBundle(bundle, complementedMetadata.version, bundleItemsCountLimit);
-      await this.uploadRepository.verifyBundle(bundle);
-    } catch (err) {
-      await this.bundleRepository.removeBundle(bundleId);
-      throw new Error(`Bundle failed to validate: ${err.message || err}`);
-    }
-
     await this.bundleRepository.storeBundleProofMetadata(
       complementedMetadata.bundleId,
       complementedMetadata.bundleProofBlock,
       complementedMetadata.bundleUploadTimestamp,
-      complementedMetadata.bundleTransactionHash
+      complementedMetadata.bundleTransactionHash,
     );
 
     return complementedMetadata;

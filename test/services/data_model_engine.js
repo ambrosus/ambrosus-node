@@ -16,7 +16,7 @@ import {pick, put} from '../../src/utils/dict_utils';
 import DataModelEngine from '../../src/services/data_model_engine';
 import {NotFoundError, PermissionError, ValidationError} from '../../src/errors/errors';
 
-import {createAsset, createBundle, createEvent, createFullBundle} from '../fixtures/assets_events';
+import {createAsset, createBundle, createEvent, createFullBundle, createFullBundleV1} from '../fixtures/assets_events';
 import {account, accountWithSecret, addAccountRequest, adminAccount, adminAccountWithSecret} from '../fixtures/account';
 
 import {createWeb3} from '../../src/utils/web3_tools';
@@ -29,7 +29,7 @@ import resetHistory from '../helpers/reset_history';
 import allPermissions from '../../src/utils/all_permissions';
 import StringWriteStream from '../../src/utils/string_write_stream';
 import BundleRepository from '../../src/services/bundle_repository';
-import {connectToMongo} from '../../src/utils/db_utils';
+import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
 import config from '../../config/config';
 import BundleBuilder from '../../src/services/bundle_builder';
 import EntityBuilder from '../../src/services/entity_builder';
@@ -1374,38 +1374,19 @@ describe('Data Model Engine', () => {
       expect(mockBundleRepository.storeBundleProofMetadata).to.be.not.called;
       expect(mockWriteStream.abort).to.have.been.calledOnce;
     });
-
-    it('removes the bundle if validation fails', async () => {
-      mockBundleBuilder.validateBundle.throws();
-      await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejected;
-      expect(mockBundleRepository.getBundle).to.have.been.calledOnceWith(bundleId);
-      expect(mockBundleBuilder.validateBundle).to.have.been.calledOnceWith(downloadedBundle);
-      expect(mockBundleRepository.removeBundle).to.have.been.calledOnceWith(bundleId);
-    });
-
-    it('removes the bundle if verification against chain fails', async () => {
-      mockUploadRepository.verifyBundle.rejects();
-      await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejected;
-      expect(mockBundleRepository.getBundle).to.have.been.calledOnceWith(bundleId);
-      expect(mockUploadRepository.verifyBundle).to.have.been.calledOnceWith(downloadedBundle);
-      expect(mockBundleRepository.removeBundle).to.have.been.calledOnceWith(bundleId);
-    });
   });
 
   describe('downloading with db', () => {
     let db;
     let client;
+    let mockUploadRepository;
     let mockBundleDownloader;
     let modelEngine;
     let bundleRepository;
     let complementedBundleMetadata;
     let downloadedBundle;
 
-    beforeEach(async () => {
-      ({db, client} = await connectToMongo(config));
-
-      downloadedBundle = createFullBundle(identityManager, {}, []);
-
+    const prepareTest = () => {
       const downloadedBundleMetadata = {
         bundleId: downloadedBundle.bundleId
       };
@@ -1420,7 +1401,7 @@ describe('Data Model Engine', () => {
       };
 
       const mockReadStream = new StringReadStream(JSON.stringify(downloadedBundle), 10);
-      const mockUploadRepository = {
+      mockUploadRepository = {
         verifyBundle: sinon.stub().resolves(),
         complementBundleMetadata: sinon.stub().resolves(complementedBundleMetadata),
         bundleItemsCountLimit: sinon.stub().resolves(1000)
@@ -1443,27 +1424,67 @@ describe('Data Model Engine', () => {
         rolesRepository: mockRolesRepository,
         bundleBuilder
       });
+    };
+
+    beforeEach(async () => {
+      ({db, client} = await connectToMongo(config));
+    });
+
+    afterEach(async () => {
+      await cleanDatabase(db);
     });
 
     after(async () => {
       client.close();
     });
 
-    it('save to db', async () => {
-      const metadata = await modelEngine.downloadBundle(downloadedBundle.bundleId, '');
+    describe('Bundle version 2', () => {
+      beforeEach(async () => {
+        downloadedBundle = createFullBundle(identityManager, {}, []);
+        prepareTest();
+      });
 
-      const bundleInDb = await bundleRepository.getBundle(downloadedBundle.bundleId);
-      expect(metadata).to.deep.eq(complementedBundleMetadata);
-      expect(bundleInDb).to.deep.eq(downloadedBundle);
+      it('save to db', async () => {
+        const metadata = await modelEngine.downloadBundle(downloadedBundle.bundleId, '');
+
+        const bundleInDb = await bundleRepository.getBundle(downloadedBundle.bundleId);
+        expect(metadata).to.deep.eq(complementedBundleMetadata);
+        expect(bundleInDb).to.deep.eq(downloadedBundle);
+      });
+
+      it('does not keep the bundle if validation has failed', async () => {
+        const mockReadStream = new StringReadStream(JSON.stringify(pick(downloadedBundle, 'content.idData.timestamp'), 10));
+        mockBundleDownloader.openBundleDownloadStream.resolves(mockReadStream);
+        await expect(modelEngine.downloadBundle(downloadedBundle.bundleId, '')).be.rejectedWith(Error, 'Bundle failed to validate: Invalid data: content.idData.timestamp should not be empty');
+
+        const bundleInDb = await bundleRepository.getBundle(downloadedBundle.bundleId);
+        expect(bundleInDb).to.be.null;
+      });
     });
 
-    it('validate', async () => {
-      const mockReadStream = new StringReadStream(JSON.stringify(pick(downloadedBundle, 'content.idData.timestamp'), 10));
-      mockBundleDownloader.openBundleDownloadStream.resolves(mockReadStream);
-      await expect(modelEngine.downloadBundle(downloadedBundle.bundleId, '')).be.rejectedWith(Error, 'Bundle failed to validate: Invalid data: content.idData.timestamp should not be empty');
+    describe('Bundle version 1', () => {
+      beforeEach(() => {
+        downloadedBundle = createFullBundleV1(identityManager, {}, []);
+        prepareTest();
+        mockUploadRepository.complementBundleMetadata.resolves({...complementedBundleMetadata, version: 1});
+      });
 
-      const bundleInDb = await bundleRepository.getBundle(downloadedBundle.bundleId);
-      expect(bundleInDb).to.be.null;
+      it('save to db', async () => {
+        const metadata = await modelEngine.downloadBundle(downloadedBundle.bundleId, '');
+
+        const bundleInDb = await bundleRepository.getBundle(downloadedBundle.bundleId);
+        expect(metadata).to.deep.eq({...complementedBundleMetadata, version: 1});
+        expect(bundleInDb).to.deep.eq(downloadedBundle);
+      });
+
+      it('does not keep the bundle if validation has failed', async () => {
+        const mockReadStream = new StringReadStream(JSON.stringify(pick(downloadedBundle, 'content.idData.timestamp'), 10));
+        mockBundleDownloader.openBundleDownloadStream.resolves(mockReadStream);
+        await expect(modelEngine.downloadBundle(downloadedBundle.bundleId, '')).be.rejectedWith(Error, 'Bundle failed to validate: Invalid data: content.idData.timestamp should not be empty');
+
+        const bundleInDb = await bundleRepository.getBundle(downloadedBundle.bundleId);
+        expect(bundleInDb).to.be.null;
+      });
     });
   });
 

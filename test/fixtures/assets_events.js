@@ -101,3 +101,22 @@ export const createFullBundle = (identityManager, idDataFields = {}, entries = [
         )
       ),
       secret));
+
+/** @deprecated */
+export const createFullBundleV1 = (identityManager, idDataFields = {}, entries = [], secret = pkPair.secret) => {
+  const addBundleId = (identityManager, bundle) => addHash(identityManager, bundle, 'content', 'bundleId');
+  const addEntriesHashToBundle = (identityManager, bundle) => addHash(identityManager, bundle, 'content.entries', 'content.idData.entriesHash');
+
+  return addBundleId(
+    identityManager,
+    addSignature(
+      identityManager,
+      addEntriesHashToBundle(
+        identityManager,
+        createBundle(
+          idDataFields,
+          entries
+        )
+      ),
+      secret));
+};
