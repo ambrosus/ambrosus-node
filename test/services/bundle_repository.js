@@ -20,6 +20,8 @@ import StringReadStream from '../../src/utils/string_read_stream';
 const {expect} = chai;
 chai.use(chaiAsPromised);
 
+const BUNDLE_VERSION = 2;
+
 const asyncPipe = async (readStream, writeStream) => new Promise((resolve, reject) => {
   writeStream.on('finish', () => resolve());
   writeStream.on('error', (err) => reject(err));
@@ -31,6 +33,7 @@ describe('Bundle Repository', () => {
   let client;
   let storage;
   const storagePeriods = 5;
+  const version = 2;
 
   before(async () => {
     ({db, client} = await connectToMongo(config));
@@ -54,7 +57,7 @@ describe('Bundle Repository', () => {
       const exampleBundle = put(createBundle(), 'bundleId', exampleBundleId);
       await storage.storeBundle(exampleBundle, storagePeriods);
       await expect(storage.getBundle(exampleBundleId)).to.eventually.deep.equal(exampleBundle);
-      await expect(storage.getBundleMetadata(exampleBundleId)).to.eventually.deep.equal({bundleId: exampleBundleId, storagePeriods});
+      await expect(storage.getBundleMetadata(exampleBundleId)).to.eventually.deep.equal({bundleId: exampleBundleId, storagePeriods, version: BUNDLE_VERSION});
       await storage.storeBundleProofMetadata(exampleBundleId, 10, 50, txHash);
       await expect(storage.getBundle(exampleBundleId), 'bundle after proof').to.eventually.deep.equal(exampleBundle);
       await expect(storage.getBundleMetadata(exampleBundleId), 'bundle metadata after proof').to.eventually.deep.equal({
@@ -62,6 +65,7 @@ describe('Bundle Repository', () => {
         bundleProofBlock: 10,
         bundleTransactionHash: txHash,
         bundleUploadTimestamp: 50,
+        version: BUNDLE_VERSION,
         storagePeriods
       });
     });
@@ -101,10 +105,10 @@ describe('Bundle Repository', () => {
     it('stores the streamed bundle', async () => {
       const exampleBundle = put(createBundle(), 'bundleId', exampleBundleId);
       const exampleBundleReadStream = new StringReadStream(JSON.stringify(exampleBundle));
-      const writeStream = await storage.openBundleWriteStream(exampleBundleId, storagePeriods);
+      const writeStream = await storage.openBundleWriteStream(exampleBundleId, storagePeriods, version);
       await asyncPipe(exampleBundleReadStream, writeStream);
       await expect(storage.getBundle(exampleBundleId)).to.eventually.deep.equal(exampleBundle);
-      await expect(storage.getBundleMetadata(exampleBundleId)).to.eventually.deep.equal({bundleId: exampleBundleId, storagePeriods});
+      await expect(storage.getBundleMetadata(exampleBundleId)).to.eventually.deep.equal({bundleId: exampleBundleId, storagePeriods, version});
     });
 
     it(`discards the bundle if the write stream gets aborted`, async () => {

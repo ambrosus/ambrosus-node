@@ -10,13 +10,12 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {put, get} from '../../src/utils/dict_utils';
 import pkPair from './pk_pair';
 import addSignature from './add_signature';
-import {getTimestamp} from '../../src/utils/time_utils';
 
 export const createAsset = (fields) => ({
   content: {
     idData: {
       createdBy: pkPair.address,
-      timestamp: getTimestamp(),
+      timestamp: 1548345374,
       sequenceNumber: 0,
       ...fields
     }
@@ -28,7 +27,7 @@ export const createEvent = (fields, data = [{type: 'ambrosus.event.example'}]) =
     idData: {
       assetId: '0x6666',
       createdBy: pkPair.address,
-      timestamp: getTimestamp(),
+      timestamp: 1548345375,
       accessLevel: 0,
       ...fields
     },
@@ -40,7 +39,7 @@ export const createBundle = (fields, entries = []) => ({
   content: {
     idData: {
       createdBy: pkPair.address,
-      timestamp: getTimestamp(),
+      timestamp: 1548345376,
       ...fields
     },
     entries: [
@@ -59,7 +58,11 @@ export const addAssetId = (identityManager, asset) => addHash(identityManager, a
 export const addDataHashToEvent = (identityManager, event) => addHash(identityManager, event, 'content.data', 'content.idData.dataHash');
 export const addEventId = (identityManager, event) => addHash(identityManager, event, 'content', 'eventId');
 
-export const addEntriesHashToBundle = (identityManager, bundle) => addHash(identityManager, bundle, 'content.entries', 'content.idData.entriesHash');
+export const addEntriesHashToBundle = (identityManager, bundle) => {
+  const entriesIds = bundle.content.entries.map((entry) => entry.assetId || entry.eventId);
+  const hash = identityManager.calculateHash(entriesIds);
+  return put(bundle, 'content.idData.entriesHash', hash);
+};
 export const addBundleId = (identityManager, bundle) => addHash(identityManager, bundle, 'content', 'bundleId');
 
 export const createFullAsset = (identityManager, idDataFields = {}, secret = pkPair.secret) =>

@@ -1039,13 +1039,13 @@ Fetches a bundle by identifier
     The requested bundle
 
     + Attributes (object)
-        + bundleId (string) - Content-addressable identifier of the bundle.
+        + bundleId (string) - Content-addressable identifier of the bundle (keccak hash of content.idData field).
         + content (object) - All meaningful content of the bundle, base of bundleId.
             + signature (string) - elliptic-curve signature of the idData field signed with the creator's private address.
             + idData (object) - Information about an event.
                 + createdBy (string) - Public address of the event creator.
                 + timestamp (number) - UNIX timestamp of the event creation.
-                + entriesHash (string) - Hash calculated from the entries field.
+                + entriesHash (string) - Keccak hash of entries ids, where, depending on entry type, ids are either `assetId` or `eventId`. The order is preserved. 
             + entries (array) - An array consisting of assets, events with public data and stubs of events with private data.
 
     + Body
@@ -1092,6 +1092,7 @@ Fetches a bundle metadata by identifier
           More info on the transaction can be found under `http://explorer-test.ambrosus.com/#/tx/{bundleTransactionHash}`
         + bundleProofBlock (number) - Block number in which the proof of the bundle has been included
         + bundleUploadTimestamp (number) - Timestamp of bundle proof upload
+        + version (number) - Version of the bundle
 
 
     + Body
@@ -1100,7 +1101,8 @@ Fetches a bundle metadata by identifier
                 "bundleId" : "0xa9bfd34.....30795ed11",
                 "bundleTransactionHash": "0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009",
                 "bundleProofBlock": 142,
-                "bundleUploadTimestamp": 1503424969
+                "bundleUploadTimestamp": 1503424969,
+                "version": 2
             }
 
 + Response 404 (application/json)
