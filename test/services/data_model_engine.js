@@ -16,7 +16,14 @@ import {pick, put} from '../../src/utils/dict_utils';
 import DataModelEngine from '../../src/services/data_model_engine';
 import {NotFoundError, PermissionError, ValidationError} from '../../src/errors/errors';
 
-import {createAsset, createBundle, createEvent, createFullBundle, createFullBundleV1} from '../fixtures/assets_events';
+import {
+  createAsset,
+  createBundle,
+  createEvent,
+  createFullAsset,
+  createFullBundle,
+  createFullBundleV1, createFullEvent
+} from '../fixtures/assets_events';
 import {account, accountWithSecret, addAccountRequest, adminAccount, adminAccountWithSecret} from '../fixtures/account';
 
 import {createWeb3} from '../../src/utils/web3_tools';
@@ -1272,16 +1279,18 @@ describe('Data Model Engine', () => {
     const bundleId = '0x123';
     const sheltererId = '0x789';
     const nodeUrl = '0.0.0.0';
-    const downloadedBundle = createBundle();
+    const exampleBundleCountLimit = 42;
     const downloadedBundleMetadata = {
       bundleId: '0xbeef'
     };
+    const extractedBundleForValidation = createBundle();
     const complementedBundleMetadata = {
       bundleId: '0xbeef',
       storagePeriods: 1,
       bundleProofBlock: 1,
       bundleUploadTimestamp: 100000,
-      bundleTransactionHash: '0xdeadface'
+      bundleTransactionHash: '0xdeadface',
+      version: 2
     };
     let mockBundleRepository;
     let mockBundleDownloader;
@@ -1294,10 +1303,9 @@ describe('Data Model Engine', () => {
 
     beforeEach(() => {
       mockWriteStream = new StringWriteStream();
-      mockReadStream = new StringReadStream(JSON.stringify(downloadedBundle), 10);
+      mockReadStream = new StringReadStream(JSON.stringify(extractedBundleForValidation), 10);
 
       mockBundleRepository = {
-        getBundle: sinon.stub().resolves(downloadedBundle),
         openBundleWriteStream: sinon.stub().resolves(mockWriteStream),
         storeBundleProofMetadata: sinon.stub().resolves(),
         removeBundle: sinon.stub().resolves()
@@ -1310,12 +1318,13 @@ describe('Data Model Engine', () => {
       mockUploadRepository = {
         verifyBundle: sinon.stub().resolves(),
         complementBundleMetadata: sinon.stub().resolves(complementedBundleMetadata),
-        bundleItemsCountLimit: sinon.stub().resolves(1000)
+        bundleItemsCountLimit: sinon.stub().resolves(exampleBundleCountLimit)
       };
 
       mockBundleBuilder = {
         validateBundle: sinon.stub(),
-        validateBundleMetadata: sinon.stub()
+        validateBundleMetadata: sinon.stub(),
+        extractBundleDataNecessaryForValidationFromStream: sinon.stub().resolves(extractedBundleForValidation)
       };
 
       mockBundleDownloader = {
@@ -1337,6 +1346,7 @@ describe('Data Model Engine', () => {
       expect(mockRolesRepository.nodeUrl).to.be.calledWith(sheltererId);
       expect(mockBundleDownloader.downloadBundleMetadata).to.be.calledWith(nodeUrl, bundleId);
       expect(mockBundleDownloader.openBundleDownloadStream).to.be.calledWith(nodeUrl, bundleId);
+      expect(mockBundleBuilder.validateBundle).to.be.calledWith(extractedBundleForValidation, complementedBundleMetadata.version, exampleBundleCountLimit);
       expect(mockBundleBuilder.validateBundleMetadata).to.be.calledWith(downloadedBundleMetadata);
       expect(mockUploadRepository.complementBundleMetadata).to.be.calledWith(downloadedBundleMetadata);
       expect(mockBundleRepository.openBundleWriteStream).to.be.calledWith(bundleId, complementedBundleMetadata.storagePeriods);
@@ -1361,6 +1371,12 @@ describe('Data Model Engine', () => {
       expect(mockBundleRepository.storeBundleProofMetadata).to.be.not.called;
     });
 
+    it('removes downloaded bundle and throws if validation fails', async () => {
+      mockBundleBuilder.validateBundle.throws(new ValidationError());
+      await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejectedWith(Error, 'Bundle failed to validate');
+      expect(mockBundleRepository.removeBundle).to.be.calledOnceWith(bundleId);
+    });
+
     it('aborts the write and throws if the bundle download fails', async () => {
       mockWriteStream.abort = sinon.stub().callsFake((err) => {
         mockWriteStream.emit('error', err);
@@ -1376,7 +1392,7 @@ describe('Data Model Engine', () => {
     });
   });
 
-  describe('downloading with db', () => {
+  describe('Integration: downloading with db', () => {
     let db;
     let client;
     let mockUploadRepository;
@@ -1385,6 +1401,8 @@ describe('Data Model Engine', () => {
     let bundleRepository;
     let complementedBundleMetadata;
     let downloadedBundle;
+    let exampleAsset;
+    let exampleEvent;
 
     const prepareTest = () => {
       const downloadedBundleMetadata = {
@@ -1428,6 +1446,8 @@ describe('Data Model Engine', () => {
 
     beforeEach(async () => {
       ({db, client} = await connectToMongo(config));
+      exampleAsset = createFullAsset(identityManager);
+      exampleEvent = createFullEvent(identityManager, {assetId: exampleAsset.assetId});
     });
 
     afterEach(async () => {
@@ -1440,7 +1460,7 @@ describe('Data Model Engine', () => {
 
     describe('Bundle version 2', () => {
       beforeEach(async () => {
-        downloadedBundle = createFullBundle(identityManager, {}, []);
+        downloadedBundle = createFullBundle(identityManager, {}, [exampleAsset, exampleEvent]);
         prepareTest();
       });
 
@@ -1464,7 +1484,7 @@ describe('Data Model Engine', () => {
 
     describe('Bundle version 1', () => {
       beforeEach(() => {
-        downloadedBundle = createFullBundleV1(identityManager, {}, []);
+        downloadedBundle = createFullBundleV1(identityManager, {}, [exampleAsset, exampleEvent]);
         prepareTest();
         mockUploadRepository.complementBundleMetadata.resolves({...complementedBundleMetadata, version: 1});
       });

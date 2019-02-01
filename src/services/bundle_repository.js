@@ -84,19 +84,6 @@ export default class BundleRepository {
     return await downloadJSONFromGridFSBucket(bundleId, this.bundlesBucket);
   }
 
-  // TODO use in DME, write tests, remove this TODO
-  async getBundleForValidation(bundleId, bundleVersion) {
-    switch (bundleVersion) {
-      case 1:
-        return this.getBundle(bundleId);
-      case 2:
-        return this.extractBundleDataNecessaryForValidationFromStream(await this.getBundleStream(bundleId));
-      default:
-        throw new Error(`Unexpected bundle version: ${bundleVersion}`);
-    }
-  }
-
-
   async getBundleMetadata(bundleId) {
     return await this.db.collection('bundle_metadata').findOne({bundleId}, {projection: this.blacklistedFields});
   }

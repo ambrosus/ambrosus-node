@@ -11,9 +11,6 @@ import {NotFoundError, PermissionError, ValidationError} from '../errors/errors'
 import {getTimestamp} from '../utils/time_utils';
 import {pick, put} from '../utils/dict_utils';
 import allPermissions from '../utils/all_permissions';
-import Filter from 'stream-json/filters/Filter';
-import {parser} from 'stream-json';
-import Asm from 'stream-json/Assembler';
 import {PassThrough} from 'stream';
 const pipeline = require('util').promisify(require('stream').pipeline);
 
@@ -233,29 +230,6 @@ export default class DataModelEngine {
     }
   }
 
-  async extractBundleDataNecessaryForValidationFromStream(readableStream, bundleVersion) {
-    return new Promise(((resolve, reject) => {
-      let pipeline;
-      if (bundleVersion === 1) {
-        pipeline = readableStream.pipe(parser());
-      }
-      if (bundleVersion === 2) {
-        /**
-         * Matches with:
-         * - all fields in root path
-         * - all fields in content path
-         * - full content.idData object
-         * - assetId fields in content.entries
-         * - eventId fields in content.entries
-         */
-        const filterRegex = /^(content\.)?[^.]+$|^content\.idData|^content\.entries\.\d+\.(assetId|eventId)$/;
-        pipeline = readableStream.pipe(Filter.withParser({filter: filterRegex}));
-      }
-      Asm.connectTo(pipeline).on('done', (asm) => resolve(asm.current));
-      pipeline.on('error', (err) => reject(new ValidationError(err.message)));
-    }));
-  }
-
   async downloadBundle(bundleId, sheltererId) {
     const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
 
@@ -276,7 +250,10 @@ export default class DataModelEngine {
       downloadStream.on('error', (err) => {
         writeStream.abort(err);
       });
-      const [minimalBundle] = await Promise.all([this.extractBundleDataNecessaryForValidationFromStream(validateAssemblyPipe, complementedMetadata.version), pipeline(dbWritePipe, writeStream)]);
+      const [minimalBundle] = await Promise.all([
+        this.bundleBuilder.extractBundleDataNecessaryForValidationFromStream(validateAssemblyPipe, complementedMetadata.version),
+        pipeline(dbWritePipe, writeStream)
+      ]);
       const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
       this.bundleBuilder.validateBundle(minimalBundle, complementedMetadata.version, bundleItemsCountLimit);
     } catch (err) {
@@ -284,14 +261,14 @@ export default class DataModelEngine {
         await this.bundleRepository.removeBundle(bundleId);
         throw new Error(`Bundle failed to validate: ${err.message || err}`);
       }
-      throw new Error('Could not fetch the bundle from the shelterer');
+      throw new Error(`Could not fetch the bundle from the shelterer: ${err.message || err}`);
     }
 
     await this.bundleRepository.storeBundleProofMetadata(
       complementedMetadata.bundleId,
       complementedMetadata.bundleProofBlock,
       complementedMetadata.bundleUploadTimestamp,
-      complementedMetadata.bundleTransactionHash,
+      complementedMetadata.bundleTransactionHash
     );
 
     return complementedMetadata;

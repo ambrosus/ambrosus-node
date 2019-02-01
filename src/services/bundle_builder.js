@@ -9,6 +9,9 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import validateAndCast from '../utils/validations';
 import {ValidationError} from '../errors/errors';
+import {parser} from 'stream-json';
+import Filter from 'stream-json/filters/Filter';
+import Asm from 'stream-json/Assembler';
 
 export default class BundleBuilder {
   constructor(identityManager, entityBuilder) {
@@ -45,6 +48,29 @@ export default class BundleBuilder {
       bundleId,
       content
     };
+  }
+
+  async extractBundleDataNecessaryForValidationFromStream(readableStream, bundleVersion) {
+    return new Promise(((resolve, reject) => {
+      let pipeline;
+      if (bundleVersion === 1) {
+        pipeline = readableStream.pipe(parser());
+      }
+      if (bundleVersion === 2) {
+        /**
+         * Matches with:
+         * - all fields in root path
+         * - all fields in content path
+         * - full content.idData object
+         * - assetId fields in content.entries
+         * - eventId fields in content.entries
+         */
+        const filterRegex = /^.{0}$|^(content\.)?[^.]+$|^content\.idData|^content\.entries\.\d+\.(assetId|eventId)$/;
+        pipeline = readableStream.pipe(Filter.withParser({filter: filterRegex}));
+      }
+      Asm.connectTo(pipeline).on('done', (asm) => resolve(asm.current));
+      pipeline.on('error', (err) => reject(new ValidationError(err.message)));
+    }));
   }
 
   validateBundle(bundle, bundleVersion, bundleItemsCountLimit) {

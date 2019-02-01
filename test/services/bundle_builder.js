@@ -8,6 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import chai, {expect} from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
@@ -23,9 +24,10 @@ import {createFullAsset, createFullBundle, createFullEvent} from '../fixtures/as
 
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {getTimestamp} from '../../src/utils/time_utils';
+import StringReadStream from '../../src/utils/string_read_stream';
 
 chai.use(sinonChai);
-
+chai.use(chaiAsPromised);
 describe('Bundle Builder', () => {
   let identityManager;
   let exampleAsset;
@@ -44,6 +46,47 @@ describe('Bundle Builder', () => {
 
   it('extractIdsFromEntries returns an array of entry ids in same order', () => {
     expect(new BundleBuilder().extractIdsFromEntries(exampleBundle.content.entries)).to.deep.equal([exampleAsset.assetId, exampleEvent.eventId]);
+  });
+
+  describe('extractBundleDataNecessaryForValidationFromStream', () => {
+    let bundleWithUnexpectedFields;
+    const createMockStream = (bundle) => new StringReadStream(JSON.stringify(bundle), 10);
+    before(() => {
+      bundleWithUnexpectedFields = put(put(exampleBundle, 'foo', 'bar'), 'content.one', 1);
+      bundleBuilder = new BundleBuilder();
+    });
+
+    describe('Bundle version 1', () => {
+      it('returns the whole bundle', async () => {
+        expect(await bundleBuilder.extractBundleDataNecessaryForValidationFromStream(createMockStream(bundleWithUnexpectedFields), 1)).to.deep.equal(bundleWithUnexpectedFields);
+      });
+
+      it('resolves when empty object is passed', async () => {
+        expect(await bundleBuilder.extractBundleDataNecessaryForValidationFromStream(createMockStream({}), 1)).to.deep.equal({});
+        expect(await bundleBuilder.extractBundleDataNecessaryForValidationFromStream(createMockStream('some string'), 1)).to.deep.equal('some string');
+      });
+
+      it('throws when streamed data is not a correct JSON', async () => {
+        await expect(bundleBuilder.extractBundleDataNecessaryForValidationFromStream(new StringReadStream('Shaun', 10), 1)).to.be.rejected;
+      });
+    });
+
+    describe('Bundle version 2', () => {
+      it('returns bundle without entries content', async () => {
+        expect(await bundleBuilder.extractBundleDataNecessaryForValidationFromStream(createMockStream(bundleWithUnexpectedFields), 2)).to.deep.equal(
+          put(bundleWithUnexpectedFields, 'content.entries', [{assetId: exampleAsset.assetId}, {eventId: exampleEvent.eventId}])
+        );
+      });
+
+      it('resolves when empty object is passed', async () => {
+        expect(await bundleBuilder.extractBundleDataNecessaryForValidationFromStream(createMockStream({}), 2)).to.deep.equal({});
+        expect(await bundleBuilder.extractBundleDataNecessaryForValidationFromStream(createMockStream('some string'), 2)).to.deep.equal('some string');
+      });
+
+      it('throws when streamed data is not a correct JSON', async () => {
+        await expect(bundleBuilder.extractBundleDataNecessaryForValidationFromStream(new StringReadStream('Shaun', 10), 2)).to.be.rejected;
+      });
+    });
   });
 
   describe('validating', () => {
