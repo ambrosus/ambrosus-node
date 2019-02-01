@@ -8,9 +8,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {pick} from '../utils/dict_utils';
-import {mongoObjectSize} from '../utils/db_utils';
-
-const MONGO_SIZE_IN_BYTES_LIMIT = 15000000; // 15 Mb
 
 export default class EntityRepository {
   constructor(db) {
@@ -60,7 +57,7 @@ export default class EntityRepository {
     return asset;
   }
 
-  async fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit, bundleSizeInBytesLimit = MONGO_SIZE_IN_BYTES_LIMIT) {
+  async fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit) {
     const notBundledQuery = {
       'repository.bundleStubId': null,
       'metadata.bundleId': null
@@ -76,21 +73,18 @@ export default class EntityRepository {
       notBundledQuery,
       {
         projection: this.blacklistedFields,
-        sort: {'content.idData.timestamp': 1, assetId: 1},
-        limit: bundleItemsCountLimit
+        sort: {'content.idData.timestamp': 1, assetId: 1}
       }
     );
     const eventsCursor = await this.db.collection('events').find(
       notBundledQuery,
       {
         projection: this.blacklistedFields,
-        sort: {'content.idData.timestamp': 1, eventId: 1},
-        limit: bundleItemsCountLimit
+        sort: {'content.idData.timestamp': 1, eventId: 1}
       }
     );
     const selectedAssets = [];
     const selectedEvents = [];
-    let usedSize = 0;
 
     let nextAsset = await assetsCursor.next();
     let nextEvent = await eventsCursor.next();
@@ -100,13 +94,6 @@ export default class EntityRepository {
 
     while (candidatesLeft() && !itemCountLimitReached()) {
       const next = this.selectEntityForBundling(nextAsset, nextEvent);
-
-      const size = mongoObjectSize(next);
-      if (usedSize + size < bundleSizeInBytesLimit) {
-        usedSize += size;
-      } else {
-        break;
-      }
 
       if (next === nextAsset) {
         await this.db.collection('assets').updateOne({assetId: nextAsset.assetId}, updateBundleStubId);

@@ -11,7 +11,6 @@ import {NotFoundError, PermissionError, ValidationError} from '../errors/errors'
 import {getTimestamp} from '../utils/time_utils';
 import {pick, put} from '../utils/dict_utils';
 import allPermissions from '../utils/all_permissions';
-import {PassThrough} from 'stream';
 const pipeline = require('util').promisify(require('stream').pipeline);
 
 export default class DataModelEngine {
