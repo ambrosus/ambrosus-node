@@ -52,9 +52,9 @@ export default class BundleBuilder {
 
   async extractBundleDataNecessaryForValidationFromStream(readableStream, bundleVersion) {
     return new Promise(((resolve, reject) => {
-      let pipeline;
+      let tokenStream;
       if (bundleVersion === 1) {
-        pipeline = readableStream.pipe(parser());
+        tokenStream = readableStream.pipe(parser());
       }
       if (bundleVersion === 2) {
         /**
@@ -66,10 +66,10 @@ export default class BundleBuilder {
          * - eventId fields in content.entries
          */
         const filterRegex = /^.{0}$|^(content\.)?[^.]+$|^content\.idData|^content\.entries\.\d+\.(assetId|eventId)$/;
-        pipeline = readableStream.pipe(Filter.withParser({filter: filterRegex}));
+        tokenStream = readableStream.pipe(Filter.withParser({filter: filterRegex}));
       }
-      Asm.connectTo(pipeline).on('done', (asm) => resolve(asm.current));
-      pipeline.on('error', (err) => reject(new ValidationError(err.message)));
+      Asm.connectTo(tokenStream).on('done', (asm) => resolve(asm.current));
+      tokenStream.on('error', (err) => reject(new ValidationError(err.message)));
     }));
   }
 
