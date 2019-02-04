@@ -14,9 +14,10 @@ import Filter from 'stream-json/filters/Filter';
 import Asm from 'stream-json/Assembler';
 
 export default class BundleBuilder {
-  constructor(identityManager, entityBuilder) {
+  constructor(identityManager, entityBuilder, supportDeprecatedBundles = true) {
     this.identityManager = identityManager;
     this.entityBuilder = entityBuilder;
+    this.supportDeprecatedBundles = supportDeprecatedBundles;
   }
 
   extractIdsFromEntries(entries) {
@@ -120,8 +121,13 @@ export default class BundleBuilder {
   }
 
   validateBundleMetadata(bundleMetadata) {
-    validateAndCast(bundleMetadata)
+    const validator = validateAndCast(bundleMetadata)
       .required(['bundleId'])
       .isHash(['bundleId']);
+    if (!this.supportDeprecatedBundles) {
+      validator
+        .required(['version'])
+        .validate(['version'], (version) => version === 2, 'Supported bundle versions are: 2');
+    }
   }
 }

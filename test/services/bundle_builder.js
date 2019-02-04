@@ -194,7 +194,8 @@ describe('Bundle Builder', () => {
       bundleUploadTimestamp: 1544171039,
       bundleProofBlock: 120,
       bundleTransactionHash: '0xbfa90258fe2badae4cce5316161cdc1f6eccb5d47f0904adafca120e142c9c3e',
-      storagePeriods: 3
+      storagePeriods: 3,
+      version: 2
     };
 
     before(() => {
@@ -217,6 +218,24 @@ describe('Bundle Builder', () => {
     it('throws if bundleId does not have the correct format', async () => {
       const brokenMetadata = {...exampleBundleMetadata, bundleId: '0xIncorrectValue'};
       expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
+    });
+
+    describe('Not supporting old bundles', () => {
+      before(() => {
+        bundleBuilder = new BundleBuilder({}, {}, false);
+      });
+
+      it('works when version is 2', async () => {
+        expect(() => bundleBuilder.validateBundleMetadata(exampleBundleMetadata)).to.not.throw();
+      });
+
+      it('throws when version is not 2', async () => {
+        expect(() => bundleBuilder.validateBundleMetadata({...exampleBundleMetadata, version: 1})).to.throw(ValidationError);
+      });
+
+      it('throws when version is missing', async () => {
+        expect(() => bundleBuilder.validateBundleMetadata(pick(exampleBundleMetadata, 'version'))).to.throw(ValidationError);
+      });
     });
   });
 

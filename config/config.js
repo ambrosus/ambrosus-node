@@ -49,5 +49,7 @@ module.exports = Object.freeze({
   workerLogsTTLInSeconds: process.env.WORKER_LOGS_TTL || 172800, // 2 days
   workerTasksTTLInSeconds: process.env.WORKER_TASKS_TTL || 600, // 10 minutes
 
-  migrationSleepTimeInSeconds: process.env.MIGRATION_SLEEP_TIME || 10
+  migrationSleepTimeInSeconds: process.env.MIGRATION_SLEEP_TIME || 10,
+
+  supportDeprecatedBundles: process.env.DISABLE_SUPPORT_FOR_DEPRECATED_BUDLES !== 'true'
 });
