@@ -87,7 +87,7 @@ export default class BundleBuilder {
       .fieldsConstrainedToSet(['content', 'bundleId', 'metadata'])
       .fieldsConstrainedToSet(['idData', 'entries', 'signature'], 'content')
       .isNonNegativeInteger(['content.idData.timestamp'])
-      .validate(['content.entries'], (entries) => entries.length <= bundleItemsCountLimit, 'Bundle size surpasses the limit'); // TODO: test
+      .validate(['content.entries'], (entries) => entries.length <= bundleItemsCountLimit, 'Bundle size surpasses the limit');
 
     switch (bundleVersion) {
       case 1:

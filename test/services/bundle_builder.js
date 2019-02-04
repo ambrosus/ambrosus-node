@@ -179,8 +179,12 @@ describe('Bundle Builder', () => {
       expect(() => bundleBuilder.validateBundle(brokenBundle, exampleVersion, bundleItemsCountLimit)).to.throw(ValidationError);
     });
 
-    it('throws if bundle has hash we do not expect', async () => {
-      expect(() => bundleBuilder.validateBundle(exampleBundle, 3.14)).to.throw(ValidationError);
+    it('throws if bundle has the version we do not expect', async () => {
+      expect(() => bundleBuilder.validateBundle(exampleBundle, 3.14, bundleItemsCountLimit)).to.throw(ValidationError);
+    });
+
+    it('throws if entries count exceeds bundleItemsCountLimit', async () => {
+      expect(() => bundleBuilder.validateBundle(exampleBundle, exampleVersion, 1)).to.throw(ValidationError);
     });
   });
 
