@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {expect} from 'chai';
-import {createMongoUrl, mongoObjectSize, uploadJSONToGridFSBucket, connectToMongo, cleanDatabase, downloadJSONFromGridFSBucket, isFileInGridFSBucket} from '../../src/utils/db_utils';
+import {createMongoUrl, uploadJSONToGridFSBucket, connectToMongo, cleanDatabase, downloadJSONFromGridFSBucket, isFileInGridFSBucket} from '../../src/utils/db_utils';
 import {GridFSBucket} from 'mongodb';
 import config from '../../config/config';
 
@@ -52,12 +52,6 @@ describe('createMongoUrl', () => {
       mongoHosts: 'mongo1.com,mongo2.com'
     });
     expect(url).to.eql('mongodb://mongo1.com,mongo2.com/?');
-  });
-});
-
-describe('mongoObjectSize', () => {
-  it('returns size of an object', async () => {
-    expect(mongoObjectSize({foo: 1, bar: 3})).to.equal(23);
   });
 });
 

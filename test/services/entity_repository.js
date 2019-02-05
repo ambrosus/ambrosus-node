@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import {cleanDatabase, connectToMongo, mongoObjectSize} from '../../src/utils/db_utils';
+import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
 import {pick, put} from '../../src/utils/dict_utils';
 import {createAsset, createEvent} from '../fixtures/assets_events';
 import {createWeb3} from '../../src/utils/web3_tools';
@@ -241,13 +241,6 @@ describe('Entity Repository', () => {
         const ret2 = await expect(storage.fetchEntitiesForBundling('otherId', bundleItemsCountLimit)).to.be.fulfilled;
         expect(ret2.assets).to.be.empty;
         expect(ret2.events).to.have.deep.members([nonBundledEvents[1], nonBundledEvents[0], nonBundledEvents[3]]);
-      });
-
-      it('should take the size limit into consideration', async () => {
-        const mongoSizeOfFirstEvent = mongoObjectSize(nonBundledEvents[1]);
-        const ret2 = await expect(storage.fetchEntitiesForBundling('otherId', bundleItemsCountLimit, mongoSizeOfFirstEvent + 1)).to.be.fulfilled;
-        expect(ret2.assets).to.be.empty;
-        expect(ret2.events).to.have.deep.members([nonBundledEvents[1]]);
       });
     });
 

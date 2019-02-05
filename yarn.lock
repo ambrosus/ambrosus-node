@@ -6946,6 +6946,18 @@ statuses@~1.4.0:
   resolved "https://registry.yarnpkg.com/statuses/-/statuses-1.4.0.tgz#bb73d446da2796106efcc1b601a253d6c46bd087"
   integrity sha512-zhSCtt8v2NDrRlPQpCNtw/heZLtfUDqxBM1udqikb/Hbk52LK4nQSwr10u77iopCW5LsyHpuXS0GnEc48mLeew==
 
+stream-chain@^2.0.3:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/stream-chain/-/stream-chain-2.1.0.tgz#a058a7104d7261a71bf7eb4c5f496f13dc665320"
+  integrity sha512-PAUXdRGm0G8P0+/+JEd3O9kfmB9kwmr2nKIc5zhcsHn0KdBByD5PJ2po21iDzc+TZsOSEbU8j4JbAevJsZkLyQ==
+
+stream-json@^1.1.4:
+  version "1.1.4"
+  resolved "https://registry.yarnpkg.com/stream-json/-/stream-json-1.1.4.tgz#95817dc3f3e4b68d5f8e74aec43a73142b6643a6"
+  integrity sha512-NAgE3JS4qULiptmr80utUSHTGLOkgiy1wJJJeJEC+4ZL+TaqdgBCoxYriq/wjIsE2pf5r4TRuW/DbZ8GFtWFeQ==
+  dependencies:
+    stream-chain "^2.0.3"
+
 stream-to-pull-stream@^1.7.1:
   version "1.7.2"
   resolved "https://registry.yarnpkg.com/stream-to-pull-stream/-/stream-to-pull-stream-1.7.2.tgz#757609ae1cebd33c7432d4afbe31ff78650b9dde"

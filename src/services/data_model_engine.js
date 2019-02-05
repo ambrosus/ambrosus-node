@@ -240,23 +240,13 @@ export default class DataModelEngine {
     const complementedMetadata = await this.uploadRepository.complementBundleMetadata(bundleMetadata);
 
     try {
-      const downloadStream = await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
-      const writeStream = await this.bundleRepository.openBundleWriteStream(bundleId, complementedMetadata.storagePeriods, complementedMetadata.version);
-      downloadStream.on('error', (err) => {
-        writeStream.abort(err);
-      });
-      await pipeline(downloadStream, writeStream);
-    } catch {
-      throw new Error('Could not fetch the bundle from the shelterer');
-    }
-
-    try {
-      const bundle = await this.bundleRepository.getBundle(bundleId);
-      this.bundleBuilder.validateBundle(bundle, complementedMetadata.version);
-      await this.uploadRepository.verifyBundle(bundle);
+      await this.downloadAndValidateBundleBody(nodeUrl, bundleId, complementedMetadata);
     } catch (err) {
-      await this.bundleRepository.removeBundle(bundleId);
-      throw new Error(`Bundle failed to validate: ${err.message || err}`);
+      if (err instanceof ValidationError) {
+        await this.bundleRepository.removeBundle(bundleId);
+        throw new Error(`Bundle failed to validate: ${err.message || err}`);
+      }
+      throw new Error(`Could not fetch the bundle from the shelterer: ${err.message || err}`);
     }
 
     await this.bundleRepository.storeBundleProofMetadata(
@@ -267,6 +257,21 @@ export default class DataModelEngine {
     );
 
     return complementedMetadata;
+  }
+
+  async downloadAndValidateBundleBody(nodeUrl, bundleId, metadata) {
+    const downloadStream = await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
+    const writeStream = await this.bundleRepository.openBundleWriteStream(bundleId, metadata.storagePeriods,
+      metadata.version);
+    downloadStream.on('error', (err) => {
+      writeStream.abort(err);
+    });
+    const [minimalBundle] = await Promise.all([
+      this.bundleBuilder.extractBundleDataNecessaryForValidationFromStream(downloadStream, metadata.version),
+      pipeline(downloadStream, writeStream)
+    ]);
+    const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
+    this.bundleBuilder.validateBundle(minimalBundle, metadata.version, bundleItemsCountLimit);
   }
 
   async updateShelteringExpirationDate(bundleId) {

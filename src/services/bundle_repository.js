@@ -6,7 +6,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
-import {uploadJSONToGridFSBucket, downloadJSONFromGridFSBucket, isFileInGridFSBucket} from '../utils/db_utils';
+import {downloadJSONFromGridFSBucket, isFileInGridFSBucket, uploadJSONToGridFSBucket} from '../utils/db_utils';
 import {GridFSBucket} from 'mongodb';
 
 const BUNDLE_VERSION = 2;

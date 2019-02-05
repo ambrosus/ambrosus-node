@@ -10,6 +10,14 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {get, put} from './dict_utils';
 import {ValidationError} from '../errors/errors';
 
+const trimObject = (object, maxLength = 500) => {
+  const stringifiedObject = object.toString();
+  if (stringifiedObject.length > maxLength) {
+    return `${stringifiedObject.substring(0, maxLength)}...`;
+  }
+  return stringifiedObject;
+};
+
 class ValidationAndCasting {
   constructor(params) {
     this.params = params;
@@ -43,7 +51,7 @@ class ValidationAndCasting {
       const value = get(this.params, valueName);
       if (value) {
         if (isNaN(value)) {
-          throw new ValidationError(`Invalid ${valueName} parameter value. ${value} is not a number`);
+          throw new ValidationError(`Invalid ${valueName} parameter value. ${trimObject(value)} is not a number`);
         }
         const parsedValue = parseFloat(value);
         this.params = put(this.params, valueName, parsedValue);
@@ -67,7 +75,7 @@ class ValidationAndCasting {
     for (const valueName of valueNames) {
       const value = get(this.params, valueName);
       if (value !== undefined && !hexRegex.exec(value)) {
-        throw new ValidationError(`${valueName} = ${value} is not a hex of length ${length}`);
+        throw new ValidationError(`${valueName} = ${trimObject(value)} is not a hex of length ${length}`);
       }
     }
     return this;
@@ -86,7 +94,7 @@ class ValidationAndCasting {
     for (const valueName of valueNames) {
       const value = get(this.params, valueName);
       if (value !== undefined && !urlRegex.exec(value)) {
-        throw new ValidationError(`${valueName} = ${value} is not a valid URL`);
+        throw new ValidationError(`${valueName} = ${trimObject(value)} is not a valid URL`);
       }
     }
     return this;
@@ -110,7 +118,7 @@ class ValidationAndCasting {
     for (const valueName of valueNames) {
       const value = get(this.params, valueName);
       if (value !== undefined && validator(value) !== true) {
-        throw new ValidationError(`${valueName} = ${value}, ${errorMsg}`);
+        throw new ValidationError(`${valueName} = ${trimObject(value)}, ${errorMsg}`);
       }
     }
     return this;

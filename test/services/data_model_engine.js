@@ -7,6 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+
 import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
@@ -16,7 +17,15 @@ import {pick, put} from '../../src/utils/dict_utils';
 import DataModelEngine from '../../src/services/data_model_engine';
 import {NotFoundError, PermissionError, ValidationError} from '../../src/errors/errors';
 
-import {createAsset, createBundle, createEvent} from '../fixtures/assets_events';
+import {
+  createAsset,
+  createBundle,
+  createEvent,
+  createFullAsset,
+  createFullBundle,
+  createFullBundleV1,
+  createFullEvent
+} from '../fixtures/assets_events';
 import {account, accountWithSecret, addAccountRequest, adminAccount, adminAccountWithSecret} from '../fixtures/account';
 
 import {createWeb3} from '../../src/utils/web3_tools';
@@ -28,6 +37,11 @@ import createTokenFor from '../fixtures/create_token_for';
 import resetHistory from '../helpers/reset_history';
 import allPermissions from '../../src/utils/all_permissions';
 import StringWriteStream from '../../src/utils/string_write_stream';
+import BundleRepository from '../../src/services/bundle_repository';
+import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
+import config from '../../config/config';
+import BundleBuilder from '../../src/services/bundle_builder';
+import EntityBuilder from '../../src/services/entity_builder';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -1187,7 +1201,12 @@ describe('Data Model Engine', () => {
       mockUploadRepository = {
         ensureBundleIsUploaded: sinon.stub().resolves({})
       };
-      mockUploadRepository.ensureBundleIsUploaded.withArgs('bundle1', 2).resolves({blockNumber, transactionHash: txHash, timestamp: now, uploadResult: 'Success'});
+      mockUploadRepository.ensureBundleIsUploaded.withArgs('bundle1', 2).resolves({
+        blockNumber,
+        transactionHash: txHash,
+        timestamp: now,
+        uploadResult: 'Success'
+      });
       mockUploadRepository.ensureBundleIsUploaded.withArgs('bundle3', 6).rejects(bundle3Error);
 
       modelEngine = new DataModelEngine({
@@ -1258,16 +1277,18 @@ describe('Data Model Engine', () => {
     const bundleId = '0x123';
     const sheltererId = '0x789';
     const nodeUrl = '0.0.0.0';
-    const downloadedBundle = createBundle();
+    const exampleBundleCountLimit = 42;
     const downloadedBundleMetadata = {
       bundleId: '0xbeef'
     };
+    const extractedBundleForValidation = createBundle();
     const complementedBundleMetadata = {
       bundleId: '0xbeef',
       storagePeriods: 1,
       bundleProofBlock: 1,
       bundleUploadTimestamp: 100000,
-      bundleTransactionHash: '0xdeadface'
+      bundleTransactionHash: '0xdeadface',
+      version: 2
     };
     let mockBundleRepository;
     let mockBundleDownloader;
@@ -1280,10 +1301,9 @@ describe('Data Model Engine', () => {
 
     beforeEach(() => {
       mockWriteStream = new StringWriteStream();
-      mockReadStream = new StringReadStream(JSON.stringify(downloadedBundle), 10);
+      mockReadStream = new StringReadStream(JSON.stringify(extractedBundleForValidation), 10);
 
       mockBundleRepository = {
-        getBundle: sinon.stub().resolves(downloadedBundle),
         openBundleWriteStream: sinon.stub().resolves(mockWriteStream),
         storeBundleProofMetadata: sinon.stub().resolves(),
         removeBundle: sinon.stub().resolves()
@@ -1295,12 +1315,14 @@ describe('Data Model Engine', () => {
 
       mockUploadRepository = {
         verifyBundle: sinon.stub().resolves(),
-        complementBundleMetadata: sinon.stub().resolves(complementedBundleMetadata)
+        complementBundleMetadata: sinon.stub().resolves(complementedBundleMetadata),
+        bundleItemsCountLimit: sinon.stub().resolves(exampleBundleCountLimit)
       };
 
       mockBundleBuilder = {
         validateBundle: sinon.stub(),
-        validateBundleMetadata: sinon.stub()
+        validateBundleMetadata: sinon.stub(),
+        extractBundleDataNecessaryForValidationFromStream: sinon.stub().resolves(extractedBundleForValidation)
       };
 
       mockBundleDownloader = {
@@ -1322,6 +1344,7 @@ describe('Data Model Engine', () => {
       expect(mockRolesRepository.nodeUrl).to.be.calledWith(sheltererId);
       expect(mockBundleDownloader.downloadBundleMetadata).to.be.calledWith(nodeUrl, bundleId);
       expect(mockBundleDownloader.openBundleDownloadStream).to.be.calledWith(nodeUrl, bundleId);
+      expect(mockBundleBuilder.validateBundle).to.be.calledWith(extractedBundleForValidation, complementedBundleMetadata.version, exampleBundleCountLimit);
       expect(mockBundleBuilder.validateBundleMetadata).to.be.calledWith(downloadedBundleMetadata);
       expect(mockUploadRepository.complementBundleMetadata).to.be.calledWith(downloadedBundleMetadata);
       expect(mockBundleRepository.openBundleWriteStream).to.be.calledWith(bundleId, complementedBundleMetadata.storagePeriods);
@@ -1346,6 +1369,12 @@ describe('Data Model Engine', () => {
       expect(mockBundleRepository.storeBundleProofMetadata).to.be.not.called;
     });
 
+    it('removes downloaded bundle and throws if validation fails', async () => {
+      mockBundleBuilder.validateBundle.throws(new ValidationError());
+      await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejectedWith(Error, 'Bundle failed to validate');
+      expect(mockBundleRepository.removeBundle).to.be.calledOnceWith(bundleId);
+    });
+
     it('aborts the write and throws if the bundle download fails', async () => {
       mockWriteStream.abort = sinon.stub().callsFake((err) => {
         mockWriteStream.emit('error', err);
@@ -1359,21 +1388,121 @@ describe('Data Model Engine', () => {
       expect(mockBundleRepository.storeBundleProofMetadata).to.be.not.called;
       expect(mockWriteStream.abort).to.have.been.calledOnce;
     });
+  });
 
-    it('removes the bundle if validation fails', async () => {
-      mockBundleBuilder.validateBundle.throws();
-      await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejected;
-      expect(mockBundleRepository.getBundle).to.have.been.calledOnceWith(bundleId);
-      expect(mockBundleBuilder.validateBundle).to.have.been.calledOnceWith(downloadedBundle);
-      expect(mockBundleRepository.removeBundle).to.have.been.calledOnceWith(bundleId);
+  describe('Integration: downloading with db', () => {
+    let db;
+    let client;
+    let mockUploadRepository;
+    let mockBundleDownloader;
+    let modelEngine;
+    let bundleRepository;
+    let complementedBundleMetadata;
+    let downloadedBundle;
+    let exampleAsset;
+    let exampleEvent;
+
+    const prepareTest = () => {
+      const downloadedBundleMetadata = {
+        bundleId: downloadedBundle.bundleId
+      };
+
+      complementedBundleMetadata = {
+        bundleId: downloadedBundle.bundleId,
+        storagePeriods: 1,
+        bundleProofBlock: 1,
+        bundleUploadTimestamp: 100000,
+        bundleTransactionHash: '0xdeadface',
+        version: 2
+      };
+
+      const mockReadStream = new StringReadStream(JSON.stringify(downloadedBundle), 10);
+      mockUploadRepository = {
+        verifyBundle: sinon.stub().resolves(),
+        complementBundleMetadata: sinon.stub().resolves(complementedBundleMetadata),
+        bundleItemsCountLimit: sinon.stub().resolves(1000)
+      };
+      mockBundleDownloader = {
+        openBundleDownloadStream: sinon.stub().resolves(mockReadStream),
+        downloadBundleMetadata: sinon.stub().resolves(downloadedBundleMetadata)
+      };
+      const mockRolesRepository = {
+        nodeUrl: sinon.stub().resolves('')
+      };
+      bundleRepository = new BundleRepository(db);
+
+
+      const bundleBuilder = new BundleBuilder(identityManager, new EntityBuilder(identityManager, 1));
+      modelEngine = new DataModelEngine({
+        bundleDownloader: mockBundleDownloader,
+        bundleRepository,
+        uploadRepository: mockUploadRepository,
+        rolesRepository: mockRolesRepository,
+        bundleBuilder
+      });
+    };
+
+    beforeEach(async () => {
+      ({db, client} = await connectToMongo(config));
+      exampleAsset = createFullAsset(identityManager);
+      exampleEvent = createFullEvent(identityManager, {assetId: exampleAsset.assetId});
     });
 
-    it('removes the bundle if verification against chain fails', async () => {
-      mockUploadRepository.verifyBundle.rejects();
-      await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejected;
-      expect(mockBundleRepository.getBundle).to.have.been.calledOnceWith(bundleId);
-      expect(mockUploadRepository.verifyBundle).to.have.been.calledOnceWith(downloadedBundle);
-      expect(mockBundleRepository.removeBundle).to.have.been.calledOnceWith(bundleId);
+    afterEach(async () => {
+      await cleanDatabase(db);
+    });
+
+    after(async () => {
+      client.close();
+    });
+
+    describe('Bundle version 2', () => {
+      beforeEach(async () => {
+        downloadedBundle = createFullBundle(identityManager, {}, [exampleAsset, exampleEvent]);
+        prepareTest();
+      });
+
+      it('save to db', async () => {
+        const metadata = await modelEngine.downloadBundle(downloadedBundle.bundleId, '');
+
+        const bundleInDb = await bundleRepository.getBundle(downloadedBundle.bundleId);
+        expect(metadata).to.deep.eq(complementedBundleMetadata);
+        expect(bundleInDb).to.deep.eq(downloadedBundle);
+      });
+
+      it('does not keep the bundle if validation has failed', async () => {
+        const mockReadStream = new StringReadStream(JSON.stringify(pick(downloadedBundle, 'content.idData.timestamp'), 10));
+        mockBundleDownloader.openBundleDownloadStream.resolves(mockReadStream);
+        await expect(modelEngine.downloadBundle(downloadedBundle.bundleId, '')).be.rejectedWith(Error, 'Bundle failed to validate: Invalid data: content.idData.timestamp should not be empty');
+
+        const bundleInDb = await bundleRepository.getBundle(downloadedBundle.bundleId);
+        expect(bundleInDb).to.be.null;
+      });
+    });
+
+    describe('Bundle version 1', () => {
+      beforeEach(() => {
+        downloadedBundle = createFullBundleV1(identityManager, {}, [exampleAsset, exampleEvent]);
+        prepareTest();
+        mockUploadRepository.complementBundleMetadata.resolves({...complementedBundleMetadata, version: 1});
+      });
+
+      it('save to db', async () => {
+        const metadata = await modelEngine.downloadBundle(downloadedBundle.bundleId, '');
+
+        const bundleInDb = await bundleRepository.getBundle(downloadedBundle.bundleId);
+        expect(metadata).to.deep.eq({...complementedBundleMetadata, version: 1});
+        expect(bundleInDb).to.deep.eq(downloadedBundle);
+      });
+
+      it('does not keep the bundle if validation has failed', async () => {
+        const mockReadStream = new StringReadStream(JSON.stringify(pick(downloadedBundle, 'content.idData.timestamp'), 10));
+        mockBundleDownloader.openBundleDownloadStream.resolves(mockReadStream);
+        await expect(modelEngine.downloadBundle(downloadedBundle.bundleId, '')).be.rejectedWith(Error, 'Bundle failed to validate: Invalid data: content.idData.timestamp should not be empty');
+
+        const bundleInDb = await bundleRepository.getBundle(downloadedBundle.bundleId);
+        expect(bundleInDb).to.be.null;
+      });
     });
   });
 

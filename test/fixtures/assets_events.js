@@ -63,7 +63,7 @@ export const addEntriesHashToBundle = (identityManager, bundle) => {
   const hash = identityManager.calculateHash(entriesIds);
   return put(bundle, 'content.idData.entriesHash', hash);
 };
-export const addBundleId = (identityManager, bundle) => addHash(identityManager, bundle, 'content', 'bundleId');
+export const addBundleId = (identityManager, bundle) => addHash(identityManager, bundle, 'content.idData', 'bundleId');
 
 export const createFullAsset = (identityManager, idDataFields = {}, secret = pkPair.secret) =>
   addAssetId(
@@ -101,3 +101,22 @@ export const createFullBundle = (identityManager, idDataFields = {}, entries = [
         )
       ),
       secret));
+
+/** @deprecated */
+export const createFullBundleV1 = (identityManager, idDataFields = {}, entries = [], secret = pkPair.secret) => {
+  const addBundleId = (identityManager, bundle) => addHash(identityManager, bundle, 'content', 'bundleId');
+  const addEntriesHashToBundle = (identityManager, bundle) => addHash(identityManager, bundle, 'content.entries', 'content.idData.entriesHash');
+
+  return addBundleId(
+    identityManager,
+    addSignature(
+      identityManager,
+      addEntriesHashToBundle(
+        identityManager,
+        createBundle(
+          idDataFields,
+          entries
+        )
+      ),
+      secret));
+};

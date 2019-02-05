@@ -9,7 +9,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {MongoClient} from 'mongodb';
 import querystring from 'querystring';
-import bson from 'bson';
 import StringReadStream from './string_read_stream';
 import StringWriteStream from './string_write_stream';
 
@@ -82,6 +81,4 @@ const downloadJSONFromGridFSBucket = async (filename, bucket) => {
   return JSON.parse(serializedJSON);
 };
 
-const mongoObjectSize = new bson.BSON().calculateObjectSize;
-
-export {connectToMongo, cleanDatabase, createMongoUrl, mongoObjectSize, isFileInGridFSBucket, uploadJSONToGridFSBucket, downloadJSONFromGridFSBucket};
+export {connectToMongo, cleanDatabase, createMongoUrl, isFileInGridFSBucket, uploadJSONToGridFSBucket, downloadJSONFromGridFSBucket};
