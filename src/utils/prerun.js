@@ -28,9 +28,6 @@ export async function registerAdminAccount(dataModelEngine, logger) {
     logger.info('Registering admin account');
     const account = await dataModelEngine.addAdminAccount();
     logger.info(`Address: ${account.address}`);
-    if (account.secret) {
-      logger.info(`Secret:  ${account.secret}`);
-    }
   } catch (exception) {
     logger.error(exception.message);
   }
