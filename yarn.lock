@@ -828,10 +828,20 @@ ajv@^6.5.5:
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
 
-ambrosus-node-contracts@0.0.29:
-  version "0.0.29"
-  resolved "https://registry.yarnpkg.com/ambrosus-node-contracts/-/ambrosus-node-contracts-0.0.29.tgz#c7de5463a02875234eb2599594bb88ad9c69978f"
-  integrity sha512-l/O+U2AqsngdbRoq7T+Ct96G3jmRKvoBV7t7m+2DovWmjNO/+1qdHpfrBmvqABYtkwuMePV9KvMG0Cop3SPeRQ==
+ajv@^6.8.1:
+  version "6.8.1"
+  resolved "https://registry.yarnpkg.com/ajv/-/ajv-6.8.1.tgz#0890b93742985ebf8973cd365c5b23920ce3cb20"
+  integrity sha512-eqxCp82P+JfqL683wwsL73XmFs1eG6qjw+RD3YHx+Jll1r0jNd4dh8QG9NYAeNGA/hnZjeEDgtTskgJULbxpWQ==
+  dependencies:
+    fast-deep-equal "^2.0.1"
+    fast-json-stable-stringify "^2.0.0"
+    json-schema-traverse "^0.4.1"
+    uri-js "^4.2.2"
+
+ambrosus-node-contracts@0.0.32:
+  version "0.0.32"
+  resolved "https://registry.yarnpkg.com/ambrosus-node-contracts/-/ambrosus-node-contracts-0.0.32.tgz#19c05e19d40c1cdd82c322e516a4b7966fd94c0d"
+  integrity sha512-AmrbRoG5nQj/u/KPflnlmJJV2SIbsS00vhxSmO/SxmJmd7gv0oPMOVHoDiPuzijMeC1K/eb57rcIpzqnz9FCLA==
   dependencies:
     babel-runtime "^6.26.0"
     bn.js "^4.11.0"
