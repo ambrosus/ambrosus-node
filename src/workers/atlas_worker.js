@@ -56,8 +56,7 @@ export default class AtlasWorker extends PeriodicWorker {
     this.expressApp.get('/metrics', prometheusMetricsHandler(registry));
     this.atlasChallengeMetrics = new promClient.Counter({
       name: 'atlas_challenges_total',
-      help: 'Total number of challenges. ' +
-        `Status label is one of [${Object.values(atlasChallengeStatus)}]`,
+      help: `Total number of challenges. Status label is one of [${Object.values(atlasChallengeStatus)}]`,
       labelNames: ['status'],
       registers: [registry]
     });
