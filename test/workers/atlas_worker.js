@@ -310,7 +310,6 @@ describe('Atlas Worker', () => {
       expect(metrics).to.not.include('atlas_challenges_total{status="failed"}');
       expect(metrics).to.not.include('atlas_challenges_total{status="should_not_fetch"}');
       expect(metrics).to.not.include('atlas_challenges_total{status="should_not_resolve"}');
-      expect(metrics).to.not.include('atlas_challenges_total{status="failed_recently"}');
     });
 
     it('records metrics on resolved challenges', async () => {
@@ -320,7 +319,6 @@ describe('Atlas Worker', () => {
       expect(metrics).to.not.include('atlas_challenges_total{status="failed"}');
       expect(metrics).to.not.include('atlas_challenges_total{status="should_not_fetch"}');
       expect(metrics).to.not.include('atlas_challenges_total{status="should_not_resolve"}');
-      expect(metrics).to.not.include('atlas_challenges_total{status="failed_recently"}');
     });
 
     it('records metrics on failed challenges', async () => {
@@ -333,7 +331,6 @@ describe('Atlas Worker', () => {
       expect(metrics).to.not.include('atlas_challenges_total{status="resolved"}');
       expect(metrics).to.not.include('atlas_challenges_total{status="should_not_fetch"}');
       expect(metrics).to.not.include('atlas_challenges_total{status="should_not_resolve"}');
-      expect(metrics).to.not.include('atlas_challenges_total{status="failed_recently"}');
     });
 
     it('records metrics on challenges that should not be fetched', async () => {
@@ -345,7 +342,6 @@ describe('Atlas Worker', () => {
       expect(metrics).to.not.include('atlas_challenges_total{status="resolved"}');
       expect(metrics).to.not.include('atlas_challenges_total{status="failed"}');
       expect(metrics).to.not.include('atlas_challenges_total{status="should_not_resolve"}');
-      expect(metrics).to.not.include('atlas_challenges_total{status="failed_recently"}');
     });
 
     it('records metrics on challenges that should not be resolved', async () => {
@@ -357,19 +353,6 @@ describe('Atlas Worker', () => {
       expect(metrics).to.not.include('atlas_challenges_total{status="resolved"}');
       expect(metrics).to.not.include('atlas_challenges_total{status="failed"}');
       expect(metrics).to.not.include('atlas_challenges_total{status="should_not_fetch"}');
-      expect(metrics).to.not.include('atlas_challenges_total{status="failed_recently"}');
-    });
-
-    it('records metrics on challenges that failed recently', async () => {
-      atlasWorker.failedChallengesCache.didChallengeFailRecently.returns(true);
-
-      await atlasWorker.periodicWork();
-      const metrics = await readMetrics(port);
-      expect(metrics).to.include('atlas_challenges_total{status="failed_recently"} 1');
-      expect(metrics).to.not.include('atlas_challenges_total{status="resolved"}');
-      expect(metrics).to.not.include('atlas_challenges_total{status="failed"}');
-      expect(metrics).to.not.include('atlas_challenges_total{status="should_not_fetch"}');
-      expect(metrics).to.not.include('atlas_challenges_total{status="should_not_resolve"}');
     });
   });
 });

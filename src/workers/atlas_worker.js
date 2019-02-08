@@ -21,8 +21,7 @@ const atlasChallengeStatus = {
   resolved: 'resolved',
   failed: 'failed',
   shouldNotFetch: 'should_not_fetch',
-  shouldNotResolve: 'should_not_resolve',
-  failedRecently: 'failed_recently'
+  shouldNotResolve: 'should_not_resolve'
 };
 
 export default class AtlasWorker extends PeriodicWorker {
@@ -57,8 +56,7 @@ export default class AtlasWorker extends PeriodicWorker {
     this.expressApp.get('/metrics', prometheusMetricsHandler(registry));
     this.atlasChallengeMetrics = new promClient.Counter({
       name: 'atlas_challenges_total',
-      help: 'Total number of challenges. ' +
-            `Status label is one of [${Object.values(atlasChallengeStatus)}]`,
+      help: `Total number of challenges. Status label is one of [${Object.values(atlasChallengeStatus)}]`,
       labelNames: ['status'],
       registers: [registry]
     });
@@ -82,8 +80,6 @@ export default class AtlasWorker extends PeriodicWorker {
   async tryWithChallenge(challenge) {
     try {
       if (this.failedChallengesCache.didChallengeFailRecently(challenge.challengeId)) {
-        this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.failedRecently});
-        await this.addLog('Challenge failed recently', challenge);
         return false;
       }
       if (!await this.strategy.shouldFetchBundle(challenge)) {
