@@ -16,7 +16,7 @@ import chaiHttp from 'chai-http';
 import {accountWithSecret, adminAccountWithSecret, notRegisteredAccount} from '../../fixtures/account';
 import ScenarioBuilder from '../../fixtures/scenario_builder';
 import {createFullEvent} from '../../fixtures/assets_events';
-import {pick} from '../../../src/utils/dict_utils';
+import {pick, put} from '../../../src/utils/dict_utils';
 import pkPair from '../../fixtures/pk_pair';
 
 chai.use(chaiHttp);
@@ -68,6 +68,17 @@ describe('Events Integrations: Create', () => {
 
   it('returns 400 for invalid input (missing required field)', async () => {
     const brokenEvent = pick(event, 'content.idData.timestamp');
+    const request = apparatus.request()
+      .post(`/assets/${asset.assetId}/events`)
+      .set('Authorization', `AMB ${pkPair.secret}`)
+      .send(brokenEvent);
+    await expect(request)
+      .to.eventually.be.rejected
+      .and.have.property('status', 400);
+  });
+
+  it('returns 400 for invalid input (unexpected field)', async () => {
+    const brokenEvent = put(event, 'content.idData.foo', 'bar');
     const request = apparatus.request()
       .post(`/assets/${asset.assetId}/events`)
       .set('Authorization', `AMB ${pkPair.secret}`)
