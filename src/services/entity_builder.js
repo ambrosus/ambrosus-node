@@ -46,6 +46,7 @@ export default class EntityBuilder {
       ])
       .fieldsConstrainedToSet(['content', 'assetId'])
       .fieldsConstrainedToSet(['idData', 'signature'], 'content')
+      .fieldsConstrainedToSet(['createdBy', 'timestamp', 'sequenceNumber'], 'content.idData')
       .validate(
         ['content.idData.timestamp'],
         (timestamp) => this.isTimestampWithinLimit(timestamp),
@@ -81,6 +82,7 @@ export default class EntityBuilder {
         'Timestamp located too far in the future')
       .fieldsConstrainedToSet(['content', 'eventId'])
       .fieldsConstrainedToSet(['idData', 'data', 'signature'], 'content')
+      .fieldsConstrainedToSet(['assetId', 'createdBy', 'timestamp', 'dataHash', 'accessLevel'], 'content.idData')
       .isNonNegativeInteger(['content.idData.accessLevel', 'content.idData.timestamp'])
       .isConstrainedToSize(10 * 1024, `Event exceeds 10KB size limit`)
       .validate(

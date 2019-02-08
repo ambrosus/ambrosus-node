@@ -13,7 +13,7 @@ import chaiAsPromised from 'chai-as-promised';
 import ServerApparatus, {apparatusScenarioProcessor} from '../helpers/server_apparatus';
 import chaiHttp from 'chai-http';
 
-import {pick} from '../../src/utils/dict_utils';
+import {pick, put} from '../../src/utils/dict_utils';
 import {createFullAsset} from '../fixtures/assets_events';
 import pkPair from '../fixtures/pk_pair';
 import {adminAccountWithSecret, notRegisteredAccount, accountWithSecret} from '../fixtures/account';
@@ -74,6 +74,17 @@ describe('Assets - Integrations', () => {
 
     it('returns 400 for invalid input (missing required field)', async () => {
       const brokenAsset = pick(asset, 'content.idData.timestamp');
+      const request = apparatus.request()
+        .post('/assets')
+        .set('Authorization', `AMB ${pkPair.secret}`)
+        .send(brokenAsset);
+      await expect(request)
+        .to.eventually.be.rejected
+        .and.have.property('status', 400);
+    });
+
+    it('returns 400 for invalid input (unexpected field)', async () => {
+      const brokenAsset = put(asset, 'content.idData.foo', 'bar');
       const request = apparatus.request()
         .post('/assets')
         .set('Authorization', `AMB ${pkPair.secret}`)

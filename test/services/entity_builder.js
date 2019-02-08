@@ -112,6 +112,11 @@ describe('Entity Builder', () => {
         const brokenAsset = put(exampleAsset, 'content.metadata', 'abc');
         expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
       });
+
+      it(`doesn't allow content.idData fields other than 'createdBy', 'timestamp' and 'sequenceNumber'`, () => {
+        const brokenAsset = put(exampleAsset, 'content.idData.unexpectedField', 'abc');
+        expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
+      });
     });
 
     describe('Event', () => {
@@ -238,13 +243,18 @@ describe('Entity Builder', () => {
         mockEnsureTimestampWithinLimit.restore();
       });
 
-      it('doesn\'t allow root-level fields other than content, and eventId', () => {
+      it(`doesn't allow root-level fields other than content, and eventId`, () => {
         const brokenEvent = put(exampleEvent, 'metadata', 'abc');
         expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
       });
 
-      it('doesn\'t allow content fields other than data, idData and signature', () => {
+      it(`doesn't allow content fields other than data, idData and signature`, () => {
         const brokenEvent = put(exampleEvent, 'content.metadata', 'abc');
+        expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
+      });
+
+      it(`doesn't allow content.idData fields other than 'assetId', 'createdBy', 'timestamp', 'dataHash', 'accessLevel'`, () => {
+        const brokenEvent = put(exampleEvent, 'content.idData.unexpectedField', 'abc');
         expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
       });
     });
