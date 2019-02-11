@@ -15,6 +15,7 @@ import healthCheckHandler from '../routes/health_check';
 import PeriodicWorker from './periodic_worker';
 import AtlasChallengeParticipationStrategy from './atlas_strategies/atlas_challenge_resolution_strategy';
 import {checkIfEnoughFundsToPayForGas, getDefaultAddress} from '../utils/web3_tools';
+import availableDiskSpace from '../utils/disk_usage';
 
 const ATLAS_RESOLUTION_WORK_TYPE = 'AtlasChallengeResolution';
 const atlasChallengeStatus = {
@@ -116,6 +117,9 @@ export default class AtlasWorker extends PeriodicWorker {
       if (!await this.isEnoughFundsToPayForGas()) {
         return;
       }
+      if (!await this.isEnoughAvailableDiskSpace()) {
+        return;
+      }
       const challenges = await this.challengesRepository.ongoingChallenges();
       const recentlyFailedChallenges = challenges.filter(({challengeId}) => challengeId in this.failedChallengesCache.failedChallengesEndTime);
       await this.addLog(`Challenges preselected for resolution: ${challenges.length} (out of which ${recentlyFailedChallenges.length} have failed recently)`);
@@ -141,6 +145,14 @@ export default class AtlasWorker extends PeriodicWorker {
       return false;
     }
     this.isOutOfFunds = false;
+    return true;
+  }
+
+  async isEnoughAvailableDiskSpace() {
+    if (await availableDiskSpace() < this.strategy.requiredFreeDiskSpace) {
+      await this.addLog('Not enough free disk space');
+      return false;
+    }
     return true;
   }
 

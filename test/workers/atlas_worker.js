@@ -30,6 +30,7 @@ describe('Atlas Worker', () => {
   const exampleWorkId = 'workid';
   const workerInterval = 10;
   const retryTimeout = 14;
+  const requiredFreeDiskSpace = 1000000;
   const {utils} = new Web3();
   let atlasWorker;
   let challengesRepositoryMock;
@@ -79,6 +80,7 @@ describe('Atlas Worker', () => {
     strategyMock = new AtlasChallengeParticipationStrategy();
     sinon.stub(strategyMock, 'workerInterval').get(() => workerInterval);
     sinon.stub(strategyMock, 'retryTimeout').get(() => retryTimeout);
+    sinon.stub(strategyMock, 'requiredFreeDiskSpace').get(() => requiredFreeDiskSpace);
     shouldFetchBundleStub = sinon.stub(strategyMock, 'shouldFetchBundle').resolves(true);
     shouldResolveChallengeStub = sinon.stub(strategyMock, 'shouldResolveChallenge').resolves(true);
     sinon.stub(strategyMock, 'afterChallengeResolution');
