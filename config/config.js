@@ -51,5 +51,5 @@ module.exports = Object.freeze({
 
   migrationSleepTimeInSeconds: process.env.MIGRATION_SLEEP_TIME || 10,
 
-  supportDeprecatedBundles: process.env.DISABLE_SUPPORT_FOR_DEPRECATED_BUDLES !== 'true'
+  supportDeprecatedBundleVersions: process.env.SUPPORT_DEPRECATED_BUDLE_VERSIONS === 'true'
 });

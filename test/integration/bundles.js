@@ -119,15 +119,8 @@ describe('Bundles - Integrations', () => {
       const response = await apparatus.request()
         .get(`/bundle/${res.bundleId}/info`);
 
-      expect(response.body).to.have.keys(['bundleId', 'bundleProofBlock', 'bundleTransactionHash', 'bundleUploadTimestamp', 'storagePeriods', 'version']);
+      expect(response.body).to.have.keys(['bundleId', 'bundleProofBlock', 'bundleTransactionHash', 'bundleUploadTimestamp', 'storagePeriods']);
       expect(response.body.bundleTransactionHash).to.be.properTxHash;
-    });
-
-    it('contains current version', async () => {
-      const response = await apparatus.request()
-        .get(`/bundle/${res.bundleId}/info`);
-
-      expect(response.body.version).to.eq(2);
     });
 
     it('return 404 if bundle with requested id does not exist', async () => {

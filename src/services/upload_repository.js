@@ -12,8 +12,6 @@ import {ValidationError} from '../errors/errors';
 import {Role} from './roles_repository';
 import {InsufficientFundsToUploadBundleError} from 'ambrosus-node-contracts';
 
-const DEFAULT_BUNDLE_VERSION = 1;
-
 export default class UploadRepository {
   constructor(web3, identityManager, uploadsActions, shelteringWrapper, rolesWrapper, configWrapper, sentry) {
     this.web3 = web3;
@@ -106,7 +104,6 @@ export default class UploadRepository {
     const bundleStoragePeriods = await this.shelteringWrapper.bundleStoragePeriods(bundleMetadata.bundleId);
     return {
       ...bundleMetadata,
-      version: bundleMetadata.version || DEFAULT_BUNDLE_VERSION,
       bundleTransactionHash: bundleUploadData.transactionHash,
       bundleProofBlock: bundleUploadData.blockNumber,
       bundleUploadTimestamp: bundleUploadData.timestamp,

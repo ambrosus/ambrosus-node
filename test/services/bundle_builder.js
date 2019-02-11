@@ -25,23 +25,28 @@ import {createFullAsset, createFullBundle, createFullEvent} from '../fixtures/as
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {getTimestamp} from '../../src/utils/time_utils';
 import StringReadStream from '../../src/utils/string_read_stream';
+import StringWriteStream from '../../src/utils/string_write_stream';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
+
 describe('Bundle Builder', () => {
   let identityManager;
   let exampleAsset;
   let exampleEvent;
   let exampleBundle;
+  let exampleBundleValidationSubset;
   let bundleBuilder;
   const exampleVersion = 2;
   const bundleItemsCountLimit = 1000;
+  const createMockStream = (bundle) => new StringReadStream(JSON.stringify(bundle), 10);
 
   before(async () => {
     identityManager = new IdentityManager(await createWeb3());
     exampleAsset = createFullAsset(identityManager);
     exampleEvent = createFullEvent(identityManager, {assetId: exampleAsset.assetId});
     exampleBundle = createFullBundle(identityManager, {}, [exampleAsset, exampleEvent]);
+    exampleBundleValidationSubset = put(exampleBundle, 'content.entries', [{assetId: exampleAsset.assetId}, {eventId: exampleEvent.eventId}]);
   });
 
   it('extractIdsFromEntries returns an array of entry ids in same order', () => {
@@ -50,42 +55,65 @@ describe('Bundle Builder', () => {
 
   describe('extractBundleDataNecessaryForValidationFromStream', () => {
     let bundleWithUnexpectedFields;
-    const createMockStream = (bundle) => new StringReadStream(JSON.stringify(bundle), 10);
     before(() => {
       bundleWithUnexpectedFields = put(put(exampleBundle, 'foo', 'bar'), 'content.one', 1);
       bundleBuilder = new BundleBuilder();
     });
 
-    describe('Bundle version 1', () => {
-      it('returns the whole bundle', async () => {
-        expect(await bundleBuilder.extractBundleDataNecessaryForValidationFromStream(createMockStream(bundleWithUnexpectedFields), 1)).to.deep.equal(bundleWithUnexpectedFields);
-      });
-
-      it('resolves when empty object is passed', async () => {
-        expect(await bundleBuilder.extractBundleDataNecessaryForValidationFromStream(createMockStream({}), 1)).to.deep.equal({});
-        expect(await bundleBuilder.extractBundleDataNecessaryForValidationFromStream(createMockStream('some string'), 1)).to.deep.equal('some string');
-      });
-
-      it('throws when streamed data is not a correct JSON', async () => {
-        await expect(bundleBuilder.extractBundleDataNecessaryForValidationFromStream(new StringReadStream('Shaun', 10), 1)).to.be.rejected;
-      });
+    it('returns bundle without entries content', async () => {
+      expect(await bundleBuilder.extractBundleDataNecessaryForValidationFromStream(createMockStream(bundleWithUnexpectedFields))).to.deep.equal(
+        put(bundleWithUnexpectedFields, 'content.entries', [{assetId: exampleAsset.assetId}, {eventId: exampleEvent.eventId}])
+      );
     });
 
-    describe('Bundle version 2', () => {
-      it('returns bundle without entries content', async () => {
-        expect(await bundleBuilder.extractBundleDataNecessaryForValidationFromStream(createMockStream(bundleWithUnexpectedFields), 2)).to.deep.equal(
-          put(bundleWithUnexpectedFields, 'content.entries', [{assetId: exampleAsset.assetId}, {eventId: exampleEvent.eventId}])
-        );
-      });
+    it('resolves when empty object is passed', async () => {
+      expect(await bundleBuilder.extractBundleDataNecessaryForValidationFromStream(createMockStream({}))).to.deep.equal({});
+      expect(await bundleBuilder.extractBundleDataNecessaryForValidationFromStream(createMockStream('some string'))).to.deep.equal('some string');
+    });
 
-      it('resolves when empty object is passed', async () => {
-        expect(await bundleBuilder.extractBundleDataNecessaryForValidationFromStream(createMockStream({}), 2)).to.deep.equal({});
-        expect(await bundleBuilder.extractBundleDataNecessaryForValidationFromStream(createMockStream('some string'), 2)).to.deep.equal('some string');
-      });
+    it('throws when streamed data is not a correct JSON', async () => {
+      await expect(bundleBuilder.extractBundleDataNecessaryForValidationFromStream(new StringReadStream('Shaun', 10))).to.be.rejected;
+    });
+  });
 
-      it('throws when streamed data is not a correct JSON', async () => {
-        await expect(bundleBuilder.extractBundleDataNecessaryForValidationFromStream(new StringReadStream('Shaun', 10), 2)).to.be.rejected;
+  describe('validateStreamedBundle', () => {
+    let mockWriteStream;
+    let mockReadStream;
+    let fullValidationStub;
+    let partialValidationStub;
+
+    beforeEach(() => {
+      mockWriteStream = new StringWriteStream();
+      mockReadStream = createMockStream(exampleBundle);
+      bundleBuilder = new BundleBuilder();
+      fullValidationStub = sinon.stub(bundleBuilder, 'validateBundle');
+      partialValidationStub = sinon.stub(bundleBuilder, 'validateBundleWithVersionBefore3');
+    });
+
+    it('calls full validation when supportDeprecatedBundleVersions is set to false', async () => {
+      await bundleBuilder.validateStreamedBundle(mockReadStream, mockWriteStream, 1);
+      expect(fullValidationStub).to.be.calledOnceWith(exampleBundleValidationSubset);
+      expect(partialValidationStub).to.be.not.called;
+    });
+
+    it('calls only partial validation when supportDeprecatedBundleVersions is set to true', async () => {
+      bundleBuilder.supportDeprecatedBundleVersions = true;
+      await bundleBuilder.validateStreamedBundle(mockReadStream, mockWriteStream, 1);
+      expect(fullValidationStub).to.be.not.called;
+      expect(partialValidationStub).to.be.calledOnceWith(exampleBundleValidationSubset);
+    });
+
+    it('aborts the write and throws if the bundle download fails', async () => {
+      mockWriteStream.abort = sinon.stub().callsFake((err) => {
+        mockWriteStream.emit('error', err);
       });
+      mockWriteStream.once('pipe', () => {
+        mockReadStream.once('data', () => {
+          mockReadStream.destroy(new Error('Download failed')); // simulate read stream failure
+        });
+      });
+      await expect(bundleBuilder.validateStreamedBundle(mockReadStream, mockWriteStream, 1)).to.be.rejected;
+      expect(mockWriteStream.abort).to.have.been.calledOnce;
     });
   });
 
@@ -123,7 +151,7 @@ describe('Bundle Builder', () => {
       // eslint-disable-next-line no-loop-func
       it(`throws if the ${field} field is missing`, () => {
         const brokenBundle = pick(exampleBundle, field);
-        expect(() => bundleBuilder.validateBundle(brokenBundle, exampleVersion, bundleItemsCountLimit)).to.throw(ValidationError);
+        expect(() => bundleBuilder.validateBundle(brokenBundle, bundleItemsCountLimit)).to.throw(ValidationError);
       });
     }
 
@@ -180,11 +208,12 @@ describe('Bundle Builder', () => {
     });
 
     it('throws if bundle has the version we do not expect', async () => {
-      expect(() => bundleBuilder.validateBundle(exampleBundle, 3.14, bundleItemsCountLimit)).to.throw(ValidationError);
+      const brokenBundle = put(exampleBundle, 'content.idData.version', 3.14);
+      expect(() => bundleBuilder.validateBundle(brokenBundle, bundleItemsCountLimit)).to.throw(ValidationError);
     });
 
     it('throws if entries count exceeds bundleItemsCountLimit', async () => {
-      expect(() => bundleBuilder.validateBundle(exampleBundle, exampleVersion, 1)).to.throw(ValidationError);
+      expect(() => bundleBuilder.validateBundle(exampleBundle, 1)).to.throw(ValidationError);
     });
   });
 
@@ -194,8 +223,7 @@ describe('Bundle Builder', () => {
       bundleUploadTimestamp: 1544171039,
       bundleProofBlock: 120,
       bundleTransactionHash: '0xbfa90258fe2badae4cce5316161cdc1f6eccb5d47f0904adafca120e142c9c3e',
-      storagePeriods: 3,
-      version: 2
+      storagePeriods: 3
     };
 
     before(() => {
@@ -218,24 +246,6 @@ describe('Bundle Builder', () => {
     it('throws if bundleId does not have the correct format', async () => {
       const brokenMetadata = {...exampleBundleMetadata, bundleId: '0xIncorrectValue'};
       expect(() => bundleBuilder.validateBundleMetadata(brokenMetadata)).to.throw(ValidationError);
-    });
-
-    describe('Not supporting old bundles', () => {
-      before(() => {
-        bundleBuilder = new BundleBuilder({}, {}, false);
-      });
-
-      it('works when version is 2', async () => {
-        expect(() => bundleBuilder.validateBundleMetadata(exampleBundleMetadata)).to.not.throw();
-      });
-
-      it('throws when version is not 2', async () => {
-        expect(() => bundleBuilder.validateBundleMetadata({...exampleBundleMetadata, version: 1})).to.throw(ValidationError);
-      });
-
-      it('throws when version is missing', async () => {
-        expect(() => bundleBuilder.validateBundleMetadata(pick(exampleBundleMetadata, 'version'))).to.throw(ValidationError);
-      });
     });
   });
 

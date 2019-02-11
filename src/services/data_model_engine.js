@@ -11,7 +11,6 @@ import {NotFoundError, PermissionError, ValidationError} from '../errors/errors'
 import {getTimestamp} from '../utils/time_utils';
 import {pick, put} from '../utils/dict_utils';
 import allPermissions from '../utils/all_permissions';
-const pipeline = require('util').promisify(require('stream').pipeline);
 
 export default class DataModelEngine {
   constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, bundleDownloader, bundleBuilder, bundleRepository, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, uploadRepository, rolesRepository, workerLogRepository}) {
@@ -261,17 +260,9 @@ export default class DataModelEngine {
 
   async downloadAndValidateBundleBody(nodeUrl, bundleId, metadata) {
     const downloadStream = await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
-    const writeStream = await this.bundleRepository.openBundleWriteStream(bundleId, metadata.storagePeriods,
-      metadata.version);
-    downloadStream.on('error', (err) => {
-      writeStream.abort(err);
-    });
-    const [minimalBundle] = await Promise.all([
-      this.bundleBuilder.extractBundleDataNecessaryForValidationFromStream(downloadStream, metadata.version),
-      pipeline(downloadStream, writeStream)
-    ]);
+    const writeStream = await this.bundleRepository.openBundleWriteStream(bundleId, metadata.storagePeriods);
     const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
-    this.bundleBuilder.validateBundle(minimalBundle, metadata.version, bundleItemsCountLimit);
+    await this.bundleBuilder.validateStreamedBundle(downloadStream, writeStream, bundleItemsCountLimit);
   }
 
   async updateShelteringExpirationDate(bundleId) {
