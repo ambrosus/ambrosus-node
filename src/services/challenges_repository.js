@@ -31,8 +31,10 @@ export default class ChallengesRepository {
 
   async ongoingChallenges() {
     const {fromBlock, currentBlock} = await this.getBlockInfo();
-    await this.updateActiveChallengesCache(fromBlock, currentBlock);
-    this.updateBlockInfo(currentBlock);
+    if (fromBlock <= currentBlock) {
+      await this.updateActiveChallengesCache(fromBlock, currentBlock);
+      this.updateBlockInfo(currentBlock);
+    }
     return this.activeChallengesCache.activeChallenges;
   }
 
@@ -61,7 +63,7 @@ export default class ChallengesRepository {
     return this.challengesWrapper.earliestMeaningfulBlock(challengeDuration);
   }
 
-  async updateBlockInfo(currentBlock) {
+  updateBlockInfo(currentBlock) {
     this.lastSavedBlock = currentBlock;
   }
 

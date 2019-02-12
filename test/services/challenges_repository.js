@@ -174,6 +174,15 @@ describe('Challenges repository', () => {
       expect(challengesRepository.lastSavedBlock).to.equal(latestBlock + 3);
     });
 
+    it('does not fetch new challenges when currentBlock equals lastSavedBlock', async () => {
+      blockchainStateWrapperMock.getCurrentBlockNumber.onSecondCall().resolves(latestBlock);
+      await challengesRepository.ongoingChallenges();
+      await challengesRepository.ongoingChallenges();
+      expect(challengeWrapperMock.challenges).to.be.calledOnce;
+      expect(challengeWrapperMock.resolvedChallenges).to.be.calledOnce;
+      expect(challengeWrapperMock.timedOutChallenges).to.be.calledOnce;
+    });
+
     it('adds new challenges to cache, decreases active count on resolved and removes timed out', async () => {
       await challengesRepository.ongoingChallenges();
       expect(activeChallengesCacheMock.applyIncomingChallengeEvents).to.be.calledOnceWithExactly(
