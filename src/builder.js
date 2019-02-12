@@ -100,10 +100,10 @@ class Builder {
     this.challengesRepository = new ChallengesRepository(this.challengesWrapper,
       this.configWrapper, this.blockChainStateWrapper, this.activeChallengesCache);
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
-    const {maximumEntityTimestampOvertake, supportDeprecatedBundles} = this.config;
+    const {maximumEntityTimestampOvertake, supportDeprecatedBundleVersions} = this.config;
     this.entityBuilder = new EntityBuilder(this.identityManager, maximumEntityTimestampOvertake);
     this.entityRepository = new EntityRepository(this.db);
-    this.bundleBuilder = new BundleBuilder(this.identityManager, this.entityBuilder, supportDeprecatedBundles);
+    this.bundleBuilder = new BundleBuilder(this.identityManager, this.entityBuilder, supportDeprecatedBundleVersions);
     this.bundleRepository = new BundleRepository(this.db);
     this.workerLogRepository = new WorkerLogRepository(this.db);
     this.workerTaskTrackingRepository = new WorkerTaskTrackingRepository(this.db);

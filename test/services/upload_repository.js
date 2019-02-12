@@ -208,8 +208,7 @@ describe('Upload repository', () => {
       bundleUploadTimestamp: exampleUploadData.timestamp,
       bundleProofBlock: exampleUploadData.blockNumber,
       bundleTransactionHash: exampleUploadData.transactionHash,
-      storagePeriods: exampleStoragePeriods,
-      version: 1
+      storagePeriods: exampleStoragePeriods
     };
 
     beforeEach(() => {

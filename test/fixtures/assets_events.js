@@ -40,6 +40,7 @@ export const createBundle = (fields, entries = []) => ({
     idData: {
       createdBy: pkPair.address,
       timestamp: 1548345376,
+      version: 3,
       ...fields
     },
     entries: [
@@ -114,7 +115,7 @@ export const createFullBundleV1 = (identityManager, idDataFields = {}, entries =
       addEntriesHashToBundle(
         identityManager,
         createBundle(
-          idDataFields,
+          {...idDataFields, version: 1},
           entries
         )
       ),
