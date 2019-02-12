@@ -77,8 +77,8 @@ describe('Bundles - Integrations', () => {
     });
 
     it('should upload the proof to ethereum, and emit an event', async () => {
-      const uploadsContract = await apparatus.uploadsWrapper.contract();
-      const emittedEvents = await uploadsContract.getPastEvents('BundleUploaded');
+      const challengesEventEmitterContract = await apparatus.challengesEventEmitterWrapper.contract();
+      const emittedEvents = await challengesEventEmitterContract.getPastEvents('ChallengeCreated');
 
       const expectedEvent = emittedEvents.filter((value) => value.returnValues.bundleId === res.bundleId);
       expect(expectedEvent).to.have.length(1);

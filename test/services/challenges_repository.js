@@ -22,6 +22,7 @@ describe('Challenges repository', () => {
   let configWrapperMock;
   let activeChallengesCacheMock;
   let blockchainStateWrapperMock;
+  let challengesEventEmitterWrapper;
   let challengesRepository;
 
   describe('prepareChallengeEvent', () => {
@@ -131,9 +132,6 @@ describe('Challenges repository', () => {
 
     beforeEach(() => {
       challengeWrapperMock = {
-        challenges: sinon.stub().resolves(events),
-        resolvedChallenges: sinon.stub().resolves(resolvedEvents),
-        timedOutChallenges: sinon.stub().resolves(timedOutEvents),
         earliestMeaningfulBlock: sinon.stub().resolves(fromBlock),
         defaultAddress: 'defaultAddress'
       };
@@ -147,11 +145,16 @@ describe('Challenges repository', () => {
       blockchainStateWrapperMock = {
         getCurrentBlockNumber: sinon.stub()
       };
+      challengesEventEmitterWrapper = {
+        challenges: sinon.stub().resolves(events),
+        resolvedChallenges: sinon.stub().resolves(resolvedEvents),
+        timedOutChallenges: sinon.stub().resolves(timedOutEvents)
+      };
       blockchainStateWrapperMock.getCurrentBlockNumber.onFirstCall()
         .resolves(latestBlock)
         .onSecondCall()
         .resolves(latestBlock + 3);
-      challengesRepository = new ChallengesRepository(challengeWrapperMock, configWrapperMock, blockchainStateWrapperMock, activeChallengesCacheMock);
+      challengesRepository = new ChallengesRepository(challengeWrapperMock, challengesEventEmitterWrapper, configWrapperMock, blockchainStateWrapperMock, activeChallengesCacheMock);
       sinon.spy(challengesRepository, 'prepareChallengeEvent');
     });
 
@@ -159,18 +162,18 @@ describe('Challenges repository', () => {
       const result = await challengesRepository.ongoingChallenges();
       expect(configWrapperMock.challengeDuration).to.be.calledOnce;
       expect(challengeWrapperMock.earliestMeaningfulBlock).to.be.calledWith(challengeDuration);
-      expect(challengeWrapperMock.challenges).to.be.calledWith(fromBlock, latestBlock);
-      expect(challengeWrapperMock.resolvedChallenges).to.be.calledWith(fromBlock, latestBlock);
-      expect(challengeWrapperMock.timedOutChallenges).to.be.calledWith(fromBlock, latestBlock);
+      expect(challengesEventEmitterWrapper.challenges).to.be.calledWith(fromBlock, latestBlock);
+      expect(challengesEventEmitterWrapper.resolvedChallenges).to.be.calledWith(fromBlock, latestBlock);
+      expect(challengesEventEmitterWrapper.timedOutChallenges).to.be.calledWith(fromBlock, latestBlock);
       expect(result).to.deep.equal(activeChallengesCacheMock.activeChallenges);
     });
 
     it('on second call: gets challenges since previously resolved block', async () => {
       await challengesRepository.ongoingChallenges();
       await challengesRepository.ongoingChallenges();
-      expect(challengeWrapperMock.challenges).to.be.calledWith(latestBlock + 1, latestBlock + 3);
-      expect(challengeWrapperMock.resolvedChallenges).to.be.calledWith(latestBlock + 1, latestBlock + 3);
-      expect(challengeWrapperMock.timedOutChallenges).to.be.calledWith(latestBlock + 1, latestBlock + 3);
+      expect(challengesEventEmitterWrapper.challenges).to.be.calledWith(latestBlock + 1, latestBlock + 3);
+      expect(challengesEventEmitterWrapper.resolvedChallenges).to.be.calledWith(latestBlock + 1, latestBlock + 3);
+      expect(challengesEventEmitterWrapper.timedOutChallenges).to.be.calledWith(latestBlock + 1, latestBlock + 3);
       expect(challengesRepository.lastSavedBlock).to.equal(latestBlock + 3);
     });
 

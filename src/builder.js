@@ -86,7 +86,7 @@ class Builder {
     this.shelteringWrapper = new ShelteringWrapper(this.headWrapper, this.web3, defaultAddress);
     this.kycWhitelistWrapper = new KycWhitelistWrapper(this.headWrapper, this.web3, defaultAddress);
     this.blockChainStateWrapper = new BlockchainStateWrapper(this.web3);
-    this.uploadActions = new UploadActions(this.uploadsWrapper, this.feesWrapper, this.shelteringWrapper, this.blockChainStateWrapper, this.web3.utils.toWei(lowFundsWarningAmount, 'ether'));
+    this.uploadActions = new UploadActions(this.uploadsWrapper, this.feesWrapper, this.shelteringWrapper, this.blockChainStateWrapper, this.challengesEventEmitterWrapper, this.web3.utils.toWei(lowFundsWarningAmount, 'ether'));
 
     this.rolesRepository = new RolesRepository(this.rolesWrapper, this.configWrapper);
     this.uploadRepository = new UploadRepository(
