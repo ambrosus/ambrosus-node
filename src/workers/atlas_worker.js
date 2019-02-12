@@ -48,6 +48,7 @@ export default class AtlasWorker extends PeriodicWorker {
     this.failedChallengesCache = failedChallengesCache;
     this.mongoClient = mongoClient;
     this.isOutOfFunds = false;
+    this.isOutOfSpace = false;
     this.expressApp = express();
     this.serverPort = serverPort;
     this.expressApp.get('/health', asyncMiddleware(
@@ -150,9 +151,13 @@ export default class AtlasWorker extends PeriodicWorker {
 
   async isEnoughAvailableDiskSpace() {
     if (await availableDiskSpace() < this.strategy.requiredFreeDiskSpace) {
-      await this.addLog('Not enough free disk space');
+      if (!this.isOutOfSpace) {
+        await this.addLog('Not enough free disk space');
+        this.isOutOfSpace = true;
+      }
       return false;
     }
+    this.isOutOfSpace = false;
     return true;
   }
 

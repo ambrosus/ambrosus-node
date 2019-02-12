@@ -17,6 +17,7 @@ import AtlasChallengeParticipationStrategy from '../../src/workers/atlas_strateg
 import {connectToMongo} from '../../src/utils/db_utils';
 import config from '../../config/config';
 import Web3 from 'web3';
+import getAvailableDiskSpace from '../../src/utils/disk_usage';
 
 chai.use(chaiHttp);
 chai.use(sinonChai);
@@ -30,7 +31,7 @@ describe('Atlas Worker', () => {
   const exampleWorkId = 'workid';
   const workerInterval = 10;
   const retryTimeout = 14;
-  const requiredFreeDiskSpace = 1000000;
+  const requiredFreeDiskSpace = 1000000000000;
   const {utils} = new Web3();
   let atlasWorker;
   let challengesRepositoryMock;
@@ -294,6 +295,61 @@ describe('Atlas Worker', () => {
       mockWeb3.eth.getBalance.resolves('10');
       await expect(atlasWorker.periodicWork()).to.be.eventually.fulfilled;
       await expect(challengesRepositoryMock.ongoingChallenges).to.be.not.called;
+    });
+
+    describe('isEnoughAvailableDiskSpace', () => {
+      let availableDiskSpace;
+      async function checkWithNotEnoughSpace() {
+        sinon.stub(strategyMock, 'requiredFreeDiskSpace').get(() => availableDiskSpace * 2);
+        return atlasWorker.isEnoughAvailableDiskSpace();
+      }
+
+      async function checkWithEnoughSpace() {
+        sinon.stub(strategyMock, 'requiredFreeDiskSpace').get(() => availableDiskSpace / 2);
+        return atlasWorker.isEnoughAvailableDiskSpace();
+      }
+
+      before(async () => {
+        availableDiskSpace = await getAvailableDiskSpace();
+      });
+
+      it('returns true when the machine has enough free disk space', async () => {
+        await expect(checkWithEnoughSpace()).to.eventually.be.true;
+      });
+
+      it('returns false when the machine does not have enough free disk space', async () => {
+        await expect(checkWithNotEnoughSpace()).to.eventually.be.false;
+      });
+
+      it('returns true when the machine got enough free disk space after it was out of it', async () => {
+        await checkWithNotEnoughSpace();
+        await expect(checkWithEnoughSpace()).to.eventually.be.true;
+      });
+
+      it('writes message to log when outOfSpace is raised for the first time in a row', async () => {
+        await checkWithNotEnoughSpace();
+        expect(loggerMock.info).to.be.calledOnce;
+
+        await checkWithEnoughSpace();
+        expect(loggerMock.info).to.be.calledOnce;
+
+        await checkWithNotEnoughSpace();
+        expect(loggerMock.info).to.be.calledTwice;
+      });
+
+      it('does not write message to log again until still not enough free space', async () => {
+        await checkWithNotEnoughSpace();
+        await checkWithNotEnoughSpace();
+        await checkWithNotEnoughSpace();
+
+        expect(loggerMock.info).to.be.calledOnce;
+      });
+
+      it('periodicWork does not do anything when there is less free space than required', async () => {
+        sinon.stub(strategyMock, 'requiredFreeDiskSpace').get(() => availableDiskSpace * 2);
+        await expect(atlasWorker.periodicWork()).to.be.eventually.fulfilled;
+        await expect(challengesRepositoryMock.ongoingChallenges).to.be.not.called;
+      });
     });
   });
 
