@@ -105,7 +105,7 @@ describe('Bundle Builder', () => {
     it('throws when version is not latest and supportDeprecatedBundleVersions is set to false', async () => {
       bundleBuilder.supportDeprecatedBundleVersions = false;
       mockReadStream = createMockStream(put(exampleBundle, 'content.idData.version', 2));
-      await expect(bundleBuilder.validateStreamedBundle(mockReadStream, mockWriteStream, 1)).to.be.rejectedWith(ValidationError, 'Only supported bundle version is: 3');
+      await expect(bundleBuilder.validateStreamedBundle(mockReadStream, mockWriteStream, 1)).to.be.rejectedWith(ValidationError, 'Only bundles with version 3 are supported');
     });
 
     it('aborts the write and throws if the bundle download fails', async () => {

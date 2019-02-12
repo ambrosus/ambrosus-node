@@ -68,7 +68,7 @@ export default class BundleBuilder {
     } else if (this.supportDeprecatedBundleVersions) {
       this.validateBundleWithVersionBefore3(minimalBundleForLatestVersionValidation, bundleItemsCountLimit);
     } else {
-      throw new ValidationError(`Only supported bundle version is: ${LATEST_BUNDLE_VERSION}`);
+      throw new ValidationError(`Only bundles with version ${LATEST_BUNDLE_VERSION} are supported`);
     }
   }
 
@@ -105,7 +105,7 @@ export default class BundleBuilder {
       .fieldsConstrainedToSet(['idData', 'entries', 'signature'], 'content')
       .isNonNegativeInteger(['content.idData.timestamp'])
       .validate(['content.entries'], (entries) => entries.length <= bundleItemsCountLimit, 'Bundle size surpasses the limit')
-      .validate(['content.idData.version'], (version) => version === LATEST_BUNDLE_VERSION, `Only supported bundle version is: ${LATEST_BUNDLE_VERSION}`);
+      .validate(['content.idData.version'], (version) => version === LATEST_BUNDLE_VERSION, `Only bundles with version ${LATEST_BUNDLE_VERSION} are supported`);
 
     this.validateBundleHashes(validator, bundle.content.idData, this.extractIdsFromEntries(bundle.content.entries));
 
