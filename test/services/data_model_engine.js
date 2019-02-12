@@ -1441,7 +1441,7 @@ describe('Data Model Engine', () => {
       client.close();
     });
 
-    describe('Bundle version 2', () => {
+    describe('Bundle version 3', () => {
       beforeEach(async () => {
         downloadedBundle = createFullBundle(identityManager, {}, [exampleAsset, exampleEvent]);
         prepareTest();

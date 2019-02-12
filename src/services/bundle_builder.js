@@ -63,10 +63,12 @@ export default class BundleBuilder {
       this.extractBundleDataNecessaryForValidationFromStream(readStream),
       pipeline(readStream, writeStream)
     ]);
-    if (!this.supportDeprecatedBundleVersions) {
+    if (minimalBundleForLatestVersionValidation.content.idData.version === LATEST_BUNDLE_VERSION) {
       this.validateBundle(minimalBundleForLatestVersionValidation, bundleItemsCountLimit);
-    } else {
+    } else if (this.supportDeprecatedBundleVersions) {
       this.validateBundleWithVersionBefore3(minimalBundleForLatestVersionValidation, bundleItemsCountLimit);
+    } else {
+      throw new ValidationError(`Only supported bundle version is: ${LATEST_BUNDLE_VERSION}`);
     }
   }
 
