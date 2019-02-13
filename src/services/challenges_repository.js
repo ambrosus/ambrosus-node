@@ -9,8 +9,9 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 
 export default class ChallengesRepository {
-  constructor(challengesWrapper, configWrapper, blockchainStateWrapper, activeChallengesCache) {
+  constructor(challengesWrapper, challengesEventEmitterWrapper, configWrapper, blockchainStateWrapper, activeChallengesCache) {
     this.challengesWrapper = challengesWrapper;
+    this.challengesEventEmitterWrapper = challengesEventEmitterWrapper;
     this.configWrapper = configWrapper;
     this.blockchainStateWrapper = blockchainStateWrapper;
     this.activeChallengesCache = activeChallengesCache;
@@ -39,9 +40,9 @@ export default class ChallengesRepository {
   }
 
   async updateActiveChallengesCache(fromBlock, currentBlock) {
-    const issuedChallengeEvents = await this.challengesWrapper.challenges(fromBlock, currentBlock);
-    const resolvedChallengeEvents = await this.challengesWrapper.resolvedChallenges(fromBlock, currentBlock);
-    const timedOutChallengeEvents = await this.challengesWrapper.timedOutChallenges(fromBlock, currentBlock);
+    const issuedChallengeEvents = await this.challengesEventEmitterWrapper.challenges(fromBlock, currentBlock);
+    const resolvedChallengeEvents = await this.challengesEventEmitterWrapper.resolvedChallenges(fromBlock, currentBlock);
+    const timedOutChallengeEvents = await this.challengesEventEmitterWrapper.timedOutChallenges(fromBlock, currentBlock);
 
     const startedChallenges = this.prepareChallengeEvent(issuedChallengeEvents, ['challengeId', 'sheltererId', 'bundleId', 'count']);
     const resolvedChallenges = this.prepareChallengeEvent(resolvedChallengeEvents, ['challengeId']);

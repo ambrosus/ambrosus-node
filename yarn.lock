@@ -838,10 +838,10 @@ ajv@^6.8.1:
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
 
-ambrosus-node-contracts@0.0.32:
-  version "0.0.32"
-  resolved "https://registry.yarnpkg.com/ambrosus-node-contracts/-/ambrosus-node-contracts-0.0.32.tgz#19c05e19d40c1cdd82c322e516a4b7966fd94c0d"
-  integrity sha512-AmrbRoG5nQj/u/KPflnlmJJV2SIbsS00vhxSmO/SxmJmd7gv0oPMOVHoDiPuzijMeC1K/eb57rcIpzqnz9FCLA==
+ambrosus-node-contracts@0.0.37:
+  version "0.0.37"
+  resolved "https://registry.yarnpkg.com/ambrosus-node-contracts/-/ambrosus-node-contracts-0.0.37.tgz#6ecfd2a6c22575b5aa0683c8bc406aa3a14625ac"
+  integrity sha512-obNi08Nv0xuCOhyd90qbbIuhUZuP3p/E1a8yItylEjY9bUHQ3Q6d1KOetibe5GxZB3OYNJuu3BfoehPnBrln+A==
   dependencies:
     babel-runtime "^6.26.0"
     bn.js "^4.11.0"
