@@ -10,7 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import AccountAccessDefinitions from './services/account_access_definitions';
 import AccountRepository from './services/account_repository';
 import {
-  ChallengesWrapper,
+  ChallengeWrapper,
+  ChallengesEventEmitterWrapper,
   ConfigWrapper,
   FeesWrapper,
   HeadWrapper,
@@ -80,11 +81,12 @@ class Builder {
     this.configWrapper = new ConfigWrapper(this.headWrapper, this.web3, defaultAddress);
     this.uploadsWrapper = new UploadsWrapper(this.headWrapper, this.web3, defaultAddress);
     this.feesWrapper = new FeesWrapper(this.headWrapper, this.web3, defaultAddress);
-    this.challengesWrapper = new ChallengesWrapper(this.headWrapper, this.web3, defaultAddress);
+    this.challengesWrapper = new ChallengeWrapper(this.headWrapper, this.web3, defaultAddress);
+    this.challengesEventEmitterWrapper = new ChallengesEventEmitterWrapper(this.headWrapper, this.web3, defaultAddress);
     this.shelteringWrapper = new ShelteringWrapper(this.headWrapper, this.web3, defaultAddress);
     this.kycWhitelistWrapper = new KycWhitelistWrapper(this.headWrapper, this.web3, defaultAddress);
     this.blockChainStateWrapper = new BlockchainStateWrapper(this.web3);
-    this.uploadActions = new UploadActions(this.uploadsWrapper, this.feesWrapper, this.shelteringWrapper, this.blockChainStateWrapper, this.web3.utils.toWei(lowFundsWarningAmount, 'ether'));
+    this.uploadActions = new UploadActions(this.uploadsWrapper, this.feesWrapper, this.shelteringWrapper, this.blockChainStateWrapper, this.challengesEventEmitterWrapper, this.web3.utils.toWei(lowFundsWarningAmount, 'ether'));
 
     this.rolesRepository = new RolesRepository(this.rolesWrapper, this.configWrapper);
     this.uploadRepository = new UploadRepository(
@@ -97,8 +99,13 @@ class Builder {
       Sentry
     );
     this.activeChallengesCache = new ActiveChallengesCache();
-    this.challengesRepository = new ChallengesRepository(this.challengesWrapper,
-      this.configWrapper, this.blockChainStateWrapper, this.activeChallengesCache);
+    this.challengesRepository = new ChallengesRepository(
+      this.challengesWrapper,
+      this.challengesEventEmitterWrapper,
+      this.configWrapper,
+      this.blockChainStateWrapper,
+      this.activeChallengesCache
+    );
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
     const {maximumEntityTimestampOvertake, supportDeprecatedBundleVersions} = this.config;
     this.entityBuilder = new EntityBuilder(this.identityManager, maximumEntityTimestampOvertake);
