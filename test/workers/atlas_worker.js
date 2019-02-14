@@ -31,7 +31,7 @@ describe('Atlas Worker', () => {
   const exampleWorkId = 'workid';
   const workerInterval = 10;
   const retryTimeout = 14;
-  const requiredFreeDiskSpace = 1000000000000;
+  const requiredFreeDiskSpace = 1000;
   const {utils} = new Web3();
   let atlasWorker;
   let challengesRepositoryMock;
