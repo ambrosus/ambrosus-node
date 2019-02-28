@@ -51,5 +51,7 @@ module.exports = Object.freeze({
 
   migrationSleepTimeInSeconds: process.env.MIGRATION_SLEEP_TIME || 10,
 
-  supportDeprecatedBundleVersions: process.env.SUPPORT_DEPRECATED_BUDLE_VERSIONS === 'true'
+  supportDeprecatedBundleVersions: process.env.SUPPORT_DEPRECATED_BUDLE_VERSIONS === 'true',
+
+  requiredFreeDiskSpace: process.env.REQUIRED_FREE_DISK_SPACE || 200000000 // 200 MB
 });

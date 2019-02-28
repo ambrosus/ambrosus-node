@@ -81,7 +81,6 @@ describe('Atlas Worker', () => {
     strategyMock = new AtlasChallengeParticipationStrategy();
     sinon.stub(strategyMock, 'workerInterval').get(() => workerInterval);
     sinon.stub(strategyMock, 'retryTimeout').get(() => retryTimeout);
-    sinon.stub(strategyMock, 'requiredFreeDiskSpace').get(() => requiredFreeDiskSpace);
     shouldFetchBundleStub = sinon.stub(strategyMock, 'shouldFetchBundle').resolves(true);
     shouldResolveChallengeStub = sinon.stub(strategyMock, 'shouldResolveChallenge').resolves(true);
     sinon.stub(strategyMock, 'afterChallengeResolution');
@@ -100,7 +99,8 @@ describe('Atlas Worker', () => {
       strategyMock,
       loggerMock,
       mongoClient,
-      config.serverPort
+      config.serverPort,
+      requiredFreeDiskSpace
     );
 
     atlasWorker.beforeWorkLoop();
@@ -300,12 +300,12 @@ describe('Atlas Worker', () => {
     describe('isEnoughAvailableDiskSpace', () => {
       let availableDiskSpace;
       async function checkWithNotEnoughSpace() {
-        sinon.stub(strategyMock, 'requiredFreeDiskSpace').get(() => availableDiskSpace * 2);
+        atlasWorker.requiredFreeDiskSpace = availableDiskSpace * 2;
         return atlasWorker.isEnoughAvailableDiskSpace();
       }
 
       async function checkWithEnoughSpace() {
-        sinon.stub(strategyMock, 'requiredFreeDiskSpace').get(() => availableDiskSpace / 2);
+        atlasWorker.requiredFreeDiskSpace = availableDiskSpace / 2;
         return atlasWorker.isEnoughAvailableDiskSpace();
       }
 
@@ -346,7 +346,7 @@ describe('Atlas Worker', () => {
       });
 
       it('periodicWork does not do anything when there is less free space than required', async () => {
-        sinon.stub(strategyMock, 'requiredFreeDiskSpace').get(() => availableDiskSpace * 2);
+        atlasWorker.requiredFreeDiskSpace = availableDiskSpace * 2;
         await expect(atlasWorker.periodicWork()).to.be.eventually.fulfilled;
         await expect(challengesRepositoryMock.ongoingChallenges).to.be.not.called;
       });
