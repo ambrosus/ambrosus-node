@@ -47,6 +47,7 @@ export default class EntityBuilder {
       .fieldsConstrainedToSet(['content', 'assetId'])
       .fieldsConstrainedToSet(['idData', 'signature'], 'content')
       .fieldsConstrainedToSet(['createdBy', 'timestamp', 'sequenceNumber'], 'content.idData')
+      .isNonNegativeInteger(['content.idData.timestamp', 'content.idData.sequenceNumber'])
       .validate(
         ['content.idData.timestamp'],
         (timestamp) => this.isTimestampWithinLimit(timestamp),

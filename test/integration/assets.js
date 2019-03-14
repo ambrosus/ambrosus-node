@@ -94,6 +94,17 @@ describe('Assets - Integrations', () => {
         .and.have.property('status', 400);
     });
 
+    it('returns 400 for invalid input (timestamp not integer)', async () => {
+      const brokenAsset = put(asset, 'content.idData.timestamp', 3.14);
+      const request = apparatus.request()
+        .post('/assets')
+        .set('Authorization', `AMB ${pkPair.secret}`)
+        .send(brokenAsset);
+      await expect(request)
+        .to.eventually.be.rejected
+        .and.have.property('status', 400);
+    });
+
     it('returns 400 when same asset added twice', async () => {
       await apparatus.request()
         .post('/assets')
