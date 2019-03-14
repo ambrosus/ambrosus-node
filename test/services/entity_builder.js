@@ -93,6 +93,15 @@ describe('Entity Builder', () => {
         expect(mockIdentityManager.validateSignature).to.have.been.calledOnce;
       });
 
+      it('throws if timestamp is not a positive integer', () => {
+        let brokenAsset = put('content.idData.timestamp', exampleAsset, '1');
+        expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
+        brokenAsset = put('content.idData.timestamp', exampleAsset, 1.1);
+        expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
+        brokenAsset = put('content.idData.timestamp', exampleAsset, -1);
+        expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
+      });
+
       it('checks if timestamp does not exceed limit', () => {
         mockEnsureTimestampWithinLimit = sinon.stub(entityBuilder, 'isTimestampWithinLimit');
         mockEnsureTimestampWithinLimit.throws(new ValidationError('Timestamp exceeds limit'));
@@ -101,6 +110,15 @@ describe('Entity Builder', () => {
         expect(mockEnsureTimestampWithinLimit).to.have.been.calledOnce;
 
         mockEnsureTimestampWithinLimit.restore();
+      });
+
+      it('throws if sequenceNumber is not a positive integer', () => {
+        let brokenAsset = put('content.idData.sequenceNumber', exampleAsset, '1');
+        expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
+        brokenAsset = put('content.idData.sequenceNumber', exampleAsset, 1.1);
+        expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
+        brokenAsset = put('content.idData.sequenceNumber', exampleAsset, -1);
+        expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
       });
 
       it(`doesn't allow root-level fields other than content and assetId`, () => {
