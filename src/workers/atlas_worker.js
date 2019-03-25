@@ -15,6 +15,7 @@ import healthCheckHandler from '../routes/health_check';
 import PeriodicWorker from './periodic_worker';
 import AtlasChallengeParticipationStrategy from './atlas_strategies/atlas_challenge_resolution_strategy';
 import {checkIfEnoughFundsToPayForGas, getDefaultAddress} from '../utils/web3_tools';
+import availableDiskSpace from '../utils/disk_usage';
 
 const ATLAS_RESOLUTION_WORK_TYPE = 'AtlasChallengeResolution';
 const atlasChallengeStatus = {
@@ -35,7 +36,8 @@ export default class AtlasWorker extends PeriodicWorker {
     strategy,
     logger,
     mongoClient,
-    serverPort
+    serverPort,
+    requiredFreeDiskSpace
   ) {
     super(strategy.workerInterval, logger);
     this.web3 = web3;
@@ -46,7 +48,9 @@ export default class AtlasWorker extends PeriodicWorker {
     this.workerTaskTrackingRepository = workerTaskTrackingRepository;
     this.failedChallengesCache = failedChallengesCache;
     this.mongoClient = mongoClient;
+    this.requiredFreeDiskSpace = requiredFreeDiskSpace;
     this.isOutOfFunds = false;
+    this.isOutOfSpace = false;
     this.expressApp = express();
     this.serverPort = serverPort;
     this.expressApp.get('/health', asyncMiddleware(
@@ -116,6 +120,9 @@ export default class AtlasWorker extends PeriodicWorker {
       if (!await this.isEnoughFundsToPayForGas()) {
         return;
       }
+      if (!await this.isEnoughAvailableDiskSpace()) {
+        return;
+      }
       const challenges = await this.challengesRepository.ongoingChallenges();
       const recentlyFailedChallenges = challenges.filter(({challengeId}) => challengeId in this.failedChallengesCache.failedChallengesEndTime);
       await this.addLog(`Challenges preselected for resolution: ${challenges.length} (out of which ${recentlyFailedChallenges.length} have failed recently)`);
@@ -141,6 +148,18 @@ export default class AtlasWorker extends PeriodicWorker {
       return false;
     }
     this.isOutOfFunds = false;
+    return true;
+  }
+
+  async isEnoughAvailableDiskSpace() {
+    if (await availableDiskSpace() < this.requiredFreeDiskSpace) {
+      if (!this.isOutOfSpace) {
+        await this.addLog('Not enough free disk space');
+        this.isOutOfSpace = true;
+      }
+      return false;
+    }
+    this.isOutOfSpace = false;
     return true;
   }
 

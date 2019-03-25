@@ -33,7 +33,8 @@ async function start(logger) {
     strategy,
     logger,
     builder.client,
-    config.serverPort
+    config.serverPort,
+    config.requiredFreeDiskSpace
   );
   await worker.start();
 }

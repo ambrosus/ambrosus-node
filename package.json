@@ -38,6 +38,7 @@
     "body-parser": "^1.18.2",
     "bson": "^1.1.0",
     "cors": "^2.8.4",
+    "diskusage": "^1.0.0",
     "express": "^4.16.2",
     "mongodb": "^3.0.2",
     "morgan": "^1.9.0",
