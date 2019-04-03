@@ -142,21 +142,26 @@ describe('Atlas Worker', () => {
     describe('tryWithChallenge', () => {
       let tryToDownloadMock;
       let tryToResolveMock;
+      let isTurnToResolveMock;
       const bundleMetadata = 'bundleMetadata';
 
       beforeEach(() => {
         tryToDownloadMock = sinon.stub(atlasWorker, 'tryToDownload');
         tryToResolveMock = sinon.stub(atlasWorker, 'tryToResolve');
+        isTurnToResolveMock = sinon.stub(atlasWorker, 'isTurnToResolve');
 
         shouldFetchBundleStub.resolves(true);
         tryToDownloadMock.resolves(bundleMetadata);
         shouldResolveChallengeStub.returns(true);
+        isTurnToResolveMock.resolves();
+        isTurnToResolveMock.returns(true);
         tryToResolveMock.resolves();
       });
 
       afterEach(() => {
         tryToDownloadMock.restore();
         tryToResolveMock.restore();
+        isTurnToResolveMock.restore();
       });
 
       it('returns false if the challenge was previously marked as failing', async () => {
@@ -184,6 +189,13 @@ describe('Atlas Worker', () => {
         shouldResolveChallengeStub.returns(false);
         expect(await atlasWorker.tryWithChallenge(challenge1)).to.equal(false);
         expect(shouldResolveChallengeStub).to.have.been.calledWith('bundleMetadata');
+        expect(tryToResolveMock).to.not.have.been.called;
+        expect(failedChallengesMock.rememberFailedChallenge).to.not.have.been.called;
+      });
+
+      it('returns false if it is not the turn of the node to resolve the challenge', async () => {
+        isTurnToResolveMock.returns(false);
+        expect(await atlasWorker.tryWithChallenge(challenge1)).to.equal(false);
         expect(tryToResolveMock).to.not.have.been.called;
         expect(failedChallengesMock.rememberFailedChallenge).to.not.have.been.called;
       });
@@ -359,7 +371,11 @@ describe('Atlas Worker', () => {
   });
 
   describe('prometheus metrics', () => {
+    let isTurnToResolveMock;
     beforeEach(async () => {
+      isTurnToResolveMock = sinon.stub(atlasWorker, 'isTurnToResolve');
+      isTurnToResolveMock.resolves();
+      isTurnToResolveMock.returns(true);
       challengesRepositoryMock.ongoingChallenges.resolves([
         {sheltererId: 5, bundleId: 6, challengeId: 2, bundleNumber: 3}
       ]);
