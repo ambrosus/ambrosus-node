@@ -83,7 +83,7 @@ export default class AtlasWorker extends PeriodicWorker {
 
   async isTurnToResolve({challengeId}) {
     const currentResolver = await this.challengesRepository.getChallengeDesignatedShelterer(challengeId);
-    return (currentResolver == getDefaultAddress(this.web3))
+    return (currentResolver === getDefaultAddress(this.web3));
   }
 
   async tryWithChallenge(challenge) {
@@ -102,7 +102,7 @@ export default class AtlasWorker extends PeriodicWorker {
         await this.addLog('Challenge resolution cancelled', challenge);
         return false;
       }
-      
+
       if (!await this.isTurnToResolve(challenge)) {
         this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.shouldNotResolve});
         await this.addLog('Not the nodes turn to resolve', challenge);
