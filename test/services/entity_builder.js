@@ -93,13 +93,15 @@ describe('Entity Builder', () => {
         expect(mockIdentityManager.validateSignature).to.have.been.calledOnce;
       });
 
-      it('throws if timestamp is not a positive integer', () => {
-        let brokenAsset = put('content.idData.timestamp', exampleAsset, '1');
-        expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
-        brokenAsset = put('content.idData.timestamp', exampleAsset, 1.1);
-        expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
-        brokenAsset = put('content.idData.timestamp', exampleAsset, -1);
-        expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
+      ['1', 1.1, -1].forEach((wrongTimestamp) => {
+        it(`throws for timestamp not a positive integer: ${wrongTimestamp}`, () => {
+          const brokenAsset = put(exampleAsset, 'content.idData.timestamp', wrongTimestamp);
+          expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError, /timestamp.*Should be a non-negative integer/);
+        });
+      });
+
+      it('does not throw when timestamp = 0', () => {
+        expect(() => entityBuilder.validateAsset(put(exampleAsset, 'content.idData.timestamp', 0))).to.not.throw();
       });
 
       it('checks if timestamp does not exceed limit', () => {
@@ -112,13 +114,11 @@ describe('Entity Builder', () => {
         mockEnsureTimestampWithinLimit.restore();
       });
 
-      it('throws if sequenceNumber is not a positive integer', () => {
-        let brokenAsset = put('content.idData.sequenceNumber', exampleAsset, '1');
-        expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
-        brokenAsset = put('content.idData.sequenceNumber', exampleAsset, 1.1);
-        expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
-        brokenAsset = put('content.idData.sequenceNumber', exampleAsset, -1);
-        expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError);
+      ['1', 1.1, -1].forEach((wrongSequenceNumber) => {
+        it(`throws for sequenceNumber not a positive integer: ${wrongSequenceNumber}`, () => {
+          const brokenAsset = put(exampleAsset, 'content.idData.sequenceNumber', wrongSequenceNumber);
+          expect(() => entityBuilder.validateAsset(brokenAsset)).to.throw(ValidationError, /sequenceNumber.*Should be a non-negative integer/);
+        });
       });
 
       it(`doesn't allow root-level fields other than content and assetId`, () => {
@@ -220,24 +220,18 @@ describe('Entity Builder', () => {
         expect(() => entityBuilder.validateEvent(oversizeEvent)).to.throw(ValidationError);
       });
 
-      it('throws if timestamp is not a positive integer', () => {
-        let brokenEvent = put('content.idData.timestamp', exampleEvent, '1');
-        expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
-        brokenEvent = put('content.idData.timestamp', exampleEvent, 1.1);
-        expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
-        brokenEvent = put('content.idData.timestamp', exampleEvent, -1);
-        expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
-        expect(() => entityBuilder.validateEvent(exampleEvent)).not.to.throw();
+      ['1', 1.1, -1].forEach((wrongTimestamp) => {
+        it(`throws for timestamp not a positive integer: ${wrongTimestamp}`, () => {
+          const brokenEvent = put(exampleEvent, 'content.idData.timestamp', wrongTimestamp);
+          expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError, /timestamp.*Should be a non-negative integer/);
+        });
       });
 
-      it('throws if accessLevel is not a positive integer', () => {
-        let brokenEvent = put('content.idData.accessLevel', exampleEvent, 1.1);
-        expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
-        brokenEvent = put('content.idData.accessLevel', exampleEvent, 1.1);
-        expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
-        brokenEvent = put('content.idData.accessLevel', exampleEvent, -1);
-        expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError);
-        expect(() => entityBuilder.validateEvent(exampleEvent)).not.to.throw();
+      ['1', 1.1, -1].forEach((wrongAccessLevel) => {
+        it(`throws for accessLevel not a positive integer: ${wrongAccessLevel}`, () => {
+          const brokenEvent = put(exampleEvent, 'content.idData.accessLevel', wrongAccessLevel);
+          expect(() => entityBuilder.validateEvent(brokenEvent)).to.throw(ValidationError, /accessLevel.*Should be a non-negative integer/);
+        });
       });
 
       it('uses the IdentityManager for checking signature (correct)', () => {
@@ -384,30 +378,32 @@ describe('Entity Builder', () => {
       expect(() => entityBuilder.validateAndCastFindAssetsParams(params)).to.throw(ValidationError);
     });
 
-    it('throws if page is not positive integer', async () => {
-      expect(() => entityBuilder.validateAndCastFindAssetsParams({page: 'avc'})).to.throw(ValidationError);
-      expect(() => entityBuilder.validateAndCastFindAssetsParams({page: '1.3'})).to.throw(ValidationError);
-      expect(() => entityBuilder.validateAndCastFindAssetsParams({page: '-10'})).to.throw(ValidationError);
+    ['avc', '1.3', '-10'].forEach((wrongPage) => {
+      it(`throws for page not a positive integer: ${wrongPage}`, () => {
+        expect(() => entityBuilder.validateAndCastFindAssetsParams({page: wrongPage})).to.throw(ValidationError);
+      });
     });
 
-    it('throws if perPage is not positive integer or greater then 100', async () => {
-      expect(() => entityBuilder.validateAndCastFindAssetsParams({perPage: 'avc'})).to.throw(ValidationError);
-      expect(() => entityBuilder.validateAndCastFindAssetsParams({perPage: '1.3'})).to.throw(ValidationError);
-      expect(() => entityBuilder.validateAndCastFindAssetsParams({perPage: '-10'})).to.throw(ValidationError);
-      expect(() => entityBuilder.validateAndCastFindAssetsParams({perPage: '0'})).to.throw(ValidationError);
+    ['avc', '1.3', '-10', '0'].forEach((wrongPage) => {
+      it(`throws for perPage not a positive integer: ${wrongPage}`, () => {
+        expect(() => entityBuilder.validateAndCastFindAssetsParams({perPage: wrongPage})).to.throw(ValidationError);
+      });
+    });
+
+    it('throws if perPage is greater than 100', async () => {
       expect(() => entityBuilder.validateAndCastFindAssetsParams({perPage: '101'})).to.throw(ValidationError);
     });
 
-    it('throws if fromTimestamp is not positive integer', async () => {
-      expect(() => entityBuilder.validateAndCastFindAssetsParams({fromTimestamp: 'avc'})).to.throw(ValidationError);
-      expect(() => entityBuilder.validateAndCastFindAssetsParams({fromTimestamp: '1.3'})).to.throw(ValidationError);
-      expect(() => entityBuilder.validateAndCastFindAssetsParams({fromTimestamp: '-10'})).to.throw(ValidationError);
+    ['avc', '1.3', '-10'].forEach((wrongTimestamp) => {
+      it(`throws for fromTimestamp not a positive integer: ${wrongTimestamp}`, () => {
+        expect(() => entityBuilder.validateAndCastFindAssetsParams({fromTimestamp: wrongTimestamp})).to.throw(ValidationError);
+      });
     });
 
-    it('throws if toTimestamp is not positive integer', async () => {
-      expect(() => entityBuilder.validateAndCastFindAssetsParams({toTimestamp: 'avc'})).to.throw(ValidationError);
-      expect(() => entityBuilder.validateAndCastFindAssetsParams({toTimestamp: '1.3'})).to.throw(ValidationError);
-      expect(() => entityBuilder.validateAndCastFindAssetsParams({toTimestamp: '-10'})).to.throw(ValidationError);
+    ['avc', '1.3', '-10'].forEach((wrongTimestamp) => {
+      it(`throws for toTimestamp not a positive integer: ${wrongTimestamp}`, () => {
+        expect(() => entityBuilder.validateAndCastFindAssetsParams({toTimestamp: wrongTimestamp})).to.throw(ValidationError);
+      });
     });
   });
 
@@ -532,12 +528,10 @@ describe('Entity Builder', () => {
       expect(() => entityBuilder.validateAndCastFindEventsParams(params)).to.throw(ValidationError);
     });
 
-    it('throws if perPage value is float or not positive or greater then 100', () => {
-      expect(() => entityBuilder.validateAndCastFindEventsParams(put(validParamsAsStrings, 'perPage', '1.1'))).to.throw(ValidationError);
-      expect(() => entityBuilder.validateAndCastFindEventsParams(put(validParamsAsStrings, 'perPage', '-1'))).to.throw(ValidationError);
-      expect(() => entityBuilder.validateAndCastFindEventsParams(put(validParamsAsStrings, 'perPage', '0'))).to.throw(ValidationError);
-      expect(() => entityBuilder.validateAndCastFindEventsParams(put(validParamsAsStrings, 'perPage', '101'))).to.throw(ValidationError);
-      expect(() => entityBuilder.validateAndCastFindEventsParams(put(validParamsAsStrings, 'perPage', 'abesad'))).to.throw(ValidationError);
+    ['abc', '1.3', '-1', '0', '101'].forEach((wrongPage) => {
+      it(`throws for perPage value being float or not positive or greater then 100: ${wrongPage}`, () => {
+        expect(() => entityBuilder.validateAndCastFindAssetsParams({perPage: wrongPage})).to.throw(ValidationError);
+      });
     });
   });
 

@@ -143,7 +143,7 @@ export default class EntityBuilder {
       .isNonNegativeInteger(['fromTimestamp', 'toTimestamp', 'page', 'perPage'])
       .isAddress(['createdBy'])
       .validate(['perPage'], (perPage) => perPage <= 100, 'pageSize should not be higher than 100')
-      .validate(['perPage'], (perPage) => 0 < perPage, 'pageSize should be positive')
+      .validate(['perPage'], (perPage) => perPage > 0, 'pageSize should be positive')
       .getCastedParams();
 
     this.ensureGeoLocationParamsCorrectlyPlaced(params);
