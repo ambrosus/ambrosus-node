@@ -23,7 +23,7 @@ const deployAll = async (web3, privateKey, logger) => {
     },
     validatorSet: {
       owner: deployingAccount.address,
-      initialValidators : [
+      initialValidators: [
         '0xc99F38231501Ca5F2e4c31d5b9Df8060B8182Ba5'
       ],
       superUser: deployingAccount.address
@@ -32,7 +32,8 @@ const deployAll = async (web3, privateKey, logger) => {
       owner: deployingAccount.address,
       baseReward: '2000000000000000000',
       superUser: deployingAccount.address
-    }
+    },
+    multiplexer: {owner: deployingAccount.address}
   };
 
   const {head} = await deployer.deploy(contractJsons, {}, [], params);
