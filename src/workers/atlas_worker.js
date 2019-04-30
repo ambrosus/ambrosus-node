@@ -105,7 +105,7 @@ export default class AtlasWorker extends PeriodicWorker {
 
       if (!await this.isTurnToResolve(challenge)) {
         this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.shouldNotResolve});
-        await this.addLog('Not the nodes turn to resolve', challenge);
+        await this.addLog(`Not the node's turn to resolve`, challenge);
         return false;
       }
 

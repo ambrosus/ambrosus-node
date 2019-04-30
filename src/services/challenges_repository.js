@@ -76,7 +76,6 @@ export default class ChallengesRepository {
   }
 
   async getChallengeDesignatedShelterer(challengeId) {
-    const resolver = await this.challengesWrapper.getChallengeDesignatedShelterer(challengeId);
-    return resolver;
+    return await this.challengesWrapper.getChallengeDesignatedShelterer(challengeId);
   }
 }
