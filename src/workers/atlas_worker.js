@@ -81,6 +81,11 @@ export default class AtlasWorker extends PeriodicWorker {
     return this.dataModelEngine.downloadBundle(bundleId, sheltererId);
   }
 
+  async isTurnToResolve({challengeId}) {
+    const currentResolver = await this.challengesRepository.getChallengeDesignatedShelterer(challengeId);
+    return (currentResolver === getDefaultAddress(this.web3));
+  }
+
   async tryWithChallenge(challenge) {
     try {
       if (this.failedChallengesCache.didChallengeFailRecently(challenge.challengeId)) {
@@ -97,6 +102,13 @@ export default class AtlasWorker extends PeriodicWorker {
         await this.addLog('Challenge resolution cancelled', challenge);
         return false;
       }
+
+      if (!await this.isTurnToResolve(challenge)) {
+        this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.shouldNotResolve});
+        await this.addLog(`Not the node's turn to resolve`, challenge);
+        return false;
+      }
+
       await this.tryToResolve(bundleMetadata, challenge);
       await this.strategy.afterChallengeResolution(challenge);
       this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.resolved});

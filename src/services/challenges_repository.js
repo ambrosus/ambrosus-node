@@ -74,4 +74,8 @@ export default class ChallengesRepository {
     }
     return this.challengesWrapper.resolve(challengeId);
   }
+
+  async getChallengeDesignatedShelterer(challengeId) {
+    return await this.challengesWrapper.getChallengeDesignatedShelterer(challengeId);
+  }
 }
