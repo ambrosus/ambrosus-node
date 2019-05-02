@@ -1,6 +1,6 @@
 FROM node:10-alpine
 
-RUN apk add git=~2.18 python=~2.7 make=~4.2 g++=~6.4 --no-cache
+RUN apk add git=~2.20 python=~2.7 make=~4.2 g++=~8.3 --no-cache
 
 WORKDIR /app
 
