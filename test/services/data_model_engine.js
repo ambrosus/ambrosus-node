@@ -41,6 +41,7 @@ import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
 import config from '../../config/config';
 import BundleBuilder from '../../src/services/bundle_builder';
 import EntityBuilder from '../../src/services/entity_builder';
+import BundleStatusStates from '../../src/utils/bundle_status_states';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -1497,7 +1498,7 @@ describe('Data Model Engine', () => {
     });
   });
 
-  describe('Update sheltering expiration date', () => {
+  describe('Mark bundle as sheltered', () => {
     const bundleId = '0x123';
     const expirationDate = 10;
     let mockBundleRepository;
@@ -1510,7 +1511,8 @@ describe('Data Model Engine', () => {
       };
 
       mockUploadRepository = {
-        expirationDate: sinon.stub().resolves(expirationDate)
+        expirationDate: sinon.stub().resolves(expirationDate),
+        setBundleRepository: sinon.stub()
       };
 
       modelEngine = new DataModelEngine({
@@ -1520,9 +1522,14 @@ describe('Data Model Engine', () => {
     });
 
     it('updates expiration date', async () => {
-      await modelEngine.updateShelteringExpirationDate(bundleId);
+      await modelEngine.markBundleAsSheltered(bundleId);
       expect(mockUploadRepository.expirationDate).to.be.calledOnceWith(bundleId);
       expect(mockBundleRepository.storeBundleShelteringExpirationDate).to.be.calledOnceWith(bundleId, expirationDate);
+    });
+
+    it('sets bundle status to SHELTERED', async () => {
+      await modelEngine.markBundleAsSheltered(bundleId);
+      expect(mockUploadRepository.setBundleRepository).to.be.calledOnceWith(bundleId, BundleStatusStates.sheltered);
     });
   });
 

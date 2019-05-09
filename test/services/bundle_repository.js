@@ -105,10 +105,9 @@ describe('Bundle Repository', () => {
     it('stores the streamed bundle', async () => {
       const exampleBundle = put(createBundle(), 'bundleId', exampleBundleId);
       const exampleBundleReadStream = new StringReadStream(JSON.stringify(exampleBundle));
-      const writeStream = await storage.openBundleWriteStream(exampleBundleId, storagePeriods, version);
+      const writeStream = await storage.openBundleWriteStream(exampleBundleId);
       await asyncPipe(exampleBundleReadStream, writeStream);
       await expect(storage.getBundle(exampleBundleId)).to.eventually.deep.equal(exampleBundle);
-      await expect(storage.getBundleMetadata(exampleBundleId)).to.eventually.deep.equal({bundleId: exampleBundleId, storagePeriods});
     });
 
     it(`discards the bundle if the write stream gets aborted`, async () => {
@@ -168,13 +167,13 @@ describe('Bundle Repository', () => {
     });
 
     it('creates metadata with bundleId and storagePeriods and empty repository if it does not exist', async () => {
-      await storage.createBundleMetadata(bundleId, storagePeriods);
-      expect(await getMetadataWithoutId(bundleId)).to.deep.equal({bundleId, storagePeriods, repository: {status: BundleStatusStates.unknown}});
+      await storage.createBundleMetadata(bundleId, storagePeriods, BundleStatusStates.shelteringCandidate);
+      expect(await getMetadataWithoutId(bundleId)).to.deep.equal({bundleId, storagePeriods, repository: {status: BundleStatusStates.shelteringCandidate}});
     });
 
     it('does nothing if metadata with same bundleId already exists', async () => {
       await storage.createBundleMetadata(bundleId, storagePeriods);
-      await storage.createBundleMetadata(bundleId, storagePeriods + 1);
+      await storage.createBundleMetadata(bundleId, storagePeriods + 1, BundleStatusStates.downloaded);
       expect(await getMetadataWithoutId(bundleId)).to.deep.equal({bundleId, storagePeriods, repository: {status: BundleStatusStates.unknown}});
     });
 
@@ -207,6 +206,33 @@ describe('Bundle Repository', () => {
 
     it('getBundleRepository returns null if metadata fot this bundleId does not exist', async () => {
       expect(await storage.getBundleRepository('unknownId')).to.be.null;
+    });
+  });
+
+  describe('isBundleSheltered', () => {
+    const shelteredBundleId = '0x1';
+    const notShelteredBundleId = '0x2';
+
+    beforeEach(async () => {
+      await storage.createBundleMetadata(shelteredBundleId, storagePeriods);
+      await storage.createBundleMetadata(notShelteredBundleId, storagePeriods);
+      await storage.setBundleRepository(shelteredBundleId, BundleStatusStates.sheltered);
+    });
+
+    afterEach(async () => {
+      await cleanDatabase(db);
+    });
+
+    it('returns true if bundle is sheltered', async () => {
+      expect(await storage.isBundleSheltered(shelteredBundleId)).to.be.true;
+    });
+
+    it('returns false if bundle is stored but not sheltered', async () => {
+      expect(await storage.isBundleSheltered(notShelteredBundleId)).to.be.false;
+    });
+
+    it('returns false if bundle is not stored', async () => {
+      expect(await storage.isBundleSheltered('not stored bundle')).to.be.false;
     });
   });
 

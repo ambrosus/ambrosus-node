@@ -11,6 +11,7 @@ import {NotFoundError, PermissionError, ValidationError} from '../errors/errors'
 import {getTimestamp} from '../utils/time_utils';
 import {pick, put} from '../utils/dict_utils';
 import allPermissions from '../utils/all_permissions';
+import BundleStatusStates from '../utils/bundle_status_states';
 
 export default class DataModelEngine {
   constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, bundleDownloader, bundleBuilder, bundleRepository, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, uploadRepository, rolesRepository, workerLogRepository}) {
@@ -229,6 +230,10 @@ export default class DataModelEngine {
   }
 
   async downloadBundle(bundleId, sheltererId) {
+    if (await this.bundleRepository.isBundleSheltered(bundleId)) {
+      throw new Error('Bundle is already sheltered');
+    }
+
     const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
 
     const bundleMetadata = await this.bundleDownloader.downloadBundleMetadata(nodeUrl, bundleId);
@@ -237,9 +242,10 @@ export default class DataModelEngine {
     }
     this.bundleBuilder.validateBundleMetadata(bundleMetadata);
     const complementedMetadata = await this.uploadRepository.complementBundleMetadata(bundleMetadata);
+    await this.bundleRepository.createBundleMetadata(bundleId, complementedMetadata.storagePeriods, BundleStatusStates.shelteringCandidate);
 
     try {
-      await this.downloadAndValidateBundleBody(nodeUrl, bundleId, complementedMetadata);
+      await this.downloadAndValidateBundleBody(nodeUrl, bundleId);
     } catch (err) {
       if (err instanceof ValidationError) {
         await this.bundleRepository.removeBundle(bundleId);
@@ -248,6 +254,7 @@ export default class DataModelEngine {
       throw new Error(`Could not fetch the bundle from the shelterer: ${err.message || err}`);
     }
 
+    await this.bundleRepository.setBundleRepository(bundleId, BundleStatusStates.downloaded, {nodeUrl});
     await this.bundleRepository.storeBundleProofMetadata(
       complementedMetadata.bundleId,
       complementedMetadata.bundleProofBlock,
@@ -258,16 +265,17 @@ export default class DataModelEngine {
     return complementedMetadata;
   }
 
-  async downloadAndValidateBundleBody(nodeUrl, bundleId, metadata) {
+  async downloadAndValidateBundleBody(nodeUrl, bundleId) {
     const downloadStream = await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
-    const writeStream = await this.bundleRepository.openBundleWriteStream(bundleId, metadata.storagePeriods);
+    const writeStream = await this.bundleRepository.openBundleWriteStream(bundleId);
     const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
     await this.bundleBuilder.validateStreamedBundle(downloadStream, writeStream, bundleItemsCountLimit);
   }
 
-  async updateShelteringExpirationDate(bundleId) {
+  async markBundleAsSheltered(bundleId) {
     const expirationDate = await this.uploadRepository.expirationDate(bundleId);
     await this.bundleRepository.storeBundleShelteringExpirationDate(bundleId, expirationDate);
+    await this.bundleRepository.setBundleRepository(bundleId, BundleStatusStates.sheltered);
   }
 
   async getWorkerLogs(logsCount = 10) {

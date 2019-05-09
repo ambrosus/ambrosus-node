@@ -30,14 +30,13 @@ export default class BundleRepository {
     }
   }
 
-  async openBundleWriteStream(bundleId, storagePeriods) {
+  async openBundleWriteStream(bundleId) {
     const uploadStream = this.bundlesBucket.openUploadStream(
       bundleId,
       {
         contentType: 'application/json'
       }
     );
-    uploadStream.on('finish', async () => await this.createBundleMetadata(bundleId, storagePeriods));
     return uploadStream;
   }
 
@@ -79,10 +78,11 @@ export default class BundleRepository {
     return await downloadJSONFromGridFSBucket(bundleId, this.bundlesBucket);
   }
 
-  async createBundleMetadata(bundleId, storagePeriods) {
+  async createBundleMetadata(bundleId, storagePeriods, status = BundleStatusStates.unknown) {
     if (await this.db.collection('bundle_metadata').findOne({bundleId}) === null) {
-      await this.db.collection('bundle_metadata')
-        .insertOne({bundleId, storagePeriods, repository: {status: BundleStatusStates.unknown}});
+      await this.db.collection('bundle_metadata').insertOne({
+        bundleId, storagePeriods, repository: {status}
+      });
     }
   }
 
@@ -107,6 +107,11 @@ export default class BundleRepository {
       return null;
     }
     return metadata.repository;
+  }
+
+  async isBundleSheltered(bundleId) {
+    const repository = await this.getBundleRepository(bundleId);
+    return repository ? repository.status === BundleStatusStates.sheltered : false;
   }
 
   async removeBundle(bundleId) {
