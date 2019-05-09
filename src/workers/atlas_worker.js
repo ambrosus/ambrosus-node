@@ -116,6 +116,7 @@ export default class AtlasWorker extends PeriodicWorker {
       return true;
     } catch (err) {
       this.failedChallengesCache.rememberFailedChallenge(challenge.challengeId, this.strategy.retryTimeout);
+      await this.dataModelEngine.prepareBundleForCleanup(challenge.bundleId);
       await this.addLog(`Failed to resolve challenge: ${err.message || err}`, challenge, err.stack);
       this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.failed});
       return false;

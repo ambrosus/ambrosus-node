@@ -32,7 +32,6 @@ describe('Bundle Repository', () => {
   let client;
   let storage;
   const storagePeriods = 5;
-  const version = 2;
 
   before(async () => {
     ({db, client} = await connectToMongo(config));

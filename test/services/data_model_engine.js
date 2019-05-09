@@ -1284,7 +1284,7 @@ describe('Data Model Engine', () => {
     const extractedBundleForValidation = createBundle();
     const complementedBundleMetadata = {
       bundleId: '0xbeef',
-      storagePeriods: 1,
+      storagePeriods: 12,
       bundleProofBlock: 1,
       bundleUploadTimestamp: 100000,
       bundleTransactionHash: '0xdeadface'
@@ -1306,7 +1306,10 @@ describe('Data Model Engine', () => {
         openBundleWriteStream: sinon.stub().resolves(mockWriteStream),
         storeBundleProofMetadata: sinon.stub().resolves(),
         removeBundle: sinon.stub().resolves(),
-        getBundleStream: sinon.stub().resolves()
+        getBundleStream: sinon.stub().resolves(),
+        isBundleSheltered: sinon.stub().resolves(false),
+        setBundleRepository: sinon.stub().resolves(),
+        createBundleMetadata: sinon.stub().resolves()
       };
 
       mockRolesRepository = {
@@ -1339,6 +1342,11 @@ describe('Data Model Engine', () => {
       });
     });
 
+    it('throws if bundle is already sheltered', async () => {
+      mockBundleRepository.isBundleSheltered.resolves(true);
+      await expect(modelEngine.downloadBundle(bundleId, sheltererId)).to.be.rejectedWith('Bundle is already sheltered');
+    });
+
     it('stores the bundle into the repository and returns the metadata', async () => {
       expect(await modelEngine.downloadBundle(bundleId, sheltererId)).to.equal(complementedBundleMetadata);
       expect(mockRolesRepository.nodeUrl).to.be.calledWith(sheltererId);
@@ -1347,7 +1355,9 @@ describe('Data Model Engine', () => {
       expect(mockBundleBuilder.validateStreamedBundle).to.be.calledWith(mockReadStream, mockWriteStream, exampleBundleCountLimit);
       expect(mockBundleBuilder.validateBundleMetadata).to.be.calledWith(downloadedBundleMetadata);
       expect(mockUploadRepository.complementBundleMetadata).to.be.calledWith(downloadedBundleMetadata);
-      expect(mockBundleRepository.openBundleWriteStream).to.be.calledWith(bundleId, complementedBundleMetadata.storagePeriods);
+      expect(mockBundleRepository.createBundleMetadata).to.be.calledOnceWith(bundleId, complementedBundleMetadata.storagePeriods, BundleStatusStates.shelteringCandidate);
+      expect(mockBundleRepository.openBundleWriteStream).to.be.calledWith(bundleId);
+      expect(mockBundleRepository.setBundleRepository).to.be.calledOnceWith(bundleId, BundleStatusStates.downloaded, {nodeUrl});
       expect(mockBundleRepository.storeBundleProofMetadata).to.be.calledOnce;
     });
 
@@ -1357,8 +1367,10 @@ describe('Data Model Engine', () => {
       expect(await modelEngine.downloadBundle(bundleId, sheltererId)).to.equal(complementedBundleMetadata);
       expect(mockRolesRepository.nodeUrl).to.be.calledWith(sheltererId);
       expect(mockBundleDownloader.downloadBundleMetadata).to.be.calledWith(nodeUrl, bundleId);
+      expect(mockBundleRepository.createBundleMetadata).to.be.calledOnceWith(bundleId, complementedBundleMetadata.storagePeriods, BundleStatusStates.shelteringCandidate);
       expect(mockBundleDownloader.openBundleDownloadStream).to.be.calledWith(nodeUrl, bundleId);
-      expect(mockBundleRepository.openBundleWriteStream).to.be.calledWith(bundleId, complementedBundleMetadata.storagePeriods);
+      expect(mockBundleRepository.openBundleWriteStream).to.be.calledWith(bundleId);
+      expect(mockBundleRepository.setBundleRepository).to.be.calledOnceWith(bundleId, BundleStatusStates.downloaded, {nodeUrl});
       expect(mockBundleRepository.storeBundleProofMetadata).to.be.calledOnce;
     });
 
@@ -1507,12 +1519,12 @@ describe('Data Model Engine', () => {
 
     beforeEach(() => {
       mockBundleRepository = {
-        storeBundleShelteringExpirationDate: sinon.stub()
+        storeBundleShelteringExpirationDate: sinon.stub(),
+        setBundleRepository: sinon.stub()
       };
 
       mockUploadRepository = {
-        expirationDate: sinon.stub().resolves(expirationDate),
-        setBundleRepository: sinon.stub()
+        expirationDate: sinon.stub().resolves(expirationDate)
       };
 
       modelEngine = new DataModelEngine({
@@ -1529,7 +1541,28 @@ describe('Data Model Engine', () => {
 
     it('sets bundle status to SHELTERED', async () => {
       await modelEngine.markBundleAsSheltered(bundleId);
-      expect(mockUploadRepository.setBundleRepository).to.be.calledOnceWith(bundleId, BundleStatusStates.sheltered);
+      expect(mockBundleRepository.setBundleRepository).to.be.calledOnceWith(bundleId, BundleStatusStates.sheltered);
+    });
+  });
+
+  describe('prepareBundleForCleanup', () => {
+    const bundleId = '0x123';
+    let mockBundleRepository;
+    let modelEngine;
+
+    beforeEach(() => {
+      mockBundleRepository = {
+        setBundleRepository: sinon.stub()
+      };
+
+      modelEngine = new DataModelEngine({
+        bundleRepository: mockBundleRepository
+      });
+    });
+
+    it('sets bundle status to CLEANUP', async () => {
+      await modelEngine.prepareBundleForCleanup(bundleId);
+      expect(mockBundleRepository.setBundleRepository).to.be.calledOnceWith(bundleId, BundleStatusStates.cleanup);
     });
   });
 
