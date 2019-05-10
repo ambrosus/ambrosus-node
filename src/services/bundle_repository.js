@@ -8,6 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 import {downloadJSONFromGridFSBucket, isFileInGridFSBucket, uploadJSONToGridFSBucket} from '../utils/db_utils';
 import {GridFSBucket} from 'mongodb';
+import BundleStatusStates from '../utils/bundle_status_states';
 
 export default class BundleRepository {
   constructor(db) {
@@ -36,11 +37,7 @@ export default class BundleRepository {
         contentType: 'application/json'
       }
     );
-    uploadStream.on('finish', async () => {
-      if (await this.db.collection('bundle_metadata').findOne({bundleId}) === null) {
-        await this.db.collection('bundle_metadata').insertOne({bundleId, storagePeriods});
-      }
-    });
+    uploadStream.on('finish', async () => await this.createBundleMetadata(bundleId, storagePeriods));
     return uploadStream;
   }
 
@@ -82,8 +79,34 @@ export default class BundleRepository {
     return await downloadJSONFromGridFSBucket(bundleId, this.bundlesBucket);
   }
 
+  async createBundleMetadata(bundleId, storagePeriods) {
+    if (await this.db.collection('bundle_metadata').findOne({bundleId}) === null) {
+      await this.db.collection('bundle_metadata')
+        .insertOne({bundleId, storagePeriods, repository: {status: BundleStatusStates.unknown}});
+    }
+  }
+
   async getBundleMetadata(bundleId) {
     return await this.db.collection('bundle_metadata').findOne({bundleId}, {projection: this.blacklistedFields});
+  }
+
+  async setBundleRepository(bundleId, status, additionalFields = {}) {
+    return this.db.collection('bundle_metadata').updateOne({bundleId}, {
+      $set: {
+        repository: {
+          status,
+          ...additionalFields
+        }
+      }
+    });
+  }
+
+  async getBundleRepository(bundleId) {
+    const metadata = await this.db.collection('bundle_metadata').findOne({bundleId}, {projection: {repository: 1}});
+    if (!metadata) {
+      return null;
+    }
+    return metadata.repository;
   }
 
   async removeBundle(bundleId) {

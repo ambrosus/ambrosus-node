@@ -16,6 +16,7 @@ import config from '../../config/config';
 
 import BundleRepository from '../../src/services/bundle_repository';
 import StringReadStream from '../../src/utils/string_read_stream';
+import BundleStatusStates from '../../src/utils/bundle_status_states';
 
 const {expect} = chai;
 chai.use(chaiAsPromised);
@@ -42,6 +43,8 @@ describe('Bundle Repository', () => {
     await cleanDatabase(db);
     client.close();
   });
+
+  const getMetadataWithoutId = async (bundleId) => db.collection('bundle_metadata').findOne({bundleId}, {projection: {_id: 0}});
 
   describe('Storing directly', () => {
     const txHash = '0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009';
@@ -154,6 +157,56 @@ describe('Bundle Repository', () => {
       expect(notRegisteredBundles).to.have.length(2);
       expect(notRegisteredBundles[0].bundleId).to.equal('bundle1');
       expect(notRegisteredBundles[1].bundleId).to.equal('bundle3');
+    });
+  });
+
+  describe('Create bundle metadata', () => {
+    const bundleId = '0xdeadBeef';
+
+    afterEach(async () => {
+      await cleanDatabase(db);
+    });
+
+    it('creates metadata with bundleId and storagePeriods and empty repository if it does not exist', async () => {
+      await storage.createBundleMetadata(bundleId, storagePeriods);
+      expect(await getMetadataWithoutId(bundleId)).to.deep.equal({bundleId, storagePeriods, repository: {status: BundleStatusStates.unknown}});
+    });
+
+    it('does nothing if metadata with same bundleId already exists', async () => {
+      await storage.createBundleMetadata(bundleId, storagePeriods);
+      await storage.createBundleMetadata(bundleId, storagePeriods + 1);
+      expect(await getMetadataWithoutId(bundleId)).to.deep.equal({bundleId, storagePeriods, repository: {status: BundleStatusStates.unknown}});
+    });
+
+    it('getBundleMetadata returns metadata without repository field', async () => {
+      await storage.createBundleMetadata(bundleId, storagePeriods);
+      expect(await storage.getBundleMetadata(bundleId)).to.deep.equal({bundleId, storagePeriods});
+    });
+  });
+
+  describe('Bundle repository', () => {
+    const bundleId = '0xdeadBeef';
+
+    beforeEach(async () => {
+      await storage.createBundleMetadata(bundleId, storagePeriods);
+    });
+
+    afterEach(async () => {
+      await cleanDatabase(db);
+    });
+
+    it('sets status in bundle metadata repository', async () => {
+      await storage.setBundleRepository(bundleId, 'OtherStatus');
+      expect(await storage.getBundleRepository(bundleId)).to.deep.equal({status: 'OtherStatus'});
+    });
+
+    it('sets additional fields in bundle metadata repository', async () => {
+      await storage.setBundleRepository(bundleId, 'OtherStatus', {additionalField: 123});
+      expect(await storage.getBundleRepository(bundleId)).to.deep.equal({status: 'OtherStatus', additionalField: 123});
+    });
+
+    it('getBundleRepository returns null if metadata fot this bundleId does not exist', async () => {
+      expect(await storage.getBundleRepository('unknownId')).to.be.null;
     });
   });
 
