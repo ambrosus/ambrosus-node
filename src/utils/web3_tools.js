@@ -27,10 +27,10 @@ function createGanacheProvider(secretKey) {
   const ganacheOptions = {
     accounts: [
       {
-        balance: '1000000000000000000000',
+        balance: '100000000000000000000000000',
         secretKey
       },
-      ...Array(9).fill({balance: '1000000000000000000000'})
+      ...Array(9).fill({balance: '100000000000000000000000000'})
     ]
   };
   const provider = Ganache.provider(ganacheOptions);

@@ -20,8 +20,7 @@ export default class RolesRepository {
     return new Role(roleIndex);
   }
 
-  async onboardAsAtlas(address, url) {
-    const stake = await this.configWrapper.atlas1Stake();
+  async onboardAsAtlas(address, url, stake = '10000000000000000000000') {
     await this.rolesWrapper.onboardAsAtlas(address, stake, url);
   }
 

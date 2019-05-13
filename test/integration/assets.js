@@ -12,7 +12,6 @@ import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import ServerApparatus, {apparatusScenarioProcessor} from '../helpers/server_apparatus';
 import chaiHttp from 'chai-http';
-
 import {pick, put} from '../../src/utils/dict_utils';
 import {createFullAsset} from '../fixtures/assets_events';
 import pkPair from '../fixtures/pk_pair';
