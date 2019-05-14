@@ -8,14 +8,13 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import chai from 'chai';
+import sinon from 'sinon';
 import chaiAsPromised from 'chai-as-promised';
+import sinonChai from 'sinon-chai';
 import Builder from '../../../src/builder';
 import config from '../../../config/config';
-import devConfig from '../../../config/devConfig';
 import AtlasWorker from '../../../src/workers/atlas_worker';
 import {createFullAsset, createFullBundle} from '../../fixtures/assets_events';
-import ResolveAllStrategy from '../../../src/workers/atlas_strategies/resolve_all_strategy';
-import chaiHttp from 'chai-http';
 import {cleanDatabase} from '../../../src/utils/db_utils';
 import deployAll from '../../../src/utils/deployment';
 import {createWeb3} from '../../../src/utils/web3_tools';
@@ -23,9 +22,13 @@ import {addToKycWhitelist} from '../../../src/utils/prerun';
 import {Role} from '../../../src/services/roles_repository';
 import Web3 from 'web3';
 import nock from 'nock';
+import AtlasChallengeParticipationStrategy
+  from '../../../src/workers/atlas_strategies/atlas_challenge_resolution_strategy';
+import {pick} from '../../../src/utils/dict_utils';
+import BundleStatusStates from '../../../src/utils/bundle_status_states';
 
 chai.use(chaiAsPromised);
-chai.use(chaiHttp);
+chai.use(sinonChai);
 const {expect} = chai;
 
 describe('Atlas worker - integration', () => {
@@ -34,6 +37,7 @@ describe('Atlas worker - integration', () => {
   let builder;
   let exampleBundle;
   let hermesUploadActions;
+  let headContractAddress;
   const hermesUrl = 'http://hermes.com';
   const atlasUrl = 'http://atlas.com';
   const storagePeriods = 8;
@@ -42,7 +46,20 @@ describe('Atlas worker - integration', () => {
     error: () => {}
   };
 
-  const prepareHermesSetup = async (web3, hermesAddress, headContractAddress) => {
+  let mockStrategy;
+
+  const createMockStrategy = () => {
+    mockStrategy = {
+      workerInterval: 5,
+      retryTimeout: 5,
+      shouldFetchBundle: sinon.stub().resolves(true),
+      shouldResolveChallenge: sinon.stub().resolves(true),
+      afterChallengeResolution: sinon.stub()
+    };
+    mockStrategy.__proto__ = AtlasChallengeParticipationStrategy.prototype;
+  };
+
+  const prepareHermesSetup = async (web3, hermesAddress) => {
     const hermesWeb3 = new Web3(web3.currentProvider);
     hermesWeb3.eth.defaultAccount = hermesAddress;
     const hermesBuilder = new Builder();
@@ -53,16 +70,25 @@ describe('Atlas worker - integration', () => {
   };
 
   const onboardAtlas = async () => {
-    await addToKycWhitelist(Role.ATLAS, web3.utils.toWei('10000', 'ether'), builder.dataModelEngine, builder.kycWhitelistWrapper, loggerMock);
+    await addToKycWhitelist(Role.ATLAS, web3.utils.toWei('10000', 'ether'), builder.dataModelEngine,
+      builder.kycWhitelistWrapper, loggerMock);
     await builder.rolesRepository.onboardAsAtlas(builder.identityManager.nodeAddress(), atlasUrl);
   };
 
-  beforeEach(async () => {
+  before(async () => {
     web3 = await createWeb3(config);
-    builder = new Builder();
+  });
+
+  beforeEach(async () => {
     const headContract = await deployAll(web3, config.nodePrivateKey, loggerMock);
-    await builder.build({...config, headContractAddress: headContract.options.address}, {web3});
-    const strategy = new ResolveAllStrategy();
+    headContractAddress = headContract.options.address;
+    builder = new Builder();
+    await builder.build({...config, headContractAddress}, {web3});
+    const [, hermesAddress] = await web3.eth.getAccounts();
+    hermesUploadActions = (await prepareHermesSetup(web3, hermesAddress)).uploadActions;
+    await onboardAtlas();
+    createMockStrategy();
+    builder.failedChallengesCache.failedChallengesEndTime = {};
     atlasWorker = new AtlasWorker(
       builder.web3,
       builder.dataModelEngine,
@@ -70,19 +96,21 @@ describe('Atlas worker - integration', () => {
       builder.challengesRepository,
       builder.workerTaskTrackingRepository,
       builder.failedChallengesCache,
-      strategy,
+      mockStrategy,
       loggerMock,
       builder.client,
       config.serverPort,
       config.requiredFreeDiskSpace
     );
-    const [, hermesAddress] = await web3.eth.getAccounts();
-    hermesUploadActions = (await prepareHermesSetup(web3, hermesAddress, headContract.options.address)).uploadActions;
-    await onboardAtlas();
-    exampleBundle = createFullBundle(builder.identityManager, {}, [createFullAsset(builder.identityManager)]);
     if (!nock.isActive()) {
       nock.activate();
     }
+    exampleBundle = createFullBundle(builder.identityManager, {}, [createFullAsset(builder.identityManager)]);
+    await hermesUploadActions.uploadBundle(exampleBundle.bundleId, storagePeriods);
+    nock(hermesUrl)
+      .persist()
+      .get(`/bundle/${exampleBundle.bundleId}/info`)
+      .reply(200, {bundleId: exampleBundle.bundleId});
   });
 
   afterEach(async () => {
@@ -93,14 +121,57 @@ describe('Atlas worker - integration', () => {
 
   it('reads a challenge and resolves it', async () => {
     nock(hermesUrl)
-      .get(`/bundle/${exampleBundle.bundleId}/info`)
-      .reply(200, {bundleId: exampleBundle.bundleId});
-    nock(hermesUrl)
       .get(`/bundle/${exampleBundle.bundleId}`)
       .reply(200, exampleBundle);
-    await hermesUploadActions.uploadBundle(exampleBundle.bundleId, storagePeriods);
+
     await atlasWorker.periodicWork();
     expect(await builder.bundleRepository.getBundle(exampleBundle.bundleId)).to.deep.equal(exampleBundle);
+  });
+
+  it('performs only one work when starting two workers simultaneously', async () => {
+    nock(hermesUrl)
+      .persist()
+      .get(`/bundle/${exampleBundle.bundleId}`)
+      .reply(200, exampleBundle);
+
+    const firstWorkerPromise = atlasWorker.periodicWork();
+    await atlasWorker.periodicWork();
+    await firstWorkerPromise;
+    expect(mockStrategy.shouldFetchBundle).to.be.calledOnce;
+  });
+
+  it('deletes downloaded bundle when it is not valid', async () => {
+    nock(hermesUrl)
+      .persist()
+      .get(`/bundle/${exampleBundle.bundleId}`)
+      .reply(200, pick(exampleBundle, 'content.signature'));
+    await atlasWorker.periodicWork();
+    expect(await builder.bundleRepository.getBundle(exampleBundle.bundleId)).to.be.null;
+  });
+
+  it(`doesn't try to download a bundle in case it is already sheltered`, async () => {
+    nock(hermesUrl)
+      .persist()
+      .get(`/bundle/${exampleBundle.bundleId}`)
+      .reply(200, exampleBundle);
+    await atlasWorker.periodicWork();
+    await atlasWorker.periodicWork();
+    expect(mockStrategy.shouldFetchBundle).to.be.calledTwice;
+    expect(mockStrategy.shouldResolveChallenge).to.be.calledOnce;
+    expect(await builder.bundleRepository.getBundle(exampleBundle.bundleId)).to.deep.equal(exampleBundle);
+    expect(await builder.bundleRepository.getBundleRepository(exampleBundle.bundleId)).to.deep
+      .equal({status: BundleStatusStates.sheltered});
+  });
+
+  it('sets bundle status to DOWNLOADED if resolution has failed', async () => {
+    nock(hermesUrl)
+      .persist()
+      .get(`/bundle/${exampleBundle.bundleId}`)
+      .reply(200, exampleBundle);
+    await atlasWorker.periodicWork();
+    await builder.bundleRepository.removeBundle(exampleBundle.bundleId);
+    await atlasWorker.periodicWork();
+    expect((await builder.bundleRepository.getBundleRepository(exampleBundle.bundleId)).status).to.equal(BundleStatusStates.downloaded);
   });
 
   after(async () => {

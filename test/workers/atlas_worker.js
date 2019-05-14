@@ -73,8 +73,7 @@ describe('Atlas Worker', () => {
     dataModelEngineMock = {
       downloadBundle: sinon.stub().resolves(fetchedBundleMetadata),
       cleanupBundles: sinon.spy(),
-      markBundleAsSheltered: sinon.stub(),
-      prepareBundleForCleanup: sinon.stub()
+      markBundleAsSheltered: sinon.stub()
     };
     mockWorkerLogRepository = {
       storeLog: sinon.stub()
@@ -179,12 +178,11 @@ describe('Atlas Worker', () => {
         expect(failedChallengesMock.rememberFailedChallenge).to.not.have.been.called;
       });
 
-      it('returns false and marks challenge as failed and queues it for cleanup if an attempt to download the bundle fails', async () => {
+      it('returns false and marks challenge as failed if an attempt to download the bundle fails', async () => {
         tryToDownloadMock.rejects();
         expect(await atlasWorker.tryWithChallenge(challenge1)).to.equal(false);
         expect(tryToDownloadMock).to.have.been.calledWith(challenge1);
         expect(failedChallengesMock.rememberFailedChallenge).to.be.calledOnceWith(challenge1.challengeId, retryTimeout);
-        expect(dataModelEngineMock.prepareBundleForCleanup).to.be.calledOnceWith(challenge1.bundleId);
       });
 
       it('returns false if the strategy disqualifies the challenge after downloaded the bundle', async () => {
@@ -202,12 +200,11 @@ describe('Atlas Worker', () => {
         expect(failedChallengesMock.rememberFailedChallenge).to.not.have.been.called;
       });
 
-      it('returns false and marks challenge as failed and queues it for cleanup if the resolution attempt fails', async () => {
+      it('returns false and marks challenge as failed if the resolution attempt fails', async () => {
         tryToResolveMock.rejects();
         expect(await atlasWorker.tryWithChallenge(challenge1)).to.equal(false);
         expect(tryToResolveMock).to.have.been.calledWith(bundleMetadata, challenge1);
         expect(failedChallengesMock.rememberFailedChallenge).to.be.calledOnceWith(challenge1.challengeId, retryTimeout);
-        expect(dataModelEngineMock.prepareBundleForCleanup).to.be.calledOnceWith(challenge1.bundleId);
       });
 
       it('returns true if everything goes ok', async () => {

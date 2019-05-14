@@ -93,8 +93,7 @@ describe('Roles repository', () => {
     });
 
     it('calls wrappers methods with correct arguments', async () => {
-      await rolesRepository.onboardAsAtlas(address, url);
-      expect(configWrapperMock.atlas1Stake).to.be.calledOnce;
+      await rolesRepository.onboardAsAtlas(address, url, stake);
       expect(rolesWrapperMock.onboardAsAtlas).to.be.calledWith(address, stake, url);
     });
   });

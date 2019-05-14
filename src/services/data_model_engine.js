@@ -278,12 +278,6 @@ export default class DataModelEngine {
     await this.bundleRepository.setBundleRepository(bundleId, BundleStatusStates.sheltered);
   }
 
-  async prepareBundleForCleanup(bundleId) {
-    if (!await this.bundleRepository.isBundleSheltered(bundleId)) {
-      await this.bundleRepository.setBundleRepository(bundleId, BundleStatusStates.cleanup);
-    }
-  }
-
   async getWorkerLogs(logsCount = 10) {
     return await this.workerLogRepository.getLogs(logsCount);
   }

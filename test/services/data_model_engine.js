@@ -1545,27 +1545,6 @@ describe('Data Model Engine', () => {
     });
   });
 
-  describe('prepareBundleForCleanup', () => {
-    const bundleId = '0x123';
-    let mockBundleRepository;
-    let modelEngine;
-
-    beforeEach(() => {
-      mockBundleRepository = {
-        setBundleRepository: sinon.stub()
-      };
-
-      modelEngine = new DataModelEngine({
-        bundleRepository: mockBundleRepository
-      });
-    });
-
-    it('sets bundle status to CLEANUP', async () => {
-      await modelEngine.prepareBundleForCleanup(bundleId);
-      expect(mockBundleRepository.setBundleRepository).to.be.calledOnceWith(bundleId, BundleStatusStates.cleanup);
-    });
-  });
-
   describe('Getting worker logs', () => {
     let modelEngine;
     let mockWorkerLogRepository;
