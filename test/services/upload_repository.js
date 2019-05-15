@@ -195,7 +195,7 @@ describe('Upload repository', () => {
     });
   });
 
-  describe('Complementing bundle metadata', () => {
+  describe('Composing bundle metadata', () => {
     const bundleId = '0x978f69298ba7940c11b16c4a778c7ad1a4e8c6ed3c90c35f36cfec1b20fc53d2';
     const exampleStoragePeriods = 12;
     const exampleUploadData = {
@@ -223,11 +223,11 @@ describe('Upload repository', () => {
     });
 
     it('substitutes metadata fields with data loaded from blockchain', async () => {
-      expect(await uploadRepository.complementBundleMetadata({bundleId})).to.deep.equal(bundleMetadata);
+      expect(await uploadRepository.composeBundleMetadataFromBlockchain(bundleId)).to.deep.equal(bundleMetadata);
     });
 
     it('throws ValidationError when bundle with given ID does not exist on chain', async () => {
-      await expect(uploadRepository.complementBundleMetadata({bundleId: 'unknownId'})).to.be.rejectedWith(ValidationError);
+      await expect(uploadRepository.composeBundleMetadataFromBlockchain('unknownId')).to.be.rejectedWith(ValidationError, 'Bundle with id=unknownId has not been uploaded');
     });
   });
 });

@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-const BundleStatusStates = Object.freeze({
+const BundleStatuses = Object.freeze({
   unknown: 'UNKNOWN',
   shelteringCandidate: 'SHELTERING_CANDIDATE',
   downloaded: 'DOWNLOADED',
@@ -15,4 +15,4 @@ const BundleStatusStates = Object.freeze({
   cleanup: 'CLEANUP'
 });
 
-export default BundleStatusStates;
+export default BundleStatuses;

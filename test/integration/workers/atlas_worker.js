@@ -25,7 +25,7 @@ import nock from 'nock';
 import AtlasChallengeParticipationStrategy
   from '../../../src/workers/atlas_strategies/atlas_challenge_resolution_strategy';
 import {pick} from '../../../src/utils/dict_utils';
-import BundleStatusStates from '../../../src/utils/bundle_status_states';
+import BundleStatuses from '../../../src/utils/bundle_statuses';
 
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
@@ -45,7 +45,6 @@ describe('Atlas worker - integration', () => {
     info: () => {},
     error: () => {}
   };
-
   let mockStrategy;
 
   const createMockStrategy = () => {
@@ -160,7 +159,7 @@ describe('Atlas worker - integration', () => {
     expect(mockStrategy.shouldResolveChallenge).to.be.calledOnce;
     expect(await builder.bundleRepository.getBundle(exampleBundle.bundleId)).to.deep.equal(exampleBundle);
     expect(await builder.bundleRepository.getBundleRepository(exampleBundle.bundleId)).to.deep
-      .equal({status: BundleStatusStates.sheltered});
+      .equal({status: BundleStatuses.sheltered});
   });
 
   it('sets bundle status to DOWNLOADED if resolution has failed', async () => {
@@ -171,7 +170,7 @@ describe('Atlas worker - integration', () => {
     await atlasWorker.periodicWork();
     await builder.bundleRepository.removeBundle(exampleBundle.bundleId);
     await atlasWorker.periodicWork();
-    expect((await builder.bundleRepository.getBundleRepository(exampleBundle.bundleId)).status).to.equal(BundleStatusStates.downloaded);
+    expect((await builder.bundleRepository.getBundleRepository(exampleBundle.bundleId)).status).to.equal(BundleStatuses.downloaded);
   });
 
   after(async () => {

@@ -8,7 +8,9 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 import {downloadJSONFromGridFSBucket, isFileInGridFSBucket, uploadJSONToGridFSBucket} from '../utils/db_utils';
 import {GridFSBucket} from 'mongodb';
-import BundleStatusStates from '../utils/bundle_status_states';
+import BundleStatuses from '../utils/bundle_statuses';
+import {pick} from '../utils/dict_utils';
+import {pipe} from '../utils/higher_order_functions';
 
 export default class BundleRepository {
   constructor(db) {
@@ -78,12 +80,31 @@ export default class BundleRepository {
     return await downloadJSONFromGridFSBucket(bundleId, this.bundlesBucket);
   }
 
-  async createBundleMetadata(bundleId, storagePeriods, status = BundleStatusStates.unknown) {
+  async createBundleMetadata(bundleId, storagePeriods, status = BundleStatuses.unknown, additionalRepositoryFields = {}) {
     if (await this.db.collection('bundle_metadata').findOne({bundleId}) === null) {
       await this.db.collection('bundle_metadata').insertOne({
-        bundleId, storagePeriods, repository: {status}
+        bundleId, storagePeriods, repository: {...additionalRepositoryFields, status}
       });
     }
+  }
+
+  async storeAdditionalMetadata(bundleId, complementaryMetadata) {
+    const requiredFields = [
+      'bundleId',
+      'bundleTransactionHash',
+      'bundleProofBlock',
+      'bundleUploadTimestamp',
+      'storagePeriods',
+      'repository'
+    ];
+    const additionalMetadataFields = pipe(...requiredFields.map((fieldName) =>
+      (dict) => pick(dict, fieldName)))(complementaryMetadata);
+    if (Object.values(additionalMetadataFields).length === 0) {
+      return;
+    }
+    await this.db.collection('bundle_metadata').updateOne({bundleId}, {
+      $set: additionalMetadataFields
+    });
   }
 
   async getBundleMetadata(bundleId) {
@@ -111,7 +132,7 @@ export default class BundleRepository {
 
   async isBundleSheltered(bundleId) {
     const repository = await this.getBundleRepository(bundleId);
-    return repository ? repository.status === BundleStatusStates.sheltered : false;
+    return repository ? repository.status === BundleStatuses.sheltered : false;
   }
 
   async removeBundle(bundleId) {
