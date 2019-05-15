@@ -72,13 +72,14 @@ export default class AtlasWorker extends PeriodicWorker {
 
   async tryToResolve({bundleId}, {challengeId}) {
     await this.challengesRepository.resolveChallenge(challengeId);
-    await this.dataModelEngine.updateShelteringExpirationDate(bundleId);
+    await this.dataModelEngine.markBundleAsSheltered(bundleId);
     await this.addLog('🍾 Yahoo! The bundle is ours.', {bundleId});
   }
 
   async tryToDownload({sheltererId, bundleId, challengeId}) {
-    await this.addLog(`Trying to fetch the bundle`, {sheltererId, bundleId, challengeId});
-    return this.dataModelEngine.downloadBundle(bundleId, sheltererId);
+    const metadata = await this.dataModelEngine.downloadBundle(bundleId, sheltererId);
+    await this.addLog(`Bundle fetched`, {sheltererId, bundleId, challengeId});
+    return metadata;
   }
 
   async isTurnToResolve({challengeId}) {

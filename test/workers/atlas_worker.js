@@ -73,7 +73,7 @@ describe('Atlas Worker', () => {
     dataModelEngineMock = {
       downloadBundle: sinon.stub().resolves(fetchedBundleMetadata),
       cleanupBundles: sinon.spy(),
-      updateShelteringExpirationDate: sinon.stub()
+      markBundleAsSheltered: sinon.stub()
     };
     mockWorkerLogRepository = {
       storeLog: sinon.stub()
@@ -136,7 +136,7 @@ describe('Atlas Worker', () => {
     it('tryToResolve resolves a challenge and sets expiration date', async () => {
       await atlasWorker.tryToResolve(fetchedBundleMetadata, challenge1);
       expect(challengesRepositoryMock.resolveChallenge).to.be.calledWith(challengeId);
-      expect(dataModelEngineMock.updateShelteringExpirationDate).to.be.calledWith(fetchedBundleMetadata.bundleId);
+      expect(dataModelEngineMock.markBundleAsSheltered).to.be.calledWith(fetchedBundleMetadata.bundleId);
     });
 
     describe('tryWithChallenge', () => {

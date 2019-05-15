@@ -8,7 +8,11 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 const BundleStatusStates = Object.freeze({
-  unknown: 'UNKNOWN'
+  unknown: 'UNKNOWN',
+  shelteringCandidate: 'SHELTERING_CANDIDATE',
+  downloaded: 'DOWNLOADED',
+  sheltered: 'SHELTERED',
+  cleanup: 'CLEANUP'
 });
 
 export default BundleStatusStates;
