@@ -55,7 +55,8 @@ export default class HttpsClient {
     const options = {
       hostname,
       path,
-      port
+      port,
+      timeout: 300000
     };
     return {agent, options};
   }
