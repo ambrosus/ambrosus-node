@@ -100,7 +100,8 @@ describe('Atlas worker - integration', () => {
       loggerMock,
       builder.client,
       config.serverPort,
-      config.requiredFreeDiskSpace
+      config.requiredFreeDiskSpace,
+      config.maxWorkerLogsCheckAgeInSeconds
     );
     if (!nock.isActive()) {
       nock.activate();

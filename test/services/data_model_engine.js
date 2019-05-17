@@ -1573,4 +1573,39 @@ describe('Data Model Engine', () => {
       expect(ret).to.equal(exampleLogs);
     });
   });
+
+  describe('Are logs active', () => {
+    let modelEngine;
+    let clock;
+    let mockWorkerLogRepository;
+    const now = 150;
+    const maximalLogAgeInSeconds = 12;
+    const exampleLogWithTimestamp = (timestampInSeconds) => ({timestamp: new Date(timestampInSeconds * 1000)});
+    beforeEach(() => {
+      mockWorkerLogRepository = {
+        getLogs: sinon.stub()
+      };
+      clock = sinon.useFakeTimers(now * 1000);
+      modelEngine = new DataModelEngine({workerLogRepository: mockWorkerLogRepository});
+    });
+
+    it('returns true when latest log was recent', async () => {
+      mockWorkerLogRepository.getLogs.withArgs(1).resolves([exampleLogWithTimestamp(now - maximalLogAgeInSeconds)]);
+      expect(await modelEngine.areLogsRecent(maximalLogAgeInSeconds)).to.be.true;
+    });
+
+    it('returns false when there was no recent log', async () => {
+      mockWorkerLogRepository.getLogs.withArgs(1).resolves([exampleLogWithTimestamp(now - maximalLogAgeInSeconds - 1)]);
+      expect(await modelEngine.areLogsRecent(maximalLogAgeInSeconds)).to.be.false;
+    });
+
+    it('returns false when there was no logs', async () => {
+      mockWorkerLogRepository.getLogs.withArgs(1).resolves([]);
+      expect(await modelEngine.areLogsRecent(maximalLogAgeInSeconds)).to.be.false;
+    });
+
+    afterEach(() => {
+      clock.restore();
+    });
+  });
 });

@@ -73,7 +73,8 @@ describe('Atlas Worker', () => {
     dataModelEngineMock = {
       downloadBundle: sinon.stub().resolves(fetchedBundleMetadata),
       cleanupBundles: sinon.spy(),
-      markBundleAsSheltered: sinon.stub()
+      markBundleAsSheltered: sinon.stub(),
+      areLogsRecent: sinon.stub().resolves(true)
     };
     mockWorkerLogRepository = {
       storeLog: sinon.stub()
@@ -100,7 +101,8 @@ describe('Atlas Worker', () => {
       loggerMock,
       mongoClient,
       config.serverPort,
-      requiredFreeDiskSpace
+      requiredFreeDiskSpace,
+      config.maxWorkerLogsCheckAgeInSeconds
     );
 
     atlasWorker.beforeWorkLoop();
@@ -365,9 +367,24 @@ describe('Atlas Worker', () => {
     });
   });
 
-  it('health checks', async () => {
-    const {status} = await chai.request(`http://localhost:${port}`).get('/health');
-    expect(status).to.eql(200);
+  describe('Health check', () => {
+    it('returns 200 when there were recent logs', async () => {
+      const {status} = await chai.request(`http://localhost:${port}`).get('/health');
+      expect(status).to.eql(200);
+    });
+
+    it('returns 500 when there were no recent logs', async () => {
+      dataModelEngineMock.areLogsRecent.resolves(false);
+      const {response: {status, body}} = await chai.request(`http://localhost:${port}`)
+        .get('/health')
+        .catch((err) => err);
+      expect(status).to.eql(500);
+      expect(body).to.eql({
+        mongo: {connected: true},
+        web3: {connected: true},
+        isWorkerActive: false
+      });
+    });
   });
 
   describe('prometheus metrics', () => {

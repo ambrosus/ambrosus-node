@@ -11,7 +11,7 @@ import express from 'express';
 import promClient from 'prom-client';
 import prometheusMetricsHandler from '../routes/prometheus_metrics.js';
 import asyncMiddleware from '../middlewares/async_middleware';
-import healthCheckHandler from '../routes/health_check';
+import {workerHealthCheckHandler} from '../routes/health_check';
 import PeriodicWorker from './periodic_worker';
 import HermesUploadStrategy from './hermes_strategies/upload_strategy';
 
@@ -25,7 +25,8 @@ export default class HermesWorker extends PeriodicWorker {
     strategy,
     logger,
     mongoClient,
-    serverPort
+    serverPort,
+    maxWorkerLogsCheckAgeInSeconds
   ) {
     super(strategy.workerInterval, logger);
     this.dataModelEngine = dataModelEngine;
@@ -37,7 +38,7 @@ export default class HermesWorker extends PeriodicWorker {
     this.expressApp = express();
     this.serverPort = serverPort;
     this.expressApp.get('/health', asyncMiddleware(
-      healthCheckHandler(mongoClient, dataModelEngine.identityManager.web3)
+      workerHealthCheckHandler(mongoClient, dataModelEngine.identityManager.web3, this.dataModelEngine, maxWorkerLogsCheckAgeInSeconds)
     ));
     const registry = new promClient.Registry();
     this.expressApp.get('/metrics', prometheusMetricsHandler(registry));
@@ -55,6 +56,11 @@ export default class HermesWorker extends PeriodicWorker {
     if (!(this.strategy instanceof HermesUploadStrategy)) {
       throw new Error('A valid strategy must be provided');
     }
+  }
+
+  async work() {
+    await this.addLog('Hermes worker started');
+    return super.work();
   }
 
   async periodicWork() {

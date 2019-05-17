@@ -53,5 +53,7 @@ module.exports = Object.freeze({
 
   supportDeprecatedBundleVersions: process.env.SUPPORT_DEPRECATED_BUDLE_VERSIONS === 'true',
 
-  requiredFreeDiskSpace: process.env.REQUIRED_FREE_DISK_SPACE || 200000000 // 200 MB
+  requiredFreeDiskSpace: process.env.REQUIRED_FREE_DISK_SPACE || 200000000, // 200 MB
+
+  maxWorkerLogsCheckAgeInSeconds: process.env.MAX_WORKER_LOGS_CHECK_AGE || 3600 // 1 hour
 });

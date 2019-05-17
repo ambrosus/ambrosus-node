@@ -34,7 +34,8 @@ async function start(logger) {
     logger,
     builder.client,
     config.serverPort,
-    config.requiredFreeDiskSpace
+    config.requiredFreeDiskSpace,
+    config.maxWorkerLogsCheckAgeInSeconds
   );
   await worker.start();
 }

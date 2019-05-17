@@ -22,7 +22,7 @@ import bundlesRouter from '../routes/bundles';
 import eventsRouter from '../routes/events';
 import tokenRouter from '../routes/token';
 import nodeInfoRouter from '../routes/nodeinfo';
-import healthCheckHandler from '../routes/health_check';
+import {serverHealthCheckHandler} from '../routes/health_check';
 import prometheusMetricsHandler from '../routes/prometheus_metrics.js';
 import asyncMiddleware from '../middlewares/async_middleware';
 import {Role} from '../services/roles_repository';
@@ -60,7 +60,7 @@ export default class ServerWorker extends Worker {
 
     app.use('/nodeinfo', nodeInfoRouter(this.modelEngine, this.modelEngine.identityManager, this.config.gitCommit));
     app.use('/bundle', bundlesRouter(this.modelEngine));
-    app.get('/health', asyncMiddleware(healthCheckHandler(this.modelEngine.mongoClient, this.web3)));
+    app.get('/health', asyncMiddleware(serverHealthCheckHandler(this.modelEngine.mongoClient, this.web3)));
     app.get('/metrics', prometheusMetricsHandler(registry));
 
     if (this.role.is(Role.HERMES)) {

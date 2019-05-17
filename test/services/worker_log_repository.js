@@ -21,7 +21,9 @@ describe('Worker Log Repository', () => {
   let db;
   let client;
   let storage;
-  const exampleLog = {foo: 'bar', timestamp: '1234'};
+  const timestamp = 123;
+  const exampleLog = {foo: 'bar', timestamp: new Date(timestamp)};
+  const createLog = (timestamp) => ({...exampleLog, timestamp: new Date(timestamp)});
 
   before(async () => {
     ({db, client} = await connectToMongo(config));
@@ -50,5 +52,15 @@ describe('Worker Log Repository', () => {
     await expect(storage.storeLog(exampleLog)).to.be.fulfilled;
     await expect(storage.storeLog(exampleLog)).to.be.fulfilled;
     expect((await storage.getLogs(3)).length).to.be.equal(3);
+  });
+
+  it('getLogs returns newest logs sorted by timestamp decreasingly', async () => {
+    await expect(storage.storeLog(createLog(timestamp))).to.be.fulfilled;
+    await expect(storage.storeLog(createLog(timestamp + 1))).to.be.fulfilled;
+    await expect(storage.storeLog(createLog(timestamp + 2))).to.be.fulfilled;
+    await expect(storage.storeLog(createLog(timestamp + 3))).to.be.fulfilled;
+    const logs = await storage.getLogs(2);
+    expect(logs[0].timestamp).to.deep.equal(new Date(timestamp + 3));
+    expect(logs[1].timestamp).to.deep.equal(new Date(timestamp + 2));
   });
 });

@@ -11,7 +11,7 @@ import express from 'express';
 import promClient from 'prom-client';
 import prometheusMetricsHandler from '../routes/prometheus_metrics.js';
 import asyncMiddleware from '../middlewares/async_middleware';
-import healthCheckHandler from '../routes/health_check';
+import {workerHealthCheckHandler} from '../routes/health_check';
 import PeriodicWorker from './periodic_worker';
 import AtlasChallengeParticipationStrategy from './atlas_strategies/atlas_challenge_resolution_strategy';
 import {checkIfEnoughFundsToPayForGas, getDefaultAddress} from '../utils/web3_tools';
@@ -37,7 +37,8 @@ export default class AtlasWorker extends PeriodicWorker {
     logger,
     mongoClient,
     serverPort,
-    requiredFreeDiskSpace
+    requiredFreeDiskSpace,
+    maxWorkerLogsCheckAgeInSeconds
   ) {
     super(strategy.workerInterval, logger);
     this.web3 = web3;
@@ -54,7 +55,7 @@ export default class AtlasWorker extends PeriodicWorker {
     this.expressApp = express();
     this.serverPort = serverPort;
     this.expressApp.get('/health', asyncMiddleware(
-      healthCheckHandler(mongoClient, web3)
+      workerHealthCheckHandler(mongoClient, web3, this.dataModelEngine, maxWorkerLogsCheckAgeInSeconds)
     ));
     const registry = new promClient.Registry();
     this.expressApp.get('/metrics', prometheusMetricsHandler(registry));
@@ -68,6 +69,11 @@ export default class AtlasWorker extends PeriodicWorker {
     if (!(this.strategy instanceof AtlasChallengeParticipationStrategy)) {
       throw new Error('A valid strategy must be provided');
     }
+  }
+
+  async work() {
+    await this.addLog('Atlas worker started');
+    return super.work();
   }
 
   async tryToResolve({bundleId}, {challengeId}) {

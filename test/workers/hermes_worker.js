@@ -46,6 +46,7 @@ describe('Hermes Worker', () => {
           eth: {getNodeInfo: () => Promise.resolve()}
         }
       },
+      areLogsRecent: sinon.stub().resolves(true),
       rejectAllBundleCandidate: sinon.stub().resolves(),
       prepareBundleCandidate: sinon.stub().resolves(mockResult),
       rejectBundleCandidate: sinon.stub().resolves(),
@@ -77,7 +78,8 @@ describe('Hermes Worker', () => {
       mockStrategy,
       mockLogger,
       mongoClient,
-      config.serverPort
+      config.serverPort,
+      config.maxWorkerLogsCheckAgeInSeconds
     );
     await hermesWorker.beforeWorkLoop();
     const {port} = hermesWorker.server.address();
@@ -153,6 +155,26 @@ describe('Hermes Worker', () => {
       mockDataModelEngine.prepareBundleCandidate.rejects();
       await expect(hermesWorker.periodicWork()).to.be.rejected;
       expect(mockWorkerTaskTrackingRepository.finishWork).to.be.calledOnceWith(exampleWorkId);
+    });
+  });
+
+  describe('Health check', () => {
+    it('returns 200 when there were recent logs', async () => {
+      const {status} = await chai.request(serverAddress).get('/health');
+      expect(status).to.eql(200);
+    });
+
+    it('returns 500 when there were no recent logs', async () => {
+      mockDataModelEngine.areLogsRecent.resolves(false);
+      const {response: {status, body}} = await chai.request(serverAddress)
+        .get('/health')
+        .catch((err) => err);
+      expect(status).to.eql(500);
+      expect(body).to.eql({
+        mongo: {connected: true},
+        web3: {connected: true},
+        isWorkerActive: false
+      });
     });
   });
 

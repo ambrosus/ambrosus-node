@@ -281,4 +281,12 @@ export default class DataModelEngine {
   async getWorkerLogs(logsCount = 10) {
     return await this.workerLogRepository.getLogs(logsCount);
   }
+
+  async areLogsRecent(maximalLogAgeInSeconds) {
+    const logs = await this.workerLogRepository.getLogs(1);
+    if (logs.length === 0) {
+      return false;
+    }
+    return Date.now() - logs[0].timestamp <= maximalLogAgeInSeconds * 1000;
+  }
 }
