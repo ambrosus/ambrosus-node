@@ -16,7 +16,7 @@ import config from '../../config/config';
 
 import BundleRepository from '../../src/services/bundle_repository';
 import StringReadStream from '../../src/utils/string_read_stream';
-import BundleStatusStates from '../../src/utils/bundle_status_states';
+import BundleStatuses from '../../src/utils/bundle_statuses';
 
 const {expect} = chai;
 chai.use(chaiAsPromised);
@@ -166,19 +166,64 @@ describe('Bundle Repository', () => {
     });
 
     it('creates metadata with bundleId and storagePeriods and empty repository if it does not exist', async () => {
-      await storage.createBundleMetadata(bundleId, storagePeriods, BundleStatusStates.shelteringCandidate);
-      expect(await getMetadataWithoutId(bundleId)).to.deep.equal({bundleId, storagePeriods, repository: {status: BundleStatusStates.shelteringCandidate}});
+      await storage.createBundleMetadata(bundleId, storagePeriods, BundleStatuses.shelteringCandidate);
+      expect(await getMetadataWithoutId(bundleId)).to.deep.equal({bundleId, storagePeriods, repository: {status: BundleStatuses.shelteringCandidate}});
     });
 
     it('does nothing if metadata with same bundleId already exists', async () => {
       await storage.createBundleMetadata(bundleId, storagePeriods);
-      await storage.createBundleMetadata(bundleId, storagePeriods + 1, BundleStatusStates.downloaded);
-      expect(await getMetadataWithoutId(bundleId)).to.deep.equal({bundleId, storagePeriods, repository: {status: BundleStatusStates.unknown}});
+      await storage.createBundleMetadata(bundleId, storagePeriods + 1, BundleStatuses.downloaded);
+      expect(await getMetadataWithoutId(bundleId)).to.deep.equal({bundleId, storagePeriods, repository: {status: BundleStatuses.unknown}});
     });
 
     it('getBundleMetadata returns metadata without repository field', async () => {
       await storage.createBundleMetadata(bundleId, storagePeriods);
       expect(await storage.getBundleMetadata(bundleId)).to.deep.equal({bundleId, storagePeriods});
+    });
+  });
+
+  describe('Additional Metadata Fields', () => {
+    const initialMetadata = {
+      bundleId: '0x1',
+      bundleTransactionHash: '0x2',
+      bundleProofBlock: 10,
+      bundleUploadTimestamp: 12,
+      storagePeriods: 2,
+      repository: {status: BundleStatuses.shelteringCandidate}
+    };
+    const downloadedBundleMetadata = {
+      bundleTransactionHash: '0x2423', // should not overwrite
+      bundleProofBlock: 15, // should not overwrite
+      storagePeriods: 7, // should not overwrite
+      bundleUploadTimestamp: 12, // should not overwrite
+      repository: {status: 'BADSTATUS', foo: 'bar'}, // should not overwrite
+      additionalField: 'field'
+    };
+
+    it('returns fields not present in initial metadata', () => {
+      expect(storage.additionalMetadataFields(initialMetadata, downloadedBundleMetadata)).to.deep.equal({additionalField: 'field'});
+    });
+  });
+
+  describe('Update Bundle Metadata', () => {
+    const initialMetadata = {bundleId: '0x1'};
+
+    beforeEach(async () => {
+      await db.collection('bundle_metadata').insertOne({...initialMetadata});
+    });
+
+    afterEach(async () => {
+      await cleanDatabase(db);
+    });
+
+    it('adds additional fields', async () => {
+      await storage.updateBundleMetadata(initialMetadata.bundleId, {foo: 'bar'});
+      expect(await storage.getBundleMetadata(initialMetadata.bundleId)).to.deep.equal({...initialMetadata, foo: 'bar'});
+    });
+
+    it('works when no additional fields provided', async () => {
+      await storage.updateBundleMetadata(initialMetadata.bundleId, {});
+      expect(await storage.getBundleMetadata(initialMetadata.bundleId)).to.deep.equal(initialMetadata);
     });
   });
 
@@ -215,7 +260,7 @@ describe('Bundle Repository', () => {
     beforeEach(async () => {
       await storage.createBundleMetadata(shelteredBundleId, storagePeriods);
       await storage.createBundleMetadata(notShelteredBundleId, storagePeriods);
-      await storage.setBundleRepository(shelteredBundleId, BundleStatusStates.sheltered);
+      await storage.setBundleRepository(shelteredBundleId, BundleStatuses.sheltered);
     });
 
     afterEach(async () => {

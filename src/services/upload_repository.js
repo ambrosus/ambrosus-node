@@ -96,14 +96,14 @@ export default class UploadRepository {
     }
   }
 
-  async complementBundleMetadata(bundleMetadata) {
-    const bundleUploadData = await this.uploadsActions.getBundleUploadData(bundleMetadata.bundleId);
+  async composeBundleMetadataFromBlockchain(bundleId) {
+    const bundleUploadData = await this.uploadsActions.getBundleUploadData(bundleId);
     if (bundleUploadData === null) {
-      throw new ValidationError(`Bundle with id=${bundleMetadata.bundleId} has not been uploaded`);
+      throw new ValidationError(`Bundle with id=${bundleId} has not been uploaded`);
     }
-    const bundleStoragePeriods = await this.shelteringWrapper.bundleStoragePeriods(bundleMetadata.bundleId);
+    const bundleStoragePeriods = await this.shelteringWrapper.bundleStoragePeriods(bundleId);
     return {
-      ...bundleMetadata,
+      bundleId,
       bundleTransactionHash: bundleUploadData.transactionHash,
       bundleProofBlock: bundleUploadData.blockNumber,
       bundleUploadTimestamp: bundleUploadData.timestamp,

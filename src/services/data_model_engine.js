@@ -11,7 +11,7 @@ import {NotFoundError, PermissionError, ValidationError} from '../errors/errors'
 import {getTimestamp} from '../utils/time_utils';
 import {pick, put} from '../utils/dict_utils';
 import allPermissions from '../utils/all_permissions';
-import BundleStatusStates from '../utils/bundle_status_states';
+import BundleStatuses from '../utils/bundle_statuses';
 
 export default class DataModelEngine {
   constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, bundleDownloader, bundleBuilder, bundleRepository, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, uploadRepository, rolesRepository, workerLogRepository}) {
@@ -234,15 +234,16 @@ export default class DataModelEngine {
       throw new Error('Bundle is already sheltered');
     }
 
+    const initialMetadata = await this.uploadRepository.composeBundleMetadataFromBlockchain(bundleId);
+    await this.bundleRepository.createBundleMetadata(bundleId, initialMetadata.storagePeriods, BundleStatuses.shelteringCandidate);
+
     const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
 
-    const bundleMetadata = await this.bundleDownloader.downloadBundleMetadata(nodeUrl, bundleId);
-    if (!bundleMetadata) {
+    const downloadedMetadata = await this.bundleDownloader.downloadBundleMetadata(nodeUrl, bundleId);
+    if (!downloadedMetadata) {
       throw new Error('Could not fetch the bundle metadata from the shelterer');
     }
-    this.bundleBuilder.validateBundleMetadata(bundleMetadata);
-    const complementedMetadata = await this.uploadRepository.complementBundleMetadata(bundleMetadata);
-    await this.bundleRepository.createBundleMetadata(bundleId, complementedMetadata.storagePeriods, BundleStatusStates.shelteringCandidate);
+    this.bundleBuilder.validateBundleMetadata(downloadedMetadata);
 
     try {
       await this.downloadAndValidateBundleBody(nodeUrl, bundleId);
@@ -254,15 +255,11 @@ export default class DataModelEngine {
       throw new Error(`Could not fetch the bundle from the shelterer: ${err.message || err}`);
     }
 
-    await this.bundleRepository.setBundleRepository(bundleId, BundleStatusStates.downloaded, {nodeUrl});
-    await this.bundleRepository.storeBundleProofMetadata(
-      complementedMetadata.bundleId,
-      complementedMetadata.bundleProofBlock,
-      complementedMetadata.bundleUploadTimestamp,
-      complementedMetadata.bundleTransactionHash
-    );
+    await this.bundleRepository.setBundleRepository(bundleId, BundleStatuses.downloaded, {nodeUrl});
+    const additionalMetadataFields = this.bundleRepository.additionalMetadataFields(initialMetadata, downloadedMetadata);
+    await this.bundleRepository.updateBundleMetadata(bundleId, additionalMetadataFields);
 
-    return complementedMetadata;
+    return {...additionalMetadataFields, ...initialMetadata};
   }
 
   async downloadAndValidateBundleBody(nodeUrl, bundleId) {
@@ -275,7 +272,7 @@ export default class DataModelEngine {
   async markBundleAsSheltered(bundleId) {
     const expirationDate = await this.uploadRepository.expirationDate(bundleId);
     await this.bundleRepository.storeBundleShelteringExpirationDate(bundleId, expirationDate);
-    await this.bundleRepository.setBundleRepository(bundleId, BundleStatusStates.sheltered);
+    await this.bundleRepository.setBundleRepository(bundleId, BundleStatuses.sheltered);
   }
 
   async getWorkerLogs(logsCount = 10) {
