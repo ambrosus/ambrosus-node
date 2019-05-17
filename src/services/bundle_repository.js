@@ -80,26 +80,22 @@ export default class BundleRepository {
     return await downloadJSONFromGridFSBucket(bundleId, this.bundlesBucket);
   }
 
-  async createBundleMetadata(bundleId, storagePeriods, status = BundleStatuses.unknown, additionalRepositoryFields = {}) {
+  async createBundleMetadata(bundleId, storagePeriods, status = BundleStatuses.unknown) {
     if (await this.db.collection('bundle_metadata').findOne({bundleId}) === null) {
       await this.db.collection('bundle_metadata').insertOne({
-        bundleId, storagePeriods, repository: {...additionalRepositoryFields, status}
+        bundleId, storagePeriods, repository: {status}
       });
     }
   }
 
-  async storeAdditionalMetadata(bundleId, complementaryMetadata) {
-    const requiredFields = [
-      'bundleId',
-      'bundleTransactionHash',
-      'bundleProofBlock',
-      'bundleUploadTimestamp',
-      'storagePeriods',
-      'repository'
-    ];
-    const additionalMetadataFields = pipe(...requiredFields.map((fieldName) =>
+  additionalMetadataFields(initialMetadata, complementaryMetadata) {
+    const originalFields = Object.keys(initialMetadata);
+    return pipe(...originalFields.map((fieldName) =>
       (dict) => pick(dict, fieldName)))(complementaryMetadata);
-    if (Object.values(additionalMetadataFields).length === 0) {
+  }
+
+  async updateBundleMetadata(bundleId, additionalMetadataFields) {
+    if (!additionalMetadataFields || Object.values(additionalMetadataFields).length === 0) {
       return;
     }
     await this.db.collection('bundle_metadata').updateOne({bundleId}, {

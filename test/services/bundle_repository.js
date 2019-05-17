@@ -170,11 +170,6 @@ describe('Bundle Repository', () => {
       expect(await getMetadataWithoutId(bundleId)).to.deep.equal({bundleId, storagePeriods, repository: {status: BundleStatuses.shelteringCandidate}});
     });
 
-    it('creates metadata with bundleId and storagePeriods and empty repository with additional fields if it does not exist', async () => {
-      await storage.createBundleMetadata(bundleId, storagePeriods, BundleStatuses.shelteringCandidate, {foo: 'bar'});
-      expect(await getMetadataWithoutId(bundleId)).to.deep.equal({bundleId, storagePeriods, repository: {status: BundleStatuses.shelteringCandidate, foo: 'bar'}});
-    });
-
     it('does nothing if metadata with same bundleId already exists', async () => {
       await storage.createBundleMetadata(bundleId, storagePeriods);
       await storage.createBundleMetadata(bundleId, storagePeriods + 1, BundleStatuses.downloaded);
@@ -187,7 +182,7 @@ describe('Bundle Repository', () => {
     });
   });
 
-  describe('Store Additional Metadata', () => {
+  describe('Additional Metadata Fields', () => {
     const initialMetadata = {
       bundleId: '0x1',
       bundleTransactionHash: '0x2',
@@ -205,24 +200,30 @@ describe('Bundle Repository', () => {
       additionalField: 'field'
     };
 
+    it('returns fields not present in initial metadata', () => {
+      expect(storage.additionalMetadataFields(initialMetadata, downloadedBundleMetadata)).to.deep.equal({additionalField: 'field'});
+    });
+  });
+
+  describe('Update Bundle Metadata', () => {
+    const initialMetadata = {bundleId: '0x1'};
+
     beforeEach(async () => {
-      await db.collection('bundle_metadata').insertOne(initialMetadata);
+      await db.collection('bundle_metadata').insertOne({...initialMetadata});
     });
 
     afterEach(async () => {
       await cleanDatabase(db);
     });
 
-    it('does not override fields of initialMetadata', async () => {
-      await storage.storeAdditionalMetadata(initialMetadata.bundleId, downloadedBundleMetadata);
-      expect(await db.collection('bundle_metadata').findOne({bundleId: initialMetadata.bundleId}))
-        .to.deep.equal({...initialMetadata, additionalField: 'field'});
+    it('adds additional fields', async () => {
+      await storage.updateBundleMetadata(initialMetadata.bundleId, {foo: 'bar'});
+      expect(await storage.getBundleMetadata(initialMetadata.bundleId)).to.deep.equal({...initialMetadata, foo: 'bar'});
     });
 
-    it('works when no additional fields are included into complementary metadata', async () => {
-      await storage.storeAdditionalMetadata(initialMetadata.bundleId, {});
-      expect(await db.collection('bundle_metadata').findOne({bundleId: initialMetadata.bundleId}))
-        .to.deep.equal(initialMetadata);
+    it('works when no additional fields provided', async () => {
+      await storage.updateBundleMetadata(initialMetadata.bundleId, {});
+      expect(await storage.getBundleMetadata(initialMetadata.bundleId)).to.deep.equal(initialMetadata);
     });
   });
 

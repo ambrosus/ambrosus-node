@@ -256,9 +256,10 @@ export default class DataModelEngine {
     }
 
     await this.bundleRepository.setBundleRepository(bundleId, BundleStatuses.downloaded, {nodeUrl});
-    await this.bundleRepository.storeAdditionalMetadata(bundleId, downloadedMetadata);
+    const additionalMetadataFields = this.bundleRepository.additionalMetadataFields(initialMetadata, downloadedMetadata);
+    await this.bundleRepository.updateBundleMetadata(bundleId, additionalMetadataFields);
 
-    return initialMetadata;
+    return {...additionalMetadataFields, ...initialMetadata};
   }
 
   async downloadAndValidateBundleBody(nodeUrl, bundleId) {
