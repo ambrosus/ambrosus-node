@@ -29,7 +29,7 @@ export default class HttpsClient {
             }
             resolve({body: parsedData, statusCode: response.statusCode});
           });
-        });
+        }).on('error', (error) => reject(error));
       } catch (error) {
         reject(error);
       }
@@ -42,7 +42,7 @@ export default class HttpsClient {
       try {
         agent.get(options, (response) => {
           resolve({response, statusCode: response.statusCode});
-        });
+        }).on('error', (error) => reject(error));
       } catch (error) {
         reject({error});
       }
