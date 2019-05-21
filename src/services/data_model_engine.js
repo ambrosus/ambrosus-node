@@ -229,13 +229,13 @@ export default class DataModelEngine {
     }
   }
 
-  async downloadBundle(bundleId, sheltererId) {
+  async downloadBundle(bundleId, sheltererId, challengeExpirationTime) {
     if (await this.bundleRepository.isBundleSheltered(bundleId)) {
       throw new Error('Bundle is already sheltered');
     }
 
     const initialMetadata = await this.uploadRepository.composeBundleMetadataFromBlockchain(bundleId);
-    await this.bundleRepository.createBundleMetadata(bundleId, initialMetadata.storagePeriods, BundleStatuses.shelteringCandidate);
+    await this.bundleRepository.createBundleMetadata(bundleId, initialMetadata.storagePeriods, BundleStatuses.shelteringCandidate, {holdUntil: new Date(challengeExpirationTime)});
 
     const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
 
@@ -255,7 +255,7 @@ export default class DataModelEngine {
       throw new Error(`Could not fetch the bundle from the shelterer: ${err.message || err}`);
     }
 
-    await this.bundleRepository.setBundleRepository(bundleId, BundleStatuses.downloaded, {nodeUrl});
+    await this.bundleRepository.setBundleRepository(bundleId, BundleStatuses.downloaded, {nodeUrl, holdUntil: new Date(challengeExpirationTime)});
     const additionalMetadataFields = this.bundleRepository.additionalMetadataFields(initialMetadata, downloadedMetadata);
     await this.bundleRepository.updateBundleMetadata(bundleId, additionalMetadataFields);
 
@@ -270,9 +270,8 @@ export default class DataModelEngine {
   }
 
   async markBundleAsSheltered(bundleId) {
-    const expirationDate = await this.uploadRepository.expirationDate(bundleId);
-    await this.bundleRepository.storeBundleShelteringExpirationDate(bundleId, expirationDate);
-    await this.bundleRepository.setBundleRepository(bundleId, BundleStatuses.sheltered);
+    const expirationDate = await this.uploadRepository.expirationDateInMs(bundleId);
+    await this.bundleRepository.setBundleRepository(bundleId, BundleStatuses.sheltered, {holdUntil: new Date(expirationDate)});
   }
 
   async getWorkerLogs(logsCount = 10) {

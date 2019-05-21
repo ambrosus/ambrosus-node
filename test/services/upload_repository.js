@@ -140,18 +140,18 @@ describe('Upload repository', () => {
     });
   });
 
-  describe('expirationDate', () => {
-    const expirationDate = 123;
+  describe('expirationDateInMs', () => {
+    const expirationDateInSeconds = '123';
 
     beforeEach(() => {
       shelteringWrapperMock = {
-        shelteringExpirationDate: sinon.stub().resolves(expirationDate)
+        shelteringExpirationDate: sinon.stub().resolves(expirationDateInSeconds)
       };
       uploadRepository = new UploadRepository({}, {}, {}, shelteringWrapperMock);
     });
 
     it('calls wrappers methods with correct arguments', async () => {
-      expect(await uploadRepository.expirationDate(bundleId)).to.equal(expirationDate);
+      expect(await uploadRepository.expirationDateInMs(bundleId)).to.equal(123000);
       expect(shelteringWrapperMock.shelteringExpirationDate).to.be.calledOnceWith(bundleId);
     });
   });

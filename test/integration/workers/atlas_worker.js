@@ -158,8 +158,9 @@ describe('Atlas worker - integration', () => {
     expect(mockStrategy.shouldFetchBundle).to.be.calledTwice;
     expect(mockStrategy.shouldResolveChallenge).to.be.calledOnce;
     expect(await builder.bundleRepository.getBundle(exampleBundle.bundleId)).to.deep.equal(exampleBundle);
-    expect(await builder.bundleRepository.getBundleRepository(exampleBundle.bundleId)).to.deep
-      .equal({status: BundleStatuses.sheltered});
+    const repository = await builder.bundleRepository.getBundleRepository(exampleBundle.bundleId);
+    expect(repository.status).to.equal(BundleStatuses.sheltered);
+    expect(repository.holdUntil).to.exist;
   });
 
   it('sets bundle status to DOWNLOADED if resolution has failed', async () => {

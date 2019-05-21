@@ -117,27 +117,6 @@ describe('Bundle Repository', () => {
     });
   });
 
-  describe('Cleanup process', () => {
-    describe('Set bundle expiration date', () => {
-      const bundleId = 'bundle';
-      const expirationDate = 10;
-
-      beforeEach(async () => {
-        await storage.storeBundle(put(createBundle(), 'bundleId', bundleId), storagePeriods);
-      });
-
-      afterEach(async () => {
-        await cleanDatabase(db);
-      });
-
-      it('storeBundleShelteringExpirationDate sets holdUntil field in the metadata', async () => {
-        await storage.storeBundleShelteringExpirationDate(bundleId, expirationDate);
-        const metadata = await storage.db.collection('bundle_metadata').findOne({bundleId});
-        expect(metadata.holdUntil).to.equal(expirationDate);
-      });
-    });
-  });
-
   describe('Finding bundles waiting for upload', () => {
     beforeEach(async () => {
       await storage.storeBundle({...createBundle(), bundleId: 'bundle1'}, storagePeriods);
@@ -165,9 +144,14 @@ describe('Bundle Repository', () => {
       await cleanDatabase(db);
     });
 
-    it('creates metadata with bundleId and storagePeriods and empty repository if it does not exist', async () => {
+    it('creates metadata with bundleId and storagePeriods and status if it does not exist', async () => {
       await storage.createBundleMetadata(bundleId, storagePeriods, BundleStatuses.shelteringCandidate);
       expect(await getMetadataWithoutId(bundleId)).to.deep.equal({bundleId, storagePeriods, repository: {status: BundleStatuses.shelteringCandidate}});
+    });
+
+    it('creates metadata with bundleId and storagePeriods and repository with status and additional fields if it does not exist', async () => {
+      await storage.createBundleMetadata(bundleId, storagePeriods, BundleStatuses.shelteringCandidate, {foo: 'bar'});
+      expect(await getMetadataWithoutId(bundleId)).to.deep.equal({bundleId, storagePeriods, repository: {status: BundleStatuses.shelteringCandidate, foo: 'bar'}});
     });
 
     it('does nothing if metadata with same bundleId already exists', async () => {

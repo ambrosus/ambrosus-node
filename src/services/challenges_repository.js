@@ -81,6 +81,12 @@ export default class ChallengesRepository {
     return this.challengesWrapper.earliestMeaningfulBlock(challengeDuration);
   }
 
+  async getChallengeExpirationTimeInMs(challengeId) {
+    const challengeCreationTime = await this.challengesWrapper.getChallengeCreationTime(challengeId);
+    const challengeDuration = await this.configWrapper.challengeDuration();
+    return (Number(challengeCreationTime) + Number(challengeDuration)) * 1000;
+  }
+
   updateBlockInfo(currentBlock) {
     this.lastSavedBlock = currentBlock;
   }

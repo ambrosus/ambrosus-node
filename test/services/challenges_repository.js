@@ -251,4 +251,27 @@ describe('Challenges repository', () => {
       expect(challengeWrapperMock.resolve).to.be.not.called;
     });
   });
+
+  describe('getChallengeExpirationTime', () => {
+    const challengeId = '0xdeadbeef';
+    const exampleChallengeDuration = '123';
+    const exampleChallengeStartTime = '297';
+    const expectedChallengeEndTime = 420000;
+
+    beforeEach(() => {
+      challengeWrapperMock = {
+        getChallengeCreationTime: sinon.stub()
+          .withArgs(challengeId)
+          .resolves(exampleChallengeStartTime)
+      };
+      configWrapperMock = {
+        challengeDuration: sinon.stub().resolves(exampleChallengeDuration)
+      };
+      challengesRepository = new ChallengesRepository(challengeWrapperMock, null, configWrapperMock);
+    });
+
+    it('adds challenge start timestamp and challenge duration', async () => {
+      expect(await challengesRepository.getChallengeExpirationTimeInMs(challengeId)).to.equal(expectedChallengeEndTime);
+    });
+  });
 });
