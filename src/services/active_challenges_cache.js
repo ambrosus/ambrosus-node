@@ -45,23 +45,46 @@ export default class ActiveChallengesCache {
   }
 
   applyIncomingChallengeEvents(startedChallenges, resolvedChallenges, timedOutChallenges) {
-    const addAction = (challenge, action) => ({...challenge, action});
+    // Optimised for memory usage
+    const totalChallengeCount = startedChallenges.length + resolvedChallenges.length + timedOutChallenges.length;
+    const sortedChallengesGroups = [
+      this.sortChronologically(startedChallenges),
+      this.sortChronologically(resolvedChallenges),
+      this.sortChronologically(timedOutChallenges)
+    ];
+    const groupIndexes = [0, 0, 0];
 
-    const startedChallengesWithAction = startedChallenges.map((challenge) => addAction(challenge, () => this.add(challenge)));
-    const resolvedChallengesWithAction = resolvedChallenges.map((challenge) => addAction(challenge, () => this.decreaseActiveCount(challenge.challengeId)));
-    const timedOutChallengesWithAction = timedOutChallenges.map((challenge) => addAction(challenge, () => this.expire(challenge.challengeId)));
+    const getNextChallengeForGroup = (groupIndex) => sortedChallengesGroups[groupIndex][groupIndexes[groupIndex]];
+    const bestIndex = (predicate) => (values) => values.reduce(
+      (bestIndex, value, index) => (predicate(value, values[bestIndex]) ? index : bestIndex), undefined);
+    const chooseIndexWithMinimalBlockNumber = bestIndex((firstChallenge, secondChallenge) => this.compareChallengesByBlockNumberAscending(firstChallenge, secondChallenge) < 0);
+    const challengeActions = [
+      (challenge) => this.add(challenge),
+      ({challengeId}) => this.decreaseActiveCount(challengeId),
+      ({challengeId}) => this.expire(challengeId)
+    ];
 
-    const challengesWithActionList = this.sortChronologically([...startedChallengesWithAction, ...resolvedChallengesWithAction, ...timedOutChallengesWithAction]);
+    while (groupIndexes[0] + groupIndexes[1] + groupIndexes[2] < totalChallengeCount) {
+      const nextGroupIndex = chooseIndexWithMinimalBlockNumber([getNextChallengeForGroup(0), getNextChallengeForGroup(1), getNextChallengeForGroup(2)]);
+      challengeActions[nextGroupIndex](getNextChallengeForGroup(nextGroupIndex));
+      groupIndexes[nextGroupIndex]++;
+    }
+  }
 
-    challengesWithActionList.forEach((challenge) => challenge.action());
+  compareChallengesByBlockNumberAscending(firstChallenge, secondChallenge) {
+    if (!firstChallenge) {
+      return 1;
+    }
+    if (!secondChallenge) {
+      return -1;
+    }
+    if  (firstChallenge.blockNumber !== secondChallenge.blockNumber) {
+      return firstChallenge.blockNumber - secondChallenge.blockNumber;
+    }
+    return firstChallenge.logIndex - secondChallenge.logIndex;
   }
 
   sortChronologically(challenges) {
-    return challenges.sort((left, right) => {
-      if  (left.blockNumber !== right.blockNumber) {
-        return left.blockNumber - right.blockNumber;
-      }
-      return left.logIndex - right.logIndex;
-    });
+    return challenges.sort(this.compareChallengesByBlockNumberAscending);
   }
 }
