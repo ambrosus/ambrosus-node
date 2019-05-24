@@ -40,14 +40,27 @@ export default class ChallengesRepository {
   }
 
   async updateActiveChallengesCache(fromBlock, currentBlock) {
-    const issuedChallengeEvents = await this.challengesEventEmitterWrapper.challenges(fromBlock, currentBlock);
-    const resolvedChallengeEvents = await this.challengesEventEmitterWrapper.resolvedChallenges(fromBlock, currentBlock);
-    const timedOutChallengeEvents = await this.challengesEventEmitterWrapper.timedOutChallenges(fromBlock, currentBlock);
-
-    const startedChallenges = this.prepareChallengeEvent(issuedChallengeEvents, ['challengeId', 'sheltererId', 'bundleId', 'count']);
-    const resolvedChallenges = this.prepareChallengeEvent(resolvedChallengeEvents, ['challengeId']);
-    const timedOutChallenges = this.prepareChallengeEvent(timedOutChallengeEvents, ['challengeId']);
+    const startedChallenges = await this.collectChallengeEvents(fromBlock, currentBlock,
+      (start, end) => this.challengesEventEmitterWrapper.challenges(start, end),
+      ['challengeId', 'sheltererId', 'bundleId', 'count']);
+    const resolvedChallenges = await this.collectChallengeEvents(fromBlock, currentBlock,
+      (start, end) => this.challengesEventEmitterWrapper.resolvedChallenges(start, end),
+      ['challengeId']);
+    const timedOutChallenges = await this.collectChallengeEvents(fromBlock, currentBlock,
+      (start, end) => this.challengesEventEmitterWrapper.timedOutChallenges(start, end),
+      ['challengeId']);
     this.activeChallengesCache.applyIncomingChallengeEvents(startedChallenges, resolvedChallenges, timedOutChallenges);
+  }
+
+  async collectChallengeEvents(fromBlock, currentBlock, fetchEvents, outputFields) {
+    const step = 5000;
+    let collectedChallengeEvents = [];
+    for (let startBlock = fromBlock; startBlock < currentBlock; startBlock += step) {
+      const endBlock = Math.min(currentBlock, startBlock + step);
+      const challengeBlockchainEvents = await fetchEvents(startBlock, endBlock);
+      collectedChallengeEvents = collectedChallengeEvents.concat(this.prepareChallengeEvent(challengeBlockchainEvents, outputFields));
+    }
+    return collectedChallengeEvents;
   }
 
   async getBlockInfo() {

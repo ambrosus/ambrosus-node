@@ -34,7 +34,7 @@ function createGanacheProvider(secretKey) {
     ]
   };
   const provider = Ganache.provider(ganacheOptions);
-  provider.setMaxListeners(500);
+  provider.setMaxListeners(750);
   return provider;
 }
 
