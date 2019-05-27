@@ -123,7 +123,7 @@ describe('Challenges repository', () => {
       {
         blockNumber: 5,
         logIndex: 0,
-        returnValues:{
+        returnValues: {
           bundleId,
           sheltererId,
           challengeId: 'timedOut'
@@ -201,6 +201,31 @@ describe('Challenges repository', () => {
       expect(challengesRepository.prepareChallengeEvent).to.be.calledWith(events);
       expect(challengesRepository.prepareChallengeEvent).to.be.calledWith(resolvedEvents);
       expect(challengesRepository.prepareChallengeEvent).to.be.calledWith(timedOutEvents);
+    });
+
+    it('fetches events with steps - collects all events', async () => {
+      const fetchEvents = sinon.stub()
+        .onCall(0)
+        .resolves([{blockNumber: 0, logIndex: 0}])
+        .onCall(1)
+        .resolves([{blockNumber: 1, logIndex: 1}]);
+      const result = await challengesRepository.collectChallengeEventsWithStep(0, 2, 1, fetchEvents, []);
+      expect(result).to.deep.eq([{blockNumber: 0, logIndex: 0}, {blockNumber: 1, logIndex: 1}]);
+    });
+
+    it('fetches events with steps - divisible range', async () => {
+      const fetchEvents = sinon.stub().resolves([]);
+      await challengesRepository.collectChallengeEventsWithStep(151, 300, 50, fetchEvents, []);
+      expect(fetchEvents).to.have.been.calledWith(151, 200);
+      expect(fetchEvents).to.have.been.calledWith(201, 250);
+      expect(fetchEvents).to.have.been.calledWith(251, 300);
+    });
+
+    it('fetches events with steps - range with remainder', async () => {
+      const fetchEvents = sinon.stub().resolves([]);
+      await challengesRepository.collectChallengeEventsWithStep(151, 215, 50, fetchEvents, []);
+      expect(fetchEvents).to.have.been.calledWith(151, 200);
+      expect(fetchEvents).to.have.been.calledWith(201, 215);
     });
   });
 
