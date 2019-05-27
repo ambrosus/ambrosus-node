@@ -7,6 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+const CHALLENGE_EVENT_ONE_FETCH_LIMIT = 5000;
 
 export default class ChallengesRepository {
   constructor(challengesWrapper, challengesEventEmitterWrapper, configWrapper, blockchainStateWrapper, activeChallengesCache) {
@@ -53,10 +54,13 @@ export default class ChallengesRepository {
   }
 
   async collectChallengeEvents(fromBlock, currentBlock, fetchEvents, outputFields) {
-    const step = 5000;
+    return await this.collectChallengeEventsWithStep(fromBlock, currentBlock, CHALLENGE_EVENT_ONE_FETCH_LIMIT, fetchEvents, outputFields);
+  }
+
+  async collectChallengeEventsWithStep(fromBlock, currentBlock, step, fetchEvents, outputFields) {
     let collectedChallengeEvents = [];
     for (let startBlock = fromBlock; startBlock < currentBlock; startBlock += step) {
-      const endBlock = Math.min(currentBlock, startBlock + step);
+      const endBlock = Math.min(currentBlock, startBlock + step - 1);
       const challengeBlockchainEvents = await fetchEvents(startBlock, endBlock);
       collectedChallengeEvents = collectedChallengeEvents.concat(this.prepareChallengeEvent(challengeBlockchainEvents, outputFields));
     }
