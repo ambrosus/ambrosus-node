@@ -270,8 +270,8 @@ export default class DataModelEngine {
   }
 
   async markBundleAsSheltered(bundleId) {
-    const expirationDate = await this.uploadRepository.expirationDateInMs(bundleId);
-    await this.bundleRepository.setBundleRepository(bundleId, BundleStatuses.sheltered, {holdUntil: new Date(expirationDate)});
+    const bundleExpirationDate = await this.uploadRepository.bundleExpirationDateInMs(bundleId);
+    await this.bundleRepository.setBundleRepository(bundleId, BundleStatuses.sheltered, {holdUntil: new Date(bundleExpirationDate)});
   }
 
   async getWorkerLogs(logsCount = 10) {

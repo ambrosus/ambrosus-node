@@ -20,7 +20,7 @@ export const up = async (db, config, logger) => {
     const {bundleId, holdUntil} = bundle;
 
     await db.collection('bundle_metadata').updateOne({bundleId},
-      {$set: {repository: {status: BundleStatuses.sheltered, holdUntil}}, $unset: {holdUntil: 1}});
+      {$set: {repository: {status: BundleStatuses.sheltered, holdUntil: new Date(Number(holdUntil) * 1000)}}, $unset: {holdUntil: 1}});
   }
 
   logger.info(`Moved holdUntil value from metadata root to repository for ${migrationsCount} bundles`);

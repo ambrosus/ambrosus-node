@@ -1554,7 +1554,7 @@ describe('Data Model Engine', () => {
       };
 
       mockUploadRepository = {
-        expirationDateInMs: sinon.stub().resolves(expirationDate)
+        bundleExpirationDateInMs: sinon.stub().resolves(expirationDate)
       };
 
       modelEngine = new DataModelEngine({
@@ -1565,7 +1565,7 @@ describe('Data Model Engine', () => {
 
     it('sets bundle status to SHELTERED', async () => {
       await modelEngine.markBundleAsSheltered(bundleId);
-      expect(mockUploadRepository.expirationDateInMs).to.be.calledOnceWith(bundleId);
+      expect(mockUploadRepository.bundleExpirationDateInMs).to.be.calledOnceWith(bundleId);
       expect(mockBundleRepository.setBundleRepository).to.be.calledOnceWith(bundleId, BundleStatuses.sheltered, {holdUntil: new Date(expirationDate)});
     });
   });

@@ -140,7 +140,7 @@ describe('Upload repository', () => {
     });
   });
 
-  describe('expirationDateInMs', () => {
+  describe('bundleExpirationDateInMs', () => {
     const expirationDateInSeconds = '123';
 
     beforeEach(() => {
@@ -151,7 +151,7 @@ describe('Upload repository', () => {
     });
 
     it('calls wrappers methods with correct arguments', async () => {
-      expect(await uploadRepository.expirationDateInMs(bundleId)).to.equal(123000);
+      expect(await uploadRepository.bundleExpirationDateInMs(bundleId)).to.equal(123000);
       expect(shelteringWrapperMock.shelteringExpirationDate).to.be.calledOnceWith(bundleId);
     });
   });
