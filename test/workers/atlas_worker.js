@@ -27,6 +27,7 @@ const {expect} = chai;
 describe('Atlas Worker', () => {
   const defaultAccount = '0x123';
   const enoughFunds = '10000000000000000000';
+  const expirationTime = 155345234132;
   const fetchedBundleMetadata = {bundleId: 'fetchedBundle'};
   const exampleWorkId = 'workid';
   const workerInterval = 10;
@@ -58,7 +59,8 @@ describe('Atlas Worker', () => {
     const {client: mongoClient} = await connectToMongo(config);
     challengesRepositoryMock = {
       ongoingChallenges: sinon.stub(),
-      resolveChallenge: sinon.stub()
+      resolveChallenge: sinon.stub(),
+      getChallengeExpirationTimeInMs: sinon.stub().resolves(expirationTime)
     };
     failedChallengesMock = {
       rememberFailedChallenge: sinon.spy(),
@@ -130,7 +132,8 @@ describe('Atlas Worker', () => {
 
     it('tryToDownload downloads the bundle', async () => {
       expect(await atlasWorker.tryToDownload(challenge1)).to.equal(fetchedBundleMetadata);
-      expect(dataModelEngineMock.downloadBundle).to.be.calledWith(bundleId, sheltererId);
+      expect(challengesRepositoryMock.getChallengeExpirationTimeInMs).to.be.calledOnceWith(challengeId);
+      expect(dataModelEngineMock.downloadBundle).to.be.calledWith(bundleId, sheltererId, expirationTime);
     });
 
     it('tryToResolve resolves a challenge and sets expiration date', async () => {

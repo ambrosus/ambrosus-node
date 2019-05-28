@@ -81,8 +81,8 @@ export default class UploadRepository {
     return this.shelteringWrapper.isSheltering(bundleId);
   }
 
-  async expirationDate(bundleId) {
-    return this.shelteringWrapper.shelteringExpirationDate(bundleId);
+  async bundleExpirationDateInMs(bundleId) {
+    return Number(await this.shelteringWrapper.shelteringExpirationDate(bundleId)) * 1000;
   }
 
   async bundleItemsCountLimit() {

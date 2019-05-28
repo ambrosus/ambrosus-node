@@ -58,14 +58,6 @@ export default class BundleRepository {
       .toArray();
   }
 
-  async storeBundleShelteringExpirationDate(bundleId, expirationDate) {
-    await this.db.collection('bundle_metadata').updateOne({bundleId}, {
-      $set: {
-        holdUntil: expirationDate
-      }
-    });
-  }
-
   async getBundleStream(bundleId) {
     if (!await isFileInGridFSBucket(bundleId, this.bundlesBucket)) {
       return null;
@@ -80,10 +72,10 @@ export default class BundleRepository {
     return await downloadJSONFromGridFSBucket(bundleId, this.bundlesBucket);
   }
 
-  async createBundleMetadata(bundleId, storagePeriods, status = BundleStatuses.unknown) {
+  async createBundleMetadata(bundleId, storagePeriods, status = BundleStatuses.unknown, additionalFields = {}) {
     if (await this.db.collection('bundle_metadata').findOne({bundleId}) === null) {
       await this.db.collection('bundle_metadata').insertOne({
-        bundleId, storagePeriods, repository: {status}
+        bundleId, storagePeriods, repository: {status, ...additionalFields}
       });
     }
   }

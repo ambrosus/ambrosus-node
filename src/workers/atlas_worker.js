@@ -77,7 +77,8 @@ export default class AtlasWorker extends PeriodicWorker {
   }
 
   async tryToDownload({sheltererId, bundleId, challengeId}) {
-    const metadata = await this.dataModelEngine.downloadBundle(bundleId, sheltererId);
+    const challengeExpirationTime = await this.challengesRepository.getChallengeExpirationTimeInMs(challengeId);
+    const metadata = await this.dataModelEngine.downloadBundle(bundleId, sheltererId, challengeExpirationTime);
     await this.addLog(`Bundle fetched`, {sheltererId, bundleId, challengeId});
     return metadata;
   }
