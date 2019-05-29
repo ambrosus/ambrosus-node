@@ -12,12 +12,14 @@ import http from 'http';
 import URL from 'url';
 import {NotFoundError, PermissionError, ValidationError, AuthenticationError} from '../errors/errors';
 
+const DEFAULT_TIMEOUT = 300000;
+
 export default class HttpsClient {
-  async performHTTPSGet(uri, path) {
-    const {agent, options} = this.prepareRequest(uri, path);
+  async performHTTPSGet(uri, path, defaultOptions = {timeout: DEFAULT_TIMEOUT}) {
+    const {agent, options} = this.prepareRequest(uri, path, defaultOptions);
     return new Promise((resolve, reject) => {
       try {
-        agent.get(options, (response) => {
+        const clientRequest = agent.get(options, (response) => {
           let rawData = '';
           let parsedData;
           response.on('data', (chunk) => rawData += chunk);
@@ -29,34 +31,45 @@ export default class HttpsClient {
             }
             resolve({body: parsedData, statusCode: response.statusCode});
           });
-        }).on('error', (error) => reject(error));
+          response.on('error', reject);
+        });
+        this.handleRequestErrors(clientRequest, reject);
       } catch (error) {
         reject(error);
       }
     });
   }
 
-  async openHTTPSGetStream(uri, path) {
-    const {agent, options} = this.prepareRequest(uri, path);
+  async openHTTPSGetStream(uri, path, defaultOptions = {timeout: DEFAULT_TIMEOUT}) {
+    const {agent, options} = this.prepareRequest(uri, path, defaultOptions);
     return new Promise((resolve, reject) => {
       try {
-        agent.get(options, (response) => {
+        const clientRequest = agent.get(options, (response) => {
           resolve({response, statusCode: response.statusCode});
-        }).on('error', (error) => reject(error));
+        });
+        this.handleRequestErrors(clientRequest, reject);
       } catch (error) {
         reject({error});
       }
     });
   }
 
-  prepareRequest(uri, path) {
+  handleRequestErrors(clientRequest, reject) {
+    clientRequest.on('error', reject)
+      .on('timeout', () => {
+        clientRequest.abort();
+        reject('Request timed out');
+      });
+  }
+
+  prepareRequest(uri, path, defaultOptions) {
     const {protocol, hostname, port} = URL.parse(uri);
     const agent = this.getAgentFromProtocol(protocol);
     const options = {
+      ...defaultOptions,
       hostname,
       path,
-      port,
-      timeout: 300000
+      port
     };
     return {agent, options};
   }

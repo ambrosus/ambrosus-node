@@ -78,4 +78,25 @@ describe('Https client', () => {
       await expect(httpsClient.openHTTPSGetStream('http://not-an-url.com', '/foo')).to.be.rejectedWith('socket hang up');
     });
   });
+
+  describe('handles response timeout', () => {
+    let clientRequest;
+
+    beforeEach(() => {
+      mitm.on('request', (req) => {
+        clientRequest = req;
+        // no response from server
+      });
+    });
+
+    it('in fetch', async () => {
+      await expect(httpsClient.performHTTPSGet('http://not-an-url.com', '/foo', {timeout: 50})).to.be.rejectedWith('Request timed out');
+      expect(clientRequest.aborted).to.be.true;
+    });
+
+    it('in open stream', async () => {
+      await expect(httpsClient.openHTTPSGetStream('http://not-an-url.com', '/foo', {timeout: 50})).to.be.rejectedWith('Request timed out');
+      expect(clientRequest.aborted).to.be.true;
+    });
+  });
 });
