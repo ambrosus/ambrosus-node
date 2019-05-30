@@ -17,6 +17,11 @@ export const up = async (db, config, logger) => {
     return dbRoles.length > 0 && dbRoles[0].role !== 'root';
   }
 
+  async function allCollectionNames() {
+    return (await db.listCollections({type: 'collection'}, {nameOnly: true}).toArray())
+      .map((col) => col.name);
+  }
+
   const dbRoles = await getDbRoles();
 
   if (noAdminPermissions(dbRoles)) {
@@ -29,16 +34,15 @@ export const up = async (db, config, logger) => {
     logger.info('Already at feature version 4.0');
     return;
   }
+
   await db.admin().command({setFeatureCompatibilityVersion: '4.0'});
 
   const indexesToRecreate = [];
-
-  const allCollections = (await db.collections());
-  for (const collection of allCollections) {
-    const indexes = await (collection.indexes());
+  for (const collectionName of await allCollectionNames()) {
+    const indexes = await (await (db.collection(collectionName)).indexes());
     for (const index of indexes) {
       if (index.unique) {
-        indexesToRecreate.push({collectionName: collection.collectionName, index});
+        indexesToRecreate.push({collectionName, index});
       }
     }
   }
