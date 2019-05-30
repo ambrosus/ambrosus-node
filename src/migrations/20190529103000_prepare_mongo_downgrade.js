@@ -9,8 +9,24 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 // eslint-disable-next-line import/prefer-default-export
 export const up = async (db, config, logger) => {
+  async function getDbRoles() {
+    return (await db.command({connectionStatus: 1})).authInfo.authenticatedUserRoles;
+  }
+
+  function noAdminPermissions(dbRoles) {
+    return dbRoles.length > 0 && dbRoles[0].role !== 'root';
+  }
+
+  const dbRoles = await getDbRoles();
+
+  if (noAdminPermissions(dbRoles)) {
+    logger.info('Not enough permissions to perform migration, exiting.');
+    return;
+  }
+
   const currentFeatureVersion = (await db.admin().command({getParameter: 1, featureCompatibilityVersion: 1})).featureCompatibilityVersion.version;
   if (currentFeatureVersion === '4.0') {
+    logger.info('Already at feature version 4.0');
     return;
   }
   await db.admin().command({setFeatureCompatibilityVersion: '4.0'});
