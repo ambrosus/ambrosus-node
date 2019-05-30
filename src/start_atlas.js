@@ -13,6 +13,7 @@ import Builder from './builder';
 import {Role} from './services/roles_repository';
 import {waitForChainSync} from './utils/web3_tools';
 import {setup} from './utils/instrument_process';
+import CleanupWorker from './workers/cleanup_worker';
 
 async function start(logger) {
   const builder = new Builder();
@@ -23,7 +24,7 @@ async function start(logger) {
   await waitForChainSync(builder.web3, 5, () => logger.info('Ethereum client is not in sync. Retrying in 5 seconds'));
   await builder.ensureAccountIsOnboarded([Role.ATLAS]);
   const strategy = loadStrategy(config.challengeResolutionStrategy);
-  const worker = new AtlasWorker(
+  const atlasWorker = new AtlasWorker(
     builder.web3,
     builder.dataModelEngine,
     builder.workerLogRepository,
@@ -36,7 +37,14 @@ async function start(logger) {
     config.serverPort,
     config.requiredFreeDiskSpace
   );
-  await worker.start();
+  const cleanupWorker = new CleanupWorker(
+    builder.dataModelEngine,
+    builder.workerTaskTrackingRepository,
+    logger,
+    config.cleanupWorkerInterval
+  );
+  await atlasWorker.start();
+  await cleanupWorker.start();
 }
 
 function loadStrategy(strategyName) {

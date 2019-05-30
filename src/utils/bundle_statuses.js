@@ -12,7 +12,8 @@ const BundleStatuses = Object.freeze({
   shelteringCandidate: 'SHELTERING_CANDIDATE',
   downloaded: 'DOWNLOADED',
   sheltered: 'SHELTERED',
-  cleanup: 'CLEANUP'
+  cleanup: 'CLEANUP',
+  expendable: 'EXPENDABLE'
 });
 
 export default BundleStatuses;

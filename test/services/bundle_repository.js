@@ -8,6 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import chai from 'chai';
+import sinon from 'sinon';
 import chaiAsPromised from 'chai-as-promised';
 import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
 import {put} from '../../src/utils/dict_utils';
@@ -275,20 +276,117 @@ describe('Bundle Repository', () => {
       await cleanDatabase(db);
     });
 
-    it('deletes the entry from the metadata collection', async () => {
-      await expect(storage.removeBundle('bundle1')).to.eventually.be.fulfilled;
-      expect(await storage.getBundleMetadata('bundle1')).to.be.null;
-      expect(await storage.getBundleMetadata('bundle2')).to.not.be.null;
-      await expect(storage.removeBundle('bundle2')).to.eventually.be.fulfilled;
-      expect(await storage.getBundleMetadata('bundle2')).to.be.null;
-    });
-
     it('deletes the entry from the gridfs bucket', async () => {
       await expect(storage.removeBundle('bundle1')).to.eventually.be.fulfilled;
       expect(await storage.getBundle('bundle1')).to.be.null;
       expect(await storage.getBundle('bundle2')).to.not.be.null;
       await expect(storage.removeBundle('bundle2')).to.eventually.be.fulfilled;
       expect(await storage.getBundle('bundle2')).to.be.null;
+    });
+
+    it('sets bundle status in metadata to expandable', async () => {
+      await expect(storage.removeBundle('bundle1')).to.eventually.be.fulfilled;
+      expect(await storage.getBundleRepository('bundle1')).to.deep.equal({status: BundleStatuses.expendable});
+      expect(await storage.getBundleMetadata('bundle1')).to.be.not.null;
+    });
+  });
+
+  describe('findOutdatedBundles', () => {
+    const now = 1543210987;
+    let clock;
+
+    beforeEach(async () => {
+      clock = sinon.useFakeTimers(now);
+      for (let iter = 0; iter <= 6; iter++) {
+        await storage.storeBundle({...createBundle(), bundleId: `bundle${iter}`}, storagePeriods);
+      }
+      // don't set repository for bundle0
+      await storage.setBundleRepository('bundle1', BundleStatuses.downloaded, {holdUntil: new Date(now + 1)});
+      await storage.setBundleRepository('bundle2', BundleStatuses.sheltered, {holdUntil: new Date(now)});
+      await storage.setBundleRepository('bundle3', BundleStatuses.cleanup);
+      await storage.setBundleRepository('bundle4', BundleStatuses.downloaded, {holdUntil: new Date(now - 1)});
+      await storage.setBundleRepository('bundle5', BundleStatuses.sheltered, {holdUntil: new Date(now - 2)});
+      await storage.setBundleRepository('bundle6', BundleStatuses.expendable);
+    });
+
+    it('sets all bundles with expired holdUntil field or without a repository status to CLEANUP', async () => {
+      await storage.findOutdatedBundles();
+      const expectedStatuses = [
+        BundleStatuses.cleanup,
+        BundleStatuses.downloaded,
+        BundleStatuses.sheltered,
+        BundleStatuses.cleanup,
+        BundleStatuses.cleanup,
+        BundleStatuses.cleanup,
+        BundleStatuses.expendable
+      ];
+      for (let bundleIndex = 0; bundleIndex <= 6; bundleIndex++) {
+        const {status} = await storage.getBundleRepository(`bundle${bundleIndex}`);
+        expect(status).to.equal(expectedStatuses[bundleIndex]);
+      }
+    });
+
+    afterEach(async () => {
+      await cleanDatabase(db);
+      clock.restore();
+    });
+  });
+
+  describe('cleanupBundles', () => {
+    const shouldBeRemoved = [
+      false,
+      false,
+      false,
+      true,
+      false,
+      true
+    ];
+
+    beforeEach(async () => {
+      for (let iter = 0; iter <= 5; iter++) {
+        await storage.storeBundle({...createBundle(), bundleId: `bundle${iter}`}, storagePeriods);
+      }
+      // don't set repository for bundle0
+      await storage.setBundleRepository('bundle1', BundleStatuses.downloaded);
+      await storage.setBundleRepository('bundle2', BundleStatuses.sheltered);
+      await storage.setBundleRepository('bundle3', BundleStatuses.cleanup);
+      await storage.setBundleRepository('bundle4', BundleStatuses.downloaded);
+      await storage.setBundleRepository('bundle5', BundleStatuses.cleanup);
+    });
+
+    it('removes all bundles having status CLEANUP', async () => {
+      await storage.cleanupBundles();
+
+      for (let bundleIndex = 0; bundleIndex <= 5; bundleIndex++) {
+        const bundle = await storage.getBundle(`bundle${bundleIndex}`);
+        if (shouldBeRemoved[bundleIndex]) {
+          expect(bundle).to.be.null;
+        } else {
+          expect(bundle).to.be.not.null;
+        }
+      }
+    });
+
+    it('sets removed bundle status to EXPENDABLE', async () => {
+      await storage.cleanupBundles();
+
+      await expect(await storage.getBundleRepository(`bundle0`)).to.be.undefined;
+      for (let bundleIndex = 1; bundleIndex <= 5; bundleIndex++) {
+        const {status} = await storage.getBundleRepository(`bundle${bundleIndex}`);
+        if (shouldBeRemoved[bundleIndex]) {
+          expect(status).to.be.equal(BundleStatuses.expendable);
+        } else {
+          expect(status).to.be.not.equal(BundleStatuses.expendable);
+        }
+      }
+    });
+
+    it('returns removed bundles count', async () => {
+      expect(await storage.cleanupBundles()).to.equal(2);
+    });
+
+    afterEach(async () => {
+      await cleanDatabase(db);
     });
   });
 });

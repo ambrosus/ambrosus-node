@@ -139,13 +139,13 @@ describe('Atlas worker - integration', () => {
     expect(mockStrategy.shouldFetchBundle).to.be.calledOnce;
   });
 
-  it('deletes downloaded bundle when it is not valid', async () => {
+  it('queues downloaded bundle for cleanup when it is not valid', async () => {
     nock(hermesUrl)
       .persist()
       .get(`/bundle/${exampleBundle.bundleId}`)
       .reply(200, pick(exampleBundle, 'content.signature'));
     await atlasWorker.periodicWork();
-    expect(await builder.bundleRepository.getBundle(exampleBundle.bundleId)).to.be.null;
+    expect(await builder.bundleRepository.getBundleRepository(exampleBundle.bundleId)).to.deep.equal({status: BundleStatuses.cleanup});
   });
 
   it(`doesn't try to download a bundle in case it is already sheltered`, async () => {

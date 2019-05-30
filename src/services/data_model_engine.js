@@ -249,7 +249,7 @@ export default class DataModelEngine {
       await this.downloadAndValidateBundleBody(nodeUrl, bundleId);
     } catch (err) {
       if (err instanceof ValidationError) {
-        await this.bundleRepository.removeBundle(bundleId);
+        await this.bundleRepository.setBundleRepository(bundleId, BundleStatuses.cleanup);
         throw new Error(`Bundle failed to validate: ${err.message || err}`);
       }
       throw new Error(`Could not fetch the bundle from the shelterer: ${err.message || err}`);
@@ -272,6 +272,14 @@ export default class DataModelEngine {
   async markBundleAsSheltered(bundleId) {
     const bundleExpirationDate = await this.uploadRepository.bundleExpirationDateInMs(bundleId);
     await this.bundleRepository.setBundleRepository(bundleId, BundleStatuses.sheltered, {holdUntil: new Date(bundleExpirationDate)});
+  }
+
+  /**
+   * @returns {Promise<void>}: removed bundles count
+   */
+  async cleanupOutdatedBundles() {
+    await this.bundleRepository.findOutdatedBundles();
+    return this.bundleRepository.cleanupBundles();
   }
 
   async getWorkerLogs(logsCount = 10) {

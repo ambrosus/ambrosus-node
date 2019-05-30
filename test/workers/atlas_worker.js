@@ -242,7 +242,7 @@ describe('Atlas Worker', () => {
         expect(tryWithChallengeMock).to.not.have.been.calledWith(challenge3);
       });
 
-      it('clears outdated challenges', async () => {
+      it('clears outdated failed challenges', async () => {
         await atlasWorker.periodicWork();
         expect(failedChallengesMock.clearOutdatedChallenges).to.be.calledOnce;
       });
