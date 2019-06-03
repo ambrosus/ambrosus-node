@@ -275,7 +275,7 @@ export default class DataModelEngine {
   }
 
   /**
-   * @returns {Promise<void>}: removed bundles count
+   * @returns {Promise<int>}: removed bundles count
    */
   async cleanupOutdatedBundles() {
     await this.bundleRepository.findOutdatedBundles();

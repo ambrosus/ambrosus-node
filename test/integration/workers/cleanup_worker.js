@@ -34,27 +34,9 @@ describe('Cleanup worker – integration', () => {
 
   beforeEach(async () => {
     loggerSpy = {info: sinon.spy()};
-    worker = new CleanupWorker(builder.dataModelEngine, builder.workerTaskTrackingRepository, loggerSpy, 300);
     clock = sinon.useFakeTimers(now);
-    for (let iter = 0; iter <= 5; iter++) {
-      await builder.bundleRepository.storeBundle({...createBundle(), bundleId: `bundle${iter}`}, 10);
-    }
-    // don't set repository for bundle0
-    await builder.bundleRepository.setBundleRepository('bundle1', BundleStatuses.downloaded, {holdUntil: new Date(now + 1)});
-    await builder.bundleRepository.setBundleRepository('bundle2', BundleStatuses.sheltered, {holdUntil: new Date(now)});
-    await builder.bundleRepository.setBundleRepository('bundle3', BundleStatuses.cleanup);
-    await builder.bundleRepository.setBundleRepository('bundle4', BundleStatuses.downloaded, {holdUntil: new Date(now - 1)});
-    await builder.bundleRepository.setBundleRepository('bundle5', BundleStatuses.sheltered, {holdUntil: new Date(now - 2)});
+    worker = new CleanupWorker(builder.dataModelEngine, builder.workerTaskTrackingRepository, loggerSpy, 300);
   });
-
-  const shouldBeRemoved = [
-    true,
-    false,
-    false,
-    true,
-    true,
-    true
-  ];
 
   afterEach(async () => {
     await cleanDatabase(builder.db);
@@ -74,31 +56,47 @@ describe('Cleanup worker – integration', () => {
       await worker.periodicWork();
       expect(loggerSpy.info).to.be.calledTwice;
     });
+  });
+
+  describe('clean up bundles', () => {
+    const storeBundle = async (bundleId, status, metadata) => {
+      await builder.bundleRepository.storeBundle({...createBundle(), bundleId}, 10);
+      if (!status) {
+        return;
+      }
+      await builder.bundleRepository.setBundleRepository(bundleId, status, metadata);
+    };
+
+    beforeEach(async () => {
+      await storeBundle('bundle0');
+      await storeBundle('bundle1', BundleStatuses.downloaded, {holdUntil: new Date(now + 1)});
+      await storeBundle('bundle2', BundleStatuses.sheltered, {holdUntil: new Date(now)});
+      await storeBundle('bundle3', BundleStatuses.cleanup);
+      await storeBundle('bundle4', BundleStatuses.downloaded, {holdUntil: new Date(now - 1)});
+      await storeBundle('bundle5', BundleStatuses.sheltered, {holdUntil: new Date(now - 2)});
+    });
 
     it('removes all outdated bundles and bundles without repository field', async () => {
       await worker.periodicWork();
 
-      for (let bundleIndex = 0; bundleIndex <= 5; bundleIndex++) {
-        const bundle = await builder.bundleRepository.getBundle(`bundle${bundleIndex}`);
-        if (shouldBeRemoved[bundleIndex]) {
-          expect(bundle).to.be.null;
-        } else {
-          expect(bundle).to.be.not.null;
-        }
-      }
+      expect(await builder.bundleRepository.getBundle('bundle0')).to.be.null;
+      expect(await builder.bundleRepository.getBundle('bundle1')).to.be.not.null;
+      expect(await builder.bundleRepository.getBundle('bundle2')).to.be.not.null;
+      expect(await builder.bundleRepository.getBundle('bundle3')).to.be.null;
+      expect(await builder.bundleRepository.getBundle('bundle4')).to.be.null;
+      expect(await builder.bundleRepository.getBundle('bundle5')).to.be.null;
     });
 
     it('sets removed bundle status to EXPENDABLE', async () => {
+      const getBundleStatus = async (bundleId) => (await builder.bundleRepository.getBundleRepository(bundleId)).status;
       await worker.periodicWork();
 
-      for (let bundleIndex = 0; bundleIndex <= 5; bundleIndex++) {
-        const {status} = await builder.bundleRepository.getBundleRepository(`bundle${bundleIndex}`);
-        if (shouldBeRemoved[bundleIndex]) {
-          expect(status).to.be.equal(BundleStatuses.expendable);
-        } else {
-          expect(status).to.be.not.equal(BundleStatuses.expendable);
-        }
-      }
+      expect(await getBundleStatus('bundle0')).to.be.equal(BundleStatuses.expendable);
+      expect(await getBundleStatus('bundle1')).to.be.equal(BundleStatuses.downloaded);
+      expect(await getBundleStatus('bundle2')).to.be.equal(BundleStatuses.sheltered);
+      expect(await getBundleStatus('bundle3')).to.be.equal(BundleStatuses.expendable);
+      expect(await getBundleStatus('bundle4')).to.be.equal(BundleStatuses.expendable);
+      expect(await getBundleStatus('bundle5')).to.be.equal(BundleStatuses.expendable);
     });
   });
 

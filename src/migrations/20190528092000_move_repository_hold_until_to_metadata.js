@@ -7,9 +7,9 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-// eslint-disable-next-line import/prefer-default-export
 import BundleStatuses from '../utils/bundle_statuses';
 
+// eslint-disable-next-line import/prefer-default-export
 export const up = async (db, config, logger) => {
   const bundlesWithRepositoryDict = await db.collection('bundle_metadata').find({holdUntil: {$exists: true}});
 
