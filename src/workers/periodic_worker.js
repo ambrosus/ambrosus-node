@@ -19,6 +19,10 @@ export default class PeriodicWorker extends Worker {
   }
 
   async work() {
+    process.once('SIGINT', async () => {
+      await this.stop();
+    });
+
     await this.beforeWorkLoop();
     return this.periodicWorkInternal();
   }

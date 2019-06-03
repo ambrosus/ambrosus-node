@@ -124,11 +124,32 @@ export default class BundleRepository {
   }
 
   async removeBundle(bundleId) {
-    await this.db.collection('bundle_metadata').deleteMany({bundleId});
     const cursor = await this.bundlesBucket.find({filename: bundleId});
     while (await cursor.hasNext()) {
       const {_id: id} = await cursor.next();
       await this.bundlesBucket.delete(id);
     }
+    await this.setBundleRepository(bundleId, BundleStatuses.expendable);
+  }
+
+  async findOutdatedBundles() {
+    await this.db.collection('bundle_metadata').updateMany({
+      $or: [
+        {repository: {$exists: false}},
+        {'repository.holdUntil': {$lt: new Date()}}
+      ]
+    }, {$set: {repository: {status: BundleStatuses.cleanup}}});
+  }
+
+  async cleanupBundles() {
+    const cursor = await this.db.collection('bundle_metadata').find({'repository.status': BundleStatuses.cleanup}, {projection: {bundleId: 1, _id: 0}});
+    const totalCount = await cursor.count();
+
+    while (await cursor.hasNext()) {
+      const {bundleId} = await cursor.next();
+      await this.removeBundle(bundleId);
+    }
+
+    return totalCount;
   }
 }

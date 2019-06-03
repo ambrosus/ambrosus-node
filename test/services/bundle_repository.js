@@ -8,6 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import chai from 'chai';
+import sinon from 'sinon';
 import chaiAsPromised from 'chai-as-promised';
 import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
 import {put} from '../../src/utils/dict_utils';
@@ -43,7 +44,16 @@ describe('Bundle Repository', () => {
     client.close();
   });
 
+  const storeBundleWithRepo = async (bundleId, status, metadata) => {
+    await storage.storeBundle({...createBundle(), bundleId}, 10);
+    if (!status) {
+      return;
+    }
+    await storage.setBundleRepository(bundleId, status, metadata);
+  };
   const getMetadataWithoutId = async (bundleId) => db.collection('bundle_metadata').findOne({bundleId}, {projection: {_id: 0}});
+  const getBundleStatus = async (bundleId) => (await storage.getBundleRepository(bundleId)).status;
+
 
   describe('Storing directly', () => {
     const txHash = '0xc9087b7510e98183f705fe99ddb6964f3b845878d8a801cf6b110975599b6009';
@@ -275,20 +285,92 @@ describe('Bundle Repository', () => {
       await cleanDatabase(db);
     });
 
-    it('deletes the entry from the metadata collection', async () => {
-      await expect(storage.removeBundle('bundle1')).to.eventually.be.fulfilled;
-      expect(await storage.getBundleMetadata('bundle1')).to.be.null;
-      expect(await storage.getBundleMetadata('bundle2')).to.not.be.null;
-      await expect(storage.removeBundle('bundle2')).to.eventually.be.fulfilled;
-      expect(await storage.getBundleMetadata('bundle2')).to.be.null;
-    });
-
     it('deletes the entry from the gridfs bucket', async () => {
       await expect(storage.removeBundle('bundle1')).to.eventually.be.fulfilled;
       expect(await storage.getBundle('bundle1')).to.be.null;
       expect(await storage.getBundle('bundle2')).to.not.be.null;
       await expect(storage.removeBundle('bundle2')).to.eventually.be.fulfilled;
       expect(await storage.getBundle('bundle2')).to.be.null;
+    });
+
+    it('sets bundle status in metadata to expandable', async () => {
+      await expect(storage.removeBundle('bundle1')).to.eventually.be.fulfilled;
+      expect(await storage.getBundleRepository('bundle1')).to.deep.equal({status: BundleStatuses.expendable});
+      expect(await storage.getBundleMetadata('bundle1')).to.be.not.null;
+    });
+  });
+
+  describe('findOutdatedBundles', () => {
+    const now = 1543210987;
+    let clock;
+
+    beforeEach(async () => {
+      clock = sinon.useFakeTimers(now);
+      await storeBundleWithRepo('bundle0');
+      await storeBundleWithRepo('bundle1', BundleStatuses.downloaded, {holdUntil: new Date(now + 1)});
+      await storeBundleWithRepo('bundle2', BundleStatuses.sheltered, {holdUntil: new Date(now)});
+      await storeBundleWithRepo('bundle3', BundleStatuses.cleanup);
+      await storeBundleWithRepo('bundle4', BundleStatuses.downloaded, {holdUntil: new Date(now - 1)});
+      await storeBundleWithRepo('bundle5', BundleStatuses.sheltered, {holdUntil: new Date(now - 2)});
+      await storeBundleWithRepo('bundle6', BundleStatuses.expendable);
+    });
+
+    it('sets all bundles with expired holdUntil field or without a repository status to CLEANUP', async () => {
+      await storage.findOutdatedBundles();
+
+      expect(await getBundleStatus('bundle0')).to.equal(BundleStatuses.cleanup);
+      expect(await getBundleStatus('bundle1')).to.equal(BundleStatuses.downloaded);
+      expect(await getBundleStatus('bundle2')).to.equal(BundleStatuses.sheltered);
+      expect(await getBundleStatus('bundle3')).to.equal(BundleStatuses.cleanup);
+      expect(await getBundleStatus('bundle4')).to.equal(BundleStatuses.cleanup);
+      expect(await getBundleStatus('bundle5')).to.equal(BundleStatuses.cleanup);
+      expect(await getBundleStatus('bundle6')).to.equal(BundleStatuses.expendable);
+    });
+
+    afterEach(async () => {
+      await cleanDatabase(db);
+      clock.restore();
+    });
+  });
+
+  describe('cleanupBundles', () => {
+    beforeEach(async () => {
+      await storeBundleWithRepo('bundle0');
+      await storeBundleWithRepo('bundle1', BundleStatuses.downloaded);
+      await storeBundleWithRepo('bundle2', BundleStatuses.sheltered);
+      await storeBundleWithRepo('bundle3', BundleStatuses.cleanup);
+      await storeBundleWithRepo('bundle4', BundleStatuses.downloaded);
+      await storeBundleWithRepo('bundle5', BundleStatuses.cleanup);
+    });
+
+    it('removes all bundles having status CLEANUP', async () => {
+      await storage.cleanupBundles();
+
+      expect(await storage.getBundle('bundle0')).to.be.not.null;
+      expect(await storage.getBundle('bundle1')).to.be.not.null;
+      expect(await storage.getBundle('bundle2')).to.be.not.null;
+      expect(await storage.getBundle('bundle3')).to.be.null;
+      expect(await storage.getBundle('bundle4')).to.be.not.null;
+      expect(await storage.getBundle('bundle5')).to.be.null;
+    });
+
+    it('sets removed bundle status to EXPENDABLE', async () => {
+      await storage.cleanupBundles();
+
+      expect(await storage.getBundleRepository('bundle0')).to.be.undefined;
+      expect(await getBundleStatus('bundle1')).to.equal(BundleStatuses.downloaded);
+      expect(await getBundleStatus('bundle2')).to.equal(BundleStatuses.sheltered);
+      expect(await getBundleStatus('bundle3')).to.equal(BundleStatuses.expendable);
+      expect(await getBundleStatus('bundle4')).to.equal(BundleStatuses.downloaded);
+      expect(await getBundleStatus('bundle5')).to.equal(BundleStatuses.expendable);
+    });
+
+    it('returns removed bundles count', async () => {
+      expect(await storage.cleanupBundles()).to.equal(2);
+    });
+
+    afterEach(async () => {
+      await cleanDatabase(db);
     });
   });
 });

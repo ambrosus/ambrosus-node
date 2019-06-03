@@ -27,7 +27,6 @@ const createMongoUrl = (config) => {
 
     query.authSource = 'admin';
   }
-
   const queryStr = `?${querystring.stringify(query)}`;
   return `mongodb://${credentials}${config.mongoHosts}/${queryStr}`;
 };

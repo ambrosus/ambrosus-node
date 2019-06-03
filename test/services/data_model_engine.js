@@ -1407,7 +1407,7 @@ describe('Data Model Engine', () => {
     it('removes downloaded bundle and throws if validation fails', async () => {
       mockBundleBuilder.validateStreamedBundle.throws(new ValidationError());
       await expect(modelEngine.downloadBundle(bundleId, sheltererId, challengeExpirationTime)).to.be.rejectedWith(Error, 'Bundle failed to validate');
-      expect(mockBundleRepository.removeBundle).to.be.calledOnceWith(bundleId);
+      expect(mockBundleRepository.setBundleRepository.lastCall).to.be.calledWith(bundleId, BundleStatuses.cleanup);
     });
   });
 
@@ -1499,13 +1499,13 @@ describe('Data Model Engine', () => {
         });
       });
 
-      it('does not keep the bundle if validation has failed', async () => {
+      it('sets bundle status to CLEANUP if validation has failed', async () => {
         const mockReadStream = new StringReadStream(JSON.stringify(pick(downloadedBundle, 'content.idData.timestamp'), 10));
         mockBundleDownloader.openBundleDownloadStream.resolves(mockReadStream);
         await expect(modelEngine.downloadBundle(downloadedBundle.bundleId, '', challengeExpirationTime)).be.rejectedWith(Error, 'Bundle failed to validate: Invalid data: content.idData.timestamp should not be empty');
 
-        const bundleInDb = await bundleRepository.getBundle(downloadedBundle.bundleId);
-        expect(bundleInDb).to.be.null;
+        const {status} = await bundleRepository.getBundleRepository(downloadedBundle.bundleId);
+        expect(status).to.equal(BundleStatuses.cleanup);
       });
     });
 
@@ -1530,13 +1530,13 @@ describe('Data Model Engine', () => {
         expect(bundleInDb).to.deep.eq(downloadedBundle);
       });
 
-      it('does not keep the bundle if validation has failed', async () => {
+      it('sets bundle status to CLEANUP if validation has failed', async () => {
         const mockReadStream = new StringReadStream(JSON.stringify(pick(downloadedBundle, 'content.idData.timestamp'), 10));
         mockBundleDownloader.openBundleDownloadStream.resolves(mockReadStream);
         await expect(modelEngine.downloadBundle(downloadedBundle.bundleId, '', challengeExpirationTime)).be.rejectedWith(Error, 'Bundle failed to validate: Invalid data: content.idData.timestamp should not be empty');
 
-        const bundleInDb = await bundleRepository.getBundle(downloadedBundle.bundleId);
-        expect(bundleInDb).to.be.null;
+        const {status} = await bundleRepository.getBundleRepository(downloadedBundle.bundleId);
+        expect(status).to.equal(BundleStatuses.cleanup);
       });
     });
   });
@@ -1596,6 +1596,30 @@ describe('Data Model Engine', () => {
 
     it('properly returns the result', () => {
       expect(ret).to.equal(exampleLogs);
+    });
+  });
+
+  describe('Cleanup outdated bundles', () => {
+    let modelEngine;
+    let mockBundleRepository;
+    const exampleCleanedBundlesCount = 123;
+
+    beforeEach(() => {
+      mockBundleRepository = {
+        findOutdatedBundles: sinon.stub(),
+        cleanupBundles: sinon.stub().resolves(exampleCleanedBundlesCount)
+      };
+
+      modelEngine = new DataModelEngine({
+        bundleRepository: mockBundleRepository
+      });
+    });
+
+    it('finds outdated bundles and then removes them', async () => {
+      expect(await modelEngine.cleanupOutdatedBundles()).to.equal(exampleCleanedBundlesCount);
+      expect(mockBundleRepository.findOutdatedBundles).to.be.calledOnce;
+      expect(mockBundleRepository.cleanupBundles).to.be.calledOnce;
+      expect(mockBundleRepository.cleanupBundles).to.be.calledAfter(mockBundleRepository.findOutdatedBundles);
     });
   });
 });
