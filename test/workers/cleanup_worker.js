@@ -64,7 +64,6 @@ describe('Cleanup worker', () => {
     it('logs error when cleanupOutdatedBundles fails', async () => {
       mockDataModelEngine.cleanupOutdatedBundles.rejects(new Error('Oh No!'));
       await expect(worker.periodicWork()).to.be.rejected;
-
       expect(logger.error).to.be.calledOnce;
     });
   });
