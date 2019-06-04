@@ -27,6 +27,9 @@ export default class CleanupWorker extends PeriodicWorker {
     try {
       const removedBundlesCount = await this.dataModelEngine.cleanupOutdatedBundles();
       this.logger.info(`Removed ${removedBundlesCount} outdated bundles`);
+    } catch (err) {
+      this.logger.error(err);
+      throw err;
     } finally {
       await this.workerTaskTrackingRepository.finishWork(workId);
     }
