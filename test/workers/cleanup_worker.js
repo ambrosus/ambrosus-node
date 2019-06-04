@@ -27,7 +27,8 @@ describe('Cleanup worker', () => {
 
   beforeEach(() => {
     logger = {
-      info: sinon.stub()
+      info: sinon.stub(),
+      error: sinon.stub()
     };
     mockWorkerTaskTracker = {
       tryToBeginWork: sinon.stub().resolves(exampleWorkId),
@@ -58,6 +59,13 @@ describe('Cleanup worker', () => {
       mockDataModelEngine.cleanupOutdatedBundles.rejects();
       await expect(worker.periodicWork()).to.be.rejected;
       expect(mockWorkerTaskTracker.finishWork).to.be.calledOnceWith(exampleWorkId);
+    });
+
+    it('logs error when cleanupOutdatedBundles fails', async () => {
+      mockDataModelEngine.cleanupOutdatedBundles.rejects(new Error('Oh No!'));
+      await expect(worker.periodicWork()).to.be.rejected;
+
+      expect(logger.error).to.be.calledOnce;
     });
   });
 });
