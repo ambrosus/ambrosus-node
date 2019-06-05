@@ -1,5 +1,6 @@
---require @babel/register
+--require ts-node/register
 --require test/mocha_env.js
+--watch-extensions js,ts
 --timeout 10000
 --recursive
 --exit

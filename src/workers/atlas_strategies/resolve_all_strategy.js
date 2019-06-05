@@ -10,12 +10,12 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import AtlasChallengeParticipationStrategy from './atlas_challenge_resolution_strategy';
 
 export default class ResolveAllStrategy extends AtlasChallengeParticipationStrategy {
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async shouldFetchBundle(challenge) {
     return true;
   }
 
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async shouldResolveChallenge(bundleMetadata) {
     return true;
   }

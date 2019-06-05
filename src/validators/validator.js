@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-/* eslint no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
+/* eslint @typescript-eslint/no-unused-vars: ["error", { "argsIgnorePattern": "^_" }]*/
 export default class Validator {
   validate(_data) {
     throw new Error('Abstract class');

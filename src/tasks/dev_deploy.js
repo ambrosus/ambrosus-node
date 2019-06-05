@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {WinstonConsoleLogger} from '../utils/loggers';
-import {createWeb3} from '../../src/utils/web3_tools';
+import {createWeb3} from '../utils/web3_tools';
 import config from '../../config/config';
 import devConfig from '../../config/devConfig';
 import deployAll from '../utils/deployment';

@@ -12,39 +12,44 @@ import fs from 'fs';
 import {sleep} from '../utils/time_utils';
 
 class Migrator {
-  constructor(db, config, sleepFunction = sleep, directory = path.dirname(__filename)) {
+  private readonly db: any;
+  private readonly config: any;
+  private readonly sleepFunction: any;
+  private readonly directory: string;
+
+  public constructor(db, config, sleepFunction = sleep, directory = path.dirname(__filename)) {
     this.db = db;
     this.config = config;
     this.sleepFunction = sleepFunction;
     this.directory = directory;
   }
 
-  getVersionFromPath(name) {
+  private getVersionFromPath(name) {
     const filename = path.basename(name);
     const splitParts = filename.split('_');
     return parseInt(splitParts[0], 10);
   }
 
-  isMigrationPath(file) {
+  private isMigrationPath(file) {
     return path.basename(file).match(/^\d{14}_.*\.js$/);
   }
 
-  async getCurrentVersion() {
+  private async getCurrentVersion() {
     const result = await this.db.collection('migrations').findOne({});
     return result ? result.version : 0;
   }
 
-  async isMigrationNecessary() {
+  private async isMigrationNecessary() {
     const latestMigrationVersion = this.getVersionFromPath((await this.migrationFiles()).pop());
     return await this.getCurrentVersion() < latestMigrationVersion;
   }
 
-  async up(fullPath, logger) {
+  public async up(fullPath, logger) {
     const version = this.getVersionFromPath(fullPath);
     const getCurrentVersion = await this.getCurrentVersion();
     if (version > getCurrentVersion) {
       logger.info({message: `Migrating: ${path.basename(fullPath)}`});
-      const imported = require(fullPath);
+      const imported = await import(fullPath);
       await imported.up(this.db, this.config, logger);
       await this.db.collection('migrations').findOneAndReplace({}, {version});
     } else {
@@ -52,7 +57,7 @@ class Migrator {
     }
   }
 
-  async waitForOtherMigrationsAndMarkAsStarted(logger) {
+  private async waitForOtherMigrationsAndMarkAsStarted(logger) {
     // eslint-disable-next-line no-constant-condition
     while (true) {
       const {modifiedCount} = await this.db.collection('migrations')
@@ -70,20 +75,25 @@ class Migrator {
     }
   }
 
-  async initMigrationsCollection() {
-    await this.db.collection('migrations').findOneAndUpdate({}, {$setOnInsert: {version: 0, migrationRunning: false}}, {upsert: true});
+  private async initMigrationsCollection() {
+    await this.db.collection('migrations').findOneAndUpdate({}, {
+      $setOnInsert: {
+        version: 0,
+        migrationRunning: false
+      }
+    }, {upsert: true});
   }
 
-  async initMigrations(logger) {
+  private async initMigrations(logger) {
     await this.initMigrationsCollection();
     await this.waitForOtherMigrationsAndMarkAsStarted(logger);
   }
 
-  async markMigrationAsDone() {
+  private async markMigrationAsDone() {
     await this.db.collection('migrations').updateOne({}, {$set: {migrationRunning: false}});
   }
 
-  async migrate(logger) {
+  private async migrate(logger) {
     await this.initMigrations(logger);
     try {
       const migrationFiles = await this.migrationFiles();
@@ -98,7 +108,7 @@ class Migrator {
     }
   }
 
-  async migrationFiles() {
+  private async migrationFiles() {
     return fs.readdirSync(this.directory)
       .filter(this.isMigrationPath)
       .sort();

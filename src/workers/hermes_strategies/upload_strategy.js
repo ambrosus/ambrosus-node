@@ -17,7 +17,7 @@ export default class HermesUploadStrategy {
     return 1;
   }
 
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async shouldBundle(bundle) {
     throw new Error('Should be implemented');
   }
