@@ -72,7 +72,7 @@ export async function createWeb3(conf: Config = config): Promise<Web3> {
   if (isValidRPCAddress(rpc)) {
     web3.setProvider(new Web3.providers.HttpProvider(rpc));
   } else if (isUsingGanache(rpc)) {
-    await web3.setProvider(await createGanacheProvider(account.privateKey));
+    web3.setProvider(await createGanacheProvider(account.privateKey));
     await ganacheTopUpDefaultAccount(web3);
   } else {
     throw new Error('A configuration value for web3 rpc server is missing');
