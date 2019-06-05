@@ -8,22 +8,24 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import Web3 from 'web3';
-import config from '../../config/config';
+import config, {Config} from '../../config/config';
 import BN from 'bn.js';
+import {Account, Contract, Provider} from 'web3/types';
+import ABI from "web3/eth/abi";
 
 export const DEFAULT_GAS = 4700000;
 
-function isValidRPCAddress(rpc) {
+function isValidRPCAddress(rpc: string): boolean {
   return /^((?:https?)|(?:ws)):\/\//g.test(rpc);
 }
 
-function isUsingGanache(rpc) {
+function isUsingGanache(rpc: string): boolean {
   return rpc === 'ganache';
 }
 
-function createGanacheProvider(secretKey) {
+async function createGanacheProvider(secretKey: string): Promise<Provider> {
   // import in code with purpose:D
-  const Ganache = require('ganache-core');
+  const Ganache = await import('ganache-core');
   const ganacheOptions = {
     accounts: [
       {
@@ -38,7 +40,7 @@ function createGanacheProvider(secretKey) {
   return provider;
 }
 
-async function ganacheTopUpDefaultAccount(web3) {
+async function ganacheTopUpDefaultAccount(web3: Web3): Promise<void> {
   const [firstGanacheMasterAccount] = await web3.eth.getAccounts();
   await web3.eth.sendTransaction({
     from: firstGanacheMasterAccount,
@@ -48,7 +50,7 @@ async function ganacheTopUpDefaultAccount(web3) {
   });
 }
 
-function importPrivateKey(web3, config) {
+function importPrivateKey(web3: Web3, config: Config): Account {
   try {
     const privateKey = config.nodePrivateKey;
     const account = web3.eth.accounts.privateKeyToAccount(privateKey);
@@ -60,7 +62,7 @@ function importPrivateKey(web3, config) {
   }
 }
 
-export async function createWeb3(conf = config) {
+export async function createWeb3(conf: Config = config): Promise<Web3> {
   const web3 = new Web3();
 
   const rpc = conf.web3Rpc;
@@ -68,9 +70,9 @@ export async function createWeb3(conf = config) {
   const account = importPrivateKey(web3, conf);
 
   if (isValidRPCAddress(rpc)) {
-    web3.setProvider(rpc);
+    web3.setProvider(new Web3.providers.HttpProvider(rpc));
   } else if (isUsingGanache(rpc)) {
-    web3.setProvider(createGanacheProvider(account.privateKey));
+    await web3.setProvider(await createGanacheProvider(account.privateKey));
     await ganacheTopUpDefaultAccount(web3);
   } else {
     throw new Error('A configuration value for web3 rpc server is missing');
@@ -79,7 +81,7 @@ export async function createWeb3(conf = config) {
   return web3;
 }
 
-export function getDefaultAddress(web3) {
+export function getDefaultAddress(web3: Web3): string {
   // note: web3.eth.defaultAccount actually stores an address of the default account, and not the full account :P
   const {defaultAccount} = web3.eth;
   if (!defaultAccount) {
@@ -88,23 +90,23 @@ export function getDefaultAddress(web3) {
   return defaultAccount;
 }
 
-export function getDefaultPrivateKey(web3) {
+export function getDefaultPrivateKey(web3: Web3): string {
   const defaultAddress = getDefaultAddress(web3);
   const account = web3.eth.accounts.wallet[defaultAddress];
   return account.privateKey;
 }
 
-export function loadContract(web3, abi, address) {
+export function loadContract(web3: Web3, abi: any[], address: string): Contract {
   return new web3.eth.Contract(abi, address, {
     gas: DEFAULT_GAS,
-    gasPrice: web3.utils.toWei(config.defaultGasPrice.toString(), 'gwei')
+    gasPrice: web3.utils.toWei(config.defaultGasPrice.toString(), 'shannon')
   });
 }
-export async function deployContract(web3, json, args = [], options = {}) {
+export async function deployContract(web3: Web3, json: any, args = [], options = {}): Promise<Contract> {
   const defaultAddress = getDefaultAddress(web3);
   return new web3.eth.Contract(json.abi, undefined, {
     gas: DEFAULT_GAS,
-    gasPrice: web3.utils.toWei(config.defaultGasPrice.toString(), 'gwei')
+    gasPrice: web3.utils.toWei(config.defaultGasPrice.toString(), 'shannon')
   }).deploy({data: json.bytecode, arguments: args})
     .send({
       from: defaultAddress,

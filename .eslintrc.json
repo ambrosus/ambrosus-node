@@ -1,9 +1,10 @@
 {
-  "parser": "babel-eslint",
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {},
   "plugins": [
     "import",
-    "header"
+    "header",
+    "@typescript-eslint/eslint-plugin"
   ],
   "env": {
     "node": true,
@@ -11,10 +12,19 @@
   },
   "extends": [
     "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
     "plugin:import/errors",
     "plugin:import/warnings"
   ],
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [".js", ".ts", ".json", ".d.ts"]
+      }
+    }
+  },
   "rules": {
+    "@typescript-eslint/no-use-before-define": 0,
     "prefer-const": 2,
     "no-var": 2,
     "object-shorthand": 2,
@@ -66,7 +76,8 @@
     "brace-style": 2,
     "no-else-return": 2,
     "spaced-comment": 2,
-    "indent": [
+    "indent": "off",
+    "@typescript-eslint/indent": [
       "error",
       2,
       {

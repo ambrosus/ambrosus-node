@@ -17,16 +17,16 @@ export default class AtlasChallengeParticipationStrategy {
     return 86400; // 1 day
   }
 
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async shouldFetchBundle(challenge) {
     throw new Error('Should be implemented');
   }
 
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async shouldResolveChallenge(bundleMetadata) {
     throw new Error('Should be implemented');
   }
 
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async afterChallengeResolution(challenge) { }
 }
