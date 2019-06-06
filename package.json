@@ -7,7 +7,7 @@
   "private": false,
   "license": "MPL-2.0-no-copyleft-exception",
   "scripts": {
-    "build": "tsc && copyfiles src/**/*.json dist",
+    "build": "tsc",
     "start:atlas": "node dist/start_atlas.js",
     "start:hermes": "node dist/start_hermes.js",
     "start:server": "node dist/start_server.js",
@@ -64,7 +64,6 @@
     "chai-as-promised": "^7.1.1",
     "chai-http": "^3.0.0",
     "chai-string": "^1.4.0",
-    "copyfiles": "^2.1.0",
     "core-js": "3",
     "eslint": "^5.16.0",
     "eslint-plugin-header": "^3.0.0",
