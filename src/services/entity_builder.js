@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import validateAndCast from '../utils/validations';
 import JsonSchemaValidator from '../validators/json_schema_validator';
 import EventEntryValidator from '../validators/event_entry_validator.js';
-import eventContentSchema from '../validators/schemas/event';
+import eventContentSchema from '../validators/schemas/event.json';
 import identifiersAssetSchema from '../validators/schemas/custom/ambrosus.asset.identifiers.json';
 import identifiersEventSchema from '../validators/schemas/custom/ambrosus.event.identifiers.json';
 import locationEventSchema from '../validators/schemas/custom/ambrosus.event.location.json';
