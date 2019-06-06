@@ -21,7 +21,7 @@
     "dev:start:atlas": "source ./dev.env && nodemon --watch src --exec ts-node src/start_atlas.js",
     "dev:start:hermes": "source ./dev.env && nodemon --watch src --exec ts-node src/start_hermes.js",
     "dev:start:server": "source ./dev.env && nodemon --watch src --exec ts-node src/start_server.js",
-    "dev:lint": "eslint src test src/config",
+    "dev:lint": "eslint src test",
     "dev:docker:db": "docker-compose up -d db",
     "dev:docker:parity": "docker-compose up -d parity"
   },
