@@ -17,7 +17,7 @@ import IdentityManager from '../../src/services/identity_manager';
 import {createWeb3} from '../../src/utils/web3_tools';
 import {adminAccountWithSecret} from '../fixtures/account';
 import AccountRepository from '../../src/services/account_repository';
-import config from '../../config/config';
+import config from '../../src/config/config';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);

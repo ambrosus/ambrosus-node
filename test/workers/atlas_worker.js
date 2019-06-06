@@ -15,7 +15,7 @@ import chaiAsPromised from 'chai-as-promised';
 import AtlasWorker from '../../src/workers/atlas_worker';
 import AtlasChallengeParticipationStrategy from '../../src/workers/atlas_strategies/atlas_challenge_resolution_strategy';
 import {connectToMongo} from '../../src/utils/db_utils';
-import config from '../../config/config';
+import config from '../../src/config/config';
 import Web3 from 'web3';
 import getAvailableDiskSpace from '../../src/utils/disk_usage';
 

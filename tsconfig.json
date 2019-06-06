@@ -11,10 +11,10 @@
     "esModuleInterop": true,
     "typeRoots": [
       "node_modules/@types"
-    ]
+    ],
+    "rootDir": "src"
   },
   "include": [
-    "./src/**/*",
-    "./test/**/*"
+    "./src/**/*"
   ]
 }

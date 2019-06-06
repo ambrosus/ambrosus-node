@@ -8,10 +8,9 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import Web3 from 'web3';
-import config, {Config} from '../../config/config';
+import config, {Config} from '../config/config';
 import BN from 'bn.js';
 import {Account, Contract, Provider} from 'web3/types';
-import ABI from "web3/eth/abi";
 
 export const DEFAULT_GAS = 4700000;
 

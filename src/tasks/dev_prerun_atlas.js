@@ -9,8 +9,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {WinstonConsoleLogger} from '../utils/loggers';
 import Builder from '../builder';
-import config from '../../config/config';
-import devConfig from '../../config/devConfig';
+import config from '../config/config';
+import devConfig from '../config/devConfig';
 import {addToKycWhitelist, onboardAsAtlas, registerAdminAccount} from '../utils/prerun';
 import {Role} from '../services/roles_repository';
 

@@ -12,7 +12,7 @@ import AccountStore from '../../src/services/account_repository';
 import {connectToMongo, cleanDatabase} from '../../src/utils/db_utils';
 import {put} from '../../src/utils/dict_utils';
 import {account} from '../fixtures/account';
-import config from '../../config/config';
+import config from '../../src/config/config';
 
 const {expect} = chai;
 

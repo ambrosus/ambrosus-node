@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import * as sinon from 'sinon';
 import {instrumentProcess, serializeError} from '../../src/utils/instrument_process';
-import config from '../../config/config';
+import config from '../../src/config/config';
 
 const {expect} = chai;
 

@@ -13,7 +13,7 @@ import chaiAsPromised from 'chai-as-promised';
 import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
 import FindAssetQueryObjectFactory, {FindAssetQueryObject} from '../../src/services/find_asset_query_object';
 import {createAsset} from '../fixtures/assets_events';
-import config from '../../config/config';
+import config from '../../src/config/config';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
