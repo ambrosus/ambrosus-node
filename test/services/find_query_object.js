@@ -12,7 +12,7 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
-import config from '../../config/config';
+import config from '../../src/config/config';
 
 import FindQueryObject from '../../src/services/find_query_object';
 

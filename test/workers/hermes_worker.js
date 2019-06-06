@@ -15,7 +15,7 @@ import chaiHttp from 'chai-http';
 import HermesWorker from '../../src/workers/hermes_worker';
 import HermesUploadStrategy from '../../src/workers/hermes_strategies/upload_strategy';
 import {connectToMongo} from '../../src/utils/db_utils';
-import config from '../../config/config';
+import config from '../../src/config/config';
 
 chai.use(chaiHttp);
 chai.use(sinonChai);

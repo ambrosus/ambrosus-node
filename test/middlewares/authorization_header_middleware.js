@@ -15,7 +15,7 @@ import {ValidationError, PermissionError} from '../../src/errors/errors';
 import pkPair from '../fixtures/pk_pair';
 import ambAuthorizationHeaderMiddleware from '../../src/middlewares/amb_authorization_header_middleware';
 import {pick} from '../../src/utils/dict_utils';
-import config from '../../config/config';
+import config from '../../src/config/config';
 
 chai.use(sinonChai);
 const {expect} = chai;

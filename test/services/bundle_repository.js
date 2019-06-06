@@ -13,7 +13,7 @@ import chaiAsPromised from 'chai-as-promised';
 import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
 import {put} from '../../src/utils/dict_utils';
 import {createBundle} from '../fixtures/assets_events';
-import config from '../../config/config';
+import config from '../../src/config/config';
 
 import BundleRepository from '../../src/services/bundle_repository';
 import StringReadStream from '../../src/utils/string_read_stream';

@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import AtlasWorker from './workers/atlas_worker';
-import config from '../config/config';
+import config from './config/config';
 import Builder from './builder';
 import {Role} from './services/roles_repository';
 import {waitForChainSync} from './utils/web3_tools';

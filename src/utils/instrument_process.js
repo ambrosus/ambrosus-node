@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 import * as Sentry from '@sentry/node';
 import {WinstonConsoleLogger} from './loggers';
-import config from '../../config/config';
+import config from '../config/config';
 
 export const serializeError = (error) => Object.getOwnPropertyNames(error).reduce(
   (accum, key) => {

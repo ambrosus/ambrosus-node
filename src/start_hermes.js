@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import config from '../config/config';
+import config from './config/config';
 import Builder from './builder';
 import HermesWorker from './workers/hermes_worker';
 import {Role} from './services/roles_repository';

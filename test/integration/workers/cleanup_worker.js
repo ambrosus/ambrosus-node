@@ -11,7 +11,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import Builder from '../../../src/builder';
-import config from '../../../config/config';
+import config from '../../../src/config/config';
 import {cleanDatabase} from '../../../src/utils/db_utils';
 import CleanupWorker from '../../../src/workers/cleanup_worker';
 import {createBundle} from '../../fixtures/assets_events';

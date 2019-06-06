@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
-import config from '../../config/config';
+import config from '../../src/config/config';
 
 import WorkerLogRepository from '../../src/services/worker_log_repository';
 

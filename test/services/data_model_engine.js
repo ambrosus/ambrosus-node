@@ -38,7 +38,7 @@ import allPermissions from '../../src/utils/all_permissions';
 import StringWriteStream from '../../src/utils/string_write_stream';
 import BundleRepository from '../../src/services/bundle_repository';
 import {cleanDatabase, connectToMongo} from '../../src/utils/db_utils';
-import config from '../../config/config';
+import config from '../../src/config/config';
 import BundleBuilder from '../../src/services/bundle_builder';
 import EntityBuilder from '../../src/services/entity_builder';
 import BundleStatuses from '../../src/utils/bundle_statuses';

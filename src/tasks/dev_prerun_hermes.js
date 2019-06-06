@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {WinstonConsoleLogger} from '../utils/loggers';
 import Builder from '../builder';
-import config from '../../config/config';
+import config from '../config/config';
 import {addToKycWhitelist, onboardAsHermes, registerAdminAccount} from '../utils/prerun';
 import {Role} from '../services/roles_repository';
 

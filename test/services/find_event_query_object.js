@@ -17,7 +17,7 @@ import EntityRepository from '../../src/services/entity_repository';
 import IdentityManager from '../../src/services/identity_manager';
 import ScenarioBuilder from '../fixtures/scenario_builder';
 import {adminAccountWithSecret, accountWithSecret} from '../fixtures/account';
-import config from '../../config/config';
+import config from '../../src/config/config';
 import allPermissions from '../../src/utils/all_permissions';
 
 chai.use(sinonChai);

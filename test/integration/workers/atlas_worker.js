@@ -12,7 +12,7 @@ import sinon from 'sinon';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import Builder from '../../../src/builder';
-import config from '../../../config/config';
+import config from '../../../src/config/config';
 import AtlasWorker from '../../../src/workers/atlas_worker';
 import {createFullAsset, createFullBundle} from '../../fixtures/assets_events';
 import {cleanDatabase} from '../../../src/utils/db_utils';

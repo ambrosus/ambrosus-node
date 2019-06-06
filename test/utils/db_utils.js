@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {expect} from 'chai';
 import {createMongoUrl, uploadJSONToGridFSBucket, connectToMongo, cleanDatabase, downloadJSONFromGridFSBucket, isFileInGridFSBucket} from '../../src/utils/db_utils';
 import {GridFSBucket} from 'mongodb';
-import config from '../../config/config';
+import config from '../../src/config/config';
 
 
 describe('createMongoUrl', () => {

@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import Migrator from '../migrations/Migrator';
 import {connectToMongo} from '../utils/db_utils';
-import config from '../../config/config';
+import config from '../config/config';
 import {WinstonExpressLogger} from '../utils/loggers';
 
 const init = async (logger) => {
