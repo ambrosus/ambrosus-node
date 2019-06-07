@@ -1,7 +1,7 @@
 {
   "name": "ambrosus-node",
   "description": "",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "author": "Ambrosus",
   "repository": "git@github.com:ambrosus/ambrosus-node.git",
   "private": false,
