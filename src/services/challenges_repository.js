@@ -54,12 +54,12 @@ export default class ChallengesRepository {
   }
 
   async collectChallengeEvents(fromBlock, currentBlock, fetchEvents, outputFields) {
-    return await this.collectChallengeEventsWithStep(fromBlock, currentBlock, CHALLENGE_EVENT_ONE_FETCH_LIMIT, fetchEvents, outputFields);
+    return this.collectChallengeEventsWithStep(fromBlock, currentBlock, CHALLENGE_EVENT_ONE_FETCH_LIMIT, fetchEvents, outputFields);
   }
 
   async collectChallengeEventsWithStep(fromBlock, currentBlock, step, fetchEvents, outputFields) {
     let collectedChallengeEvents = [];
-    for (let startBlock = fromBlock; startBlock < currentBlock; startBlock += step) {
+    for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += step) {
       const endBlock = Math.min(currentBlock, startBlock + step - 1);
       const challengeBlockchainEvents = await fetchEvents(startBlock, endBlock);
       collectedChallengeEvents = collectedChallengeEvents.concat(this.prepareChallengeEvent(challengeBlockchainEvents, outputFields));

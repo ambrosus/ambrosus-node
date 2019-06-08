@@ -204,13 +204,15 @@ describe('Challenges repository', () => {
     });
 
     it('fetches events with steps - collects all events', async () => {
-      const fetchEvents = sinon.stub()
-        .onCall(0)
-        .resolves([{blockNumber: 0, logIndex: 0}])
-        .onCall(1)
+      const fetchEvents = sinon.stub();
+      fetchEvents.withArgs(0, 0)
+        .resolves([{blockNumber: 0, logIndex: 0}]);
+      fetchEvents.withArgs(1, 1)
         .resolves([{blockNumber: 1, logIndex: 1}]);
+      fetchEvents.withArgs(2, 2)
+        .resolves([{blockNumber: 2, logIndex: 2}]);
       const result = await challengesRepository.collectChallengeEventsWithStep(0, 2, 1, fetchEvents, []);
-      expect(result).to.deep.eq([{blockNumber: 0, logIndex: 0}, {blockNumber: 1, logIndex: 1}]);
+      expect(result).to.deep.eq([{blockNumber: 0, logIndex: 0}, {blockNumber: 1, logIndex: 1}, {blockNumber: 2, logIndex: 2}]);
     });
 
     it('fetches events with steps - divisible range', async () => {
@@ -226,6 +228,14 @@ describe('Challenges repository', () => {
       await challengesRepository.collectChallengeEventsWithStep(151, 215, 50, fetchEvents, []);
       expect(fetchEvents).to.have.been.calledWith(151, 200);
       expect(fetchEvents).to.have.been.calledWith(201, 215);
+    });
+
+    it('fetches events with steps - range of 1', async () => {
+      const fetchEvents = sinon.stub()
+        .withArgs(5, 5)
+        .resolves([{blockNumber: 0, logIndex: 0}]);
+      const result = await challengesRepository.collectChallengeEventsWithStep(5, 5, 100, fetchEvents, []);
+      expect(result).to.deep.eq([{blockNumber: 0, logIndex: 0}]);
     });
   });
 
