@@ -98,16 +98,17 @@ export default class AtlasWorker extends PeriodicWorker {
         await this.addLog('Decided not to download bundle', challenge);
         return false;
       }
-      const bundleMetadata = await this.tryToDownload(challenge);
-      if (!await this.strategy.shouldResolveChallenge(bundleMetadata)) {
-        this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.shouldNotResolve});
-        await this.addLog('Challenge resolution cancelled', challenge);
-        return false;
-      }
 
       if (!await this.isTurnToResolve(challenge)) {
         this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.shouldNotResolve});
         await this.addLog(`Not the node's turn to resolve`, challenge);
+        return false;
+      }
+
+      const bundleMetadata = await this.tryToDownload(challenge);
+      if (!await this.strategy.shouldResolveChallenge(bundleMetadata)) {
+        this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.shouldNotResolve});
+        await this.addLog('Challenge resolution cancelled', challenge);
         return false;
       }
 
