@@ -156,7 +156,6 @@ describe('Atlas Worker', () => {
         shouldFetchBundleStub.resolves(true);
         tryToDownloadMock.resolves(bundleMetadata);
         shouldResolveChallengeStub.returns(true);
-        isTurnToResolveMock.resolves();
         isTurnToResolveMock.returns(true);
         tryToResolveMock.resolves();
       });
@@ -213,6 +212,12 @@ describe('Atlas Worker', () => {
       it('returns true if everything goes ok', async () => {
         expect(await atlasWorker.tryWithChallenge(challenge1)).to.equal(true);
         expect(strategyMock.afterChallengeResolution).to.have.been.calledWith(challenge1);
+      });
+
+      it('does not download bundle if not turn to resolve', async () => {
+        isTurnToResolveMock.returns(false);
+        await atlasWorker.tryWithChallenge(challenge1);
+        expect(tryToDownloadMock).to.not.have.been.called;
       });
     });
 
