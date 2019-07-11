@@ -13,7 +13,7 @@ import prometheusMetricsHandler from '../routes/prometheus_metrics.js';
 import asyncMiddleware from '../middlewares/async_middleware';
 import healthCheckHandler from '../routes/health_check';
 import PeriodicWorker from './periodic_worker';
-import AtlasChallengeParticipationStrategy from './atlas_strategies/atlas_challenge_resolution_strategy';
+import AtlasParticipationStrategy from './atlas_strategies/atlas_participation_strategy';
 import {checkIfEnoughFundsToPayForGas, getDefaultAddress} from '../utils/web3_tools';
 import availableDiskSpace from '../utils/disk_usage';
 
@@ -37,9 +37,10 @@ export default class AtlasWorker extends PeriodicWorker {
     logger,
     mongoClient,
     serverPort,
-    requiredFreeDiskSpace
+    requiredFreeDiskSpace,
+    workerInterval
   ) {
-    super(strategy.workerInterval, logger);
+    super(workerInterval, logger);
     this.web3 = web3;
     this.dataModelEngine = dataModelEngine;
     this.strategy = strategy;
@@ -65,7 +66,7 @@ export default class AtlasWorker extends PeriodicWorker {
       registers: [registry]
     });
 
-    if (!(this.strategy instanceof AtlasChallengeParticipationStrategy)) {
+    if (!(this.strategy instanceof AtlasParticipationStrategy)) {
       throw new Error('A valid strategy must be provided');
     }
   }
@@ -106,14 +107,14 @@ export default class AtlasWorker extends PeriodicWorker {
       }
 
       const bundleMetadata = await this.tryToDownload(challenge);
-      if (!await this.strategy.shouldResolveChallenge(bundleMetadata)) {
+      if (!await this.strategy.shouldResolve(bundleMetadata)) {
         this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.shouldNotResolve});
         await this.addLog('Challenge resolution cancelled', challenge);
         return false;
       }
 
       await this.tryToResolve(bundleMetadata, challenge);
-      await this.strategy.afterChallengeResolution(challenge);
+      await this.strategy.afterResolution(challenge);
       this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.resolved});
       return true;
     } catch (err) {

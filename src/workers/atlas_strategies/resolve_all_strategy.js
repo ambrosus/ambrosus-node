@@ -7,16 +7,16 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import AtlasChallengeParticipationStrategy from './atlas_challenge_resolution_strategy';
+import AtlasParticipationStrategy from './atlas_participation_strategy';
 
-export default class ResolveAllStrategy extends AtlasChallengeParticipationStrategy {
+export default class ResolveAllStrategy extends AtlasParticipationStrategy {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async shouldFetchBundle(challenge) {
+  async shouldFetchBundle(entity) {
     return true;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async shouldResolveChallenge(bundleMetadata) {
+  async shouldResolve(bundleMetadata) {
     return true;
   }
 }

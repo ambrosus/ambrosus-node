@@ -13,7 +13,7 @@ import sinonChai from 'sinon-chai';
 import chaiHttp from 'chai-http';
 import chaiAsPromised from 'chai-as-promised';
 import AtlasWorker from '../../src/workers/atlas_worker';
-import AtlasChallengeParticipationStrategy from '../../src/workers/atlas_strategies/atlas_challenge_resolution_strategy';
+import AtlasParticipationStrategy from '../../src/workers/atlas_strategies/atlas_participation_strategy';
 import {connectToMongo} from '../../src/utils/db_utils';
 import config from '../../src/config/config';
 import Web3 from 'web3';
@@ -44,7 +44,7 @@ describe('Atlas Worker', () => {
   let strategyMock;
   let loggerMock;
   let shouldFetchBundleStub;
-  let shouldResolveChallengeStub;
+  let shouldResolveStub;
   let port;
 
   beforeEach(async () => {
@@ -80,12 +80,11 @@ describe('Atlas Worker', () => {
     mockWorkerLogRepository = {
       storeLog: sinon.stub()
     };
-    strategyMock = new AtlasChallengeParticipationStrategy();
-    sinon.stub(strategyMock, 'workerInterval').get(() => workerInterval);
+    strategyMock = new AtlasParticipationStrategy();
     sinon.stub(strategyMock, 'retryTimeout').get(() => retryTimeout);
     shouldFetchBundleStub = sinon.stub(strategyMock, 'shouldFetchBundle').resolves(true);
-    shouldResolveChallengeStub = sinon.stub(strategyMock, 'shouldResolveChallenge').resolves(true);
-    sinon.stub(strategyMock, 'afterChallengeResolution');
+    shouldResolveStub = sinon.stub(strategyMock, 'shouldResolve').resolves(true);
+    sinon.stub(strategyMock, 'afterResolution');
     loggerMock = {
       info: sinon.spy(),
       error: sinon.spy()
@@ -102,7 +101,8 @@ describe('Atlas Worker', () => {
       loggerMock,
       mongoClient,
       config.serverPort,
-      requiredFreeDiskSpace
+      requiredFreeDiskSpace,
+      workerInterval
     );
 
     atlasWorker.beforeWorkLoop();
@@ -113,7 +113,7 @@ describe('Atlas Worker', () => {
     await atlasWorker.afterWorkLoop();
   });
 
-  it('copies the work interval from the strategy', () => {
+  it('set the work interval into constructor', () => {
     expect(atlasWorker.interval).to.equal(workerInterval);
   });
 
@@ -155,7 +155,7 @@ describe('Atlas Worker', () => {
 
         shouldFetchBundleStub.resolves(true);
         tryToDownloadMock.resolves(bundleMetadata);
-        shouldResolveChallengeStub.returns(true);
+        shouldResolveStub.returns(true);
         isTurnToResolveMock.returns(true);
         tryToResolveMock.resolves();
       });
@@ -188,9 +188,9 @@ describe('Atlas Worker', () => {
       });
 
       it('returns false if the strategy disqualifies the challenge after downloaded the bundle', async () => {
-        shouldResolveChallengeStub.returns(false);
+        shouldResolveStub.returns(false);
         expect(await atlasWorker.tryWithChallenge(challenge1)).to.equal(false);
-        expect(shouldResolveChallengeStub).to.have.been.calledWith('bundleMetadata');
+        expect(shouldResolveStub).to.have.been.calledWith('bundleMetadata');
         expect(tryToResolveMock).to.not.have.been.called;
         expect(failedChallengesMock.rememberFailedChallenge).to.not.have.been.called;
       });
@@ -211,7 +211,7 @@ describe('Atlas Worker', () => {
 
       it('returns true if everything goes ok', async () => {
         expect(await atlasWorker.tryWithChallenge(challenge1)).to.equal(true);
-        expect(strategyMock.afterChallengeResolution).to.have.been.calledWith(challenge1);
+        expect(strategyMock.afterResolution).to.have.been.calledWith(challenge1);
       });
 
       it('does not download bundle if not turn to resolve', async () => {
@@ -427,7 +427,7 @@ describe('Atlas Worker', () => {
     });
 
     it('records metrics on challenges that should not be resolved', async () => {
-      atlasWorker.strategy.shouldResolveChallenge.returns(false);
+      atlasWorker.strategy.shouldResolve.returns(false);
 
       await atlasWorker.periodicWork();
       const metrics = await readMetrics(port);

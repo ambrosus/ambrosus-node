@@ -35,7 +35,8 @@ async function start(logger) {
     logger,
     builder.client,
     config.serverPort,
-    config.requiredFreeDiskSpace
+    config.requiredFreeDiskSpace,
+    config.atlasWorkerInterval
   );
   const cleanupWorker = new CleanupWorker(
     builder.dataModelEngine,

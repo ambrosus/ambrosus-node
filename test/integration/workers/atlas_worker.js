@@ -22,8 +22,8 @@ import {addToKycWhitelist} from '../../../src/utils/prerun';
 import {Role} from '../../../src/services/roles_repository';
 import Web3 from 'web3';
 import nock from 'nock';
-import AtlasChallengeParticipationStrategy
-  from '../../../src/workers/atlas_strategies/atlas_challenge_resolution_strategy';
+import AtlasParticipationStrategy
+  from '../../../src/workers/atlas_strategies/atlas_participation_strategy';
 import {pick} from '../../../src/utils/dict_utils';
 import BundleStatuses from '../../../src/utils/bundle_statuses';
 
@@ -49,13 +49,12 @@ describe('Atlas worker - integration', () => {
 
   const createMockStrategy = () => {
     mockStrategy = {
-      workerInterval: 5,
       retryTimeout: 5,
       shouldFetchBundle: sinon.stub().resolves(true),
-      shouldResolveChallenge: sinon.stub().resolves(true),
-      afterChallengeResolution: sinon.stub()
+      shouldResolve: sinon.stub().resolves(true),
+      afterResolution: sinon.stub()
     };
-    mockStrategy.__proto__ = AtlasChallengeParticipationStrategy.prototype;
+    mockStrategy.__proto__ = AtlasParticipationStrategy.prototype;
   };
 
   const prepareHermesSetup = async (web3, hermesAddress) => {
@@ -99,7 +98,8 @@ describe('Atlas worker - integration', () => {
       loggerMock,
       builder.client,
       config.serverPort,
-      config.requiredFreeDiskSpace
+      config.requiredFreeDiskSpace,
+      config.atlasWorkerInterval
     );
     if (!nock.isActive()) {
       nock.activate();
@@ -156,7 +156,7 @@ describe('Atlas worker - integration', () => {
     await atlasWorker.periodicWork();
     await atlasWorker.periodicWork();
     expect(mockStrategy.shouldFetchBundle).to.be.calledTwice;
-    expect(mockStrategy.shouldResolveChallenge).to.be.calledOnce;
+    expect(mockStrategy.shouldResolve).to.be.calledOnce;
     expect(await builder.bundleRepository.getBundle(exampleBundle.bundleId)).to.deep.equal(exampleBundle);
     const repository = await builder.bundleRepository.getBundleRepository(exampleBundle.bundleId);
     expect(repository.status).to.equal(BundleStatuses.sheltered);
