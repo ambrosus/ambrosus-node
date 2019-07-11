@@ -24,6 +24,8 @@ import Web3 from 'web3';
 import nock from 'nock';
 import AtlasParticipationStrategy
   from '../../../src/workers/atlas_strategies/atlas_participation_strategy';
+import AtlasChallengeResolver
+  from '../../../src/workers/atlas_resolvers/atlas_challenge_resolver';
 import {pick} from '../../../src/utils/dict_utils';
 import BundleStatuses from '../../../src/utils/bundle_statuses';
 
@@ -99,20 +101,28 @@ describe('Atlas worker - integration', () => {
     createMockChallengeStrategy();
     createMockTransferStrategy();
     builder.failedChallengesCache.failedChallengesEndTime = {};
+    const resolvers = [
+      new AtlasChallengeResolver(
+        builder.web3,
+        builder.dataModelEngine,
+        builder.challengesRepository,
+        builder.failedChallengesCache,
+        mockChallengeStrategy,
+        builder.workerLogRepository,
+        loggerMock
+      )
+    ];
     atlasWorker = new AtlasWorker(
       builder.web3,
       builder.dataModelEngine,
       builder.workerLogRepository,
-      builder.challengesRepository,
       builder.workerTaskTrackingRepository,
-      builder.failedChallengesCache,
-      mockChallengeStrategy,
-      mockTransferStrategy,
       loggerMock,
       builder.client,
       config.serverPort,
       config.requiredFreeDiskSpace,
-      config.atlasWorkerInterval
+      config.atlasWorkerInterval,
+      resolvers
     );
     if (!nock.isActive()) {
       nock.activate();

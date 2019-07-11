@@ -8,6 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import AtlasWorker from './workers/atlas_worker';
+import AtlasChallengeResolver from './workers/atlas_resolvers/atlas_challenge_resolver';
 import config from './config/config';
 import Builder from './builder';
 import {Role} from './services/roles_repository';
@@ -24,21 +25,28 @@ async function start(logger) {
   await waitForChainSync(builder.web3, 5, () => logger.info('Ethereum client is not in sync. Retrying in 5 seconds'));
   await builder.ensureAccountIsOnboarded([Role.ATLAS]);
   const challengeStrategy = loadStrategy(config.challengeResolutionStrategy);
-  const transferStrategy = loadStrategy(config.transferResolutionStrategy);
+  const resolvers = [
+    new AtlasChallengeResolver(
+      builder.web3,
+      builder.dataModelEngine,
+      builder.challengesRepository,
+      builder.failedChallengesCache,
+      challengeStrategy,
+      builder.workerLogRepository,
+      logger
+    )
+  ];
   const atlasWorker = new AtlasWorker(
     builder.web3,
     builder.dataModelEngine,
     builder.workerLogRepository,
-    builder.challengesRepository,
     builder.workerTaskTrackingRepository,
-    builder.failedChallengesCache,
-    challengeStrategy,
-    transferStrategy,
     logger,
     builder.client,
     config.serverPort,
     config.requiredFreeDiskSpace,
-    config.atlasWorkerInterval
+    config.atlasWorkerInterval,
+    resolvers
   );
   const cleanupWorker = new CleanupWorker(
     builder.dataModelEngine,

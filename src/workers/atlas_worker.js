@@ -13,45 +13,32 @@ import prometheusMetricsHandler from '../routes/prometheus_metrics.js';
 import asyncMiddleware from '../middlewares/async_middleware';
 import healthCheckHandler from '../routes/health_check';
 import PeriodicWorker from './periodic_worker';
-import AtlasParticipationStrategy from './atlas_strategies/atlas_participation_strategy';
 import {checkIfEnoughFundsToPayForGas, getDefaultAddress} from '../utils/web3_tools';
 import availableDiskSpace from '../utils/disk_usage';
 
-const ATLAS_RESOLUTION_WORK_TYPE = 'AtlasChallengeResolution';
-const atlasChallengeStatus = {
-  resolved: 'resolved',
-  failed: 'failed',
-  shouldNotFetch: 'should_not_fetch',
-  shouldNotResolve: 'should_not_resolve'
-};
+const ATLAS_RESOLUTION_WORK_TYPE = 'AtlasResolutions';
 
 export default class AtlasWorker extends PeriodicWorker {
   constructor(
     web3,
     dataModelEngine,
     workerLogRepository,
-    challengesRepository,
     workerTaskTrackingRepository,
-    failedChallengesCache,
-    challengeStrategy,
-    transferStrategy,
     logger,
     mongoClient,
     serverPort,
     requiredFreeDiskSpace,
-    workerInterval
+    workerInterval,
+    resolvers
   ) {
     super(workerInterval, logger);
     this.web3 = web3;
     this.dataModelEngine = dataModelEngine;
-    this.challengeStrategy = challengeStrategy;
-    this.transferStrategy = transferStrategy;
     this.workerLogRepository = workerLogRepository;
-    this.challengesRepository = challengesRepository;
     this.workerTaskTrackingRepository = workerTaskTrackingRepository;
-    this.failedChallengesCache = failedChallengesCache;
     this.mongoClient = mongoClient;
     this.requiredFreeDiskSpace = requiredFreeDiskSpace;
+    this.resolvers = resolvers;
     this.isOutOfFunds = false;
     this.isOutOfSpace = false;
     this.expressApp = express();
@@ -61,73 +48,8 @@ export default class AtlasWorker extends PeriodicWorker {
     ));
     const registry = new promClient.Registry();
     this.expressApp.get('/metrics', prometheusMetricsHandler(registry));
-    this.atlasChallengeMetrics = new promClient.Counter({
-      name: 'atlas_challenges_total',
-      help: `Total number of challenges. Status label is one of [${Object.values(atlasChallengeStatus)}]`,
-      labelNames: ['status'],
-      registers: [registry]
-    });
-
-    if (!(this.challengeStrategy instanceof AtlasParticipationStrategy)) {
-      throw new Error('A valid challenge strategy must be provided');
-    }
-
-    if (!(this.transferStrategy instanceof AtlasParticipationStrategy)) {
-      throw new Error('A valid transfer strategy must be provided');
-    }
-  }
-
-  async tryToResolve({bundleId}, {challengeId}) {
-    await this.challengesRepository.resolveChallenge(challengeId);
-    await this.dataModelEngine.markBundleAsSheltered(bundleId);
-    await this.addLog('🍾 Yahoo! The bundle is ours.', {bundleId});
-  }
-
-  async tryToDownload({sheltererId, bundleId, challengeId}) {
-    const challengeExpirationTime = await this.challengesRepository.getChallengeExpirationTimeInMs(challengeId);
-    const metadata = await this.dataModelEngine.downloadBundle(bundleId, sheltererId, challengeExpirationTime);
-    await this.addLog(`Bundle fetched`, {sheltererId, bundleId, challengeId});
-    return metadata;
-  }
-
-  async isTurnToResolve({challengeId}) {
-    const currentResolver = await this.challengesRepository.getChallengeDesignatedShelterer(challengeId);
-    return (currentResolver === getDefaultAddress(this.web3));
-  }
-
-  async tryWithChallenge(challenge) {
-    try {
-      if (this.failedChallengesCache.didChallengeFailRecently(challenge.challengeId)) {
-        return false;
-      }
-      if (!await this.isTurnToResolve(challenge)) {
-        this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.shouldNotResolve});
-        await this.addLog(`Not the node's turn to resolve`, challenge);
-        return false;
-      }
-
-      if (!await this.challengeStrategy.shouldFetchBundle(challenge)) {
-        this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.shouldNotFetch});
-        await this.addLog('Decided not to download bundle', challenge);
-        return false;
-      }
-
-      const bundleMetadata = await this.tryToDownload(challenge);
-      if (!await this.challengeStrategy.shouldResolve(bundleMetadata)) {
-        this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.shouldNotResolve});
-        await this.addLog('Challenge resolution cancelled', challenge);
-        return false;
-      }
-
-      await this.tryToResolve(bundleMetadata, challenge);
-      await this.challengeStrategy.afterResolution(challenge);
-      this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.resolved});
-      return true;
-    } catch (err) {
-      this.failedChallengesCache.rememberFailedChallenge(challenge.challengeId, this.challengeStrategy.retryTimeout);
-      await this.addLog(`Failed to resolve challenge: ${err.message || err}`, challenge, err.stack);
-      this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.failed});
-      return false;
+    for (const resolver of this.resolvers) {
+      resolver.addMetrics(registry);
     }
   }
 
@@ -145,16 +67,9 @@ export default class AtlasWorker extends PeriodicWorker {
       if (!await this.isEnoughAvailableDiskSpace()) {
         return;
       }
-      const challenges = await this.challengesRepository.ongoingChallenges();
-      const recentlyFailedChallenges = challenges.filter(({challengeId}) => challengeId in this.failedChallengesCache.failedChallengesEndTime);
-      await this.addLog(`Challenges preselected for resolution: ${challenges.length} (out of which ${recentlyFailedChallenges.length} have failed recently)`);
-      for (const challenge of challenges) {
-        const successful = await this.tryWithChallenge(challenge);
-        if (successful) {
-          break;
-        }
+      for (const resolver of this.resolvers) {
+        await resolver.resolveOne();
       }
-      this.failedChallengesCache.clearOutdatedChallenges();
     } finally {
       await this.workerTaskTrackingRepository.finishWork(workId);
     }
