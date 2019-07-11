@@ -33,7 +33,8 @@ export default class AtlasWorker extends PeriodicWorker {
     challengesRepository,
     workerTaskTrackingRepository,
     failedChallengesCache,
-    strategy,
+    challengeStrategy,
+    transferStrategy,
     logger,
     mongoClient,
     serverPort,
@@ -43,7 +44,8 @@ export default class AtlasWorker extends PeriodicWorker {
     super(workerInterval, logger);
     this.web3 = web3;
     this.dataModelEngine = dataModelEngine;
-    this.strategy = strategy;
+    this.challengeStrategy = challengeStrategy;
+    this.transferStrategy = transferStrategy;
     this.workerLogRepository = workerLogRepository;
     this.challengesRepository = challengesRepository;
     this.workerTaskTrackingRepository = workerTaskTrackingRepository;
@@ -66,8 +68,12 @@ export default class AtlasWorker extends PeriodicWorker {
       registers: [registry]
     });
 
-    if (!(this.strategy instanceof AtlasParticipationStrategy)) {
-      throw new Error('A valid strategy must be provided');
+    if (!(this.challengeStrategy instanceof AtlasParticipationStrategy)) {
+      throw new Error('A valid challenge strategy must be provided');
+    }
+
+    if (!(this.transferStrategy instanceof AtlasParticipationStrategy)) {
+      throw new Error('A valid transfer strategy must be provided');
     }
   }
 
@@ -100,25 +106,25 @@ export default class AtlasWorker extends PeriodicWorker {
         return false;
       }
 
-      if (!await this.strategy.shouldFetchBundle(challenge)) {
+      if (!await this.challengeStrategy.shouldFetchBundle(challenge)) {
         this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.shouldNotFetch});
         await this.addLog('Decided not to download bundle', challenge);
         return false;
       }
 
       const bundleMetadata = await this.tryToDownload(challenge);
-      if (!await this.strategy.shouldResolve(bundleMetadata)) {
+      if (!await this.challengeStrategy.shouldResolve(bundleMetadata)) {
         this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.shouldNotResolve});
         await this.addLog('Challenge resolution cancelled', challenge);
         return false;
       }
 
       await this.tryToResolve(bundleMetadata, challenge);
-      await this.strategy.afterResolution(challenge);
+      await this.challengeStrategy.afterResolution(challenge);
       this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.resolved});
       return true;
     } catch (err) {
-      this.failedChallengesCache.rememberFailedChallenge(challenge.challengeId, this.strategy.retryTimeout);
+      this.failedChallengesCache.rememberFailedChallenge(challenge.challengeId, this.challengeStrategy.retryTimeout);
       await this.addLog(`Failed to resolve challenge: ${err.message || err}`, challenge, err.stack);
       this.atlasChallengeMetrics.inc({status: atlasChallengeStatus.failed});
       return false;

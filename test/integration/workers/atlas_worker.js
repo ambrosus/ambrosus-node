@@ -45,16 +45,27 @@ describe('Atlas worker - integration', () => {
     info: () => {},
     error: () => {}
   };
-  let mockStrategy;
+  let mockChallengeStrategy;
+  let mockTransferStrategy;
 
-  const createMockStrategy = () => {
-    mockStrategy = {
+  const createMockChallengeStrategy = () => {
+    mockChallengeStrategy = {
       retryTimeout: 5,
       shouldFetchBundle: sinon.stub().resolves(true),
       shouldResolve: sinon.stub().resolves(true),
       afterResolution: sinon.stub()
     };
-    mockStrategy.__proto__ = AtlasParticipationStrategy.prototype;
+    mockChallengeStrategy.__proto__ = AtlasParticipationStrategy.prototype;
+  };
+
+  const createMockTransferStrategy = () => {
+    mockTransferStrategy = {
+      retryTimeout: 5,
+      shouldFetchBundle: sinon.stub().resolves(true),
+      shouldResolve: sinon.stub().resolves(true),
+      afterResolution: sinon.stub()
+    };
+    mockTransferStrategy.__proto__ = AtlasParticipationStrategy.prototype;
   };
 
   const prepareHermesSetup = async (web3, hermesAddress) => {
@@ -85,7 +96,8 @@ describe('Atlas worker - integration', () => {
     const [, hermesAddress] = await web3.eth.getAccounts();
     hermesUploadActions = (await prepareHermesSetup(web3, hermesAddress)).uploadActions;
     await onboardAtlas();
-    createMockStrategy();
+    createMockChallengeStrategy();
+    createMockTransferStrategy();
     builder.failedChallengesCache.failedChallengesEndTime = {};
     atlasWorker = new AtlasWorker(
       builder.web3,
@@ -94,7 +106,8 @@ describe('Atlas worker - integration', () => {
       builder.challengesRepository,
       builder.workerTaskTrackingRepository,
       builder.failedChallengesCache,
-      mockStrategy,
+      mockChallengeStrategy,
+      mockTransferStrategy,
       loggerMock,
       builder.client,
       config.serverPort,
@@ -136,7 +149,7 @@ describe('Atlas worker - integration', () => {
     const firstWorkerPromise = atlasWorker.periodicWork();
     await atlasWorker.periodicWork();
     await firstWorkerPromise;
-    expect(mockStrategy.shouldFetchBundle).to.be.calledOnce;
+    expect(mockChallengeStrategy.shouldFetchBundle).to.be.calledOnce;
   });
 
   it('queues downloaded bundle for cleanup when it is not valid', async () => {
@@ -155,8 +168,8 @@ describe('Atlas worker - integration', () => {
       .reply(200, exampleBundle);
     await atlasWorker.periodicWork();
     await atlasWorker.periodicWork();
-    expect(mockStrategy.shouldFetchBundle).to.be.calledTwice;
-    expect(mockStrategy.shouldResolve).to.be.calledOnce;
+    expect(mockChallengeStrategy.shouldFetchBundle).to.be.calledTwice;
+    expect(mockChallengeStrategy.shouldResolve).to.be.calledOnce;
     expect(await builder.bundleRepository.getBundle(exampleBundle.bundleId)).to.deep.equal(exampleBundle);
     const repository = await builder.bundleRepository.getBundleRepository(exampleBundle.bundleId);
     expect(repository.status).to.equal(BundleStatuses.sheltered);
