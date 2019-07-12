@@ -100,7 +100,7 @@ describe('Atlas worker - integration', () => {
     await onboardAtlas();
     createMockChallengeStrategy();
     createMockTransferStrategy();
-    builder.failedChallengesCache.failedChallengesEndTime = {};
+    builder.failedChallengesCache.failedResolutionsEndTime = {};
     const resolvers = [
       new AtlasChallengeResolver(
         builder.web3,

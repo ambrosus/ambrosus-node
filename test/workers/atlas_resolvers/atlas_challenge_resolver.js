@@ -64,10 +64,10 @@ describe('Atlas Challenge Resolver', () => {
       getChallengeExpirationTimeInMs: sinon.stub().resolves(expirationTime)
     };
     failedChallengesMock = {
-      rememberFailedChallenge: sinon.spy(),
-      didChallengeFailRecently: sinon.stub().returns(false),
-      clearOutdatedChallenges: sinon.spy(),
-      failedChallengesEndTime: {}
+      rememberFailedResolution: sinon.spy(),
+      didResolutionFailRecently: sinon.stub().returns(false),
+      clearOutdatedResolutions: sinon.spy(),
+      failedResolutionsEndTime: {}
     };
     workerTaskTrackingRepositoryMock = {
       tryToBeginWork: sinon.stub().resolves(exampleWorkId),
@@ -176,9 +176,9 @@ describe('Atlas Challenge Resolver', () => {
       });
 
       it('returns false if the challenge was previously marked as failing', async () => {
-        failedChallengesMock.didChallengeFailRecently.returns(true);
+        failedChallengesMock.didResolutionFailRecently.returns(true);
         expect(await challengeResolver.tryWithChallenge(challenge1)).to.equal(false);
-        expect(failedChallengesMock.didChallengeFailRecently).to.be.calledOnceWith(challenge1.challengeId);
+        expect(failedChallengesMock.didResolutionFailRecently).to.be.calledOnceWith(challenge1.challengeId);
         expect(tryToDownloadMock).to.not.have.been.called;
       });
 
@@ -186,14 +186,14 @@ describe('Atlas Challenge Resolver', () => {
         shouldFetchBundleStub.resolves(false);
         expect(await challengeResolver.tryWithChallenge(challenge1)).to.equal(false);
         expect(tryToDownloadMock).to.not.have.been.called;
-        expect(failedChallengesMock.rememberFailedChallenge).to.not.have.been.called;
+        expect(failedChallengesMock.rememberFailedResolution).to.not.have.been.called;
       });
 
       it('returns false and marks challenge as failed if an attempt to download the bundle fails', async () => {
         tryToDownloadMock.rejects();
         expect(await challengeResolver.tryWithChallenge(challenge1)).to.equal(false);
         expect(tryToDownloadMock).to.have.been.calledWith(challenge1);
-        expect(failedChallengesMock.rememberFailedChallenge).to.be.calledOnceWith(challenge1.challengeId, retryTimeout);
+        expect(failedChallengesMock.rememberFailedResolution).to.be.calledOnceWith(challenge1.challengeId, retryTimeout);
       });
 
       it('returns false if the strategy disqualifies the challenge after downloaded the bundle', async () => {
@@ -201,21 +201,21 @@ describe('Atlas Challenge Resolver', () => {
         expect(await challengeResolver.tryWithChallenge(challenge1)).to.equal(false);
         expect(shouldResolveChallengeStub).to.have.been.calledWith('bundleMetadata');
         expect(tryToResolveMock).to.not.have.been.called;
-        expect(failedChallengesMock.rememberFailedChallenge).to.not.have.been.called;
+        expect(failedChallengesMock.rememberFailedResolution).to.not.have.been.called;
       });
 
       it('returns false if it is not the turn of the node to resolve the challenge', async () => {
         isTurnToResolveMock.returns(false);
         expect(await challengeResolver.tryWithChallenge(challenge1)).to.equal(false);
         expect(tryToResolveMock).to.not.have.been.called;
-        expect(failedChallengesMock.rememberFailedChallenge).to.not.have.been.called;
+        expect(failedChallengesMock.rememberFailedResolution).to.not.have.been.called;
       });
 
       it('returns false and marks challenge as failed if the resolution attempt fails', async () => {
         tryToResolveMock.rejects();
         expect(await challengeResolver.tryWithChallenge(challenge1)).to.equal(false);
         expect(tryToResolveMock).to.have.been.calledWith(bundleMetadata, challenge1);
-        expect(failedChallengesMock.rememberFailedChallenge).to.be.calledOnceWith(challenge1.challengeId, retryTimeout);
+        expect(failedChallengesMock.rememberFailedResolution).to.be.calledOnceWith(challenge1.challengeId, retryTimeout);
       });
 
       it('returns true if everything goes ok', async () => {
@@ -258,14 +258,14 @@ describe('Atlas Challenge Resolver', () => {
 
       it('clears outdated failed challenges', async () => {
         await atlasWorker.periodicWork();
-        expect(failedChallengesMock.clearOutdatedChallenges).to.be.calledOnce;
+        expect(failedChallengesMock.clearOutdatedResolutions).to.be.calledOnce;
       });
 
       it('starts and ends AtlasChallengeResolution task', async () => {
         await atlasWorker.periodicWork();
         expect(workerTaskTrackingRepositoryMock.tryToBeginWork).to.be.calledBefore(challengesRepositoryMock.ongoingChallenges);
         expect(workerTaskTrackingRepositoryMock.tryToBeginWork).to.be.calledOnceWith('AtlasResolutions');
-        expect(workerTaskTrackingRepositoryMock.finishWork).to.be.calledAfter(failedChallengesMock.clearOutdatedChallenges);
+        expect(workerTaskTrackingRepositoryMock.finishWork).to.be.calledAfter(failedChallengesMock.clearOutdatedResolutions);
         expect(workerTaskTrackingRepositoryMock.finishWork).to.be.calledOnceWith(exampleWorkId);
       });
 

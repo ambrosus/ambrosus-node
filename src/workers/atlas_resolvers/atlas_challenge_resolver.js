@@ -56,7 +56,7 @@ export default class AtlasChallengeResolver extends AtlasResolver {
 
   async tryWithChallenge(challenge) {
     try {
-      if (this.failedChallengesCache.didChallengeFailRecently(challenge.challengeId)) {
+      if (this.failedChallengesCache.didResolutionFailRecently(challenge.challengeId)) {
         return false;
       }
       if (!await this.isTurnToResolve(challenge)) {
@@ -83,7 +83,7 @@ export default class AtlasChallengeResolver extends AtlasResolver {
       this.atlasChallengeMetrics.inc({status: atlasResolutionStatus.resolved});
       return true;
     } catch (err) {
-      this.failedChallengesCache.rememberFailedChallenge(challenge.challengeId, this.strategy.retryTimeout);
+      this.failedChallengesCache.rememberFailedResolution(challenge.challengeId, this.strategy.retryTimeout);
       await this.addLog(`Failed to resolve challenge: ${err.message || err}`, challenge, err.stack);
       this.atlasChallengeMetrics.inc({status: atlasResolutionStatus.failed});
       return false;
@@ -114,7 +114,7 @@ export default class AtlasChallengeResolver extends AtlasResolver {
 
   async resolveOne() {
     const challenges = await this.challengesRepository.ongoingChallenges();
-    const recentlyFailedChallenges = challenges.filter(({challengeId}) => challengeId in this.failedChallengesCache.failedChallengesEndTime);
+    const recentlyFailedChallenges = challenges.filter(({challengeId}) => challengeId in this.failedChallengesCache.failedResolutionsEndTime);
     await this.addLog(`Challenges preselected for resolution: ${challenges.length} (out of which ${recentlyFailedChallenges.length} have failed recently)`);
     for (const challenge of challenges) {
       const successful = await this.tryWithChallenge(challenge);
@@ -122,16 +122,16 @@ export default class AtlasChallengeResolver extends AtlasResolver {
         break;
       }
     }
-    this.failedChallengesCache.clearOutdatedChallenges();
+    this.failedChallengesCache.clearOutdatedResolutions();
   }
 
   async resolveAll() {
     const challenges = await this.challengesRepository.ongoingChallenges();
-    const recentlyFailedChallenges = challenges.filter(({challengeId}) => challengeId in this.failedChallengesCache.failedChallengesEndTime);
+    const recentlyFailedChallenges = challenges.filter(({challengeId}) => challengeId in this.failedChallengesCache.failedResolutionsEndTime);
     await this.addLog(`Challenges preselected for resolution: ${challenges.length} (out of which ${recentlyFailedChallenges.length} have failed recently)`);
     for (const challenge of challenges) {
       await this.tryWithChallenge(challenge);
     }
-    this.failedChallengesCache.clearOutdatedChallenges();
+    this.failedChallengesCache.clearOutdatedResolutions();
   }
 }

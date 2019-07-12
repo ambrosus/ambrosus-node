@@ -41,7 +41,7 @@ import RolesRepository, {Role} from './services/roles_repository';
 import UploadRepository from './services/upload_repository';
 import ChallengesRepository from './services/challenges_repository';
 import Migrator from './migrations/Migrator';
-import FailedChallengesCache from './services/failed_challenges_cache';
+import FailedResolutionsCache from './services/failed_resolutions_cache';
 import ActiveChallengesCache from './services/active_challenges_cache';
 import WorkerTaskTrackingRepository from './services/worker_task_tracking_repository';
 import * as Sentry from '@sentry/node';
@@ -116,7 +116,7 @@ class Builder {
     this.workerTaskTrackingRepository = new WorkerTaskTrackingRepository(this.db);
     this.findEventQueryObjectFactory = new FindEventQueryObjectFactory(this.db);
     this.findAssetQueryObjectFactory = new FindAssetQueryObjectFactory(this.db);
-    this.failedChallengesCache = new FailedChallengesCache();
+    this.failedChallengesCache = new FailedResolutionsCache();
     this.httpsClient = new HttpsClient();
     this.bundleDownloader = new BundleDownloader(this.httpsClient);
     this.accountRepository = new AccountRepository(this.db);
