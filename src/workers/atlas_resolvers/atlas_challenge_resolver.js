@@ -113,7 +113,7 @@ export default class AtlasChallengeResolver extends AtlasResolver {
   }
 
   async resolveOne() {
-    const challenges = await this.challengesRepository.ongoingChallenges();
+    const challenges = await this.challengesRepository.ongoingResolutions();
     const recentlyFailedChallenges = challenges.filter(({challengeId}) => challengeId in this.failedChallengesCache.failedResolutionsEndTime);
     await this.addLog(`Challenges preselected for resolution: ${challenges.length} (out of which ${recentlyFailedChallenges.length} have failed recently)`);
     for (const challenge of challenges) {
@@ -126,7 +126,7 @@ export default class AtlasChallengeResolver extends AtlasResolver {
   }
 
   async resolveAll() {
-    const challenges = await this.challengesRepository.ongoingChallenges();
+    const challenges = await this.challengesRepository.ongoingResolutionss();
     const recentlyFailedChallenges = challenges.filter(({challengeId}) => challengeId in this.failedChallengesCache.failedResolutionsEndTime);
     await this.addLog(`Challenges preselected for resolution: ${challenges.length} (out of which ${recentlyFailedChallenges.length} have failed recently)`);
     for (const challenge of challenges) {

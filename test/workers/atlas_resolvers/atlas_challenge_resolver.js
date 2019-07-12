@@ -59,7 +59,7 @@ describe('Atlas Challenge Resolver', () => {
     };
     const {client: mongoClient} = await connectToMongo(config);
     challengesRepositoryMock = {
-      ongoingChallenges: sinon.stub(),
+      ongoingResolutions: sinon.stub(),
       resolveChallenge: sinon.stub(),
       getChallengeExpirationTimeInMs: sinon.stub().resolves(expirationTime)
     };
@@ -234,7 +234,7 @@ describe('Atlas Challenge Resolver', () => {
       let tryWithChallengeMock;
 
       beforeEach(() => {
-        challengesRepositoryMock.ongoingChallenges.resolves(challenges);
+        challengesRepositoryMock.ongoingResolutions.resolves(challenges);
         tryWithChallengeMock = sinon.stub(challengeResolver, 'tryWithChallenge');
       });
 
@@ -244,7 +244,7 @@ describe('Atlas Challenge Resolver', () => {
 
       it('gets ongoing challenges', async () => {
         await atlasWorker.periodicWork();
-        expect(challengesRepositoryMock.ongoingChallenges).to.be.calledOnce;
+        expect(challengesRepositoryMock.ongoingResolutions).to.be.calledOnce;
       });
 
       it('tries to resolve challenges in order until it succeeds', async () => {
@@ -263,14 +263,14 @@ describe('Atlas Challenge Resolver', () => {
 
       it('starts and ends AtlasChallengeResolution task', async () => {
         await atlasWorker.periodicWork();
-        expect(workerTaskTrackingRepositoryMock.tryToBeginWork).to.be.calledBefore(challengesRepositoryMock.ongoingChallenges);
+        expect(workerTaskTrackingRepositoryMock.tryToBeginWork).to.be.calledBefore(challengesRepositoryMock.ongoingResolutions);
         expect(workerTaskTrackingRepositoryMock.tryToBeginWork).to.be.calledOnceWith('AtlasResolutions');
         expect(workerTaskTrackingRepositoryMock.finishWork).to.be.calledAfter(failedChallengesMock.clearOutdatedResolutions);
         expect(workerTaskTrackingRepositoryMock.finishWork).to.be.calledOnceWith(exampleWorkId);
       });
 
       it('should end task even if an error was thrown', async () => {
-        challengesRepositoryMock.ongoingChallenges.rejects();
+        challengesRepositoryMock.ongoingResolutions.rejects();
         await expect(atlasWorker.periodicWork()).to.be.rejected;
         expect(workerTaskTrackingRepositoryMock.finishWork).to.be.calledOnceWith(exampleWorkId);
       });
@@ -283,7 +283,7 @@ describe('Atlas Challenge Resolver', () => {
       isTurnToResolveMock = sinon.stub(challengeResolver, 'isTurnToResolve');
       isTurnToResolveMock.resolves();
       isTurnToResolveMock.returns(true);
-      challengesRepositoryMock.ongoingChallenges.resolves([
+      challengesRepositoryMock.ongoingResolutions.resolves([
         {sheltererId: 5, bundleId: 6, challengeId: 2, bundleNumber: 3}
       ]);
       const metrics = await readMetrics(port);
