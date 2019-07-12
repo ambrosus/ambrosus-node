@@ -139,8 +139,8 @@ describe('Challenges repository', () => {
         challengeDuration: sinon.stub().resolves(challengeDuration)
       };
       activeChallengesCacheMock = {
-        applyIncomingChallengeEvents: sinon.stub(),
-        activeChallenges: ['activeChallenges']
+        applyIncomingResolutionEvents: sinon.stub(),
+        activeResolutions: ['activeResolutions']
       };
       blockchainStateWrapperMock = {
         getCurrentBlockNumber: sinon.stub()
@@ -165,7 +165,7 @@ describe('Challenges repository', () => {
       expect(challengesEventEmitterWrapper.challenges).to.be.calledWith(fromBlock, latestBlock);
       expect(challengesEventEmitterWrapper.resolvedChallenges).to.be.calledWith(fromBlock, latestBlock);
       expect(challengesEventEmitterWrapper.timedOutChallenges).to.be.calledWith(fromBlock, latestBlock);
-      expect(result).to.deep.equal(activeChallengesCacheMock.activeChallenges);
+      expect(result).to.deep.equal(activeChallengesCacheMock.activeResolutions);
     });
 
     it('on second call: gets challenges since previously resolved block', async () => {
@@ -188,7 +188,7 @@ describe('Challenges repository', () => {
 
     it('adds new challenges to cache, decreases active count on resolved and removes timed out', async () => {
       await challengesRepository.ongoingChallenges();
-      expect(activeChallengesCacheMock.applyIncomingChallengeEvents).to.be.calledOnceWithExactly(
+      expect(activeChallengesCacheMock.applyIncomingResolutionEvents).to.be.calledOnceWithExactly(
         challengesRepository.prepareChallengeEvent(events, ['challengeId', 'sheltererId', 'bundleId', 'count']),
         challengesRepository.prepareChallengeEvent(resolvedEvents, ['challengeId']),
         challengesRepository.prepareChallengeEvent(timedOutEvents, ['challengeId'])

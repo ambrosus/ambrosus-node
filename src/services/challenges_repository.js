@@ -37,7 +37,7 @@ export default class ChallengesRepository {
       await this.updateActiveChallengesCache(fromBlock, currentBlock);
       this.updateBlockInfo(currentBlock);
     }
-    return this.activeChallengesCache.activeChallenges;
+    return this.activeChallengesCache.activeResolutions;
   }
 
   async updateActiveChallengesCache(fromBlock, currentBlock) {
@@ -50,7 +50,7 @@ export default class ChallengesRepository {
     const timedOutChallenges = await this.collectChallengeEvents(fromBlock, currentBlock,
       (start, end) => this.challengesEventEmitterWrapper.timedOutChallenges(start, end),
       ['challengeId']);
-    this.activeChallengesCache.applyIncomingChallengeEvents(startedChallenges, resolvedChallenges, timedOutChallenges);
+    this.activeChallengesCache.applyIncomingResolutionEvents(startedChallenges, resolvedChallenges, timedOutChallenges);
   }
 
   async collectChallengeEvents(fromBlock, currentBlock, fetchEvents, outputFields) {

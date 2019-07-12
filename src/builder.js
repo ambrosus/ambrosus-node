@@ -42,7 +42,7 @@ import UploadRepository from './services/upload_repository';
 import ChallengesRepository from './services/challenges_repository';
 import Migrator from './migrations/Migrator';
 import FailedResolutionsCache from './services/failed_resolutions_cache';
-import ActiveChallengesCache from './services/active_challenges_cache';
+import ActiveResolutionsCache from './services/active_resolutions_cache';
 import WorkerTaskTrackingRepository from './services/worker_task_tracking_repository';
 import * as Sentry from '@sentry/node';
 
@@ -98,7 +98,7 @@ class Builder {
       this.configWrapper,
       Sentry
     );
-    this.activeChallengesCache = new ActiveChallengesCache();
+    this.activeChallengesCache = new ActiveResolutionsCache('challengeId');
     this.challengesRepository = new ChallengesRepository(
       this.challengesWrapper,
       this.challengesEventEmitterWrapper,
