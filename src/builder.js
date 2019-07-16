@@ -20,7 +20,9 @@ import {
   ShelteringWrapper,
   UploadActions,
   UploadsWrapper,
-  BlockchainStateWrapper
+  BlockchainStateWrapper,
+  ShelteringTransfersWrapper,
+  TransfersEventEmitterWrapper
 } from 'ambrosus-node-contracts';
 import DataModelEngine from './services/data_model_engine';
 import EntityBuilder from './services/entity_builder';
@@ -40,6 +42,7 @@ import {createWeb3, getDefaultAddress} from './utils/web3_tools';
 import RolesRepository, {Role} from './services/roles_repository';
 import UploadRepository from './services/upload_repository';
 import ChallengesRepository from './services/challenges_repository';
+import TransfersRepository from './services/transfers_repository';
 import Migrator from './migrations/Migrator';
 import FailedResolutionsCache from './services/failed_resolutions_cache';
 import ActiveResolutionsCache from './services/active_resolutions_cache';
@@ -83,6 +86,8 @@ class Builder {
     this.feesWrapper = new FeesWrapper(this.headWrapper, this.web3, defaultAddress);
     this.challengesWrapper = new ChallengeWrapper(this.headWrapper, this.web3, defaultAddress);
     this.challengesEventEmitterWrapper = new ChallengesEventEmitterWrapper(this.headWrapper, this.web3, defaultAddress);
+    this.shelteringTransfersWrapper = new ShelteringTransfersWrapper(this.headWrapper, this.web3, defaultAddress);
+    this.transfersEventEmitterWrapper = new TransfersEventEmitterWrapper(this.headWrapper, this.web3, defaultAddress);
     this.shelteringWrapper = new ShelteringWrapper(this.headWrapper, this.web3, defaultAddress);
     this.kycWhitelistWrapper = new KycWhitelistWrapper(this.headWrapper, this.web3, defaultAddress);
     this.blockChainStateWrapper = new BlockchainStateWrapper(this.web3);
@@ -105,6 +110,14 @@ class Builder {
       this.configWrapper,
       this.blockChainStateWrapper,
       this.activeChallengesCache
+    );
+    this.activeTransfersCache = new ActiveResolutionsCache('transferId');
+    this.transfersRepository = new TransfersRepository(
+      this.shelteringTransfersWrapper,
+      this.transfersEventEmitterWrapper,
+      this.configWrapper,
+      this.blockChainStateWrapper,
+      this.activeTransfersCache
     );
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
     const {maximumEntityTimestampOvertake, supportDeprecatedBundleVersions} = this.config;
