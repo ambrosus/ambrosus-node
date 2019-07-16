@@ -154,7 +154,7 @@ describe('Transfers repository', () => {
     it('on first call: gets transfers from earliest possible block and caches them', async () => {
       const result = await transfersRepository.ongoingResolutions();
       expect(configWrapperMock.challengeDuration).to.be.calledOnce;
-      expect(transferWrapperMock.earliestMeaningfulBlock).to.be.calledWith(challengeDuration / 3);
+      expect(transferWrapperMock.earliestMeaningfulBlock).to.be.calledWith(challengeDuration);
       expect(transfersEventEmitterWrapper.transfers).to.be.calledWith(fromBlock, latestBlock);
       expect(transfersEventEmitterWrapper.resolvedTransfers).to.be.calledWith(fromBlock, latestBlock);
       expect(transfersEventEmitterWrapper.cancelledTransfers).to.be.calledWith(fromBlock, latestBlock);

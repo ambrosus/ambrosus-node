@@ -37,7 +37,7 @@ export default class TransfersRepository extends ResolutionsRepository {
       return this.lastSavedBlock + 1;
     }
     const transferDuration = await this.configWrapper.challengeDuration();
-    return this.shelteringTransfersWrapper.earliestMeaningfulBlock(transferDuration / 3);
+    return this.shelteringTransfersWrapper.earliestMeaningfulBlock(transferDuration);
   }
 
   async resolveTransfer(transferId) {
