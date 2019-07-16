@@ -29,7 +29,8 @@ export default class AtlasWorker extends PeriodicWorker {
     serverPort,
     requiredFreeDiskSpace,
     workerInterval,
-    resolvers
+    resolvers,
+    resolveByOne
   ) {
     super(workerInterval, logger);
     this.web3 = web3;
@@ -39,6 +40,7 @@ export default class AtlasWorker extends PeriodicWorker {
     this.mongoClient = mongoClient;
     this.requiredFreeDiskSpace = requiredFreeDiskSpace;
     this.resolvers = resolvers;
+    this.resolveByOne = resolveByOne;
     this.isOutOfFunds = false;
     this.isOutOfSpace = false;
     this.expressApp = express();
@@ -67,8 +69,14 @@ export default class AtlasWorker extends PeriodicWorker {
       if (!await this.isEnoughAvailableDiskSpace()) {
         return;
       }
-      for (const resolver of this.resolvers) {
-        await resolver.resolveOne();
+      if (this.resolveByOne) {
+        for (const resolver of this.resolvers) {
+          await resolver.resolveOne();
+        }
+      } else {
+        for (const resolver of this.resolvers) {
+          await resolver.resolveAll();
+        }
       }
     } finally {
       await this.workerTaskTrackingRepository.finishWork(workId);

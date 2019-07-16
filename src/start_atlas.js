@@ -46,7 +46,8 @@ async function start(logger) {
     config.serverPort,
     config.requiredFreeDiskSpace,
     config.atlasWorkerInterval,
-    resolvers
+    resolvers,
+    config.atlasProcessActiveResolviesByOne
   );
   const cleanupWorker = new CleanupWorker(
     builder.dataModelEngine,
