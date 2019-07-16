@@ -27,6 +27,7 @@ export interface Config {
 
   headContractAddress: string | undefined;
   challengeResolutionStrategy: string;
+  transferResolutionStrategy: string;
   uploadStrategy: string;
 
   maximumEntityTimestampOvertake: number;
@@ -79,6 +80,7 @@ const config: Readonly<Config> = Object.freeze({
 
   headContractAddress: process.env.HEAD_CONTRACT_ADDRESS,
   challengeResolutionStrategy: process.env.CHALLENGE_RESOLUTION_STRATEGY || 'resolve_all_strategy',
+  transferResolutionStrategy: process.env.TRANSFER_RESOLUTION_STRATEGY || 'resolve_all_strategy',
   uploadStrategy: process.env.UPLOAD_STRATEGY || 'regular_interval_upload_strategy',
 
   maximumEntityTimestampOvertake: Number(process.env.MAXIMUM_ENTITY_TIMESTAMP_OVERTAKE) || 86400,
