@@ -122,7 +122,8 @@ describe('Atlas worker - integration', () => {
       config.serverPort,
       config.requiredFreeDiskSpace,
       config.atlasWorkerInterval,
-      resolvers
+      resolvers,
+      true
     );
     if (!nock.isActive()) {
       nock.activate();

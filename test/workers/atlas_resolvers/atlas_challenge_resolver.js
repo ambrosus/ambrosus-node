@@ -115,7 +115,8 @@ describe('Atlas Challenge Resolver', () => {
       config.serverPort,
       requiredFreeDiskSpace,
       workerInterval,
-      resolvers
+      resolvers,
+      true
     );
 
     atlasWorker.beforeWorkLoop();

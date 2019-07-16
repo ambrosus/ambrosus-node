@@ -88,7 +88,8 @@ describe('Atlas Worker', () => {
       config.serverPort,
       requiredFreeDiskSpace,
       workerInterval,
-      resolvers
+      resolvers,
+      true
     );
 
     atlasWorker.beforeWorkLoop();
