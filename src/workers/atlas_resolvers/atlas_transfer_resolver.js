@@ -126,7 +126,7 @@ export default class AtlaTransferResolver extends AtlasResolver {
   }
 
   async resolveAll() {
-    const transfers = await this.transfersRepository.ongoingResolutionss();
+    const transfers = await this.transfersRepository.ongoingResolutions();
     const recentlyFailedTransfers = transfers.filter(({transferId}) => transferId in this.failedTransfersCache.failedResolutionsEndTime);
     await this.addLog(`Transfers preselected for resolution: ${transfers.length} (out of which ${recentlyFailedTransfers.length} have failed recently)`);
     for (const transfer of transfers) {

@@ -44,7 +44,8 @@ describe('Atlas Worker', () => {
   const createMockResolver = () => {
     mockResolver = {
       addMetrics: sinon.stub(),
-      resolveOne: sinon.stub()
+      resolveOne: sinon.stub(),
+      resolveAll: sinon.stub()
     };
     mockResolver.__proto__ = AtlasResolver.prototype;
   };
@@ -108,9 +109,16 @@ describe('Atlas Worker', () => {
     expect(mockResolver.addMetrics).to.be.calledOnce;
   });
 
-  it('resolver was called', async () => {
+  it('resolver resolveOne was called', async () => {
     await atlasWorker.periodicWork();
     expect(mockResolver.resolveOne).to.be.calledOnce;
+  });
+
+  it('resolver resolveAll was called', async () => {
+    atlasWorker.resolveByOne = false;
+    await atlasWorker.periodicWork();
+    expect(mockResolver.resolveAll).to.be.calledOnce;
+    atlasWorker.resolveByOne = true;
   });
 
   describe('isEnoughFundsToPayForGas', () => {
