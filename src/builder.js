@@ -130,6 +130,7 @@ class Builder {
     this.findEventQueryObjectFactory = new FindEventQueryObjectFactory(this.db);
     this.findAssetQueryObjectFactory = new FindAssetQueryObjectFactory(this.db);
     this.failedChallengesCache = new FailedResolutionsCache();
+    this.failedTransfersCache = new FailedResolutionsCache();
     this.httpsClient = new HttpsClient();
     this.bundleDownloader = new BundleDownloader(this.httpsClient);
     this.accountRepository = new AccountRepository(this.db);
