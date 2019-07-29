@@ -45,7 +45,7 @@ describe('Atlas Challenge Resolver', () => {
   let challengeStrategyMock;
   let loggerMock;
   let shouldFetchBundleStub;
-  let shouldResolveChallengeStub;
+  let shouldresolveStub;
   let port;
 
   beforeEach(async () => {
@@ -60,8 +60,8 @@ describe('Atlas Challenge Resolver', () => {
     const {client: mongoClient} = await connectToMongo(config);
     challengesRepositoryMock = {
       ongoingResolutions: sinon.stub(),
-      resolveChallenge: sinon.stub(),
-      getChallengeExpirationTimeInMs: sinon.stub().resolves(expirationTime)
+      resolve: sinon.stub(),
+      getExpirationTimeInMs: sinon.stub().resolves(expirationTime)
     };
     failedChallengesMock = {
       rememberFailedResolution: sinon.spy(),
@@ -84,7 +84,7 @@ describe('Atlas Challenge Resolver', () => {
     challengeStrategyMock = new AtlasParticipationStrategy();
     sinon.stub(challengeStrategyMock, 'retryTimeout').get(() => retryTimeout);
     shouldFetchBundleStub = sinon.stub(challengeStrategyMock, 'shouldFetchBundle').resolves(true);
-    shouldResolveChallengeStub = sinon.stub(challengeStrategyMock, 'shouldResolve').resolves(true);
+    shouldresolveStub = sinon.stub(challengeStrategyMock, 'shouldResolve').resolves(true);
     sinon.stub(challengeStrategyMock, 'afterResolution');
     loggerMock = {
       info: sinon.spy(),
@@ -142,13 +142,13 @@ describe('Atlas Challenge Resolver', () => {
 
     it('tryToDownload downloads the bundle', async () => {
       expect(await challengeResolver.tryToDownload(challenge1)).to.equal(fetchedBundleMetadata);
-      expect(challengesRepositoryMock.getChallengeExpirationTimeInMs).to.be.calledOnceWith(challengeId);
+      expect(challengesRepositoryMock.getExpirationTimeInMs).to.be.calledOnceWith(challenge1);
       expect(dataModelEngineMock.downloadBundle).to.be.calledWith(bundleId, sheltererId, expirationTime);
     });
 
     it('tryToResolve resolves a challenge and sets expiration date', async () => {
-      await challengeResolver.tryToResolve(fetchedBundleMetadata, challenge1);
-      expect(challengesRepositoryMock.resolveChallenge).to.be.calledWith(challengeId);
+      await challengeResolver.tryToResolve(fetchedBundleMetadata.bundleId, challenge1);
+      expect(challengesRepositoryMock.resolve).to.be.calledWith(challenge1);
       expect(dataModelEngineMock.markBundleAsSheltered).to.be.calledWith(fetchedBundleMetadata.bundleId);
     });
 
@@ -165,7 +165,7 @@ describe('Atlas Challenge Resolver', () => {
 
         shouldFetchBundleStub.resolves(true);
         tryToDownloadMock.resolves(bundleMetadata);
-        shouldResolveChallengeStub.returns(true);
+        shouldresolveStub.returns(true);
         isTurnToResolveMock.returns(true);
         tryToResolveMock.resolves();
       });
@@ -178,69 +178,69 @@ describe('Atlas Challenge Resolver', () => {
 
       it('returns false if the challenge was previously marked as failing', async () => {
         failedChallengesMock.didResolutionFailRecently.returns(true);
-        expect(await challengeResolver.tryWithChallenge(challenge1)).to.equal(false);
+        expect(await challengeResolver.tryWith(challenge1)).to.equal(false);
         expect(failedChallengesMock.didResolutionFailRecently).to.be.calledOnceWith(challenge1.challengeId);
         expect(tryToDownloadMock).to.not.have.been.called;
       });
 
       it('returns false if the strategy disqualifies the challenge', async () => {
         shouldFetchBundleStub.resolves(false);
-        expect(await challengeResolver.tryWithChallenge(challenge1)).to.equal(false);
+        expect(await challengeResolver.tryWith(challenge1)).to.equal(false);
         expect(tryToDownloadMock).to.not.have.been.called;
         expect(failedChallengesMock.rememberFailedResolution).to.not.have.been.called;
       });
 
       it('returns false and marks challenge as failed if an attempt to download the bundle fails', async () => {
         tryToDownloadMock.rejects();
-        expect(await challengeResolver.tryWithChallenge(challenge1)).to.equal(false);
+        expect(await challengeResolver.tryWith(challenge1)).to.equal(false);
         expect(tryToDownloadMock).to.have.been.calledWith(challenge1);
         expect(failedChallengesMock.rememberFailedResolution).to.be.calledOnceWith(challenge1.challengeId, retryTimeout);
       });
 
       it('returns false if the strategy disqualifies the challenge after downloaded the bundle', async () => {
-        shouldResolveChallengeStub.returns(false);
-        expect(await challengeResolver.tryWithChallenge(challenge1)).to.equal(false);
-        expect(shouldResolveChallengeStub).to.have.been.calledWith('bundleMetadata');
+        shouldresolveStub.returns(false);
+        expect(await challengeResolver.tryWith(challenge1)).to.equal(false);
+        expect(shouldresolveStub).to.have.been.calledWith('bundleMetadata');
         expect(tryToResolveMock).to.not.have.been.called;
         expect(failedChallengesMock.rememberFailedResolution).to.not.have.been.called;
       });
 
       it('returns false if it is not the turn of the node to resolve the challenge', async () => {
         isTurnToResolveMock.returns(false);
-        expect(await challengeResolver.tryWithChallenge(challenge1)).to.equal(false);
+        expect(await challengeResolver.tryWith(challenge1)).to.equal(false);
         expect(tryToResolveMock).to.not.have.been.called;
         expect(failedChallengesMock.rememberFailedResolution).to.not.have.been.called;
       });
 
       it('returns false and marks challenge as failed if the resolution attempt fails', async () => {
         tryToResolveMock.rejects();
-        expect(await challengeResolver.tryWithChallenge(challenge1)).to.equal(false);
-        expect(tryToResolveMock).to.have.been.calledWith(bundleMetadata, challenge1);
+        expect(await challengeResolver.tryWith(challenge1)).to.equal(false);
+        expect(tryToResolveMock).to.have.been.calledWith(bundleMetadata.bundleId, challenge1);
         expect(failedChallengesMock.rememberFailedResolution).to.be.calledOnceWith(challenge1.challengeId, retryTimeout);
       });
 
       it('returns true if everything goes ok', async () => {
-        expect(await challengeResolver.tryWithChallenge(challenge1)).to.equal(true);
+        expect(await challengeResolver.tryWith(challenge1)).to.equal(true);
         expect(challengeStrategyMock.afterResolution).to.have.been.calledWith(challenge1);
       });
 
       it('does not download bundle if not turn to resolve', async () => {
         isTurnToResolveMock.returns(false);
-        await challengeResolver.tryWithChallenge(challenge1);
+        await challengeResolver.tryWith(challenge1);
         expect(tryToDownloadMock).to.not.have.been.called;
       });
     });
 
     describe('periodicWork', () => {
-      let tryWithChallengeMock;
+      let tryWithMock;
 
       beforeEach(() => {
         challengesRepositoryMock.ongoingResolutions.resolves(challenges);
-        tryWithChallengeMock = sinon.stub(challengeResolver, 'tryWithChallenge');
+        tryWithMock = sinon.stub(challengeResolver, 'tryWith');
       });
 
       afterEach(() => {
-        tryWithChallengeMock.restore();
+        tryWithMock.restore();
       });
 
       it('gets ongoing challenges', async () => {
@@ -249,12 +249,12 @@ describe('Atlas Challenge Resolver', () => {
       });
 
       it('tries to resolve challenges in order until it succeeds', async () => {
-        tryWithChallengeMock.withArgs(challenge1).resolves(false);
-        tryWithChallengeMock.withArgs(challenge2).resolves(true);
+        tryWithMock.withArgs(challenge1).resolves(false);
+        tryWithMock.withArgs(challenge2).resolves(true);
         await atlasWorker.periodicWork();
-        expect(tryWithChallengeMock).to.have.been.calledWith(challenge1);
-        expect(tryWithChallengeMock).to.have.been.calledWith(challenge2);
-        expect(tryWithChallengeMock).to.not.have.been.calledWith(challenge3);
+        expect(tryWithMock).to.have.been.calledWith(challenge1);
+        expect(tryWithMock).to.have.been.calledWith(challenge2);
+        expect(tryWithMock).to.not.have.been.calledWith(challenge3);
       });
 
       it('clears outdated failed challenges', async () => {

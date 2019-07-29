@@ -45,7 +45,7 @@ describe('Atlas Transfer Resolver', () => {
   let transferStrategyMock;
   let loggerMock;
   let shouldFetchBundleStub;
-  let shouldResolveTransferStub;
+  let shouldresolveStub;
   let port;
 
   beforeEach(async () => {
@@ -60,8 +60,8 @@ describe('Atlas Transfer Resolver', () => {
     const {client: mongoClient} = await connectToMongo(config);
     transfersRepositoryMock = {
       ongoingResolutions: sinon.stub(),
-      resolveTransfer: sinon.stub(),
-      getTransferExpirationTimeInMs: sinon.stub().resolves(expirationTime)
+      resolve: sinon.stub(),
+      getExpirationTimeInMs: sinon.stub().resolves(expirationTime)
     };
     failedTransfersMock = {
       rememberFailedResolution: sinon.spy(),
@@ -84,7 +84,7 @@ describe('Atlas Transfer Resolver', () => {
     transferStrategyMock = new AtlasParticipationStrategy();
     sinon.stub(transferStrategyMock, 'retryTimeout').get(() => retryTimeout);
     shouldFetchBundleStub = sinon.stub(transferStrategyMock, 'shouldFetchBundle').resolves(true);
-    shouldResolveTransferStub = sinon.stub(transferStrategyMock, 'shouldResolve').resolves(true);
+    shouldresolveStub = sinon.stub(transferStrategyMock, 'shouldResolve').resolves(true);
     sinon.stub(transferStrategyMock, 'afterResolution');
     loggerMock = {
       info: sinon.spy(),
@@ -142,13 +142,13 @@ describe('Atlas Transfer Resolver', () => {
 
     it('tryToDownload downloads the bundle', async () => {
       expect(await transferResolver.tryToDownload(transfer1)).to.equal(fetchedBundleMetadata);
-      expect(transfersRepositoryMock.getTransferExpirationTimeInMs).to.be.calledOnceWith(transferId);
+      expect(transfersRepositoryMock.getExpirationTimeInMs).to.be.calledOnceWith(transfer1);
       expect(dataModelEngineMock.downloadBundle).to.be.calledWith(bundleId, donorId, expirationTime);
     });
 
     it('tryToResolve resolves a transfer and sets expiration date', async () => {
-      await transferResolver.tryToResolve(fetchedBundleMetadata, transfer1);
-      expect(transfersRepositoryMock.resolveTransfer).to.be.calledWith(transferId);
+      await transferResolver.tryToResolve(fetchedBundleMetadata.bundleId, transfer1);
+      expect(transfersRepositoryMock.resolve).to.be.calledWith(transfer1);
       expect(dataModelEngineMock.markBundleAsSheltered).to.be.calledWith(fetchedBundleMetadata.bundleId);
     });
 
@@ -165,7 +165,7 @@ describe('Atlas Transfer Resolver', () => {
 
         shouldFetchBundleStub.resolves(true);
         tryToDownloadMock.resolves(bundleMetadata);
-        shouldResolveTransferStub.returns(true);
+        shouldresolveStub.returns(true);
         isTurnToResolveMock.returns(true);
         tryToResolveMock.resolves();
       });
@@ -178,69 +178,69 @@ describe('Atlas Transfer Resolver', () => {
 
       it('returns false if the transfer was previously marked as failing', async () => {
         failedTransfersMock.didResolutionFailRecently.returns(true);
-        expect(await transferResolver.tryWithTransfer(transfer1)).to.equal(false);
+        expect(await transferResolver.tryWith(transfer1)).to.equal(false);
         expect(failedTransfersMock.didResolutionFailRecently).to.be.calledOnceWith(transfer1.transferId);
         expect(tryToDownloadMock).to.not.have.been.called;
       });
 
       it('returns false if the strategy disqualifies the transfer', async () => {
         shouldFetchBundleStub.resolves(false);
-        expect(await transferResolver.tryWithTransfer(transfer1)).to.equal(false);
+        expect(await transferResolver.tryWith(transfer1)).to.equal(false);
         expect(tryToDownloadMock).to.not.have.been.called;
         expect(failedTransfersMock.rememberFailedResolution).to.not.have.been.called;
       });
 
       it('returns false and marks transfer as failed if an attempt to download the bundle fails', async () => {
         tryToDownloadMock.rejects();
-        expect(await transferResolver.tryWithTransfer(transfer1)).to.equal(false);
+        expect(await transferResolver.tryWith(transfer1)).to.equal(false);
         expect(tryToDownloadMock).to.have.been.calledWith(transfer1);
         expect(failedTransfersMock.rememberFailedResolution).to.be.calledOnceWith(transfer1.transferId, retryTimeout);
       });
 
       it('returns false if the strategy disqualifies the transfer after downloaded the bundle', async () => {
-        shouldResolveTransferStub.returns(false);
-        expect(await transferResolver.tryWithTransfer(transfer1)).to.equal(false);
-        expect(shouldResolveTransferStub).to.have.been.calledWith('bundleMetadata');
+        shouldresolveStub.returns(false);
+        expect(await transferResolver.tryWith(transfer1)).to.equal(false);
+        expect(shouldresolveStub).to.have.been.calledWith('bundleMetadata');
         expect(tryToResolveMock).to.not.have.been.called;
         expect(failedTransfersMock.rememberFailedResolution).to.not.have.been.called;
       });
 
       it('returns false if it is not the turn of the node to resolve the transfer', async () => {
         isTurnToResolveMock.returns(false);
-        expect(await transferResolver.tryWithTransfer(transfer1)).to.equal(false);
+        expect(await transferResolver.tryWith(transfer1)).to.equal(false);
         expect(tryToResolveMock).to.not.have.been.called;
         expect(failedTransfersMock.rememberFailedResolution).to.not.have.been.called;
       });
 
       it('returns false and marks transfer as failed if the resolution attempt fails', async () => {
         tryToResolveMock.rejects();
-        expect(await transferResolver.tryWithTransfer(transfer1)).to.equal(false);
-        expect(tryToResolveMock).to.have.been.calledWith(bundleMetadata, transfer1);
+        expect(await transferResolver.tryWith(transfer1)).to.equal(false);
+        expect(tryToResolveMock).to.have.been.calledWith(bundleMetadata.bundleId, transfer1);
         expect(failedTransfersMock.rememberFailedResolution).to.be.calledOnceWith(transfer1.transferId, retryTimeout);
       });
 
       it('returns true if everything goes ok', async () => {
-        expect(await transferResolver.tryWithTransfer(transfer1)).to.equal(true);
+        expect(await transferResolver.tryWith(transfer1)).to.equal(true);
         expect(transferStrategyMock.afterResolution).to.have.been.calledWith(transfer1);
       });
 
       it('does not download bundle if not turn to resolve', async () => {
         isTurnToResolveMock.returns(false);
-        await transferResolver.tryWithTransfer(transfer1);
+        await transferResolver.tryWith(transfer1);
         expect(tryToDownloadMock).to.not.have.been.called;
       });
     });
 
     describe('periodicWork', () => {
-      let tryWithTransferMock;
+      let tryWithMock;
 
       beforeEach(() => {
         transfersRepositoryMock.ongoingResolutions.resolves(transfers);
-        tryWithTransferMock = sinon.stub(transferResolver, 'tryWithTransfer');
+        tryWithMock = sinon.stub(transferResolver, 'tryWith');
       });
 
       afterEach(() => {
-        tryWithTransferMock.restore();
+        tryWithMock.restore();
       });
 
       it('gets ongoing transfers', async () => {
@@ -249,12 +249,12 @@ describe('Atlas Transfer Resolver', () => {
       });
 
       it('tries to resolve transfers in order until it succeeds', async () => {
-        tryWithTransferMock.withArgs(transfer1).resolves(false);
-        tryWithTransferMock.withArgs(transfer2).resolves(true);
+        tryWithMock.withArgs(transfer1).resolves(false);
+        tryWithMock.withArgs(transfer2).resolves(true);
         await atlasWorker.periodicWork();
-        expect(tryWithTransferMock).to.have.been.calledWith(transfer1);
-        expect(tryWithTransferMock).to.have.been.calledWith(transfer2);
-        expect(tryWithTransferMock).to.not.have.been.calledWith(transfer3);
+        expect(tryWithMock).to.have.been.calledWith(transfer1);
+        expect(tryWithMock).to.have.been.calledWith(transfer2);
+        expect(tryWithMock).to.not.have.been.calledWith(transfer3);
       });
 
       it('clears outdated failed transfers', async () => {
