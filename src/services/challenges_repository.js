@@ -40,20 +40,20 @@ export default class ChallengesRepository extends ResolutionsRepository {
     return this.challengesWrapper.earliestMeaningfulBlock(challengeDuration);
   }
 
-  async getChallengeExpirationTimeInMs(challengeId) {
-    const challengeCreationTime = await this.challengesWrapper.getChallengeCreationTime(challengeId);
+  async getExpirationTimeInMs(challenge) {
+    const challengeCreationTime = await this.challengesWrapper.getChallengeCreationTime(challenge.challengeId);
     const challengeDuration = await this.configWrapper.challengeDuration();
     return (Number(challengeCreationTime) + Number(challengeDuration)) * 1000;
   }
 
-  async resolveChallenge(challengeId) {
-    if (!await this.challengesWrapper.canResolve(challengeId)) {
+  async resolve(challenge) {
+    if (!await this.challengesWrapper.canResolve(challenge.challengeId)) {
       throw new Error('Unable to resolve challenge - boundary check fail');
     }
-    return this.challengesWrapper.resolve(challengeId);
+    return this.challengesWrapper.resolve(challenge.challengeId);
   }
 
-  async getChallengeDesignatedShelterer(challengeId) {
-    return await this.challengesWrapper.getChallengeDesignatedShelterer(challengeId);
+  async getDesignatedShelterer(challenge) {
+    return await this.challengesWrapper.getChallengeDesignatedShelterer(challenge.challengeId);
   }
 }

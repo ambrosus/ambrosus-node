@@ -38,7 +38,22 @@ export default class ResolutionsRepository {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async getExpirationTimeInMs(resolution) {
+    throw new Error('Should be implemented');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async resolve(resolution) {
+    throw new Error('Should be implemented');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updateActiveResolutionsCache(fromBlock, currentBlock) {
+    throw new Error('Should be implemented');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async getDesignatedShelterer(resolution) {
     throw new Error('Should be implemented');
   }
 

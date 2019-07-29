@@ -8,6 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import ResolutionsRepository from './resolutions_repository';
+import {constants} from 'ambrosus-node-contracts';
 
 const TRANSFER_EVENT_ONE_FETCH_LIMIT = 5000;
 
@@ -37,13 +38,23 @@ export default class TransfersRepository extends ResolutionsRepository {
       return this.lastSavedBlock + 1;
     }
     const transferDuration = await this.configWrapper.challengeDuration();
-    return this.shelteringTransfersWrapper.earliestMeaningfulBlock(transferDuration);
+    return Math.max(0, await this.blockchainStateWrapper.getCurrentBlockNumber() - Math.ceil(transferDuration / constants.MIN_BLOCK_TIME));
   }
 
-  async resolveTransfer(transferId) {
-    if (!await this.shelteringTransfersWrapper.canResolve(transferId)) {
+  async getExpirationTimeInMs(transfer) {
+    const transferCreationTime = await this.shelteringTransfersWrapper.getTransferCreationTime(transfer.transferId);
+    const transferDuration = await this.configWrapper.challengeDuration();
+    return (Number(transferCreationTime) + Number(transferDuration)) * 1000;
+  }
+
+  async resolve(transfer) {
+    if (!await this.shelteringTransfersWrapper.canResolve(transfer.transferId)) {
       throw new Error('Unable to resolve transfer - boundary check fail');
     }
-    return this.shelteringTransfersWrapper.resolve(transferId);
+    return this.shelteringTransfersWrapper.resolve(transfer.transferId);
+  }
+
+  async getDesignatedShelterer(transfer) {
+    return await this.shelteringTransfersWrapper.getTransferDesignatedShelterer(transfer.transferId);
   }
 }
