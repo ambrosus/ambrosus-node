@@ -240,7 +240,10 @@ describe('Challenges repository', () => {
   });
 
   describe('resolveChallenge', () => {
-    const challengeId = '0x123';
+    const sheltererId = 'shelterer';
+    const bundleId = 'bundle';
+    const challengeId = 'challenge';
+    const challenge1 = {sheltererId, bundleId, challengeId, bundleNumber: 1};
 
     beforeEach(() => {
       challengeWrapperMock = {
@@ -251,13 +254,13 @@ describe('Challenges repository', () => {
     });
 
     it('calls contract method with correct arguments', async () => {
-      await challengesRepository.resolveChallenge(challengeId);
-      expect(challengeWrapperMock.resolve).to.be.calledOnceWith(challengeId);
+      await challengesRepository.resolve(challenge1);
+      expect(challengeWrapperMock.resolve).to.be.calledOnceWith(challenge1.challengeId);
     });
 
     it('throws error if cannot resolve challenge', async () => {
       challengeWrapperMock.canResolve.resolves(false);
-      await expect(challengesRepository.resolveChallenge(challengeId)).to.be.eventually.rejected;
+      await expect(challengesRepository.resolve(challenge1)).to.be.eventually.rejected;
       expect(challengeWrapperMock.resolve).to.be.not.called;
     });
   });
@@ -281,7 +284,7 @@ describe('Challenges repository', () => {
     });
 
     it('adds challenge start timestamp and challenge duration', async () => {
-      expect(await challengesRepository.getChallengeExpirationTimeInMs(challengeId)).to.equal(expectedChallengeEndTime);
+      expect(await challengesRepository.getExpirationTimeInMs(challengeId)).to.equal(expectedChallengeEndTime);
     });
   });
 });
