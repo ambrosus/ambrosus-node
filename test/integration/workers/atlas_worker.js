@@ -48,7 +48,6 @@ describe('Atlas worker - integration', () => {
     error: () => {}
   };
   let mockChallengeStrategy;
-  let mockTransferStrategy;
 
   const createMockChallengeStrategy = () => {
     mockChallengeStrategy = {
@@ -58,16 +57,6 @@ describe('Atlas worker - integration', () => {
       afterResolution: sinon.stub()
     };
     mockChallengeStrategy.__proto__ = AtlasParticipationStrategy.prototype;
-  };
-
-  const createMockTransferStrategy = () => {
-    mockTransferStrategy = {
-      retryTimeout: 5,
-      shouldFetchBundle: sinon.stub().resolves(true),
-      shouldResolve: sinon.stub().resolves(true),
-      afterResolution: sinon.stub()
-    };
-    mockTransferStrategy.__proto__ = AtlasParticipationStrategy.prototype;
   };
 
   const prepareHermesSetup = async (web3, hermesAddress) => {
@@ -99,7 +88,6 @@ describe('Atlas worker - integration', () => {
     hermesUploadActions = (await prepareHermesSetup(web3, hermesAddress)).uploadActions;
     await onboardAtlas();
     createMockChallengeStrategy();
-    createMockTransferStrategy();
     builder.failedChallengesCache.failedResolutionsEndTime = {};
     const resolvers = [
       new AtlasChallengeResolver(
