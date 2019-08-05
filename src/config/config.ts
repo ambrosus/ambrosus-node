@@ -105,7 +105,7 @@ const config: Readonly<Config> = Object.freeze({
 
   requiredFreeDiskSpace: Number(process.env.REQUIRED_FREE_DISK_SPACE) || 200000000, // 200 MB
 
-  atlasProcessActiveResolviesByOne: process.env.ATLAS_PROCESS_ACTIVE_RESOLVIES_BY_ONE === 'true' || false,
+  atlasProcessActiveResolviesByOne: process.env.ATLAS_RESOLVIES_BY_ONE === 'true' || false,
 
   atlasWorkerInterval: Number(process.env.ATLAS_WORKER_INTERVAL) || 5, // 5 sec
   cleanupWorkerInterval: Number(process.env.CLEANUP_WORKER_INTERVAL) || 86400 // 1 day
