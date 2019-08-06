@@ -22,8 +22,10 @@ import {addToKycWhitelist} from '../../../src/utils/prerun';
 import {Role} from '../../../src/services/roles_repository';
 import Web3 from 'web3';
 import nock from 'nock';
-import AtlasChallengeParticipationStrategy
-  from '../../../src/workers/atlas_strategies/atlas_challenge_resolution_strategy';
+import AtlasParticipationStrategy
+  from '../../../src/workers/atlas_strategies/atlas_participation_strategy';
+import AtlasChallengeResolver
+  from '../../../src/workers/atlas_resolvers/atlas_challenge_resolver';
 import {pick} from '../../../src/utils/dict_utils';
 import BundleStatuses from '../../../src/utils/bundle_statuses';
 
@@ -45,17 +47,16 @@ describe('Atlas worker - integration', () => {
     info: () => {},
     error: () => {}
   };
-  let mockStrategy;
+  let mockChallengeStrategy;
 
-  const createMockStrategy = () => {
-    mockStrategy = {
-      workerInterval: 5,
+  const createMockChallengeStrategy = () => {
+    mockChallengeStrategy = {
       retryTimeout: 5,
       shouldFetchBundle: sinon.stub().resolves(true),
-      shouldResolveChallenge: sinon.stub().resolves(true),
-      afterChallengeResolution: sinon.stub()
+      shouldResolve: sinon.stub().resolves(true),
+      afterResolution: sinon.stub()
     };
-    mockStrategy.__proto__ = AtlasChallengeParticipationStrategy.prototype;
+    mockChallengeStrategy.__proto__ = AtlasParticipationStrategy.prototype;
   };
 
   const prepareHermesSetup = async (web3, hermesAddress) => {
@@ -86,20 +87,31 @@ describe('Atlas worker - integration', () => {
     const [, hermesAddress] = await web3.eth.getAccounts();
     hermesUploadActions = (await prepareHermesSetup(web3, hermesAddress)).uploadActions;
     await onboardAtlas();
-    createMockStrategy();
-    builder.failedChallengesCache.failedChallengesEndTime = {};
+    createMockChallengeStrategy();
+    builder.failedChallengesCache.failedResolutionsEndTime = {};
+    const resolvers = [
+      new AtlasChallengeResolver(
+        builder.web3,
+        builder.dataModelEngine,
+        builder.challengesRepository,
+        builder.failedChallengesCache,
+        mockChallengeStrategy,
+        builder.workerLogRepository,
+        loggerMock
+      )
+    ];
     atlasWorker = new AtlasWorker(
       builder.web3,
       builder.dataModelEngine,
       builder.workerLogRepository,
-      builder.challengesRepository,
       builder.workerTaskTrackingRepository,
-      builder.failedChallengesCache,
-      mockStrategy,
       loggerMock,
       builder.client,
       config.serverPort,
-      config.requiredFreeDiskSpace
+      config.requiredFreeDiskSpace,
+      config.atlasWorkerInterval,
+      resolvers,
+      true
     );
     if (!nock.isActive()) {
       nock.activate();
@@ -136,7 +148,7 @@ describe('Atlas worker - integration', () => {
     const firstWorkerPromise = atlasWorker.periodicWork();
     await atlasWorker.periodicWork();
     await firstWorkerPromise;
-    expect(mockStrategy.shouldFetchBundle).to.be.calledOnce;
+    expect(mockChallengeStrategy.shouldFetchBundle).to.be.calledOnce;
   });
 
   it('queues downloaded bundle for cleanup when it is not valid', async () => {
@@ -155,8 +167,8 @@ describe('Atlas worker - integration', () => {
       .reply(200, exampleBundle);
     await atlasWorker.periodicWork();
     await atlasWorker.periodicWork();
-    expect(mockStrategy.shouldFetchBundle).to.be.calledTwice;
-    expect(mockStrategy.shouldResolveChallenge).to.be.calledOnce;
+    expect(mockChallengeStrategy.shouldFetchBundle).to.be.calledTwice;
+    expect(mockChallengeStrategy.shouldResolve).to.be.calledOnce;
     expect(await builder.bundleRepository.getBundle(exampleBundle.bundleId)).to.deep.equal(exampleBundle);
     const repository = await builder.bundleRepository.getBundleRepository(exampleBundle.bundleId);
     expect(repository.status).to.equal(BundleStatuses.sheltered);

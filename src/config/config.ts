@@ -27,6 +27,7 @@ export interface Config {
 
   headContractAddress: string | undefined;
   challengeResolutionStrategy: string;
+  transferResolutionStrategy: string;
   uploadStrategy: string;
 
   maximumEntityTimestampOvertake: number;
@@ -50,6 +51,9 @@ export interface Config {
 
   requiredFreeDiskSpace: number;
 
+  atlasProcessActiveResolviesByOne: boolean;
+
+  atlasWorkerInterval: number;
   cleanupWorkerInterval: number;
 }
 
@@ -76,6 +80,7 @@ const config: Readonly<Config> = Object.freeze({
 
   headContractAddress: process.env.HEAD_CONTRACT_ADDRESS,
   challengeResolutionStrategy: process.env.CHALLENGE_RESOLUTION_STRATEGY || 'resolve_all_strategy',
+  transferResolutionStrategy: process.env.TRANSFER_RESOLUTION_STRATEGY || 'resolve_all_strategy',
   uploadStrategy: process.env.UPLOAD_STRATEGY || 'regular_interval_upload_strategy',
 
   maximumEntityTimestampOvertake: Number(process.env.MAXIMUM_ENTITY_TIMESTAMP_OVERTAKE) || 86400,
@@ -100,6 +105,9 @@ const config: Readonly<Config> = Object.freeze({
 
   requiredFreeDiskSpace: Number(process.env.REQUIRED_FREE_DISK_SPACE) || 200000000, // 200 MB
 
+  atlasProcessActiveResolviesByOne: process.env.ATLAS_RESOLVIES_BY_ONE === 'true' || false,
+
+  atlasWorkerInterval: Number(process.env.ATLAS_WORKER_INTERVAL) || 5, // 5 sec
   cleanupWorkerInterval: Number(process.env.CLEANUP_WORKER_INTERVAL) || 86400 // 1 day
 });
 

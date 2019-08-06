@@ -7,26 +7,30 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+export const atlasResolutionStatus = Object.freeze({
+  resolved: 'resolved',
+  failed: 'failed',
+  shouldNotFetch: 'should_not_fetch',
+  shouldNotResolve: 'should_not_resolve'
+});
+
 /** @abstract */
-export default class AtlasChallengeParticipationStrategy {
-  get workerInterval() {
-    return 5;
-  }
-
-  get retryTimeout() {
-    return 86400; // 1 day
-  }
-
+export class AtlasResolver {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async shouldFetchBundle(challenge) {
+  addMetrics(registry) {
     throw new Error('Should be implemented');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async shouldResolveChallenge(bundleMetadata) {
+  async resolve(entity) {
     throw new Error('Should be implemented');
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async afterChallengeResolution(challenge) { }
+  async resolveOne() {
+    throw new Error('Should be implemented');
+  }
+
+  async resolveAll() {
+    throw new Error('Should be implemented');
+  }
 }

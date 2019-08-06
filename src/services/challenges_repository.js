@@ -7,70 +7,29 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+import ResolutionsRepository from './resolutions_repository';
+
 const CHALLENGE_EVENT_ONE_FETCH_LIMIT = 5000;
 
-export default class ChallengesRepository {
+export default class ChallengesRepository extends ResolutionsRepository {
   constructor(challengesWrapper, challengesEventEmitterWrapper, configWrapper, blockchainStateWrapper, activeChallengesCache) {
+    super(blockchainStateWrapper, activeChallengesCache, CHALLENGE_EVENT_ONE_FETCH_LIMIT);
     this.challengesWrapper = challengesWrapper;
     this.challengesEventEmitterWrapper = challengesEventEmitterWrapper;
     this.configWrapper = configWrapper;
-    this.blockchainStateWrapper = blockchainStateWrapper;
-    this.activeChallengesCache = activeChallengesCache;
-    this.lastSavedBlock = 0;
   }
 
-  prepareChallengeEvent(challengeEvents, outputFields) {
-    return challengeEvents.map(
-      ({blockNumber, logIndex, returnValues}) => outputFields.reduce(
-        (acc, fieldName) => {
-          acc[fieldName] = returnValues[fieldName];
-          return acc;
-        },
-        {blockNumber, logIndex}
-      )
-    );
-  }
-
-  async ongoingChallenges() {
-    const {fromBlock, currentBlock} = await this.getBlockInfo();
-    if (fromBlock <= currentBlock) {
-      await this.updateActiveChallengesCache(fromBlock, currentBlock);
-      this.updateBlockInfo(currentBlock);
-    }
-    return this.activeChallengesCache.activeChallenges;
-  }
-
-  async updateActiveChallengesCache(fromBlock, currentBlock) {
-    const startedChallenges = await this.collectChallengeEvents(fromBlock, currentBlock,
+  async updateActiveResolutionsCache(fromBlock, currentBlock) {
+    const startedChallenges = await this.collectResolutionEvents(fromBlock, currentBlock,
       (start, end) => this.challengesEventEmitterWrapper.challenges(start, end),
       ['challengeId', 'sheltererId', 'bundleId', 'count']);
-    const resolvedChallenges = await this.collectChallengeEvents(fromBlock, currentBlock,
+    const resolvedChallenges = await this.collectResolutionEvents(fromBlock, currentBlock,
       (start, end) => this.challengesEventEmitterWrapper.resolvedChallenges(start, end),
       ['challengeId']);
-    const timedOutChallenges = await this.collectChallengeEvents(fromBlock, currentBlock,
+    const timedOutChallenges = await this.collectResolutionEvents(fromBlock, currentBlock,
       (start, end) => this.challengesEventEmitterWrapper.timedOutChallenges(start, end),
       ['challengeId']);
-    this.activeChallengesCache.applyIncomingChallengeEvents(startedChallenges, resolvedChallenges, timedOutChallenges);
-  }
-
-  async collectChallengeEvents(fromBlock, currentBlock, fetchEvents, outputFields) {
-    return this.collectChallengeEventsWithStep(fromBlock, currentBlock, CHALLENGE_EVENT_ONE_FETCH_LIMIT, fetchEvents, outputFields);
-  }
-
-  async collectChallengeEventsWithStep(fromBlock, currentBlock, step, fetchEvents, outputFields) {
-    let collectedChallengeEvents = [];
-    for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += step) {
-      const endBlock = Math.min(currentBlock, startBlock + step - 1);
-      const challengeBlockchainEvents = await fetchEvents(startBlock, endBlock);
-      collectedChallengeEvents = collectedChallengeEvents.concat(this.prepareChallengeEvent(challengeBlockchainEvents, outputFields));
-    }
-    return collectedChallengeEvents;
-  }
-
-  async getBlockInfo() {
-    const fromBlock = await this.getFromBlock();
-    const currentBlock = await this.blockchainStateWrapper.getCurrentBlockNumber();
-    return {fromBlock, currentBlock};
+    this.activeResolutionsCache.applyIncomingResolutionEvents(startedChallenges, resolvedChallenges, timedOutChallenges);
   }
 
   async getFromBlock() {
@@ -81,24 +40,20 @@ export default class ChallengesRepository {
     return this.challengesWrapper.earliestMeaningfulBlock(challengeDuration);
   }
 
-  async getChallengeExpirationTimeInMs(challengeId) {
-    const challengeCreationTime = await this.challengesWrapper.getChallengeCreationTime(challengeId);
+  async getExpirationTimeInMs(challenge) {
+    const challengeCreationTime = await this.challengesWrapper.getChallengeCreationTime(challenge.challengeId);
     const challengeDuration = await this.configWrapper.challengeDuration();
     return (Number(challengeCreationTime) + Number(challengeDuration)) * 1000;
   }
 
-  updateBlockInfo(currentBlock) {
-    this.lastSavedBlock = currentBlock;
-  }
-
-  async resolveChallenge(challengeId) {
-    if (!await this.challengesWrapper.canResolve(challengeId)) {
+  async resolve(challenge) {
+    if (!await this.challengesWrapper.canResolve(challenge.challengeId)) {
       throw new Error('Unable to resolve challenge - boundary check fail');
     }
-    return this.challengesWrapper.resolve(challengeId);
+    return this.challengesWrapper.resolve(challenge.challengeId);
   }
 
-  async getChallengeDesignatedShelterer(challengeId) {
-    return await this.challengesWrapper.getChallengeDesignatedShelterer(challengeId);
+  async getDesignatedShelterer(challenge) {
+    return await this.challengesWrapper.getChallengeDesignatedShelterer(challenge.challengeId);
   }
 }

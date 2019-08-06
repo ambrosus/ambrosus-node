@@ -8,6 +8,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import AtlasWorker from './workers/atlas_worker';
+import AtlasChallengeResolver from './workers/atlas_resolvers/atlas_challenge_resolver';
+import AtlasTransferResolver from './workers/atlas_resolvers/atlas_transfer_resolver';
 import config from './config/config';
 import Builder from './builder';
 import {Role} from './services/roles_repository';
@@ -23,19 +25,40 @@ async function start(logger) {
   }
   await waitForChainSync(builder.web3, 5, () => logger.info('Ethereum client is not in sync. Retrying in 5 seconds'));
   await builder.ensureAccountIsOnboarded([Role.ATLAS]);
-  const strategy = loadStrategy(config.challengeResolutionStrategy);
+  const challengeStrategy = loadStrategy(config.challengeResolutionStrategy);
+  const transferStrategy = loadStrategy(config.transferResolutionStrategy);
+  const resolvers = [
+    new AtlasChallengeResolver(
+      builder.web3,
+      builder.dataModelEngine,
+      builder.challengesRepository,
+      builder.failedChallengesCache,
+      challengeStrategy,
+      builder.workerLogRepository,
+      logger
+    ),
+    new AtlasTransferResolver(
+      builder.web3,
+      builder.dataModelEngine,
+      builder.transfersRepository,
+      builder.failedTransfersCache,
+      transferStrategy,
+      builder.workerLogRepository,
+      logger
+    )
+  ];
   const atlasWorker = new AtlasWorker(
     builder.web3,
     builder.dataModelEngine,
     builder.workerLogRepository,
-    builder.challengesRepository,
     builder.workerTaskTrackingRepository,
-    builder.failedChallengesCache,
-    strategy,
     logger,
     builder.client,
     config.serverPort,
-    config.requiredFreeDiskSpace
+    config.requiredFreeDiskSpace,
+    config.atlasWorkerInterval,
+    resolvers,
+    config.atlasProcessActiveResolviesByOne
   );
   const cleanupWorker = new CleanupWorker(
     builder.dataModelEngine,
@@ -48,8 +71,8 @@ async function start(logger) {
 }
 
 function loadStrategy(strategyName) {
-  const ChallengeResolutionStrategy = require(`./workers/atlas_strategies/${strategyName}`).default;
-  return new ChallengeResolutionStrategy();
+  const ResolutionStrategy = require(`./workers/atlas_strategies/${strategyName}`).default;
+  return new ResolutionStrategy();
 }
 
 setup(start);
