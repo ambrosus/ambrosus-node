@@ -152,4 +152,9 @@ export default class BundleRepository {
 
     return totalCount;
   }
+
+  async getShelteredBundles() {
+    const cursor = await this.db.collection('bundle_metadata').find({'repository.status': BundleStatuses.sheltered}, {projection: {bundleId: 1, _id: 0}});
+    return await cursor.toArray();
+  }
 }
