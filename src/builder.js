@@ -43,10 +43,13 @@ import RolesRepository, {Role} from './services/roles_repository';
 import UploadRepository from './services/upload_repository';
 import ChallengesRepository from './services/challenges_repository';
 import TransfersRepository from './services/transfers_repository';
+import RetireTransfersRepository from './services/retire_transfers_repository';
 import Migrator from './migrations/Migrator';
 import FailedResolutionsCache from './services/failed_resolutions_cache';
 import ActiveResolutionsCache from './services/active_resolutions_cache';
 import WorkerTaskTrackingRepository from './services/worker_task_tracking_repository';
+import OperationalMode from './services/operational_mode';
+import OperationalModeRepository from './services/operational_mode_repository';
 import * as Sentry from '@sentry/node';
 
 class Builder {
@@ -119,7 +122,15 @@ class Builder {
       this.blockChainStateWrapper,
       this.activeTransfersCache
     );
+    this.retireTransfersRepository = new RetireTransfersRepository(
+      this.transfersEventEmitterWrapper,
+      this.blockChainStateWrapper,
+      this.configWrapper,
+      defaultAddress
+    );
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
+    this.operationalModeRepository = new OperationalModeRepository(this.db);
+    this.operationalMode = new OperationalMode(this.operationalModeRepository, this.tokenAuthenticator);
     const {maximumEntityTimestampOvertake, supportDeprecatedBundleVersions} = this.config;
     this.entityBuilder = new EntityBuilder(this.identityManager, maximumEntityTimestampOvertake);
     this.entityRepository = new EntityRepository(this.db);
@@ -145,6 +156,7 @@ class Builder {
       bundleBuilder: this.bundleBuilder,
       bundleRepository: this.bundleRepository,
       accountRepository: this.accountRepository,
+      operationalModeRepository: this.operationalModeRepository,
       findEventQueryObjectFactory: this.findEventQueryObjectFactory,
       findAccountQueryObjectFactory: this.findAccountQueryObjectFactory,
       findAssetQueryObjectFactory: this.findAssetQueryObjectFactory,
