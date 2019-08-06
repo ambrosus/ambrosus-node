@@ -67,12 +67,12 @@ describe('Challenges repository', () => {
     });
 
     it('extracts the blockNumber, logIndex, the fields specified in selector and appends event type', async () => {
-      expect(challengesRepository.prepareResolutionEvent(events, ['challengeId', 'sheltererId', 'bundleId', 'count'])).to.deep.equal([
+      expect(challengesRepository.prepareEvents(events, ['challengeId', 'sheltererId', 'bundleId', 'count'])).to.deep.equal([
         {sheltererId, bundleId, challengeId, count, blockNumber: 1, logIndex: 0},
         {sheltererId, bundleId, challengeId: 100, count, blockNumber: 2, logIndex: 0},
         {sheltererId, bundleId, challengeId, count, blockNumber: 2, logIndex: 1}
       ]);
-      expect(challengesRepository.prepareResolutionEvent(events, ['challengeId'])).to.deep.equal([
+      expect(challengesRepository.prepareEvents(events, ['challengeId'])).to.deep.equal([
         {challengeId, blockNumber: 1, logIndex: 0},
         {challengeId: 100, blockNumber: 2, logIndex: 0},
         {challengeId, blockNumber: 2, logIndex: 1}
@@ -155,7 +155,7 @@ describe('Challenges repository', () => {
         .onSecondCall()
         .resolves(latestBlock + 3);
       challengesRepository = new ChallengesRepository(challengeWrapperMock, challengesEventEmitterWrapper, configWrapperMock, blockchainStateWrapperMock, activeChallengesCacheMock);
-      sinon.spy(challengesRepository, 'prepareResolutionEvent');
+      sinon.spy(challengesRepository, 'prepareEvents');
     });
 
     it('on first call: gets challenges from earliest possible block and caches them', async () => {
@@ -189,18 +189,18 @@ describe('Challenges repository', () => {
     it('adds new challenges to cache, decreases active count on resolved and removes timed out', async () => {
       await challengesRepository.ongoingResolutions();
       expect(activeChallengesCacheMock.applyIncomingResolutionEvents).to.be.calledOnceWithExactly(
-        challengesRepository.prepareResolutionEvent(events, ['challengeId', 'sheltererId', 'bundleId', 'count']),
-        challengesRepository.prepareResolutionEvent(resolvedEvents, ['challengeId']),
-        challengesRepository.prepareResolutionEvent(timedOutEvents, ['challengeId'])
+        challengesRepository.prepareEvents(events, ['challengeId', 'sheltererId', 'bundleId', 'count']),
+        challengesRepository.prepareEvents(resolvedEvents, ['challengeId']),
+        challengesRepository.prepareEvents(timedOutEvents, ['challengeId'])
       );
     });
 
     it('calls own methods with correct params', async () => {
       await challengesRepository.ongoingResolutions();
-      expect(challengesRepository.prepareResolutionEvent).to.be.calledThrice;
-      expect(challengesRepository.prepareResolutionEvent).to.be.calledWith(events);
-      expect(challengesRepository.prepareResolutionEvent).to.be.calledWith(resolvedEvents);
-      expect(challengesRepository.prepareResolutionEvent).to.be.calledWith(timedOutEvents);
+      expect(challengesRepository.prepareEvents).to.be.calledThrice;
+      expect(challengesRepository.prepareEvents).to.be.calledWith(events);
+      expect(challengesRepository.prepareEvents).to.be.calledWith(resolvedEvents);
+      expect(challengesRepository.prepareEvents).to.be.calledWith(timedOutEvents);
     });
 
     it('fetches events with steps - collects all events', async () => {
@@ -211,13 +211,13 @@ describe('Challenges repository', () => {
         .resolves([{blockNumber: 1, logIndex: 1}]);
       fetchEvents.withArgs(2, 2)
         .resolves([{blockNumber: 2, logIndex: 2}]);
-      const result = await challengesRepository.collectResolutionEventsWithStep(0, 2, 1, fetchEvents, []);
+      const result = await challengesRepository.collectEventsWithStep(0, 2, 1, fetchEvents, []);
       expect(result).to.deep.eq([{blockNumber: 0, logIndex: 0}, {blockNumber: 1, logIndex: 1}, {blockNumber: 2, logIndex: 2}]);
     });
 
     it('fetches events with steps - divisible range', async () => {
       const fetchEvents = sinon.stub().resolves([]);
-      await challengesRepository.collectResolutionEventsWithStep(151, 300, 50, fetchEvents, []);
+      await challengesRepository.collectEventsWithStep(151, 300, 50, fetchEvents, []);
       expect(fetchEvents).to.have.been.calledWith(151, 200);
       expect(fetchEvents).to.have.been.calledWith(201, 250);
       expect(fetchEvents).to.have.been.calledWith(251, 300);
@@ -225,7 +225,7 @@ describe('Challenges repository', () => {
 
     it('fetches events with steps - range with remainder', async () => {
       const fetchEvents = sinon.stub().resolves([]);
-      await challengesRepository.collectResolutionEventsWithStep(151, 215, 50, fetchEvents, []);
+      await challengesRepository.collectEventsWithStep(151, 215, 50, fetchEvents, []);
       expect(fetchEvents).to.have.been.calledWith(151, 200);
       expect(fetchEvents).to.have.been.calledWith(201, 215);
     });
@@ -234,7 +234,7 @@ describe('Challenges repository', () => {
       const fetchEvents = sinon.stub()
         .withArgs(5, 5)
         .resolves([{blockNumber: 0, logIndex: 0}]);
-      const result = await challengesRepository.collectResolutionEventsWithStep(5, 5, 100, fetchEvents, []);
+      const result = await challengesRepository.collectEventsWithStep(5, 5, 100, fetchEvents, []);
       expect(result).to.deep.eq([{blockNumber: 0, logIndex: 0}]);
     });
   });

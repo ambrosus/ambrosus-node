@@ -20,13 +20,13 @@ export default class ChallengesRepository extends ResolutionsRepository {
   }
 
   async updateActiveResolutionsCache(fromBlock, currentBlock) {
-    const startedChallenges = await this.collectResolutionEvents(fromBlock, currentBlock,
+    const startedChallenges = await this.collectEvents(fromBlock, currentBlock,
       (start, end) => this.challengesEventEmitterWrapper.challenges(start, end),
       ['challengeId', 'sheltererId', 'bundleId', 'count']);
-    const resolvedChallenges = await this.collectResolutionEvents(fromBlock, currentBlock,
+    const resolvedChallenges = await this.collectEvents(fromBlock, currentBlock,
       (start, end) => this.challengesEventEmitterWrapper.resolvedChallenges(start, end),
       ['challengeId']);
-    const timedOutChallenges = await this.collectResolutionEvents(fromBlock, currentBlock,
+    const timedOutChallenges = await this.collectEvents(fromBlock, currentBlock,
       (start, end) => this.challengesEventEmitterWrapper.timedOutChallenges(start, end),
       ['challengeId']);
     this.activeResolutionsCache.applyIncomingResolutionEvents(startedChallenges, resolvedChallenges, timedOutChallenges);
