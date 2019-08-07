@@ -30,9 +30,7 @@ describe('Atlas Transfer Resolver', () => {
   const expirationTime = 155345234132;
   const fetchedBundleMetadata = {bundleId: 'fetchedBundle'};
   const exampleWorkId = 'workid';
-  const workerInterval = 10;
   const retryTimeout = 14;
-  const requiredFreeDiskSpace = 1000;
   const {utils} = new Web3();
   let transferResolver;
   let atlasWorker;
@@ -40,10 +38,12 @@ describe('Atlas Transfer Resolver', () => {
   let workerTaskTrackingRepositoryMock;
   let failedTransfersMock;
   let dataModelEngineMock;
-  let mockWorkerLogRepository;
   let mockWeb3;
   let transferStrategyMock;
   let loggerMock;
+  let workerLoggerMock;
+  let operationalModeMock;
+  let releaseBundlesServiceMock;
   let shouldFetchBundleStub;
   let shouldresolveStub;
   let port;
@@ -78,9 +78,6 @@ describe('Atlas Transfer Resolver', () => {
       cleanupBundles: sinon.spy(),
       markBundleAsSheltered: sinon.stub()
     };
-    mockWorkerLogRepository = {
-      storeLog: sinon.stub()
-    };
     transferStrategyMock = new AtlasParticipationStrategy();
     sinon.stub(transferStrategyMock, 'retryTimeout').get(() => retryTimeout);
     shouldFetchBundleStub = sinon.stub(transferStrategyMock, 'shouldFetchBundle').resolves(true);
@@ -90,6 +87,15 @@ describe('Atlas Transfer Resolver', () => {
       info: sinon.spy(),
       error: sinon.spy()
     };
+    workerLoggerMock = {
+      logger: loggerMock,
+      addLog: sinon.stub()
+    };
+    operationalModeMock = {
+      isRetire: sinon.stub().returns(false)
+    };
+    releaseBundlesServiceMock = {
+    };
 
     transferResolver = new AtlasTransferResolver(
       mockWeb3,
@@ -97,8 +103,7 @@ describe('Atlas Transfer Resolver', () => {
       transfersRepositoryMock,
       failedTransfersMock,
       transferStrategyMock,
-      mockWorkerLogRepository,
-      loggerMock
+      workerLoggerMock
     );
 
     const resolvers = [
@@ -108,15 +113,13 @@ describe('Atlas Transfer Resolver', () => {
     atlasWorker = new AtlasWorker(
       mockWeb3,
       dataModelEngineMock,
-      mockWorkerLogRepository,
+      workerLoggerMock,
       workerTaskTrackingRepositoryMock,
-      loggerMock,
       mongoClient,
-      config.serverPort,
-      requiredFreeDiskSpace,
-      workerInterval,
       resolvers,
-      true
+      operationalModeMock,
+      config,
+      releaseBundlesServiceMock
     );
 
     atlasWorker.beforeWorkLoop();
@@ -251,7 +254,9 @@ describe('Atlas Transfer Resolver', () => {
       it('tries to resolve transfers in order until it succeeds', async () => {
         tryWithMock.withArgs(transfer1).resolves(false);
         tryWithMock.withArgs(transfer2).resolves(true);
+        atlasWorker.resolveByOne = true;
         await atlasWorker.periodicWork();
+        atlasWorker.resolveByOne = config.atlasProcessActiveResolviesByOne;
         expect(tryWithMock).to.have.been.calledWith(transfer1);
         expect(tryWithMock).to.have.been.calledWith(transfer2);
         expect(tryWithMock).to.not.have.been.calledWith(transfer3);
