@@ -29,17 +29,17 @@ describe('Atlas Worker', () => {
   const enoughFunds = '10000000000000000000';
   const fetchedBundleMetadata = {bundleId: 'fetchedBundle'};
   const exampleWorkId = 'workid';
-  const workerInterval = 10;
-  const requiredFreeDiskSpace = 1000;
   const {utils} = new Web3();
   let atlasWorker;
   let workerTaskTrackingRepositoryMock;
   let dataModelEngineMock;
-  let mockWorkerLogRepository;
+  let workerLoggerMock;
   let mockWeb3;
   let loggerMock;
   let port;
   let mockResolver;
+  let operationalModeMock;
+  let releaseBundlesServiceMock;
 
   const createMockResolver = () => {
     mockResolver = {
@@ -69,12 +69,18 @@ describe('Atlas Worker', () => {
       cleanupBundles: sinon.spy(),
       markBundleAsSheltered: sinon.stub()
     };
-    mockWorkerLogRepository = {
-      storeLog: sinon.stub()
-    };
     loggerMock = {
       info: sinon.spy(),
       error: sinon.spy()
+    };
+    workerLoggerMock = {
+      logger: loggerMock,
+      addLog: sinon.spy()
+    };
+    operationalModeMock = {
+      isRetire: sinon.stub().returns(false)
+    };
+    releaseBundlesServiceMock = {
     };
     createMockResolver();
     const resolvers = [mockResolver];
@@ -82,17 +88,16 @@ describe('Atlas Worker', () => {
     atlasWorker = new AtlasWorker(
       mockWeb3,
       dataModelEngineMock,
-      mockWorkerLogRepository,
+      workerLoggerMock,
       workerTaskTrackingRepositoryMock,
-      loggerMock,
       mongoClient,
-      config.serverPort,
-      requiredFreeDiskSpace,
-      workerInterval,
       resolvers,
-      true
+      operationalModeMock,
+      config,
+      releaseBundlesServiceMock
     );
 
+    atlasWorker.resolveByOne = true;
     atlasWorker.beforeWorkLoop();
     ({port} = atlasWorker.server.address());
   });
@@ -102,7 +107,7 @@ describe('Atlas Worker', () => {
   });
 
   it('set the work interval into constructor', () => {
-    expect(atlasWorker.interval).to.equal(workerInterval);
+    expect(atlasWorker.interval).to.equal(config.atlasWorkerInterval);
   });
 
   it('setup the resolver metrics into constructor', () => {
@@ -147,13 +152,13 @@ describe('Atlas Worker', () => {
 
     it('writes message to log when outOfFunds is raised for the first time in a row', async () => {
       await checkWithNoFunds();
-      expect(loggerMock.info).to.be.calledOnce;
+      expect(workerLoggerMock.addLog).to.be.calledOnce;
 
       await checkWithEnoughFunds();
-      expect(loggerMock.info).to.be.calledOnce;
+      expect(workerLoggerMock.addLog).to.be.calledOnce;
 
       await checkWithNoFunds();
-      expect(loggerMock.info).to.be.calledTwice;
+      expect(workerLoggerMock.addLog).to.be.calledTwice;
     });
 
     it('does not write message to log again until still out of funds', async () => {
@@ -161,7 +166,7 @@ describe('Atlas Worker', () => {
       await checkWithNoFunds();
       await checkWithNoFunds();
 
-      expect(loggerMock.info).to.be.calledOnce;
+      expect(workerLoggerMock.addLog).to.be.calledOnce;
     });
   });
 
@@ -202,13 +207,13 @@ describe('Atlas Worker', () => {
 
     it('writes message to log when outOfSpace is raised for the first time in a row', async () => {
       await checkWithNotEnoughSpace();
-      expect(loggerMock.info).to.be.calledOnce;
+      expect(workerLoggerMock.addLog).to.be.calledOnce;
 
       await checkWithEnoughSpace();
-      expect(loggerMock.info).to.be.calledOnce;
+      expect(workerLoggerMock.addLog).to.be.calledOnce;
 
       await checkWithNotEnoughSpace();
-      expect(loggerMock.info).to.be.calledTwice;
+      expect(workerLoggerMock.addLog).to.be.calledTwice;
     });
 
     it('does not write message to log again until still not enough free space', async () => {
@@ -216,7 +221,7 @@ describe('Atlas Worker', () => {
       await checkWithNotEnoughSpace();
       await checkWithNotEnoughSpace();
 
-      expect(loggerMock.info).to.be.calledOnce;
+      expect(workerLoggerMock.addLog).to.be.calledOnce;
     });
 
     it('periodicWork does not do anything when there is less free space than required', async () => {
