@@ -20,19 +20,18 @@ const HERMES_BUNDLING_WORK_TYPE = 'HermesBundling';
 export default class HermesWorker extends PeriodicWorker {
   constructor(
     dataModelEngine,
-    workerLogRepository,
+    workerLogger,
     workerTaskTrackingRepository,
     strategy,
-    logger,
     mongoClient,
     serverPort
   ) {
-    super(strategy.workerInterval, logger);
+    super(strategy.workerInterval, workerLogger.logger);
     this.dataModelEngine = dataModelEngine;
     this.bundleSequenceNumber = 0;
     this.workerTaskTrackingRepository = workerTaskTrackingRepository;
     this.strategy = strategy;
-    this.workerLogRepository = workerLogRepository;
+    this.workerLogger = workerLogger;
     this.mongoClient = mongoClient;
     this.expressApp = express();
     this.serverPort = serverPort;
@@ -81,10 +80,10 @@ export default class HermesWorker extends PeriodicWorker {
     if (bundlingDecision.result) {
       await this.dataModelEngine.acceptBundleCandidate(bundle, sequenceNumber, storagePeriods);
       await this.strategy.bundlingSucceeded();
-      await this.addLog('Bundle candidate accepted', {bundleId: bundle.bundleId});
+      await this.workerLogger.addLog('Bundle candidate accepted', {bundleId: bundle.bundleId});
     } else {
       await this.dataModelEngine.rejectBundleCandidate(sequenceNumber);
-      await this.addLog(`Bundle candidate discarded. ${bundlingDecision.reason}`);
+      await this.workerLogger.addLog(`Bundle candidate discarded. ${bundlingDecision.reason}`);
     }
   }
 
@@ -92,22 +91,13 @@ export default class HermesWorker extends PeriodicWorker {
     await this.dataModelEngine.uploadAcceptedBundleCandidates({
       success: async (bundleId, uploadResult) => {
         this.totalBundlesUploaded.inc();
-        await this.addLog(uploadResult, {bundleId});
+        await this.workerLogger.addLog(uploadResult, {bundleId});
       },
       fail: async (bundleId, error) => {
         this.totalBundleUploadFailures.inc();
-        await this.addLog(`Bundle failed to upload`, {bundleId, errorMsg: error.message || error}, error.stack);
+        await this.workerLogger.addLog(`Bundle failed to upload`, {bundleId, errorMsg: error.message || error}, error.stack);
       }
     });
-  }
-
-  async addLog(message, additionalFields, stacktrace) {
-    const log = {
-      message,
-      ...additionalFields
-    };
-    this.logger.info({...log, stacktrace});
-    await this.workerLogRepository.storeLog({timestamp: new Date(), ...log});
   }
 
   async beforeWorkLoop() {
