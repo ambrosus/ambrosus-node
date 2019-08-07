@@ -30,9 +30,7 @@ describe('Atlas Challenge Resolver', () => {
   const expirationTime = 155345234132;
   const fetchedBundleMetadata = {bundleId: 'fetchedBundle'};
   const exampleWorkId = 'workid';
-  const workerInterval = 10;
   const retryTimeout = 14;
-  const requiredFreeDiskSpace = 1000;
   const {utils} = new Web3();
   let challengeResolver;
   let atlasWorker;
@@ -40,10 +38,12 @@ describe('Atlas Challenge Resolver', () => {
   let workerTaskTrackingRepositoryMock;
   let failedChallengesMock;
   let dataModelEngineMock;
-  let mockWorkerLogRepository;
   let mockWeb3;
   let challengeStrategyMock;
   let loggerMock;
+  let workerLoggerMock;
+  let operationalModeMock;
+  let releaseBundlesServiceMock;
   let shouldFetchBundleStub;
   let shouldresolveStub;
   let port;
@@ -78,9 +78,6 @@ describe('Atlas Challenge Resolver', () => {
       cleanupBundles: sinon.spy(),
       markBundleAsSheltered: sinon.stub()
     };
-    mockWorkerLogRepository = {
-      storeLog: sinon.stub()
-    };
     challengeStrategyMock = new AtlasParticipationStrategy();
     sinon.stub(challengeStrategyMock, 'retryTimeout').get(() => retryTimeout);
     shouldFetchBundleStub = sinon.stub(challengeStrategyMock, 'shouldFetchBundle').resolves(true);
@@ -90,6 +87,15 @@ describe('Atlas Challenge Resolver', () => {
       info: sinon.spy(),
       error: sinon.spy()
     };
+    workerLoggerMock = {
+      logger: loggerMock,
+      addLog: sinon.stub()
+    };
+    operationalModeMock = {
+      isRetire: sinon.stub().returns(false)
+    };
+    releaseBundlesServiceMock = {
+    };
 
     challengeResolver = new AtlasChallengeResolver(
       mockWeb3,
@@ -97,8 +103,7 @@ describe('Atlas Challenge Resolver', () => {
       challengesRepositoryMock,
       failedChallengesMock,
       challengeStrategyMock,
-      mockWorkerLogRepository,
-      loggerMock
+      workerLoggerMock
     );
 
     const resolvers = [
@@ -108,15 +113,13 @@ describe('Atlas Challenge Resolver', () => {
     atlasWorker = new AtlasWorker(
       mockWeb3,
       dataModelEngineMock,
-      mockWorkerLogRepository,
+      workerLoggerMock,
       workerTaskTrackingRepositoryMock,
-      loggerMock,
       mongoClient,
-      config.serverPort,
-      requiredFreeDiskSpace,
-      workerInterval,
       resolvers,
-      true
+      operationalModeMock,
+      config,
+      releaseBundlesServiceMock
     );
 
     atlasWorker.beforeWorkLoop();
@@ -251,7 +254,9 @@ describe('Atlas Challenge Resolver', () => {
       it('tries to resolve challenges in order until it succeeds', async () => {
         tryWithMock.withArgs(challenge1).resolves(false);
         tryWithMock.withArgs(challenge2).resolves(true);
+        atlasWorker.resolveByOne = true;
         await atlasWorker.periodicWork();
+        atlasWorker.resolveByOne = config.atlasProcessActiveResolviesByOne;
         expect(tryWithMock).to.have.been.calledWith(challenge1);
         expect(tryWithMock).to.have.been.calledWith(challenge2);
         expect(tryWithMock).to.not.have.been.calledWith(challenge3);
