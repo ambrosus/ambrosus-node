@@ -28,6 +28,7 @@ import AtlasChallengeResolver
   from '../../../src/workers/atlas_resolvers/atlas_challenge_resolver';
 import {pick} from '../../../src/utils/dict_utils';
 import BundleStatuses from '../../../src/utils/bundle_statuses';
+import WorkerLogger from '../../../src/services/worker_logger';
 
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
@@ -48,6 +49,7 @@ describe('Atlas worker - integration', () => {
     error: () => {}
   };
   let mockChallengeStrategy;
+  let workerLogger;
 
   const createMockChallengeStrategy = () => {
     mockChallengeStrategy = {
@@ -88,6 +90,7 @@ describe('Atlas worker - integration', () => {
     hermesUploadActions = (await prepareHermesSetup(web3, hermesAddress)).uploadActions;
     await onboardAtlas();
     createMockChallengeStrategy();
+    workerLogger = new WorkerLogger(loggerMock, builder.workerLogRepository);
     builder.failedChallengesCache.failedResolutionsEndTime = {};
     const resolvers = [
       new AtlasChallengeResolver(
@@ -96,22 +99,18 @@ describe('Atlas worker - integration', () => {
         builder.challengesRepository,
         builder.failedChallengesCache,
         mockChallengeStrategy,
-        builder.workerLogRepository,
-        loggerMock
+        workerLogger
       )
     ];
     atlasWorker = new AtlasWorker(
       builder.web3,
       builder.dataModelEngine,
-      builder.workerLogRepository,
+      workerLogger,
       builder.workerTaskTrackingRepository,
-      loggerMock,
       builder.client,
-      config.serverPort,
-      config.requiredFreeDiskSpace,
-      config.atlasWorkerInterval,
       resolvers,
-      true
+      builder.operationalMode,
+      config
     );
     if (!nock.isActive()) {
       nock.activate();
