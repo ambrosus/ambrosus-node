@@ -7,6 +7,8 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+import OperationalModes from '../utils/operational_modes';
+
 const MAX_ONGOING_TRANSFERS = 20;
 
 export default class ReleaseBundlesService {
@@ -25,12 +27,12 @@ export default class ReleaseBundlesService {
       const bundles = await this.dataModelEngine.getShelteredBundles();
       this.shelteredBundles = new Set(bundles.map((bundle) => bundle.bundleId));
       this.modeInfo = {
-        mode: 'retire',
+        mode: OperationalModes.retire,
         total: this.shelteredBundles.size,
         transfers: 0,
         transfered: 0
       };
-      this.operationalMode.setModeInfo(this.modeInfo);
+      this.operationalMode.setModeInfo(OperationalModes.retire, this.modeInfo);
     }
 
     const transfers = await this.retireTransfersRepository.ongoingTransfers();
