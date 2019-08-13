@@ -22,8 +22,11 @@ describe('Node info', () => {
   let res = null;
   let mockIdentityManager;
   let mockModel;
+  let mockConfig;
+  let mockOperationalMode;
   const mockAddress = '0x33323df655da4e8eBF343E73b7703D2188389f20';
   const mockLogs = [{foo: 'bar'}, {foo2: 'bar2'}, {foo3: 'bar3'}];
+  const mockModeInfo = {mode: 'normal'};
 
   beforeEach(async () => {
     mockIdentityManager = {
@@ -32,19 +35,24 @@ describe('Node info', () => {
     mockModel = {
       getWorkerLogs: sinon.stub().resolves(mockLogs)
     };
+    mockConfig = {
+    };
+    mockOperationalMode = {
+      get: sinon.stub().resolves(mockModeInfo)
+    };
     req = httpMocks.createRequest();
     res = httpMocks.createResponse();
   });
 
   it('asks for worker logs', async () => {
-    await getNodeInfoHandler(mockModel, mockIdentityManager)(req, res);
+    await getNodeInfoHandler(mockModel, mockIdentityManager, mockConfig, mockOperationalMode)(req, res);
     const responseBody = res._getData();
     expect(responseBody.workerLogs).to.equal(mockLogs);
     expect(mockModel.getWorkerLogs).to.have.been.calledOnce;
   });
 
   it('gets info on node', async () => {
-    await getNodeInfoHandler(mockModel, mockIdentityManager)(req, res);
+    await getNodeInfoHandler(mockModel, mockIdentityManager, mockConfig, mockOperationalMode)(req, res);
     const responseBody = res._getData();
     expect(responseBody.version).to.match(/^\d+\.\d+\.\d+$/);
     expect(responseBody.nodeAddress).to.equal(mockAddress);

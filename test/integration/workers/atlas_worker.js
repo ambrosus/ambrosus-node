@@ -48,6 +48,9 @@ describe('Atlas worker - integration', () => {
     info: () => {},
     error: () => {}
   };
+  const bundleReleaseServerMock = {
+    reset: () => {}
+  };
   let mockChallengeStrategy;
   let workerLogger;
 
@@ -110,7 +113,8 @@ describe('Atlas worker - integration', () => {
       builder.client,
       resolvers,
       builder.operationalMode,
-      config
+      config,
+      bundleReleaseServerMock
     );
     if (!nock.isActive()) {
       nock.activate();

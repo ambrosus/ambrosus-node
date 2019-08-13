@@ -95,6 +95,7 @@ describe('Atlas Transfer Resolver', () => {
       isRetire: sinon.stub().returns(false)
     };
     releaseBundlesServiceMock = {
+      reset: sinon.stub()
     };
 
     transferResolver = new AtlasTransferResolver(

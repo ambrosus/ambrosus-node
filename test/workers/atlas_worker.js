@@ -81,6 +81,7 @@ describe('Atlas Worker', () => {
       isRetire: sinon.stub().returns(false)
     };
     releaseBundlesServiceMock = {
+      reset: sinon.stub()
     };
     createMockResolver();
     const resolvers = [mockResolver];

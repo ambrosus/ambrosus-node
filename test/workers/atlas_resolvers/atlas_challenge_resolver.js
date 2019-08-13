@@ -95,6 +95,7 @@ describe('Atlas Challenge Resolver', () => {
       isRetire: sinon.stub().returns(false)
     };
     releaseBundlesServiceMock = {
+      reset: sinon.stub()
     };
 
     challengeResolver = new AtlasChallengeResolver(
