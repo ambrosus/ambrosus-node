@@ -7,8 +7,6 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import OperationalModes from '../utils/operational_modes';
-
 const MAX_ONGOING_TRANSFERS = 20;
 
 export default class ReleaseBundlesService {
@@ -22,17 +20,21 @@ export default class ReleaseBundlesService {
     this.shelteredBundles = null;
   }
 
+  reset() {
+    this.shelteredBundles = null;
+  }
+
   async process() {
+    let infoUpdated = false;
     if (null === this.shelteredBundles) {
       const bundles = await this.dataModelEngine.getShelteredBundles();
       this.shelteredBundles = new Set(bundles.map((bundle) => bundle.bundleId));
       this.modeInfo = {
-        mode: OperationalModes.retire,
         total: this.shelteredBundles.size,
         transfers: 0,
         transfered: 0
       };
-      this.operationalMode.setModeInfo(OperationalModes.retire, this.modeInfo);
+      this.operationalMode.setInfo(this.modeInfo);
     }
 
     const transfers = await this.retireTransfersRepository.ongoingTransfers();
@@ -44,6 +46,7 @@ export default class ReleaseBundlesService {
         this.shelteredBundles.delete(transfer.bundleId);
         this.retireTransfersRepository.transferDone(transfer.transferId);
         this.modeInfo.transfered++;
+        infoUpdated = true;
       } catch (err) {
         await this.workerLogger.addLog(`Failed to remove bundle: ${err.message || err}`, transfer.bundleId, err.stack);
       }
@@ -60,8 +63,15 @@ export default class ReleaseBundlesService {
           await this.workerLogger.addLog(`Failed to start transfer: ${err.message || err}`, bundle, err.stack);
         }
       }
-      this.modeInfo.transfered += startedTransersCount;
-      this.workerLogger.logger.info(`Started new ${startedTransersCount} bundle transfers`);
+      if (startedTransersCount > 0) {
+        this.modeInfo.transfered += startedTransersCount;
+        infoUpdated = true;
+        this.workerLogger.logger.info(`Started new ${startedTransersCount} bundle transfers`);
+      }
+    }
+
+    if (infoUpdated) {
+      this.operationalMode.setInfo(this.modeInfo);
     }
   }
 }
