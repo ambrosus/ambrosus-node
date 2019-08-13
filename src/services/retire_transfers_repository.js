@@ -63,7 +63,7 @@ export default class RetireTransfersRepository extends EventsCollector {
     for (const transfer of resolvedTransfers) {
       const resolved = this.activeTransfers[transfer.transferId];
       if (resolved !== undefined) {
-        this.resolvedTransfers[transfer.transferId] = resolved;
+        this.resolvedTransfers.push(resolved);
         delete this.activeTransfers[transfer.transferId];
       }
     }
