@@ -13,42 +13,31 @@ export default class OperationalMode {
   constructor(operationalModeRepository, tokenAuthenticator) {
     this.operationalModeRepository = operationalModeRepository;
     this.tokenAuthenticator = tokenAuthenticator;
-    this.modeInfo = {
-      normal: {
-        mode: OperationalModes.normal
-      },
-      retire: null
-    };
   }
 
-  async setMode(request) {
+  async set(request) {
     if (request.mode !== undefined) {
       const mode = this.tokenAuthenticator.decode(request.mode);
-      this.retireMode = mode.idData.mode === OperationalModes.retire;
-      if (this.retireMode) {
-        this.operationalModeRepository.set({mode:OperationalModes.retire});
+      if (mode.idData.mode === OperationalModes.retire) {
+        this.operationalModeRepository.set({mode:OperationalModes.retire, info:{}});
       } else {
-        this.operationalModeRepository.set({mode:OperationalModes.normal});
+        this.operationalModeRepository.set({mode:OperationalModes.normal, info:{}});
       }
     }
   }
 
-  setModeInfo(mode, modeInfo) {
-    this.modeInfo[mode] = modeInfo;
+  async setInfo(info) {
+    await this.operationalModeRepository.updateInfo(info);
   }
 
-  getModeInfo() {
-    return this.retireMode ? this.modeInfo.retire : this.modeInfo.normal;
+  async get() {
+    const mode = await this.operationalModeRepository.get();
+    return (mode == null) ? {mode:OperationalModes.normal} : mode;
   }
 
   async isRetire() {
-    if (this.retireMode === undefined) {
-      const mode = await this.operationalModeRepository.get();
-      if (null !== mode) {
-        this.retireMode = mode.mode === OperationalModes.retire;
-      }
-    }
-    return this.retireMode;
+    const mode = await this.operationalModeRepository.get();
+    return (null !== mode) && (mode.mode === OperationalModes.retire);
   }
 }
 
