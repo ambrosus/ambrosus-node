@@ -30,7 +30,8 @@ async function start(logger) {
     builder.web3,
     role,
     config,
-    logger
+    logger,
+    builder.operationalMode
   );
   await worker.start();
 }
