@@ -15,13 +15,23 @@ import asyncMiddleware from '../middlewares/async_middleware';
 export const getNodeInfoHandler = (modelEngine, identityManager, gitCommit, operationalMode) => async (req, res) => {
   const workerLogs = await modelEngine.getWorkerLogs();
   require('pkginfo')(module, 'version');
-  res.status(200).send({
-    commit: gitCommit,
-    version: module.exports.version,
-    mode: await operationalMode.get(),
-    nodeAddress: identityManager.nodeAddress(),
-    workerLogs
-  });
+  if (operationalMode !== null) {
+    const mode = await operationalMode.get();
+    res.status(200).send({
+      commit: gitCommit,
+      version: module.exports.version,
+      nodeAddress: identityManager.nodeAddress(),
+      mode,
+      workerLogs
+    });
+  } else {
+    res.status(200).send({
+      commit: gitCommit,
+      version: module.exports.version,
+      nodeAddress: identityManager.nodeAddress(),
+      workerLogs
+    });
+  }
 };
 
 export const setModeHandler = (operationalMode) => async (req, res) => {
