@@ -32,7 +32,7 @@ export default class OperationalMode {
 
   async get() {
     const mode = await this.operationalModeRepository.get();
-    return (mode == null) ? {mode:OperationalModes.normal} : mode;
+    return (mode === null) ? {mode:OperationalModes.normal} : mode;
   }
 
   async isRetire() {
