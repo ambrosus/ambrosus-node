@@ -12,7 +12,6 @@ import promClient from 'prom-client';
 import prometheusMetricsHandler from '../routes/prometheus_metrics.js';
 import asyncMiddleware from '../middlewares/async_middleware';
 import healthCheckHandler from '../routes/health_check';
-import atlasModeRouter from '../routes/atlas_mode';
 import PeriodicWorker from './periodic_worker';
 import {checkIfEnoughFundsToPayForGas, getDefaultAddress} from '../utils/web3_tools';
 import availableDiskSpace from '../utils/disk_usage';
@@ -52,7 +51,6 @@ export default class AtlasWorker extends PeriodicWorker {
     this.expressApp.get('/health', asyncMiddleware(
       healthCheckHandler(mongoClient, web3)
     ));
-    this.expressApp.use('/mode', atlasModeRouter(this.operationalMode, config));
     const registry = new promClient.Registry();
     this.expressApp.get('/metrics', prometheusMetricsHandler(registry));
     for (const resolver of this.resolvers) {
@@ -64,6 +62,7 @@ export default class AtlasWorker extends PeriodicWorker {
     if (await this.operationalMode.isRetire()) {
       await this.retireOperation();
     } else {
+      this.releaseBundlesService.reset();
       await this.normalOperation();
     }
   }
