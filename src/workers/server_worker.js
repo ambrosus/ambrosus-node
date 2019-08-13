@@ -27,15 +27,15 @@ import prometheusMetricsHandler from '../routes/prometheus_metrics.js';
 import asyncMiddleware from '../middlewares/async_middleware';
 import {Role} from '../services/roles_repository';
 import fallbackRouter from '../routes/fallback';
-import atlasModeProxy from '../routes/atlas_mode_proxy';
 
 export default class ServerWorker extends Worker {
-  constructor(modelEngine, web3, role, config, logger) {
+  constructor(modelEngine, web3, role, config, logger, operationalMode) {
     super(logger);
     this.modelEngine = modelEngine;
     this.role = role;
     this.web3 = web3;
     this.config = config;
+    this.operationalMode = operationalMode;
   }
 
   async work() {
@@ -59,7 +59,7 @@ export default class ServerWorker extends Worker {
 
     app.use(cachePreventionMiddleware);
 
-    app.use('/nodeinfo', nodeInfoRouter(this.modelEngine, this.modelEngine.identityManager, this.config.gitCommit));
+    app.use('/nodeinfo', nodeInfoRouter(this.modelEngine, this.modelEngine.identityManager, this.config.gitCommit, this.config, this.role.is(Role.HERMES) ? null : this.operationalMode));
     app.use('/bundle', bundlesRouter(this.modelEngine));
     app.get('/health', asyncMiddleware(healthCheckHandler(this.modelEngine.mongoClient, this.web3)));
     app.get('/metrics', prometheusMetricsHandler(registry));
@@ -69,8 +69,6 @@ export default class ServerWorker extends Worker {
       app.use('/assets', assetsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine, this.config));
       app.use('/events', eventsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine));
       app.use('/token', tokenRouter(this.modelEngine.tokenAuthenticator, this.config));
-    } else {
-      app.use('/mode', atlasModeProxy());
     }
 
     app.use('*', fallbackRouter(this.config));
