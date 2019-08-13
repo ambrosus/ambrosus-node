@@ -18,9 +18,7 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Retire transfers repository', () => {
-  let transferWrapperMock;
   let configWrapperMock;
-  let activeTransfersCacheMock;
   let blockchainStateWrapperMock;
   let transfersEventEmitterWrapper;
   let retireTransfersRepository;
