@@ -19,9 +19,9 @@ export default class OperationalMode {
     if (request.mode !== undefined) {
       const mode = this.tokenAuthenticator.decode(request.mode);
       if (mode.idData.mode === OperationalModes.retire) {
-        this.operationalModeRepository.set({mode:OperationalModes.retire, info:{}});
+        await this.operationalModeRepository.set({mode:OperationalModes.retire, info:{}});
       } else {
-        this.operationalModeRepository.set({mode:OperationalModes.normal, info:{}});
+        await this.operationalModeRepository.set({mode:OperationalModes.normal, info:{}});
       }
     }
   }

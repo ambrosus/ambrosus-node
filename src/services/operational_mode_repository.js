@@ -16,12 +16,8 @@ export default class OperationalModeRepository {
     await this.db.collection('operationalmode').updateOne({_id:1}, {$set : {_id:1, ...mode}}, {upsert : true});
   }
 
-  // total
-  // transfered
-  // transfer now
   async updateInfo(info) {
     await this.db.collection('operationalmode').updateOne({_id:1}, {$set : {info}});
-    return await this.db.collection('operationalmode').findOne({_id:1}, {projection: {_id: 0}});
   }
 
   async get() {
