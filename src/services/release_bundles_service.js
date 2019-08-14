@@ -27,7 +27,7 @@ export default class ReleaseBundlesService {
   async process() {
     let infoUpdated = false;
     if (null === this.shelteredBundles) {
-      const bundles = await this.dataModelEngine.getShelteredBundles();
+      const bundles = await this.dataModelEngine.getShelteredBundles(0);
       this.shelteredBundles = new Set(bundles.map((bundle) => bundle.bundleId));
       this.modeInfo = {
         total: this.shelteredBundles.size,
@@ -54,13 +54,13 @@ export default class ReleaseBundlesService {
 
     if (transfers.length < this.maxOngoingTransfers) {
       let startedTransersCount = 0;
-      for (const bundle of this.shelteredBundles) {
+      for (const bundleId of this.shelteredBundles) {
         try {
-          await this.shelteringTransfersWrapper.start(bundle.bundleId);
+          await this.shelteringTransfersWrapper.start(bundleId);
           startedTransersCount++;
         } catch (err) {
-          this.failedTransfersCache.rememberFailedResolution(bundle.bundleId, this.retryTimeout);
-          await this.workerLogger.addLog(`Failed to start transfer: ${err.message || err}`, bundle, err.stack);
+          this.failedTransfersCache.rememberFailedResolution(bundleId, this.retryTimeout);
+          await this.workerLogger.addLog(`Failed to start transfer: ${err.message || err}`, bundleId, err.stack);
         }
       }
       if (startedTransersCount > 0) {
