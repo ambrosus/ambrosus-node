@@ -153,8 +153,14 @@ export default class BundleRepository {
     return totalCount;
   }
 
-  async getShelteredBundles() {
-    const cursor = await this.db.collection('bundle_metadata').find({'repository.status': BundleStatuses.sheltered}, {projection: {bundleId: 1, _id: 0}});
+  async getShelteredBundles(bundlesCount) {
+    const cursor = await this.db.collection('bundle_metadata').find({'repository.status': BundleStatuses.sheltered}, {projection: {bundleId: 1, _id: 0}})
+      .limit(bundlesCount);
     return await cursor.toArray();
+  }
+
+  async getShelteredBundlesCount() {
+    return await this.db.collection('bundle_metadata').find({'repository.status': BundleStatuses.sheltered}, {projection: {bundleId: 1, _id: 0}})
+      .count();
   }
 }
