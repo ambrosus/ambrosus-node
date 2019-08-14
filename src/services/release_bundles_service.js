@@ -22,6 +22,7 @@ export default class ReleaseBundlesService {
 
   reset() {
     this.shelteredBundles = null;
+    this.modeInfo = null;
   }
 
   async process() {
@@ -40,12 +41,22 @@ export default class ReleaseBundlesService {
     const transfers = await this.retireTransfersRepository.ongoingTransfers();
     const resolvedTransfers = this.retireTransfersRepository.getResolvedTransfers();
 
+    for (const transfer of transfers) {
+      if (this.shelteredBundles.delete(transfer.bundleId)) {
+        this.modeInfo.transfers++;
+        infoUpdated = true;
+      }
+    }
+
     for (const transfer of resolvedTransfers) {
       try {
         await this.dataModelEngine.removeBundle(transfer.bundleId);
         this.shelteredBundles.delete(transfer.bundleId);
         this.retireTransfersRepository.transferDone(transfer.transferId);
         this.modeInfo.transfered++;
+        if (this.modeInfo.transfers > 0) {
+          this.modeInfo.transfers--;
+        }
         infoUpdated = true;
       } catch (err) {
         await this.workerLogger.addLog(`Failed to remove bundle: ${err.message || err}`, transfer.bundleId, err.stack);
@@ -58,13 +69,17 @@ export default class ReleaseBundlesService {
         try {
           await this.shelteringTransfersWrapper.start(bundleId);
           startedTransersCount++;
+          this.shelteredBundles.delete(bundleId);
+          if ((startedTransersCount + transfers.length) >= this.maxOngoingTransfers) {
+            break;
+          }
         } catch (err) {
-          this.failedTransfersCache.rememberFailedResolution(bundleId, this.retryTimeout);
+          // TODO: this.failedTransfersCache.rememberFailedResolution(bundleId, this.retryTimeout);
           await this.workerLogger.addLog(`Failed to start transfer: ${err.message || err}`, bundleId, err.stack);
         }
       }
       if (startedTransersCount > 0) {
-        this.modeInfo.transfered += startedTransersCount;
+        this.modeInfo.transfers += startedTransersCount;
         infoUpdated = true;
         this.workerLogger.logger.info(`Started new ${startedTransersCount} bundle transfers`);
       }
