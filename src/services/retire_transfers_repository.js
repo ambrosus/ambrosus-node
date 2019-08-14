@@ -28,7 +28,7 @@ export default class RetireTransfersRepository extends EventsCollector {
       await this.updateTransfers(fromBlock, currentBlock);
       this.updateBlockInfo(currentBlock);
     }
-    return this.activeTransfers;
+    return Object.values(this.activeTransfers);
   }
 
   getResolvedTransfers() {

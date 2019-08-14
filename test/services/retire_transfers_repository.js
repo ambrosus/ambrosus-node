@@ -165,7 +165,7 @@ describe('Retire transfers repository', () => {
       expect(transfersEventEmitterWrapper.transfers).to.be.calledWith(fromBlock, latestBlock);
       expect(transfersEventEmitterWrapper.resolvedTransfers).to.be.calledWith(fromBlock, latestBlock);
       expect(transfersEventEmitterWrapper.cancelledTransfers).to.be.calledWith(fromBlock, latestBlock);
-      expect(result).to.deep.equal(retireTransfersRepository.activeTransfers);
+      expect(result).to.deep.equal(Object.values(retireTransfersRepository.activeTransfers));
     });
 
     it('on second call: gets transfers since previously resolved block', async () => {
