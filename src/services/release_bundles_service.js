@@ -8,10 +8,12 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 const MAX_ONGOING_TRANSFERS = 20;
+const MAX_SHELTERING_CHECKS = 50;
 
 export default class ReleaseBundlesService {
-  constructor(dataModelEngine, shelteringTransfersWrapper, retireTransfersRepository, workerLogger, operationalMode) {
+  constructor(dataModelEngine, shelteringWrapper, shelteringTransfersWrapper, retireTransfersRepository, workerLogger, operationalMode) {
     this.dataModelEngine = dataModelEngine;
+    this.shelteringWrapper = shelteringWrapper;
     this.shelteringTransfersWrapper = shelteringTransfersWrapper;
     this.retireTransfersRepository = retireTransfersRepository;
     this.workerLogger = workerLogger;
@@ -65,13 +67,24 @@ export default class ReleaseBundlesService {
 
     if (transfers.length < this.maxOngoingTransfers) {
       let startedTransersCount = 0;
+      let shelteringChecks = 0;
       for (const bundleId of this.shelteredBundles) {
         try {
-          await this.shelteringTransfersWrapper.start(bundleId);
-          startedTransersCount++;
-          this.shelteredBundles.delete(bundleId);
-          if ((startedTransersCount + transfers.length) >= this.maxOngoingTransfers) {
-            break;
+          shelteringChecks++;
+          if (await this.shelteringWrapper.isSheltering(bundleId)) {
+            await this.shelteringTransfersWrapper.start(bundleId);
+            startedTransersCount++;
+            this.shelteredBundles.delete(bundleId);
+            if ((startedTransersCount + transfers.length) >= this.maxOngoingTransfers) {
+              break;
+            }
+          } else {
+            this.shelteredBundles.delete(bundleId);
+            await this.dataModelEngine.removeBundle(bundleId);
+            this.modeInfo.transfered++;
+          }
+          if (shelteringChecks >= MAX_SHELTERING_CHECKS) {
+            infoUpdated = true;
           }
         } catch (err) {
           // TODO: this.failedTransfersCache.rememberFailedResolution(bundleId, this.retryTimeout);

@@ -21,6 +21,7 @@ const {expect} = chai;
 describe('Release Bundles Service', () => {
   let service;
   let dataModelEngineMock;
+  let shelteringWrapperMock;
   let shelteringTransfersWrapperMock;
   let retireTransfersRepositoryMock;
   let workerLoggerMock;
@@ -32,6 +33,9 @@ describe('Release Bundles Service', () => {
     dataModelEngineMock = {
       removeBundle: sinon.spy(),
       getShelteredBundles: sinon.stub().resolves([])
+    };
+    shelteringWrapperMock = {
+      isSheltering: sinon.stub()
     };
     shelteringTransfersWrapperMock = {
       start: sinon.spy()
@@ -51,10 +55,11 @@ describe('Release Bundles Service', () => {
       setInfo: sinon.spy(),
       isRetire: sinon.stub().resolves(true)
     };
-    service = new ReleaseBundlesService(dataModelEngineMock, shelteringTransfersWrapperMock, retireTransfersRepositoryMock, workerLoggerMock, operationalModeMock);
+    service = new ReleaseBundlesService(dataModelEngineMock, shelteringWrapperMock, shelteringTransfersWrapperMock, retireTransfersRepositoryMock, workerLoggerMock, operationalModeMock);
   });
 
   afterEach(async () => {
+    shelteringWrapperMock.isSheltering.resolves(true);
     service.reset();
   });
 
@@ -81,6 +86,16 @@ describe('Release Bundles Service', () => {
     expect(retireTransfersRepositoryMock.transferDone).to.not.have.been.called;
     expect(service.shelteredBundles.size).to.be.equal(0);
     expect(service.modeInfo).to.deep.equal({total: 5, transfers: 5, transfered: 0});
+  });
+
+  it('do not start transfers for non-sheltered bundles works', async () => {
+    dataModelEngineMock.getShelteredBundles.resolves(bundles5);
+    shelteringWrapperMock.isSheltering.resolves(false);
+    await service.process();
+    expect(dataModelEngineMock.removeBundle).to.be.callCount(5);
+    expect(retireTransfersRepositoryMock.transferDone).to.not.have.been.called;
+    expect(service.shelteredBundles.size).to.be.equal(0);
+    expect(service.modeInfo).to.deep.equal({total: 5, transfers: 0, transfered: 5});
   });
 
   it('remove bundles for resolved transfers works', async () => {

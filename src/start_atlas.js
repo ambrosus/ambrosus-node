@@ -50,6 +50,7 @@ async function start(logger) {
   ];
   const releaseBundlesService = new ReleaseBundlesService(
     builder.dataModelEngine,
+    builder.shelteringWrapper,
     builder.shelteringTransfersWrapper,
     builder.retireTransfersRepository,
     workerLogger,
