@@ -85,6 +85,8 @@ describe('Release Bundles Service', () => {
 
   it('remove bundles for resolved transfers works', async () => {
     dataModelEngineMock.getShelteredBundles.resolves(bundles5);
+    await service.process();
+    expect(service.shelteredBundles.size).to.be.equal(0);
     retireTransfersRepositoryMock.ongoingTransfers.resolves([
       {transferId:1, donorId:1, bundleId:1},
       {transferId:3, donorId:1, bundleId:3},
@@ -96,7 +98,7 @@ describe('Release Bundles Service', () => {
     expect(dataModelEngineMock.removeBundle).to.be.calledWith(2);
     expect(retireTransfersRepositoryMock.transferDone).to.be.calledWith(2);
     expect(service.shelteredBundles.size).to.be.equal(0);
-    expect(service.modeInfo).to.deep.equal({total: 5, transfers: 3, transfered: 1});
+    expect(service.modeInfo).to.deep.equal({total: 5, transfers: 4, transfered: 1});
 
     retireTransfersRepositoryMock.ongoingTransfers.resolves([
       {transferId:1, donorId:1, bundleId:1},
@@ -108,6 +110,6 @@ describe('Release Bundles Service', () => {
     expect(dataModelEngineMock.removeBundle).to.be.calledWith(5);
     expect(retireTransfersRepositoryMock.transferDone).to.be.calledWith(5);
     expect(service.shelteredBundles.size).to.be.equal(0);
-    expect(service.modeInfo).to.deep.equal({total: 5, transfers: 2, transfered: 2});
+    expect(service.modeInfo).to.deep.equal({total: 5, transfers: 3, transfered: 2});
   });
 });
