@@ -88,7 +88,7 @@ export default class ReleaseBundlesService {
           }
         } catch (err) {
           // TODO: this.failedTransfersCache.rememberFailedResolution(bundleId, this.retryTimeout);
-          await this.workerLogger.addLog(`Failed to start transfer: ${err.message || err}`, bundleId, err.stack);
+          await this.workerLogger.addLog(`Failed to start transfer: ${err.message || err}`, {bundleId}, err.stack);
         }
       }
       if (startedTransersCount > 0) {
