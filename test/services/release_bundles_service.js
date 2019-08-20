@@ -20,7 +20,7 @@ const {expect} = chai;
 
 describe('Release Bundles Service', () => {
   let service;
-  let dataModelEngineMock;
+  let bundleRepositoryMock;
   let shelteringWrapperMock;
   let shelteringTransfersWrapperMock;
   let retireTransfersRepositoryMock;
@@ -30,7 +30,7 @@ describe('Release Bundles Service', () => {
   const bundles5 = [{bundleId:1}, {bundleId:2}, {bundleId:3}, {bundleId:4}, {bundleId:5}];
 
   before(async () => {
-    dataModelEngineMock = {
+    bundleRepositoryMock = {
       removeBundle: sinon.spy(),
       getShelteredBundles: sinon.stub().resolves([])
     };
@@ -55,7 +55,7 @@ describe('Release Bundles Service', () => {
       setInfo: sinon.spy(),
       isRetire: sinon.stub().resolves(true)
     };
-    service = new ReleaseBundlesService(dataModelEngineMock, shelteringWrapperMock, shelteringTransfersWrapperMock, retireTransfersRepositoryMock, workerLoggerMock, operationalModeMock);
+    service = new ReleaseBundlesService(bundleRepositoryMock, shelteringWrapperMock, shelteringTransfersWrapperMock, retireTransfersRepositoryMock, workerLoggerMock, operationalModeMock);
   });
 
   afterEach(async () => {
@@ -69,10 +69,10 @@ describe('Release Bundles Service', () => {
   it('call with empty data works', async () => {
     expect(service.shelteredBundles).to.be.null;
     await service.process();
-    expect(dataModelEngineMock.getShelteredBundles).to.be.calledOnce;
+    expect(bundleRepositoryMock.getShelteredBundles).to.be.calledOnce;
     expect(retireTransfersRepositoryMock.ongoingTransfers).to.be.calledOnce;
     expect(retireTransfersRepositoryMock.getResolvedTransfers).to.be.calledOnce;
-    expect(dataModelEngineMock.removeBundle).to.not.have.been.called;
+    expect(bundleRepositoryMock.removeBundle).to.not.have.been.called;
     expect(retireTransfersRepositoryMock.transferDone).to.not.have.been.called;
     expect(shelteringTransfersWrapperMock.start).to.not.have.been.called;
     expect(service.shelteredBundles.size).to.be.equal(0);
@@ -80,26 +80,26 @@ describe('Release Bundles Service', () => {
   });
 
   it('start bundles transfers works', async () => {
-    dataModelEngineMock.getShelteredBundles.resolves(bundles5);
+    bundleRepositoryMock.getShelteredBundles.resolves(bundles5);
     await service.process();
-    expect(dataModelEngineMock.removeBundle).to.not.have.been.called;
+    expect(bundleRepositoryMock.removeBundle).to.not.have.been.called;
     expect(retireTransfersRepositoryMock.transferDone).to.not.have.been.called;
     expect(service.shelteredBundles.size).to.be.equal(0);
     expect(service.modeInfo).to.deep.equal({total: 5, transfers: 5, transfered: 0});
   });
 
   it('do not start transfers for non-sheltered bundles works', async () => {
-    dataModelEngineMock.getShelteredBundles.resolves(bundles5);
+    bundleRepositoryMock.getShelteredBundles.resolves(bundles5);
     shelteringWrapperMock.isSheltering.resolves(false);
     await service.process();
-    expect(dataModelEngineMock.removeBundle).to.be.callCount(5);
+    expect(bundleRepositoryMock.removeBundle).to.be.callCount(5);
     expect(retireTransfersRepositoryMock.transferDone).to.not.have.been.called;
     expect(service.shelteredBundles.size).to.be.equal(0);
     expect(service.modeInfo).to.deep.equal({total: 5, transfers: 0, transfered: 5});
   });
 
   it('remove bundles for resolved transfers works', async () => {
-    dataModelEngineMock.getShelteredBundles.resolves(bundles5);
+    bundleRepositoryMock.getShelteredBundles.resolves(bundles5);
     await service.process();
     expect(service.shelteredBundles.size).to.be.equal(0);
     retireTransfersRepositoryMock.ongoingTransfers.resolves([
@@ -110,7 +110,7 @@ describe('Release Bundles Service', () => {
     ]);
     retireTransfersRepositoryMock.getResolvedTransfers.returns([{transferId:2, donorId:1, bundleId:2}]);
     await service.process();
-    expect(dataModelEngineMock.removeBundle).to.be.calledWith(2);
+    expect(bundleRepositoryMock.removeBundle).to.be.calledWith(2);
     expect(retireTransfersRepositoryMock.transferDone).to.be.calledWith(2);
     expect(service.shelteredBundles.size).to.be.equal(0);
     expect(service.modeInfo).to.deep.equal({total: 5, transfers: 4, transfered: 1});
@@ -122,7 +122,7 @@ describe('Release Bundles Service', () => {
     ]);
     retireTransfersRepositoryMock.getResolvedTransfers.returns([{transferId:5, donorId:1, bundleId:5}]);
     await service.process();
-    expect(dataModelEngineMock.removeBundle).to.be.calledWith(5);
+    expect(bundleRepositoryMock.removeBundle).to.be.calledWith(5);
     expect(retireTransfersRepositoryMock.transferDone).to.be.calledWith(5);
     expect(service.shelteredBundles.size).to.be.equal(0);
     expect(service.modeInfo).to.deep.equal({total: 5, transfers: 3, transfered: 2});

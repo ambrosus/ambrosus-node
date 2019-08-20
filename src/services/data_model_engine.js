@@ -283,14 +283,6 @@ export default class DataModelEngine {
     return this.bundleRepository.cleanupBundles();
   }
 
-  async getShelteredBundlesCount() {
-    return await this.bundleRepository.getShelteredBundlesCount();
-  }
-
-  async getShelteredBundles(bundlesCount) {
-    return await this.bundleRepository.getShelteredBundles(bundlesCount);
-  }
-
   async getWorkerLogs(logsCount = 10) {
     return await this.workerLogRepository.getLogs(logsCount);
   }
