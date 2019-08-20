@@ -8,11 +8,15 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 const MAX_ONGOING_TRANSFERS = 20;
-const MAX_SHELTERING_CHECKS = 50;
+const MAX_SHELTERING_CHECKS = 25;
+
+const sleep = async (timeout) => new Promise((resolve) => {
+  setTimeout(resolve, timeout);
+});
 
 export default class ReleaseBundlesService {
-  constructor(dataModelEngine, shelteringWrapper, shelteringTransfersWrapper, retireTransfersRepository, workerLogger, operationalMode) {
-    this.dataModelEngine = dataModelEngine;
+  constructor(bundleRepository, shelteringWrapper, shelteringTransfersWrapper, retireTransfersRepository, workerLogger, operationalMode) {
+    this.bundleRepository = bundleRepository;
     this.shelteringWrapper = shelteringWrapper;
     this.shelteringTransfersWrapper = shelteringTransfersWrapper;
     this.retireTransfersRepository = retireTransfersRepository;
@@ -30,7 +34,7 @@ export default class ReleaseBundlesService {
   async process() {
     let infoUpdated = false;
     if (null === this.shelteredBundles) {
-      const bundles = await this.dataModelEngine.getShelteredBundles(0);
+      const bundles = await this.bundleRepository.getShelteredBundles(0);
       this.shelteredBundles = new Set(bundles.map((bundle) => bundle.bundleId));
       this.modeInfo = {
         total: this.shelteredBundles.size,
@@ -52,7 +56,7 @@ export default class ReleaseBundlesService {
 
     for (const transfer of resolvedTransfers) {
       try {
-        await this.dataModelEngine.removeBundle(transfer.bundleId);
+        await this.bundleRepository.removeBundle(transfer.bundleId);
         this.shelteredBundles.delete(transfer.bundleId);
         this.retireTransfersRepository.transferDone(transfer.transferId);
         this.modeInfo.transfered++;
@@ -80,16 +84,18 @@ export default class ReleaseBundlesService {
             }
           } else {
             this.shelteredBundles.delete(bundleId);
-            await this.dataModelEngine.removeBundle(bundleId);
+            await this.bundleRepository.removeBundle(bundleId);
             this.modeInfo.transfered++;
           }
           if (shelteringChecks >= MAX_SHELTERING_CHECKS) {
             infoUpdated = true;
+            break;
           }
         } catch (err) {
           // TODO: this.failedTransfersCache.rememberFailedResolution(bundleId, this.retryTimeout);
           await this.workerLogger.addLog(`Failed to start transfer: ${err.message || err}`, {bundleId}, err.stack);
         }
+        await sleep(100);
       }
       if (startedTransersCount > 0) {
         this.modeInfo.transfers += startedTransersCount;
