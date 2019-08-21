@@ -39,7 +39,10 @@ export default class ReleaseBundlesService {
       this.modeInfo = {
         total: this.shelteredBundles.size,
         transfers: 0,
-        transfered: 0
+        transfered: 0,
+        started: 0,
+        extra: 0,
+        failed: 0
       };
       this.operationalMode.setInfo(this.modeInfo);
     }
@@ -68,16 +71,17 @@ export default class ReleaseBundlesService {
         await this.workerLogger.addLog(`Failed to remove bundle: ${err.message || err}`, transfer.bundleId, err.stack);
       }
     }
-
     if (transfers.length < this.maxOngoingTransfers) {
       let startedTransersCount = 0;
       let shelteringChecks = 0;
       for (const bundleId of this.shelteredBundles) {
         try {
+          infoUpdated = true;
           shelteringChecks++;
           if (await this.shelteringWrapper.isSheltering(bundleId)) {
             await this.shelteringTransfersWrapper.start(bundleId);
             startedTransersCount++;
+            this.modeInfo.started++;
             this.shelteredBundles.delete(bundleId);
             if ((startedTransersCount + transfers.length) >= this.maxOngoingTransfers) {
               break;
@@ -86,20 +90,20 @@ export default class ReleaseBundlesService {
             this.shelteredBundles.delete(bundleId);
             await this.bundleRepository.removeBundle(bundleId);
             this.modeInfo.transfered++;
-          }
-          if (shelteringChecks >= MAX_SHELTERING_CHECKS) {
-            infoUpdated = true;
-            break;
+            this.modeInfo.extra++;
           }
         } catch (err) {
           // TODO: this.failedTransfersCache.rememberFailedResolution(bundleId, this.retryTimeout);
           await this.workerLogger.addLog(`Failed to start transfer: ${err.message || err}`, {bundleId}, err.stack);
+          this.modeInfo.failed++;
+        }
+        if (shelteringChecks >= MAX_SHELTERING_CHECKS) {
+          break;
         }
         await sleep(100);
       }
       if (startedTransersCount > 0) {
         this.modeInfo.transfers += startedTransersCount;
-        infoUpdated = true;
         this.workerLogger.logger.info(`Started new ${startedTransersCount} bundle transfers`);
       }
     }
