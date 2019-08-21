@@ -14,7 +14,7 @@ import allPermissions from '../utils/all_permissions';
 import BundleStatuses from '../utils/bundle_statuses';
 
 export default class DataModelEngine {
-  constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, bundleDownloader, bundleBuilder, bundleRepository, accountRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, uploadRepository, rolesRepository, workerLogRepository}) {
+  constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, bundleDownloader, bundleBuilder, bundleRepository, accountRepository, operationalModeRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, uploadRepository, rolesRepository, workerLogRepository}) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
@@ -23,6 +23,7 @@ export default class DataModelEngine {
     this.bundleBuilder = bundleBuilder;
     this.bundleRepository = bundleRepository;
     this.accountRepository = accountRepository;
+    this.operationalModeRepository = operationalModeRepository;
     this.findEventQueryObjectFactory = findEventQueryObjectFactory;
     this.findAccountQueryObjectFactory = findAccountQueryObjectFactory;
     this.findAssetQueryObjectFactory = findAssetQueryObjectFactory;

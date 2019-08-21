@@ -18,16 +18,14 @@ export default class AtlasChallengeResolver extends BundleShelteringResolver {
     challengesRepository,
     failedChallengesCache,
     strategy,
-    workerLogRepository,
-    logger
+    workerLogger
   ) {
     super(web3,
       dataModelEngine,
       challengesRepository,
       failedChallengesCache,
       strategy,
-      workerLogRepository,
-      logger,
+      workerLogger,
       'Challenge'
     );
   }

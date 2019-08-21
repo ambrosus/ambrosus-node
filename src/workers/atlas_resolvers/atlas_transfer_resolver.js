@@ -18,16 +18,14 @@ export default class AtlaTransferResolver extends BundleShelteringResolver {
     transfersRepository,
     failedTransfersCache,
     strategy,
-    workerLogRepository,
-    logger
+    workerLogger
   ) {
     super(web3,
       dataModelEngine,
       transfersRepository,
       failedTransfersCache,
       strategy,
-      workerLogRepository,
-      logger,
+      workerLogger,
       'Transfer'
     );
   }

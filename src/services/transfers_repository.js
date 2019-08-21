@@ -21,13 +21,13 @@ export default class TransfersRepository extends ResolutionsRepository {
   }
 
   async updateActiveResolutionsCache(fromBlock, currentBlock) {
-    const startedTransfers = await this.collectResolutionEvents(fromBlock, currentBlock,
+    const startedTransfers = await this.collectEvents(fromBlock, currentBlock,
       (start, end) => this.transfersEventEmitterWrapper.transfers(start, end),
       ['transferId', 'donorId', 'bundleId']);
-    const resolvedTransfers = await this.collectResolutionEvents(fromBlock, currentBlock,
+    const resolvedTransfers = await this.collectEvents(fromBlock, currentBlock,
       (start, end) => this.transfersEventEmitterWrapper.resolvedTransfers(start, end),
       ['transferId']);
-    const cancelledTransfers = await this.collectResolutionEvents(fromBlock, currentBlock,
+    const cancelledTransfers = await this.collectEvents(fromBlock, currentBlock,
       (start, end) => this.transfersEventEmitterWrapper.cancelledTransfers(start, end),
       ['transferId']);
     this.activeResolutionsCache.applyIncomingResolutionEvents(startedTransfers, resolvedTransfers, cancelledTransfers);

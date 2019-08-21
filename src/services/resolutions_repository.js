@@ -7,25 +7,13 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-/** @abstract */
-export default class ResolutionsRepository {
-  constructor(blockchainStateWrapper, activeResolutionsCache, eventOneFetchLimit) {
-    this.blockchainStateWrapper = blockchainStateWrapper;
-    this.activeResolutionsCache = activeResolutionsCache;
-    this.eventOneFetchLimit = eventOneFetchLimit;
-    this.lastSavedBlock = 0;
-  }
+import EventsCollector from './events_collector';
 
-  prepareResolutionEvent(resolutionEvents, outputFields) {
-    return resolutionEvents.map(
-      ({blockNumber, logIndex, returnValues}) => outputFields.reduce(
-        (acc, fieldName) => {
-          acc[fieldName] = returnValues[fieldName];
-          return acc;
-        },
-        {blockNumber, logIndex}
-      )
-    );
+/** @abstract */
+export default class ResolutionsRepository extends EventsCollector {
+  constructor(blockchainStateWrapper, activeResolutionsCache, eventOneFetchLimit) {
+    super(blockchainStateWrapper, eventOneFetchLimit);
+    this.activeResolutionsCache = activeResolutionsCache;
   }
 
   async ongoingResolutions() {
@@ -55,33 +43,5 @@ export default class ResolutionsRepository {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getDesignatedShelterer(resolution) {
     throw new Error('Should be implemented');
-  }
-
-  async collectResolutionEvents(fromBlock, currentBlock, fetchEvents, outputFields) {
-    return this.collectResolutionEventsWithStep(fromBlock, currentBlock, this.eventOneFetchLimit, fetchEvents, outputFields);
-  }
-
-  async collectResolutionEventsWithStep(fromBlock, currentBlock, step, fetchEvents, outputFields) {
-    let collectedResolutionEvents = [];
-    for (let startBlock = fromBlock; startBlock <= currentBlock; startBlock += step) {
-      const endBlock = Math.min(currentBlock, startBlock + step - 1);
-      const challengeBlockchainEvents = await fetchEvents(startBlock, endBlock);
-      collectedResolutionEvents = collectedResolutionEvents.concat(this.prepareResolutionEvent(challengeBlockchainEvents, outputFields));
-    }
-    return collectedResolutionEvents;
-  }
-
-  async getBlockInfo() {
-    const fromBlock = await this.getFromBlock();
-    const currentBlock = await this.blockchainStateWrapper.getCurrentBlockNumber();
-    return {fromBlock, currentBlock};
-  }
-
-  async getFromBlock() {
-    throw new Error('Should be implemented');
-  }
-
-  updateBlockInfo(currentBlock) {
-    this.lastSavedBlock = currentBlock;
   }
 }

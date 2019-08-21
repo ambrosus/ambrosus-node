@@ -55,7 +55,8 @@ export default class ServerApparatus extends Builder {
       web3,
       this.role,
       this.config,
-      this.logger
+      this.logger,
+      this.operationalMode
     );
     await this.worker.start();
   }

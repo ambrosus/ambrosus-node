@@ -27,9 +27,9 @@ describe('Hermes Worker', () => {
   const exampleWorkId = 'workid';
   const bundleId = '0xc0ffee';
   let mockDataModelEngine;
-  let mockWorkerLogRepository;
   let mockWorkerTaskTrackingRepository;
   let mockLogger;
+  let mockWorkerLogger;
   let mockStrategy;
   let mockResult;
   let hermesWorker;
@@ -58,12 +58,13 @@ describe('Hermes Worker', () => {
       tryToBeginWork: sinon.stub().resolves(exampleWorkId),
       finishWork: sinon.spy()
     };
-    mockWorkerLogRepository = {
-      storeLog: sinon.stub()
-    };
     mockLogger = {
       info: sinon.stub(),
       error: sinon.stub()
+    };
+    mockWorkerLogger = {
+      logger: mockLogger,
+      addLog: sinon.stub()
     };
     mockStrategy = sinon.createStubInstance(HermesUploadStrategy);
     mockStrategy.shouldBundle.resolves({result: true});
@@ -72,10 +73,9 @@ describe('Hermes Worker', () => {
     const {client: mongoClient} = await connectToMongo(config);
     hermesWorker = new HermesWorker(
       mockDataModelEngine,
-      mockWorkerLogRepository,
+      mockWorkerLogger,
       mockWorkerTaskTrackingRepository,
       mockStrategy,
-      mockLogger,
       mongoClient,
       config.serverPort
     );
@@ -136,7 +136,7 @@ describe('Hermes Worker', () => {
     it('is requested and summary is logged', async () => {
       await hermesWorker.periodicWork();
       expect(mockDataModelEngine.uploadAcceptedBundleCandidates).to.have.been.calledOnce;
-      expect(mockLogger.info).to.have.been.calledWith({message: 'Bundle has been uploaded', bundleId, stacktrace: undefined});
+      expect(mockWorkerLogger.addLog).to.have.been.calledWith('Bundle has been uploaded', {bundleId});
     });
   });
 

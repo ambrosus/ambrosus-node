@@ -11,6 +11,7 @@ import config from './config/config';
 import Builder from './builder';
 import HermesWorker from './workers/hermes_worker';
 import {Role} from './services/roles_repository';
+import WorkerLogger from './services/worker_logger';
 import {waitForChainSync} from './utils/web3_tools';
 import {setup} from './utils/instrument_process';
 
@@ -27,10 +28,9 @@ async function start(logger) {
   const strategy = loadStrategy(config.uploadStrategy);
   const worker = new HermesWorker(
     builder.dataModelEngine,
-    builder.workerLogRepository,
+    new WorkerLogger(logger, builder.workerLogRepository),
     builder.workerTaskTrackingRepository,
     strategy,
-    logger,
     builder.client,
     config.serverPort
   );

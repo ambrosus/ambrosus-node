@@ -13,9 +13,11 @@ import AtlasTransferResolver from './workers/atlas_resolvers/atlas_transfer_reso
 import config from './config/config';
 import Builder from './builder';
 import {Role} from './services/roles_repository';
+import WorkerLogger from './services/worker_logger';
 import {waitForChainSync} from './utils/web3_tools';
 import {setup} from './utils/instrument_process';
 import CleanupWorker from './workers/cleanup_worker';
+import ReleaseBundlesService from './services/release_bundles_service';
 
 async function start(logger) {
   const builder = new Builder();
@@ -27,6 +29,7 @@ async function start(logger) {
   await builder.ensureAccountIsOnboarded([Role.ATLAS]);
   const challengeStrategy = loadStrategy(config.challengeResolutionStrategy);
   const transferStrategy = loadStrategy(config.transferResolutionStrategy);
+  const workerLogger = new WorkerLogger(logger, builder.workerLogRepository);
   const resolvers = [
     new AtlasChallengeResolver(
       builder.web3,
@@ -34,8 +37,7 @@ async function start(logger) {
       builder.challengesRepository,
       builder.failedChallengesCache,
       challengeStrategy,
-      builder.workerLogRepository,
-      logger
+      workerLogger
     ),
     new AtlasTransferResolver(
       builder.web3,
@@ -43,22 +45,27 @@ async function start(logger) {
       builder.transfersRepository,
       builder.failedTransfersCache,
       transferStrategy,
-      builder.workerLogRepository,
-      logger
+      workerLogger
     )
   ];
+  const releaseBundlesService = new ReleaseBundlesService(
+    builder.bundleRepository,
+    builder.shelteringWrapper,
+    builder.shelteringTransfersWrapper,
+    builder.retireTransfersRepository,
+    workerLogger,
+    builder.operationalMode
+  );
   const atlasWorker = new AtlasWorker(
     builder.web3,
     builder.dataModelEngine,
-    builder.workerLogRepository,
+    workerLogger,
     builder.workerTaskTrackingRepository,
-    logger,
     builder.client,
-    config.serverPort,
-    config.requiredFreeDiskSpace,
-    config.atlasWorkerInterval,
     resolvers,
-    config.atlasProcessActiveResolviesByOne
+    builder.operationalMode,
+    config,
+    releaseBundlesService
   );
   const cleanupWorker = new CleanupWorker(
     builder.dataModelEngine,

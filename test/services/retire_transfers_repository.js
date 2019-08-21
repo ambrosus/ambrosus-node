@@ -10,22 +10,20 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import TransfersRepository from '../../src/services/transfers_repository';
+import RetireTransfersRepository from '../../src/services/retire_transfers_repository';
 import sinon from 'sinon';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-describe('Transfers repository', () => {
-  let transferWrapperMock;
+describe('Retire transfers repository', () => {
   let configWrapperMock;
-  let activeTransfersCacheMock;
   let blockchainStateWrapperMock;
   let transfersEventEmitterWrapper;
-  let transfersRepository;
+  let retireTransfersRepository;
 
-  describe('prepareResolutionEvent', () => {
+  describe('prepareEvents', () => {
     const donorId = 1;
     const bundleId = 2;
     const transferId = 3;
@@ -59,16 +57,16 @@ describe('Transfers repository', () => {
       }];
 
     beforeEach(() => {
-      transfersRepository = new TransfersRepository();
+      retireTransfersRepository = new RetireTransfersRepository();
     });
 
     it('extracts the blockNumber, logIndex, the fields specified in selector and appends event type', async () => {
-      expect(transfersRepository.prepareEvents(events, ['transferId', 'donorId', 'bundleId'])).to.deep.equal([
+      expect(retireTransfersRepository.prepareEvents(events, ['transferId', 'donorId', 'bundleId'])).to.deep.equal([
         {donorId, bundleId, transferId, blockNumber: 1, logIndex: 0},
         {donorId, bundleId, transferId: 100, blockNumber: 2, logIndex: 0},
         {donorId, bundleId, transferId, blockNumber: 2, logIndex: 1}
       ]);
-      expect(transfersRepository.prepareEvents(events, ['transferId'])).to.deep.equal([
+      expect(retireTransfersRepository.prepareEvents(events, ['transferId'])).to.deep.equal([
         {transferId, blockNumber: 1, logIndex: 0},
         {transferId: 100, blockNumber: 2, logIndex: 0},
         {transferId, blockNumber: 2, logIndex: 1}
@@ -100,6 +98,22 @@ describe('Transfers repository', () => {
           bundleId,
           transferId: 100
         }
+      }, {
+        blockNumber: 2,
+        logIndex: 1,
+        returnValues: {
+          donorId,
+          bundleId,
+          transferId: 'resolved'
+        }
+      }, {
+        blockNumber: 2,
+        logIndex: 2,
+        returnValues: {
+          donorId,
+          bundleId,
+          transferId: 'cancelled'
+        }
       }];
     const resolvedEvents = [
       {
@@ -109,7 +123,7 @@ describe('Transfers repository', () => {
           bundleId,
           donorId,
           transferId: 'resolved',
-          resolverId: 'someResolverId'
+          recipientId: 'someResolverId'
         }
       }];
     const cancelledEvents = [
@@ -127,10 +141,6 @@ describe('Transfers repository', () => {
       configWrapperMock = {
         challengeDuration: sinon.stub().resolves(challengeDuration)
       };
-      activeTransfersCacheMock = {
-        applyIncomingResolutionEvents: sinon.stub(),
-        activeResolutions: ['activeResolutions']
-      };
       blockchainStateWrapperMock = {
         getCurrentBlockNumber: sinon.stub()
       };
@@ -145,52 +155,61 @@ describe('Transfers repository', () => {
         .resolves(latestBlock)
         .onThirdCall(2)
         .resolves(latestBlock + 3);
-      transfersRepository = new TransfersRepository(transferWrapperMock, transfersEventEmitterWrapper, configWrapperMock, blockchainStateWrapperMock, activeTransfersCacheMock);
-      sinon.spy(transfersRepository, 'prepareEvents');
+      retireTransfersRepository = new RetireTransfersRepository(transfersEventEmitterWrapper, blockchainStateWrapperMock, configWrapperMock, donorId);
+      sinon.spy(retireTransfersRepository, 'prepareEvents');
     });
 
     it('on first call: gets transfers from earliest possible block and caches them', async () => {
-      const result = await transfersRepository.ongoingResolutions();
+      const result = await retireTransfersRepository.ongoingTransfers();
       expect(configWrapperMock.challengeDuration).to.be.calledOnce;
       expect(transfersEventEmitterWrapper.transfers).to.be.calledWith(fromBlock, latestBlock);
       expect(transfersEventEmitterWrapper.resolvedTransfers).to.be.calledWith(fromBlock, latestBlock);
       expect(transfersEventEmitterWrapper.cancelledTransfers).to.be.calledWith(fromBlock, latestBlock);
-      expect(result).to.deep.equal(activeTransfersCacheMock.activeResolutions);
+      expect(result).to.deep.equal(Object.values(retireTransfersRepository.activeTransfers));
     });
 
     it('on second call: gets transfers since previously resolved block', async () => {
-      await transfersRepository.ongoingResolutions();
-      await transfersRepository.ongoingResolutions();
+      await retireTransfersRepository.ongoingTransfers();
+      await retireTransfersRepository.ongoingTransfers();
       expect(transfersEventEmitterWrapper.transfers).to.be.calledWith(latestBlock + 1, latestBlock + 3);
       expect(transfersEventEmitterWrapper.resolvedTransfers).to.be.calledWith(latestBlock + 1, latestBlock + 3);
       expect(transfersEventEmitterWrapper.cancelledTransfers).to.be.calledWith(latestBlock + 1, latestBlock + 3);
-      expect(transfersRepository.lastSavedBlock).to.equal(latestBlock + 3);
+      expect(retireTransfersRepository.lastSavedBlock).to.equal(latestBlock + 3);
     });
 
     it('does not fetch new transfers when currentBlock equals lastSavedBlock', async () => {
       blockchainStateWrapperMock.getCurrentBlockNumber.onThirdCall().resolves(latestBlock);
-      await transfersRepository.ongoingResolutions();
-      await transfersRepository.ongoingResolutions();
+      await retireTransfersRepository.ongoingTransfers();
+      await retireTransfersRepository.ongoingTransfers();
       expect(transfersEventEmitterWrapper.transfers).to.be.calledOnce;
       expect(transfersEventEmitterWrapper.resolvedTransfers).to.be.calledOnce;
       expect(transfersEventEmitterWrapper.cancelledTransfers).to.be.calledOnce;
     });
 
     it('adds new transfers to cache, removes resolved and cancelled', async () => {
-      await transfersRepository.ongoingResolutions();
-      expect(activeTransfersCacheMock.applyIncomingResolutionEvents).to.be.calledOnceWithExactly(
-        transfersRepository.prepareEvents(events, ['transferId', 'donorId', 'bundleId']),
-        transfersRepository.prepareEvents(resolvedEvents, ['transferId']),
-        transfersRepository.prepareEvents(cancelledEvents, ['transferId'])
+      sinon.spy(retireTransfersRepository, 'applyIncomingTransferEvents');
+      await retireTransfersRepository.ongoingTransfers();
+      expect(retireTransfersRepository.applyIncomingTransferEvents).to.be.calledOnceWithExactly(
+        retireTransfersRepository.prepareEvents(events, ['transferId', 'donorId', 'bundleId']),
+        retireTransfersRepository.prepareEvents(resolvedEvents, ['transferId']),
+        retireTransfersRepository.prepareEvents(cancelledEvents, ['transferId'])
       );
+      expect(retireTransfersRepository.resolvedTransfers).to.deep.eq([{bundleId, donorId, transferId: 'resolved', blockNumber: 2, logIndex: 1}]);
+    });
+
+    it('flush resolved transfers at get', async () => {
+      await retireTransfersRepository.ongoingTransfers();
+      expect(retireTransfersRepository.resolvedTransfers).to.deep.eq([{bundleId, donorId, transferId: 'resolved', blockNumber: 2, logIndex: 1}]);
+      expect(retireTransfersRepository.flushResolvedTransfers()).to.deep.eq([{bundleId, donorId, transferId: 'resolved', blockNumber: 2, logIndex: 1}]);
+      expect(retireTransfersRepository.resolvedTransfers.length).to.be.equal(0);
     });
 
     it('calls own methods with correct params', async () => {
-      await transfersRepository.ongoingResolutions();
-      expect(transfersRepository.prepareEvents).to.be.calledThrice;
-      expect(transfersRepository.prepareEvents).to.be.calledWith(events);
-      expect(transfersRepository.prepareEvents).to.be.calledWith(resolvedEvents);
-      expect(transfersRepository.prepareEvents).to.be.calledWith(cancelledEvents);
+      await retireTransfersRepository.ongoingTransfers();
+      expect(retireTransfersRepository.prepareEvents).to.be.calledThrice;
+      expect(retireTransfersRepository.prepareEvents).to.be.calledWith(events);
+      expect(retireTransfersRepository.prepareEvents).to.be.calledWith(resolvedEvents);
+      expect(retireTransfersRepository.prepareEvents).to.be.calledWith(cancelledEvents);
     });
 
     it('fetches events with steps - collects all events', async () => {
@@ -201,13 +220,13 @@ describe('Transfers repository', () => {
         .resolves([{blockNumber: 1, logIndex: 1}]);
       fetchEvents.withArgs(2, 2)
         .resolves([{blockNumber: 2, logIndex: 2}]);
-      const result = await transfersRepository.collectEventsWithStep(0, 2, 1, fetchEvents, []);
+      const result = await retireTransfersRepository.collectEventsWithStep(0, 2, 1, fetchEvents, []);
       expect(result).to.deep.eq([{blockNumber: 0, logIndex: 0}, {blockNumber: 1, logIndex: 1}, {blockNumber: 2, logIndex: 2}]);
     });
 
     it('fetches events with steps - divisible range', async () => {
       const fetchEvents = sinon.stub().resolves([]);
-      await transfersRepository.collectEventsWithStep(151, 300, 50, fetchEvents, []);
+      await retireTransfersRepository.collectEventsWithStep(151, 300, 50, fetchEvents, []);
       expect(fetchEvents).to.have.been.calledWith(151, 200);
       expect(fetchEvents).to.have.been.calledWith(201, 250);
       expect(fetchEvents).to.have.been.calledWith(251, 300);
@@ -215,7 +234,7 @@ describe('Transfers repository', () => {
 
     it('fetches events with steps - range with remainder', async () => {
       const fetchEvents = sinon.stub().resolves([]);
-      await transfersRepository.collectEventsWithStep(151, 215, 50, fetchEvents, []);
+      await retireTransfersRepository.collectEventsWithStep(151, 215, 50, fetchEvents, []);
       expect(fetchEvents).to.have.been.calledWith(151, 200);
       expect(fetchEvents).to.have.been.calledWith(201, 215);
     });
@@ -224,34 +243,8 @@ describe('Transfers repository', () => {
       const fetchEvents = sinon.stub()
         .withArgs(5, 5)
         .resolves([{blockNumber: 0, logIndex: 0}]);
-      const result = await transfersRepository.collectEventsWithStep(5, 5, 100, fetchEvents, []);
+      const result = await retireTransfersRepository.collectEventsWithStep(5, 5, 100, fetchEvents, []);
       expect(result).to.deep.eq([{blockNumber: 0, logIndex: 0}]);
-    });
-  });
-
-  describe('resolveTransfer', () => {
-    const donorId = 'donor';
-    const bundleId = 'bundle';
-    const transferId = 'transfer';
-    const transfer1 = {donorId, bundleId, transferId, bundleNumber: 1};
-
-    beforeEach(() => {
-      transferWrapperMock = {
-        resolve: sinon.stub(),
-        canResolve: sinon.stub().resolves(true)
-      };
-      transfersRepository = new TransfersRepository(transferWrapperMock);
-    });
-
-    it('calls contract method with correct arguments', async () => {
-      await transfersRepository.resolve(transfer1);
-      expect(transferWrapperMock.resolve).to.be.calledOnceWith(transfer1.transferId);
-    });
-
-    it('throws error if cannot resolve transfer', async () => {
-      transferWrapperMock.canResolve.resolves(false);
-      await expect(transfersRepository.resolve(transfer1)).to.be.eventually.rejected;
-      expect(transferWrapperMock.resolve).to.be.not.called;
     });
   });
 });

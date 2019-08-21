@@ -17,34 +17,37 @@ import {checkIfEnoughFundsToPayForGas, getDefaultAddress} from '../utils/web3_to
 import availableDiskSpace from '../utils/disk_usage';
 
 const ATLAS_RESOLUTION_WORK_TYPE = 'AtlasResolutions';
+const RELEASE_BUNDLES_WORK_TYPE = 'ReleaseBundles';
 
 export default class AtlasWorker extends PeriodicWorker {
   constructor(
     web3,
     dataModelEngine,
-    workerLogRepository,
+    workerLogger,
     workerTaskTrackingRepository,
-    logger,
     mongoClient,
-    serverPort,
-    requiredFreeDiskSpace,
-    workerInterval,
     resolvers,
-    resolveByOne
+    operationalMode,
+    config,
+    releaseBundlesService
   ) {
-    super(workerInterval, logger);
+    super(config.atlasWorkerInterval, workerLogger.logger);
     this.web3 = web3;
     this.dataModelEngine = dataModelEngine;
-    this.workerLogRepository = workerLogRepository;
+    this.workerLogger = workerLogger;
     this.workerTaskTrackingRepository = workerTaskTrackingRepository;
     this.mongoClient = mongoClient;
-    this.requiredFreeDiskSpace = requiredFreeDiskSpace;
+    this.requiredFreeDiskSpace = config.requiredFreeDiskSpace;
     this.resolvers = resolvers;
-    this.resolveByOne = resolveByOne;
+    this.resolveByOne = config.atlasProcessActiveResolviesByOne;
+    this.operationalMode = operationalMode;
+    this.releaseBundlesService = releaseBundlesService;
+
     this.isOutOfFunds = false;
     this.isOutOfSpace = false;
+
     this.expressApp = express();
-    this.serverPort = serverPort;
+    this.serverPort = config.serverPort;
     this.expressApp.get('/health', asyncMiddleware(
       healthCheckHandler(mongoClient, web3)
     ));
@@ -56,6 +59,15 @@ export default class AtlasWorker extends PeriodicWorker {
   }
 
   async periodicWork() {
+    if (await this.operationalMode.isRetire()) {
+      await this.retireOperation();
+    } else {
+      this.releaseBundlesService.reset();
+      await this.normalOperation();
+    }
+  }
+
+  async normalOperation() {
     let workId = null;
     try {
       workId = await this.workerTaskTrackingRepository.tryToBeginWork(ATLAS_RESOLUTION_WORK_TYPE);
@@ -83,10 +95,27 @@ export default class AtlasWorker extends PeriodicWorker {
     }
   }
 
+  async retireOperation() {
+    let workId = null;
+    try {
+      workId = await this.workerTaskTrackingRepository.tryToBeginWork(RELEASE_BUNDLES_WORK_TYPE);
+    } catch (err) {
+      return;
+    }
+    try {
+      this.releaseBundlesService.process();
+    } catch (err) {
+      this.workerLogger.logger.error(err);
+      throw err;
+    } finally {
+      await this.workerTaskTrackingRepository.finishWork(workId);
+    }
+  }
+
   async isEnoughFundsToPayForGas() {
     if (!await checkIfEnoughFundsToPayForGas(this.web3, getDefaultAddress(this.web3))) {
       if (!this.isOutOfFunds) {
-        await this.addLog('Not enough funds to pay for gas');
+        await this.workerLogger.addLog('Not enough funds to pay for gas');
         this.isOutOfFunds = true;
       }
       return false;
@@ -98,22 +127,13 @@ export default class AtlasWorker extends PeriodicWorker {
   async isEnoughAvailableDiskSpace() {
     if (await availableDiskSpace() < this.requiredFreeDiskSpace) {
       if (!this.isOutOfSpace) {
-        await this.addLog('Not enough free disk space');
+        await this.workerLogger.addLog('Not enough free disk space');
         this.isOutOfSpace = true;
       }
       return false;
     }
     this.isOutOfSpace = false;
     return true;
-  }
-
-  async addLog(message, additionalFields, stacktrace) {
-    const log = {
-      message,
-      ...additionalFields
-    };
-    this.logger.info({...log, stacktrace});
-    await this.workerLogRepository.storeLog({timestamp: new Date(), ...log});
   }
 
   beforeWorkLoop() {
