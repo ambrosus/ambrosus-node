@@ -37,7 +37,7 @@ describe('Release Bundles Service', () => {
     retireTransfersRepositoryMock = {
       ongoingTransfers: sinon.stub().resolves([]),
       transferDone: sinon.spy(),
-      getResolvedTransfers: sinon.stub().returns([])
+      flushResolvedTransfers: sinon.stub().returns([])
     };
     shelteringWrapperMock = {
     };
@@ -67,7 +67,7 @@ describe('Release Bundles Service', () => {
     await service.process();
     expect(bundleRepositoryMock.getShelteredBundles).to.be.calledOnce;
     expect(retireTransfersRepositoryMock.ongoingTransfers).to.be.calledOnce;
-    expect(retireTransfersRepositoryMock.getResolvedTransfers).to.be.calledOnce;
+    expect(retireTransfersRepositoryMock.flushResolvedTransfers).to.be.calledOnce;
     expect(bundleRepositoryMock.removeBundle).to.not.have.been.called;
     expect(retireTransfersRepositoryMock.transferDone).to.not.have.been.called;
     expect(shelteringTransfersWrapperMock.start).to.not.have.been.called;
@@ -114,7 +114,7 @@ describe('Release Bundles Service', () => {
       {transferId:4, donorId:1, bundleId:4},
       {transferId:5, donorId:1, bundleId:5}
     ]);
-    retireTransfersRepositoryMock.getResolvedTransfers.returns([{transferId:2, donorId:1, bundleId:2}]);
+    retireTransfersRepositoryMock.flushResolvedTransfers.returns([{transferId:2, donorId:1, bundleId:2}]);
     await service.process();
     expect(bundleRepositoryMock.removeBundle).to.be.calledWith(2);
     expect(retireTransfersRepositoryMock.transferDone).to.be.calledWith(2);
@@ -126,7 +126,7 @@ describe('Release Bundles Service', () => {
       {transferId:3, donorId:1, bundleId:3},
       {transferId:4, donorId:1, bundleId:4}
     ]);
-    retireTransfersRepositoryMock.getResolvedTransfers.returns([{transferId:5, donorId:1, bundleId:5}]);
+    retireTransfersRepositoryMock.flushResolvedTransfers.returns([{transferId:5, donorId:1, bundleId:5}]);
     await service.process();
     expect(bundleRepositoryMock.removeBundle).to.be.calledWith(5);
     expect(retireTransfersRepositoryMock.transferDone).to.be.calledWith(5);

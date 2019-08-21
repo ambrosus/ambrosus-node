@@ -50,7 +50,7 @@ export default class ReleaseBundlesService {
     }
 
     const transfers = await this.retireTransfersRepository.ongoingTransfers();
-    const resolvedTransfers = this.retireTransfersRepository.getResolvedTransfers();
+    const resolvedTransfers = this.retireTransfersRepository.flushResolvedTransfers();
 
     for (const transfer of transfers) {
       if (this.shelteredBundles.delete(transfer.bundleId)) {
@@ -74,6 +74,7 @@ export default class ReleaseBundlesService {
         await this.workerLogger.addLog(`Failed to remove bundle: ${err.message || err}`, transfer.bundleId, err.stack);
       }
     }
+
     if (transfers.length < this.maxOngoingTransfers) {
       let startedTransersCount = 0;
       let shelteringChecks = 0;

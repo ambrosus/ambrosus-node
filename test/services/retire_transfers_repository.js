@@ -197,6 +197,13 @@ describe('Retire transfers repository', () => {
       expect(retireTransfersRepository.resolvedTransfers).to.deep.eq([{bundleId, donorId, transferId: 'resolved', blockNumber: 2, logIndex: 1}]);
     });
 
+    it('flush resolved transfers at get', async () => {
+      await retireTransfersRepository.ongoingTransfers();
+      expect(retireTransfersRepository.resolvedTransfers).to.deep.eq([{bundleId, donorId, transferId: 'resolved', blockNumber: 2, logIndex: 1}]);
+      expect(retireTransfersRepository.flushResolvedTransfers()).to.deep.eq([{bundleId, donorId, transferId: 'resolved', blockNumber: 2, logIndex: 1}]);
+      expect(retireTransfersRepository.resolvedTransfers.length).to.be.equal(0);
+    });
+
     it('calls own methods with correct params', async () => {
       await retireTransfersRepository.ongoingTransfers();
       expect(retireTransfersRepository.prepareEvents).to.be.calledThrice;

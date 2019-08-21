@@ -31,8 +31,10 @@ export default class RetireTransfersRepository extends EventsCollector {
     return Object.values(this.activeTransfers);
   }
 
-  getResolvedTransfers() {
-    return this.resolvedTransfers;
+  flushResolvedTransfers() {
+    const transfers = this.resolvedTransfers;
+    this.resolvedTransfers = [];
+    return transfers;
   }
 
   transferDone(transferId) {
