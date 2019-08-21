@@ -53,7 +53,7 @@ describe('Release Bundles Service', () => {
       setInfo: sinon.spy(),
       isRetire: sinon.stub().resolves(true)
     };
-    service = new ReleaseBundlesService(bundleRepositoryMock, shelteringWrapperMock, shelteringTransfersWrapperMock, retireTransfersRepositoryMock, workerLoggerMock, operationalModeMock);
+    service = new ReleaseBundlesService(bundleRepositoryMock, shelteringWrapperMock, shelteringTransfersWrapperMock, retireTransfersRepositoryMock, workerLoggerMock, operationalModeMock, 10);
   });
 
   beforeEach(() => {

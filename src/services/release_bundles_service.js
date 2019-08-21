@@ -9,19 +9,21 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 const MAX_ONGOING_TRANSFERS = 20;
 const MAX_SHELTERING_CHECKS = 25;
+const TRANSACTIONS_INTERVAL = 1000;
 
 const sleep = async (timeout) => new Promise((resolve) => {
   setTimeout(resolve, timeout);
 });
 
 export default class ReleaseBundlesService {
-  constructor(bundleRepository, shelteringWrapper, shelteringTransfersWrapper, retireTransfersRepository, workerLogger, operationalMode) {
+  constructor(bundleRepository, shelteringWrapper, shelteringTransfersWrapper, retireTransfersRepository, workerLogger, operationalMode, transactionsInterval = TRANSACTIONS_INTERVAL) {
     this.bundleRepository = bundleRepository;
     this.shelteringWrapper = shelteringWrapper;
     this.shelteringTransfersWrapper = shelteringTransfersWrapper;
     this.retireTransfersRepository = retireTransfersRepository;
     this.workerLogger = workerLogger;
     this.operationalMode = operationalMode;
+    this.transactionsInterval = transactionsInterval;
     this.maxOngoingTransfers = MAX_ONGOING_TRANSFERS;
     this.shelteredBundles = null;
   }
@@ -105,7 +107,7 @@ export default class ReleaseBundlesService {
         if (shelteringChecks >= MAX_SHELTERING_CHECKS) {
           break;
         }
-        await sleep(100);
+        await sleep(this.transactionsInterval);
       }
       if (startedTransersCount > 0) {
         this.modeInfo.transfers += startedTransersCount;
