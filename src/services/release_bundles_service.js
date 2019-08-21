@@ -42,6 +42,8 @@ export default class ReleaseBundlesService {
         transfered: 0,
         started: 0,
         extra: 0,
+        removed: 0,
+        now: 0,
         failed: 0
       };
       this.operationalMode.setInfo(this.modeInfo);
@@ -60,6 +62,7 @@ export default class ReleaseBundlesService {
     for (const transfer of resolvedTransfers) {
       try {
         await this.bundleRepository.removeBundle(transfer.bundleId);
+        this.modeInfo.removed++;
         this.shelteredBundles.delete(transfer.bundleId);
         this.retireTransfersRepository.transferDone(transfer.transferId);
         this.modeInfo.transfered++;
@@ -89,6 +92,7 @@ export default class ReleaseBundlesService {
           } else {
             this.shelteredBundles.delete(bundleId);
             await this.bundleRepository.removeBundle(bundleId);
+            this.modeInfo.removed++;
             this.modeInfo.transfered++;
             this.modeInfo.extra++;
           }
@@ -109,6 +113,7 @@ export default class ReleaseBundlesService {
     }
 
     if (infoUpdated) {
+      this.modeInfo.now = this.shelteredBundles.size;
       this.operationalMode.setInfo(this.modeInfo);
     }
   }
