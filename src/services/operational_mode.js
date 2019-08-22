@@ -8,6 +8,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import OperationalModes from '../utils/operational_modes';
+import {AuthenticationError} from '../errors/errors';
+import {getTimestamp} from '../utils/time_utils';
 
 export default class OperationalMode {
   constructor(operationalModeRepository, tokenAuthenticator) {
@@ -18,6 +20,9 @@ export default class OperationalMode {
   async set(request) {
     if (request.mode !== undefined) {
       const mode = this.tokenAuthenticator.decode(request.mode);
+      if (mode.idData.validUntil < getTimestamp()) {
+        throw new AuthenticationError('Token has expired.');
+      }
       if (mode.idData.mode === OperationalModes.retire) {
         await this.operationalModeRepository.set({mode:OperationalModes.retire, info:{}});
       } else {
