@@ -20,6 +20,14 @@ describe('Active Resolutions Cache', () => {
     logIndex: 0
   };
 
+  const exampleResolution = {
+    challengeId: '0xc0ffee',
+    sheltererId: '0xbeef',
+    bundleId: '0xdeadbeef',
+    blockNumber: 1,
+    logIndex: 0
+  };
+
   beforeEach(() => {
     activeChallengesCache = new ActiveResolutionsCache('challengeId');
   });
@@ -30,6 +38,14 @@ describe('Active Resolutions Cache', () => {
 
   function aChallengeWith(params) {
     return {...aChallenge(), ...params};
+  }
+
+  function aResolution() {
+    return exampleResolution;
+  }
+
+  function aResolutionWith(params) {
+    return {...aResolution(), ...params};
   }
 
   describe('with one challenge added', () => {
@@ -81,6 +97,22 @@ describe('Active Resolutions Cache', () => {
   });
 
   describe('when decreasing active count', () => {
+    it('set count to 1 if no count field into resolution', () => {
+      activeChallengesCache.add(aResolutionWith({challengeId: '0xc0ffee'}));
+      activeChallengesCache.add(aResolutionWith({challengeId: '0xbeef'}));
+
+      expect(activeChallengesCache.activeResolutions).to.deep.include.members([
+        aResolutionWith({challengeId: '0xc0ffee', count: 1}),
+        aResolutionWith({challengeId: '0xbeef', count: 1})
+      ]);
+
+      activeChallengesCache.decreaseActiveCount('0xc0ffee');
+
+      expect(activeChallengesCache.activeResolutions).to.deep.include.members([
+        aResolutionWith({challengeId: '0xbeef', count: 1})
+      ]);
+    });
+
     it('reduces count for the right challenge', () => {
       activeChallengesCache.add(aChallengeWith({challengeId: '0xc0ffee', count: 12}));
       activeChallengesCache.add(aChallengeWith({challengeId: '0xbeef', count: 43}));

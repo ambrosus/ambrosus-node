@@ -19,6 +19,9 @@ export default class ActiveResolutionsCache {
 
   add(resolution) {
     if (!this.has(resolution[this.resolutionIdField])) {
+      if (resolution.count === undefined) {
+        resolution.count = 1;
+      }
       this.activeResolutionsDict[resolution[this.resolutionIdField]] = resolution;
     }
   }
