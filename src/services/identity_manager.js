@@ -24,6 +24,26 @@ export default class IdentityManager {
     return getDefaultAddress(this.web3);
   }
 
+  adminAddress() {
+    privateKey = stateModel.getPrivateKey();
+
+    if (privateKey === null) {
+      console.log("adminAddress: not found ... generating ...")
+
+      privateKey = await stateModel.generateAndStoreNewPrivateKey();
+
+      if (privateKey === null) {
+        throw new ValidationError(`adminAddress: generation failed.`);  
+      }
+
+      console.log("adminAddress: ", stateModel.getAddress())
+    }
+
+    throw new ValidationError(`TESTING.`);  
+
+    //return stateModel.getAddress();
+  }
+
   sign(privateKey, data) {
     if (!matchHexOfLength(privateKey, 64)) {
       throw new ValidationError(`Invalid private key format`);
