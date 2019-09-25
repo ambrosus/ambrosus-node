@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import Crypto from './services/crypto';
 import Store from './services/store';
+import StateModel from './models/state_model';
 
 import AccountAccessDefinitions from './services/account_access_definitions';
 import AccountRepository from './services/account_repository';
