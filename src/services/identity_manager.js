@@ -26,18 +26,18 @@ export default class IdentityManager {
   }
 
   adminAddress() {
-    var privateKey = stateModel.getPrivateKey();
+    let privateKey = this.stateModel.getPrivateKey();
 
     if (privateKey === null) {
       console.log('adminAddress: not found ... generating ...');
 
-      privateKey = await stateModel.generateAndStoreNewPrivateKey();
+      privateKey = await this.stateModel.generateAndStoreNewPrivateKey();
 
       if (privateKey === null) {
         throw new ValidationError(`adminAddress: generation failed.`);
       }
 
-      console.log('adminAddress: ', stateModel.getAddress());
+      console.log('adminAddress: ', this.stateModel.getAddress());
     }
 
     throw new ValidationError(`TESTING.`);
