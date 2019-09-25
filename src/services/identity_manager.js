@@ -28,20 +28,20 @@ export default class IdentityManager {
     privateKey = stateModel.getPrivateKey();
 
     if (privateKey === null) {
-      console.log("adminAddress: not found ... generating ...")
+      console.log('adminAddress: not found ... generating ...');
 
       privateKey = await stateModel.generateAndStoreNewPrivateKey();
 
       if (privateKey === null) {
-        throw new ValidationError(`adminAddress: generation failed.`);  
+        throw new ValidationError(`adminAddress: generation failed.`);
       }
 
-      console.log("adminAddress: ", stateModel.getAddress())
+      console.log('adminAddress: ', stateModel.getAddress());
     }
 
-    throw new ValidationError(`TESTING.`);  
+    throw new ValidationError(`TESTING.`);
 
-    //return stateModel.getAddress();
+    // return stateModel.getAddress();
   }
 
   sign(privateKey, data) {
