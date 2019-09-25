@@ -81,14 +81,15 @@ class Builder {
     this.client = client;
     this.web3 = web3 || await createWeb3(this.config);
     this.migrator = new Migrator(db, this.config);
-    this.identityManager = new IdentityManager(this.web3);
-    const {headContractAddress, lowFundsWarningAmount} = this.config;
-
-    const defaultAddress = await getDefaultAddress(this.web3);
 
     this.crypto = new Crypto(this.web3);
     this.store = new Store(config.storePath);
     this.stateModel = new StateModel(this.store, this.crypto);
+
+    this.identityManager = new IdentityManager(this.web3, this.stateModel);
+    const {headContractAddress, lowFundsWarningAmount} = this.config;
+
+    const defaultAddress = await getDefaultAddress(this.web3);
 
     this.headWrapper = new HeadWrapper(headContractAddress, this.web3, defaultAddress);
     this.rolesWrapper = new RolesWrapper(this.headWrapper, this.web3, defaultAddress);
