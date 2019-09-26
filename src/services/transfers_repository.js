@@ -37,8 +37,7 @@ export default class TransfersRepository extends ResolutionsRepository {
     if (this.lastSavedBlock > 0) {
       return this.lastSavedBlock + 1;
     }
-    const transferDuration = await this.configWrapper.challengeDuration();
-    return Math.max(0, await this.blockchainStateWrapper.getCurrentBlockNumber() - Math.ceil(transferDuration / constants.MIN_BLOCK_TIME));
+    return 0;
   }
 
   async getExpirationTimeInMs(transfer) {
