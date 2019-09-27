@@ -35,16 +35,18 @@ export default class DataModelEngine {
   }
 
   async addAdminAccount(address) {
-    if (address === undefined) {
-      address = await this.identityManager.adminAddress();
+    let internalAddress = address;
+
+    if (internalAddress === undefined) {
+      internalAddress = await this.identityManager.adminAddress();
     }
 
-    const existingAccount = await this.accountRepository.get(address);
+    const existingAccount = await this.accountRepository.get(internalAddress);
     if (existingAccount) {
       return existingAccount;
     }
 
-    const account = this.accountAccessDefinitions.defaultAdminAccount(address);
+    const account = this.accountAccessDefinitions.defaultAdminAccount(internalAddress);
     await this.accountRepository.store(account);
     return account;
   }

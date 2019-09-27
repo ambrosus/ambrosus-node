@@ -8,17 +8,17 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import fs from 'fs';
+import path from 'path';
 
-var pathF = require('path'),
-    fs = require('fs');
-
-const writeFile = (path, data, opts = {}) =>
+const writeFile = (filepath, data, opts = {}) =>
   new Promise((resolve, reject) => {
-    fs.mkdir(pathF.dirname(path), { recursive: true }, (err) => {
-      if (err) throw new Error(`can't create dir for ${path}: ${err}`);
+    fs.mkdir(path.dirname(filepath), {recursive: true}, (err) => {
+      if (err) {
+        throw new Error(`can't create dir for ${filepath}: ${err}`);
+      }
     });
 
-    fs.writeFile(path, data, opts, (err) => {
+    fs.writeFile(filepath, data, opts, (err) => {
       if (err) {
         reject(err);
       } else {
@@ -27,9 +27,9 @@ const writeFile = (path, data, opts = {}) =>
     });
   });
 
-const readFile = (path) =>
+const readFile = (filepath) =>
   new Promise((resolve, reject) => {
-    fs.readFile(path, 'utf8', (err, data) => {
+    fs.readFile(filepath, 'utf8', (err, data) => {
       if (err) {
         reject(err);
       } else {
@@ -38,9 +38,9 @@ const readFile = (path) =>
     });
   });
 
-const removeFile = (path) =>
+const removeFile = (filepath) =>
   new Promise((resolve, reject) => {
-    fs.unlink(path, (err) => {
+    fs.unlink(filepath, (err) => {
       if (err) {
         reject(err);
       } else {
@@ -49,16 +49,16 @@ const removeFile = (path) =>
     });
   });
 
-const checkFileExists = (path) =>
+const checkFileExists = (filepath) =>
   new Promise((resolve) => {
-    fs.access(path, (err) => {
+    fs.access(filepath, (err) => {
       resolve(!err);
     });
   });
 
-const listDirectory = (path) =>
+const listDirectory = (filepath) =>
   new Promise((resolve, reject) => {
-    fs.readdir(path, (err, files) => {
+    fs.readdir(filepath, (err, files) => {
       if (err) {
         reject(err);
       } else {
@@ -67,9 +67,9 @@ const listDirectory = (path) =>
     });
   });
 
-const removeDirectory = (path) =>
+const removeDirectory = (filepath) =>
   new Promise((resolve, reject) => {
-    fs.rmdir(path, (err) => {
+    fs.rmdir(filepath, (err) => {
       if (err) {
         reject(err);
       } else {
@@ -78,9 +78,9 @@ const removeDirectory = (path) =>
     });
   });
 
-const makeDirectory = (path) =>
+const makeDirectory = (filepath) =>
   new Promise((resolve, reject) => {
-    fs.mkdir(path, (err) => {
+    fs.mkdir(filepath, (err) => {
       if (err) {
         reject(err);
       } else {
@@ -89,9 +89,9 @@ const makeDirectory = (path) =>
     });
   });
 
-const getPath = (path) =>
+const getfilepath = (filepath) =>
   new Promise((resolve, reject) => {
-    fs.lstat(path, (err, stats) => {
+    fs.lstat(filepath, (err, stats) => {
       if (err) {
         reject(err);
       } else {
@@ -100,4 +100,4 @@ const getPath = (path) =>
     });
   });
 
-export {writeFile, readFile, removeFile, checkFileExists, listDirectory, removeDirectory, makeDirectory, getPath};
+export {writeFile, readFile, removeFile, checkFileExists, listDirectory, removeDirectory, makeDirectory, getfilepath};
