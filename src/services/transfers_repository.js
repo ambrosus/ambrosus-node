@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import ResolutionsRepository from './resolutions_repository';
 import {constants} from 'ambrosus-node-contracts';
 
-const TRANSFER_EVENT_ONE_FETCH_LIMIT = 5000;
+const TRANSFER_EVENT_ONE_FETCH_LIMIT = 50000;
 
 export default class TransfersRepository extends ResolutionsRepository {
   constructor(shelteringTransfersWrapper, transfersEventEmitterWrapper, configWrapper, blockchainStateWrapper, activeTransfersCache) {
