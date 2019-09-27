@@ -34,7 +34,11 @@ export default class DataModelEngine {
     this.workerLogRepository = workerLogRepository;
   }
 
-  async addAdminAccount(address = this.identityManager.adminAddress()) {
+  async addAdminAccount(address) {
+    if (address === undefined) {
+      address = await this.identityManager.adminAddress();
+    }
+
     const existingAccount = await this.accountRepository.get(address);
     if (existingAccount) {
       return existingAccount;

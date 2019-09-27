@@ -9,8 +9,15 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import fs from 'fs';
 
+var pathF = require('path'),
+    fs = require('fs');
+
 const writeFile = (path, data, opts = {}) =>
   new Promise((resolve, reject) => {
+    fs.mkdir(pathF.dirname(path), { recursive: true }, (err) => {
+      if (err) throw new Error(`can't create dir for ${path}: ${err}`);
+    });
+
     fs.writeFile(path, data, opts, (err) => {
       if (err) {
         reject(err);
