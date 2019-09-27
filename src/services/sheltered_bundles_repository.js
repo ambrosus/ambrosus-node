@@ -8,7 +8,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import ResolutionsRepository from './resolutions_repository';
-import {constants} from 'ambrosus-node-contracts';
 
 const SHELTERING_EVENT_ONE_FETCH_LIMIT = 50000;
 

@@ -82,7 +82,6 @@ describe('Transfers repository', () => {
     const transferId = 3;
     const fromBlock = 0;
     const latestBlock = 7;
-    const challengeDuration = 15;
     const events = [
       {
         blockNumber: 4,
