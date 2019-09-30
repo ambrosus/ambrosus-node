@@ -100,8 +100,6 @@ export default class AccountAccessDefinitions {
   }
 
   defaultAdminAccount(address) {
-    console.log('T2: ', address)
-
     return {
       address,
       permissions: [allPermissions.superAccount],
