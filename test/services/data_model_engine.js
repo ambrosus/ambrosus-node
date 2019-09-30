@@ -71,7 +71,7 @@ describe('Data Model Engine', () => {
 
     before(() => {
       mockIdentityManager = {
-        nodeAddress: sinon.stub()
+        adminAddress: sinon.stub()
       };
       mockAccountRepository = {
         store: sinon.stub(),
@@ -90,17 +90,17 @@ describe('Data Model Engine', () => {
     beforeEach(() => {
       resetHistory(mockIdentityManager, mockAccountRepository, mockAccountAccessDefinitions);
 
-      mockIdentityManager.nodeAddress.returns(exampleAccount.address);
+      mockIdentityManager.adminAddress.returns(exampleAccount.address);
       mockAccountRepository.get.resolves(exampleAccount);
       mockAccountAccessDefinitions.defaultAdminAccount.returns(exampleAccount);
     });
 
-    it('takes the nodeAddress from the identityManager if no parameter provided and registers if not already registered', async () => {
+    it('takes the adminAddress from the identityManager if no parameter provided and registers if not already registered', async () => {
       mockAccountRepository.get.resolves(null);
 
       await expect(modelEngine.addAdminAccount()).to.have.been.fulfilled;
 
-      expect(mockIdentityManager.nodeAddress).to.have.been.called;
+      expect(mockIdentityManager.adminAddress).to.have.been.called;
       expect(mockAccountRepository.get).to.have.been.calledWith(exampleAccount.address);
       expect(mockAccountAccessDefinitions.defaultAdminAccount).to.have.been.calledWith(exampleAccount.address);
       expect(mockAccountRepository.store).to.have.been.calledWith(exampleAccount);
@@ -112,7 +112,7 @@ describe('Data Model Engine', () => {
 
       await expect(modelEngine.addAdminAccount(otherAccount.address)).to.have.been.fulfilled;
 
-      expect(mockIdentityManager.nodeAddress).to.have.not.been.called;
+      expect(mockIdentityManager.adminAddress).to.have.not.been.called;
       expect(mockAccountRepository.get).to.have.been.calledWith(otherAccount.address);
       expect(mockAccountAccessDefinitions.defaultAdminAccount).to.have.been.calledWith(otherAccount.address);
       expect(mockAccountRepository.store).to.have.been.calledWith(otherAccount);
@@ -121,7 +121,7 @@ describe('Data Model Engine', () => {
     it('does nothing if account already registered', async () => {
       await expect(modelEngine.addAdminAccount()).to.have.been.fulfilled;
 
-      expect(mockIdentityManager.nodeAddress).to.have.been.called;
+      expect(mockIdentityManager.adminAddress).to.have.been.called;
       expect(mockAccountRepository.get).to.have.been.calledWith(exampleAccount.address);
       expect(mockAccountRepository.store).to.not.have.been.called;
     });

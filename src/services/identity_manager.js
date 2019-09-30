@@ -25,7 +25,7 @@ export default class IdentityManager {
     return getDefaultAddress(this.web3);
   }
 
-  async adminAddress() {
+  async adminAddress() {    
     let privateKey = await this.stateModel.getPrivateKey();
 
     if (privateKey === null) {
