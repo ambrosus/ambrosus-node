@@ -7,6 +7,10 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+import Crypto from './services/crypto';
+import Store from './services/store';
+import StateModel from './models/state_model';
+
 import AccountAccessDefinitions from './services/account_access_definitions';
 import AccountRepository from './services/account_repository';
 import {
@@ -77,7 +81,12 @@ class Builder {
     this.client = client;
     this.web3 = web3 || await createWeb3(this.config);
     this.migrator = new Migrator(db, this.config);
-    this.identityManager = new IdentityManager(this.web3);
+
+    this.crypto = new Crypto(this.web3);
+    this.store = new Store(config.storePath);
+    this.stateModel = new StateModel(this.store, this.crypto);
+
+    this.identityManager = new IdentityManager(this.web3, this.stateModel);
     const {headContractAddress, lowFundsWarningAmount} = this.config;
 
     const defaultAddress = await getDefaultAddress(this.web3);

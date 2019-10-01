@@ -34,13 +34,19 @@ export default class DataModelEngine {
     this.workerLogRepository = workerLogRepository;
   }
 
-  async addAdminAccount(address = this.identityManager.nodeAddress()) {
-    const existingAccount = await this.accountRepository.get(address);
+  async addAdminAccount(address) {
+    let internalAddress = address;
+
+    if (internalAddress === undefined) {
+      internalAddress = await this.identityManager.adminAddress();
+    }
+
+    const existingAccount = await this.accountRepository.get(internalAddress);
     if (existingAccount) {
       return existingAccount;
     }
 
-    const account = this.accountAccessDefinitions.defaultAdminAccount(address);
+    const account = this.accountAccessDefinitions.defaultAdminAccount(internalAddress);
     await this.accountRepository.store(account);
     return account;
   }

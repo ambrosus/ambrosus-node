@@ -12,8 +12,9 @@ import matchHexOfLength from '../utils/regex';
 import {getDefaultPrivateKey, getDefaultAddress} from '../utils/web3_tools';
 
 export default class IdentityManager {
-  constructor(web3) {
+  constructor(web3, stateModel) {
     this.web3 = web3;
+    this.stateModel = stateModel;
   }
 
   async nodePrivateKey() {
@@ -22,6 +23,26 @@ export default class IdentityManager {
 
   nodeAddress() {
     return getDefaultAddress(this.web3);
+  }
+
+  async adminAddress() {
+    let privateKey = await this.stateModel.getPrivateKey();
+
+    if (privateKey === null) {
+      console.log('adminAddress: not found ... generating ...');
+
+      privateKey = await this.stateModel.generateAndStoreNewPrivateKey();
+
+      if (privateKey === null) {
+        throw new ValidationError(`adminAddress: generation failed.`);
+      }
+    }
+
+    const address = await this.stateModel.getAddress();
+
+    console.log('adminAddress: ', address);
+
+    return address;
   }
 
   sign(privateKey, data) {
