@@ -18,14 +18,20 @@ export default class BundlesRestorer {
   }
 
   async restore() {
+    await this.workerLogger.addLog('Getting sheltered bundles from DB...');
     const storedBundles = await this.bundleRepository.getShelteredBundles(0);
+    await this.workerLogger.addLog(`Found ${storedBundles.length} bundles into DB`);
     const storedBundlesIds = new Set(storedBundles.map((bundle) => bundle.bundleId));
-    const bundles = (await this.shelteredBundlesRepository.ongoingResolutions()).filter((bundle) => !storedBundlesIds.has(bundle.bundleId));
+    await this.workerLogger.addLog('Getting sheltered bundles from blockchain...');
+    const blockchainBundles = await this.shelteredBundlesRepository.ongoingResolutions();
+    await this.workerLogger.addLog(`Found ${blockchainBundles.length} bundles into blockchain`);
+    const bundles = blockchainBundles.filter((bundle) => !storedBundlesIds.has(bundle.bundleId));
+    await this.workerLogger.addLog(`Need to restore ${bundles.length} bundles`);
 
     for (const bundle of bundles) {
       try {
-        await this.workerLogger.addLog('Try to restore bundle', bundle.bundleId);
-        const expirationTime = await this.shelteringWrapper.getShelteringExpirationDate(bundle.bundleId, bundle.shelterer);
+        await this.workerLogger.addLog('Try to restore bundle', {bundleId: bundle.bundleId});
+        const expirationTime = await this.shelteringWrapper.shelteringExpirationDate(bundle.bundleId);
         const donors = await this.getBundleDonors(bundle);
         while (donors.length > 0) {
           const pos = this.getRandomInt(donors.length);
@@ -33,7 +39,7 @@ export default class BundlesRestorer {
           try {
             await this.dataModelEngine.downloadBundle(bundle.bundleId, donorId, expirationTime);
             await this.dataModelEngine.markBundleAsSheltered(bundle.bundleId);
-            await this.workerLogger.addLog('Bundle restored', bundle.bundleId);
+            await this.workerLogger.addLog('Bundle restored', {bundleId: bundle.bundleId});
             break;
           } catch (err) {
             await this.workerLogger.logger.info(`Failed to download bundle: ${err.message || err}`, {bundleId: bundle.bundleId, donorId}, err.stack);
@@ -41,7 +47,7 @@ export default class BundlesRestorer {
           }
         }
       } catch (err) {
-        await this.workerLogger.addLog(`Failed to restore bundle: ${err.message || err}`, bundle.bundleId, err.stack);
+        await this.workerLogger.addLog(`Failed to restore bundle: ${err.message || err}`, {bundleId: bundle.bundleId}, err.stack);
       }
     }
   }

@@ -49,7 +49,7 @@ describe('Bundles Restorer', () => {
       contract: sinon.stub().resolves(bundleStoreContractMock)
     };
     shelteringWrapperMock = {
-      getShelteringExpirationDate: sinon.stub().resolves(timestamp)
+      shelteringExpirationDate: sinon.stub().resolves(timestamp)
     };
     dataModelEngineMock = {
       downloadBundle: sinon.spy(),
@@ -76,7 +76,7 @@ describe('Bundles Restorer', () => {
     expect(bundleRepositoryMock.getShelteredBundles).to.be.calledOnce;
     expect(shelteredBundlesRepositoryMock.ongoingResolutions).to.be.calledOnce;
     expect(restorer.getBundleDonors).to.not.have.been.called;
-    expect(shelteringWrapperMock.getShelteringExpirationDate).to.not.have.been.called;
+    expect(shelteringWrapperMock.shelteringExpirationDate).to.not.have.been.called;
     expect(dataModelEngineMock.downloadBundle).to.not.have.been.called;
     expect(dataModelEngineMock.markBundleAsSheltered).to.not.have.been.called;
   });
