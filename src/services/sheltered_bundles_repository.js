@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import ResolutionsRepository from './resolutions_repository';
 
-const SHELTERING_EVENT_ONE_FETCH_LIMIT = 50000;
+const SHELTERING_EVENT_ONE_FETCH_LIMIT = 5000;
 
 export default class ShelteredBundlesRepository extends ResolutionsRepository {
   constructor(address, bandleStoreWrapper, blockchainStateWrapper, activeBundlesCache) {
