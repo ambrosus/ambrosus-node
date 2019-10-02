@@ -32,7 +32,6 @@ async function start(logger) {
   const transferStrategy = loadStrategy(config.transferResolutionStrategy);
   const workerLogger = new WorkerLogger(logger, builder.workerLogRepository);
   const bundlesRestorer = new BundlesRestorer(builder.bundleStoreWrapper, builder.shelteringWrapper, builder.dataModelEngine, builder.bundleRepository, builder.shelteredBundlesRepository, workerLogger);
-  await bundlesRestorer.restore();
   const resolvers = [
     new AtlasChallengeResolver(
       builder.web3,
@@ -68,7 +67,8 @@ async function start(logger) {
     resolvers,
     builder.operationalMode,
     config,
-    releaseBundlesService
+    releaseBundlesService,
+    bundlesRestorer
   );
   const cleanupWorker = new CleanupWorker(
     builder.dataModelEngine,
