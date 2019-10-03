@@ -167,8 +167,8 @@ describe('Sheltered bundles repository', () => {
     it('calls own methods with correct params', async () => {
       await shelteredBundlesRepository.ongoingResolutions();
       expect(shelteredBundlesRepository.prepareEvents).to.be.calledTwice;
-      expect(shelteredBundlesRepository.prepareEvents).to.be.calledWith(addSheltererEvents);
-      expect(shelteredBundlesRepository.prepareEvents).to.be.calledWith(removeSheltererEvents);
+      expect(shelteredBundlesRepository.prepareEvents).to.be.calledWith(addSheltererEvents.filter((event) => event.returnValues.shelterer === atlasId));
+      expect(shelteredBundlesRepository.prepareEvents).to.be.calledWith(removeSheltererEvents.filter((event) => event.returnValues.shelterer === atlasId));
     });
 
     it('fetches events with steps - collects all events', async () => {

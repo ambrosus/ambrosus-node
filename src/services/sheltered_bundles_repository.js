@@ -20,16 +20,13 @@ export default class ShelteredBundlesRepository extends ResolutionsRepository {
 
   async updateActiveResolutionsCache(fromBlock, currentBlock) {
     const addedBundles = await this.collectEvents(fromBlock, currentBlock,
-      (start, end) => this.bandleStoreWrapper.sheltererAdded(start, end),
+      async (start, end) => (await this.bandleStoreWrapper.sheltererAdded(start, end)).filter((event) => event.returnValues.shelterer === this.address),
       ['bundleId', 'shelterer']);
     const removedBundles = await this.collectEvents(fromBlock, currentBlock,
-      (start, end) => this.bandleStoreWrapper.sheltererRemoved(start, end),
+      async (start, end) => (await this.bandleStoreWrapper.sheltererRemoved(start, end)).filter((event) => event.returnValues.shelterer === this.address),
       ['bundleId', 'shelterer']);
 
-    this.activeResolutionsCache.applyIncomingResolutionEvents(
-      addedBundles.filter((event) => event.shelterer === this.address),
-      [],
-      removedBundles.filter((event) => event.shelterer === this.address));
+    this.activeResolutionsCache.applyIncomingResolutionEvents(addedBundles, [], removedBundles);
   }
 
   async getFromBlock() {
