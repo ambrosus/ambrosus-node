@@ -62,7 +62,7 @@ export default class AtlasWorker extends PeriodicWorker {
 
   async periodicWork() {
     if (this.bundlesRestorer !== null) {
-      this.bundlesRestorer.restore();
+      await this.bundlesRestorer.restore();
       this.bundlesRestorer = null;
     }
     if (await this.operationalMode.isRetire()) {
