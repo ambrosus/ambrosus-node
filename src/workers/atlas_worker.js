@@ -29,7 +29,8 @@ export default class AtlasWorker extends PeriodicWorker {
     resolvers,
     operationalMode,
     config,
-    releaseBundlesService
+    releaseBundlesService,
+    bundlesRestorer
   ) {
     super(config.atlasWorkerInterval, workerLogger.logger);
     this.web3 = web3;
@@ -42,6 +43,7 @@ export default class AtlasWorker extends PeriodicWorker {
     this.resolveByOne = config.atlasProcessActiveResolviesByOne;
     this.operationalMode = operationalMode;
     this.releaseBundlesService = releaseBundlesService;
+    this.bundlesRestorer = (bundlesRestorer === undefined) ? null : bundlesRestorer;
 
     this.isOutOfFunds = false;
     this.isOutOfSpace = false;
@@ -59,6 +61,10 @@ export default class AtlasWorker extends PeriodicWorker {
   }
 
   async periodicWork() {
+    if (this.bundlesRestorer !== null) {
+      await this.bundlesRestorer.restore();
+      this.bundlesRestorer = null;
+    }
     if (await this.operationalMode.isRetire()) {
       await this.retireOperation();
     } else {

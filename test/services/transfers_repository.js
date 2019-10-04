@@ -80,9 +80,8 @@ describe('Transfers repository', () => {
     const donorId = 1;
     const bundleId = 2;
     const transferId = 3;
-    const fromBlock = 4;
+    const fromBlock = 0;
     const latestBlock = 7;
-    const challengeDuration = 15;
     const events = [
       {
         blockNumber: 4,
@@ -125,7 +124,6 @@ describe('Transfers repository', () => {
 
     beforeEach(() => {
       configWrapperMock = {
-        challengeDuration: sinon.stub().resolves(challengeDuration)
       };
       activeTransfersCacheMock = {
         applyIncomingResolutionEvents: sinon.stub(),
@@ -142,8 +140,6 @@ describe('Transfers repository', () => {
       blockchainStateWrapperMock.getCurrentBlockNumber.onFirstCall()
         .resolves(latestBlock)
         .onSecondCall()
-        .resolves(latestBlock)
-        .onThirdCall(2)
         .resolves(latestBlock + 3);
       transfersRepository = new TransfersRepository(transferWrapperMock, transfersEventEmitterWrapper, configWrapperMock, blockchainStateWrapperMock, activeTransfersCacheMock);
       sinon.spy(transfersRepository, 'prepareEvents');
@@ -151,7 +147,6 @@ describe('Transfers repository', () => {
 
     it('on first call: gets transfers from earliest possible block and caches them', async () => {
       const result = await transfersRepository.ongoingResolutions();
-      expect(configWrapperMock.challengeDuration).to.be.calledOnce;
       expect(transfersEventEmitterWrapper.transfers).to.be.calledWith(fromBlock, latestBlock);
       expect(transfersEventEmitterWrapper.resolvedTransfers).to.be.calledWith(fromBlock, latestBlock);
       expect(transfersEventEmitterWrapper.cancelledTransfers).to.be.calledWith(fromBlock, latestBlock);
@@ -168,7 +163,7 @@ describe('Transfers repository', () => {
     });
 
     it('does not fetch new transfers when currentBlock equals lastSavedBlock', async () => {
-      blockchainStateWrapperMock.getCurrentBlockNumber.onThirdCall().resolves(latestBlock);
+      blockchainStateWrapperMock.getCurrentBlockNumber.onSecondCall().resolves(latestBlock);
       await transfersRepository.ongoingResolutions();
       await transfersRepository.ongoingResolutions();
       expect(transfersEventEmitterWrapper.transfers).to.be.calledOnce;

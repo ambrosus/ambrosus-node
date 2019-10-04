@@ -26,7 +26,8 @@ import {
   UploadsWrapper,
   BlockchainStateWrapper,
   ShelteringTransfersWrapper,
-  TransfersEventEmitterWrapper
+  TransfersEventEmitterWrapper,
+  BundleStoreWrapper
 } from 'ambrosus-node-contracts';
 import DataModelEngine from './services/data_model_engine';
 import EntityBuilder from './services/entity_builder';
@@ -47,6 +48,7 @@ import RolesRepository, {Role} from './services/roles_repository';
 import UploadRepository from './services/upload_repository';
 import ChallengesRepository from './services/challenges_repository';
 import TransfersRepository from './services/transfers_repository';
+import ShelteredBundlesRepository from './services/sheltered_bundles_repository';
 import RetireTransfersRepository from './services/retire_transfers_repository';
 import Migrator from './migrations/Migrator';
 import FailedResolutionsCache from './services/failed_resolutions_cache';
@@ -102,6 +104,7 @@ class Builder {
     this.transfersEventEmitterWrapper = new TransfersEventEmitterWrapper(this.headWrapper, this.web3, defaultAddress);
     this.shelteringWrapper = new ShelteringWrapper(this.headWrapper, this.web3, defaultAddress);
     this.kycWhitelistWrapper = new KycWhitelistWrapper(this.headWrapper, this.web3, defaultAddress);
+    this.bundleStoreWrapper = new BundleStoreWrapper(this.headWrapper, this.web3, defaultAddress);
     this.blockChainStateWrapper = new BlockchainStateWrapper(this.web3);
     this.uploadActions = new UploadActions(this.uploadsWrapper, this.feesWrapper, this.shelteringWrapper, this.blockChainStateWrapper, this.challengesEventEmitterWrapper, this.web3.utils.toWei(lowFundsWarningAmount, 'ether'));
 
@@ -130,6 +133,13 @@ class Builder {
       this.configWrapper,
       this.blockChainStateWrapper,
       this.activeTransfersCache
+    );
+    this.shelteredBundlesCache = new ActiveResolutionsCache('bundleId');
+    this.shelteredBundlesRepository = new ShelteredBundlesRepository(
+      defaultAddress,
+      this.bundleStoreWrapper,
+      this.blockChainStateWrapper,
+      this.shelteredBundlesCache
     );
     this.retireTransfersRepository = new RetireTransfersRepository(
       this.transfersEventEmitterWrapper,
