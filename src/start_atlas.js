@@ -18,6 +18,7 @@ import {waitForChainSync} from './utils/web3_tools';
 import {setup} from './utils/instrument_process';
 import CleanupWorker from './workers/cleanup_worker';
 import ReleaseBundlesService from './services/release_bundles_service';
+import BundlesRestorer from './services/bundles_restorer';
 
 async function start(logger) {
   const builder = new Builder();
@@ -30,6 +31,7 @@ async function start(logger) {
   const challengeStrategy = loadStrategy(config.challengeResolutionStrategy);
   const transferStrategy = loadStrategy(config.transferResolutionStrategy);
   const workerLogger = new WorkerLogger(logger, builder.workerLogRepository);
+  const bundlesRestorer = new BundlesRestorer(builder.bundleStoreWrapper, builder.shelteringWrapper, builder.dataModelEngine, builder.bundleRepository, builder.shelteredBundlesRepository, workerLogger);
   const resolvers = [
     new AtlasChallengeResolver(
       builder.web3,
@@ -65,7 +67,8 @@ async function start(logger) {
     resolvers,
     builder.operationalMode,
     config,
-    releaseBundlesService
+    releaseBundlesService,
+    bundlesRestorer
   );
   const cleanupWorker = new CleanupWorker(
     builder.dataModelEngine,

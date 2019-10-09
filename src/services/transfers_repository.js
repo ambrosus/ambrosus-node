@@ -8,9 +8,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import ResolutionsRepository from './resolutions_repository';
-import {constants} from 'ambrosus-node-contracts';
 
-const TRANSFER_EVENT_ONE_FETCH_LIMIT = 5000;
+const TRANSFER_EVENT_ONE_FETCH_LIMIT = 50000;
 
 export default class TransfersRepository extends ResolutionsRepository {
   constructor(shelteringTransfersWrapper, transfersEventEmitterWrapper, configWrapper, blockchainStateWrapper, activeTransfersCache) {
@@ -37,8 +36,7 @@ export default class TransfersRepository extends ResolutionsRepository {
     if (this.lastSavedBlock > 0) {
       return this.lastSavedBlock + 1;
     }
-    const transferDuration = await this.configWrapper.challengeDuration();
-    return Math.max(0, await this.blockchainStateWrapper.getCurrentBlockNumber() - Math.ceil(transferDuration / constants.MIN_BLOCK_TIME));
+    return 0;
   }
 
   async getExpirationTimeInMs(transfer) {
