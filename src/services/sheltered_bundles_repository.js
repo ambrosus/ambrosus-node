@@ -9,13 +9,34 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import ResolutionsRepository from './resolutions_repository';
 
-const SHELTERING_EVENT_ONE_FETCH_LIMIT = 5000;
+const SHELTERING_EVENT_ONE_FETCH_LIMIT = 250;
 
 export default class ShelteredBundlesRepository extends ResolutionsRepository {
-  constructor(address, bandleStoreWrapper, blockchainStateWrapper, activeBundlesCache) {
+  constructor(address, bandleStoreWrapper, blockchainStateWrapper, activeBundlesCache, db) {
     super(blockchainStateWrapper, activeBundlesCache, SHELTERING_EVENT_ONE_FETCH_LIMIT);
     this.address = address;
     this.bandleStoreWrapper = bandleStoreWrapper;
+    this.db = db;
+  }
+
+  async load() {
+    try {
+      const stored = await this.db.collection('resolutions_repository').findOne({name:'shelteredbundles'}, {projection: {_id: 0}});
+      if (stored !== null) {
+        this.lastSavedBlock = stored.lastSavedBlock;
+        this.activeResolutionsCache.setActiveResolutions(stored.activeResolutions);
+      }
+    } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-empty
+    }
+  }
+
+  async save() {
+    try {
+      await this.db.collection('resolutions_repository').updateOne({name:'shelteredbundles'}, {$set : {name:'shelteredbundles', lastSavedBlock: this.lastSavedBlock, activeResolutions: this.activeResolutionsCache.activeResolutions}}, {upsert : true});
+    } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-empty
+    }
   }
 
   async updateActiveResolutionsCache(fromBlock, currentBlock) {
