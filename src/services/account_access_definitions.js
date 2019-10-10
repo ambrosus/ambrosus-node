@@ -55,6 +55,7 @@ export default class AccountAccessDefinitions {
     await this.ensureHasPermission(address, allPermissions.manageAccounts);
     this.validateModifyAccountRequest(accountModificationRequest);
     const modifier = await this.accountRepository.get(address);
+    this.ensureNotSameAccount(modifier, accountToChange);
     if (this.hasPermission(modifier, allPermissions.superAccount)) {
       return;
     }
@@ -81,6 +82,12 @@ export default class AccountAccessDefinitions {
   ensureSameOrganization(managingAccount, managedAccount) {
     if (managedAccount.organization && managingAccount.organization !== managedAccount.organization) {
       throw new PermissionError(`You need to belong to the same organization`);
+    }
+  }
+
+  ensureNotSameAccount(managingAccount, managedAccount) {
+    if (managingAccount.address === managedAccount.address) {
+      throw new PermissionError(`Account can not modify itself`);
     }
   }
 
