@@ -54,7 +54,8 @@ async function start(logger) {
       builder.transfersRepository,
       builder.failedTransfersCache,
       transferStrategy,
-      workerLogger
+      workerLogger,
+      builder.bundleStoreWrapper
     )
   ];
   const releaseBundlesService = new ReleaseBundlesService(
