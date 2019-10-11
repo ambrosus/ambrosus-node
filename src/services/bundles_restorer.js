@@ -18,6 +18,7 @@ export default class BundlesRestorer {
   }
 
   async restore() {
+    await this.shelteredBundlesRepository.load();
     await this.workerLogger.addLog('Getting sheltered bundles from DB...');
     const storedBundles = await this.bundleRepository.getShelteredBundles(0);
     await this.workerLogger.addLog(`Found ${storedBundles.length} bundles into DB`);
@@ -50,6 +51,7 @@ export default class BundlesRestorer {
         await this.workerLogger.addLog(`Failed to restore bundle: ${err.message || err}`, {bundleId: bundle.bundleId}, err.stack);
       }
     }
+    await this.shelteredBundlesRepository.save();
   }
 
   getRandomInt(max) {

@@ -17,6 +17,13 @@ export default class ActiveResolutionsCache {
     return this.sortChronologically(Object.values(this.activeResolutionsDict));
   }
 
+  setActiveResolutions(resolutions) {
+    this.activeResolutionsDict = {};
+    for (const resolution of resolutions) {
+      this.add(resolution);
+    }
+  }
+
   add(resolution) {
     if (!this.has(resolution[this.resolutionIdField])) {
       if (resolution.count === undefined) {
