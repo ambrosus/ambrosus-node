@@ -93,7 +93,9 @@ export default class DataModelEngine {
     const accountToChange = await this.getAccount(accountToChangeAddress, tokenData);
     await this.accountAccessDefinitions.ensureCanModifyAccount(tokenData.createdBy, accountToChange, accountModificationRequest);
 
-    accountModificationRequest.permissions = removeDuplicates(accountModificationRequest.permissions);
+    if (accountModificationRequest.permissions !== undefined) {
+      accountModificationRequest.permissions = removeDuplicates(accountModificationRequest.permissions);
+    }
 
     return this.accountRepository.update(accountToChangeAddress, accountModificationRequest);
   }
