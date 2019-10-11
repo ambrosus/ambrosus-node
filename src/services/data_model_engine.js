@@ -12,6 +12,7 @@ import {getTimestamp} from '../utils/time_utils';
 import {pick, put} from '../utils/dict_utils';
 import allPermissions from '../utils/all_permissions';
 import BundleStatuses from '../utils/bundle_statuses';
+import removeDuplicates from '../utils/sutils.js';
 
 export default class DataModelEngine {
   constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, bundleDownloader, bundleBuilder, bundleRepository, accountRepository, operationalModeRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, uploadRepository, rolesRepository, workerLogRepository}) {
@@ -91,6 +92,9 @@ export default class DataModelEngine {
   async modifyAccount(accountToChangeAddress, accountModificationRequest, tokenData) {
     const accountToChange = await this.getAccount(accountToChangeAddress, tokenData);
     await this.accountAccessDefinitions.ensureCanModifyAccount(tokenData.createdBy, accountToChange, accountModificationRequest);
+
+    accountModificationRequest.permissions = removeDuplicates(accountModificationRequest.permissions);
+
     return this.accountRepository.update(accountToChangeAddress, accountModificationRequest);
   }
 
