@@ -7,8 +7,10 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import Web3 = require('web3');
-import base64url = require('base64url');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const Web3 = require('web3');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const base64url = require('base64url');
 
 const serializeForHashing = (object) => {
   const isDict = (subject) => typeof subject === 'object' && !Array.isArray(subject);
@@ -34,10 +36,6 @@ const serializeForHashing = (object) => {
 
 async function getToken(hermesURL, secret) {
   try {
-    require('web3');
-    require('base64url');
-
-
     const web3 = new Web3(hermesURL);
 
     const idData = {
