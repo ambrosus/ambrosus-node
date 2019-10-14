@@ -52,6 +52,7 @@ export default class AccountAccessDefinitions {
   }
 
   async ensureCanModifyAccount(address, accountToChange, accountModificationRequest) {
+    await ensureNotBuiltInAccount(accountToChange);
     await this.ensureHasPermission(address, allPermissions.manageAccounts);
     this.validateModifyAccountRequest(accountModificationRequest);
     const modifier = await this.accountRepository.get(address);
@@ -91,11 +92,9 @@ export default class AccountAccessDefinitions {
     }
   }
 
-  ensureNotBuiltInAccount(managedAccount) {
-    const amdinAddr = this.identityManager.adminAddress();
-
-    if (amdinAddr === managedAccount.address) {
-      throw new PermissionError(`Account can not modify itself`);
+  ensureNotBuiltInAccount(managedAccount) {    
+    if (this.identityManager.adminAddress() === managedAccount.address) {
+      throw new PermissionError(`Can not modify built-in admin account`);
     }
   }
 
