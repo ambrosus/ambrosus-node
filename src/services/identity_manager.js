@@ -40,7 +40,7 @@ export default class IdentityManager {
 
     const address = await this.stateModel.getAddress();
 
-    console.log('adminAddress: ', address);
+    // console.log('adminAddress: ', address);
 
     return address;
   }
