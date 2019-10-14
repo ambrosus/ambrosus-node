@@ -91,6 +91,14 @@ export default class AccountAccessDefinitions {
     }
   }
 
+  ensureNotBuiltInAccount(managedAccount) {
+    const amdinAddr = this.identityManager.adminAddress();
+
+    if (amdinAddr === managedAccount.address) {
+      throw new PermissionError(`Account can not modify itself`);
+    }
+  }
+
   async getTokenCreatorAccessLevel(tokenData) {
     if (!tokenData) {
       return 0;

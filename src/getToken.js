@@ -7,6 +7,9 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+import Web3 = require('web3');
+import base64url = require('base64url');
+
 const serializeForHashing = (object) => {
   const isDict = (subject) => typeof subject === 'object' && !Array.isArray(subject);
   const isString = (subject) => typeof subject === 'string';
@@ -31,8 +34,8 @@ const serializeForHashing = (object) => {
 
 async function getToken(hermesURL, secret) {
   try {
-    const Web3 = require('web3');
-    const base64url = require('base64url');
+    require('web3');
+    require('base64url');
 
 
     const web3 = new Web3(hermesURL);
@@ -56,7 +59,7 @@ async function getToken(hermesURL, secret) {
 }
 
 if (process.argv.length > 2) {
- getToken('wss://localhost/ws', process.argv[2]); 
+  getToken('wss://localhost/ws', process.argv[2]);
 } else {
- console.log("Usage: node getToken.js <privKey>")
+  console.log('Usage: node getToken.js <privKey>');
 }
