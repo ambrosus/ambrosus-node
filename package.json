@@ -24,6 +24,7 @@
     "dev:lint": "eslint src test",
     "dev:docker:db": "docker-compose up -d db",
     "dev:docker:parity": "docker-compose up -d parity"
+    "getToken": "node src/getToken.js"
   },
   "engines": {
     "node": ">=10.0",
