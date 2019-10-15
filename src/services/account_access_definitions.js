@@ -94,7 +94,7 @@ export default class AccountAccessDefinitions {
 
   async ensureNotBuiltInAccount(managedAccount) {
     const adminAddress = await this.identityManager.adminAddress();
-    
+
     if (adminAddress === managedAccount.address) {
       throw new PermissionError(`Can not modify built-in admin account`);
     }
