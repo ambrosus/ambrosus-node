@@ -34,13 +34,13 @@ const serializeForHashing = (object) => {
   return object.toString();
 };
 
-async function getToken(hermesURL, secret) {
+async function getToken(secret) {
   try {
-    const web3 = new Web3(hermesURL);
+    const web3 = new Web3('');
 
     const idData = {
       createdBy: web3.eth.accounts.privateKeyToAccount(secret).address,
-      validUntil: Math.floor(Date.now() / 1000) + 300
+      validUntil: Math.floor(Date.now() / 1000) + 86400
     };
 
     const sign = web3.eth.accounts.sign(serializeForHashing(idData), secret).signature;
@@ -57,7 +57,7 @@ async function getToken(hermesURL, secret) {
 }
 
 if (process.argv.length > 2) {
-  getToken('wss://localhost/ws', process.argv[2]);
+  getToken(process.argv[2]);
 } else {
   console.log('Usage: node getToken.js <privKey>');
 }
