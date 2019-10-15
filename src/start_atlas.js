@@ -31,7 +31,14 @@ async function start(logger) {
   const challengeStrategy = loadStrategy(config.challengeResolutionStrategy);
   const transferStrategy = loadStrategy(config.transferResolutionStrategy);
   const workerLogger = new WorkerLogger(logger, builder.workerLogRepository);
-  const bundlesRestorer = new BundlesRestorer(builder.bundleStoreWrapper, builder.shelteringWrapper, builder.dataModelEngine, builder.bundleRepository, builder.shelteredBundlesRepository, workerLogger);
+  const bundlesRestorer = new BundlesRestorer(
+    builder.bundleStoreWrapper,
+    builder.shelteringWrapper,
+    builder.dataModelEngine,
+    builder.bundleRepository,
+    builder.shelteredBundlesRepository,
+    workerLogger
+  );
   const resolvers = [
     new AtlasChallengeResolver(
       builder.web3,
@@ -47,7 +54,8 @@ async function start(logger) {
       builder.transfersRepository,
       builder.failedTransfersCache,
       transferStrategy,
-      workerLogger
+      workerLogger,
+      builder.bundleStoreWrapper
     )
   ];
   const releaseBundlesService = new ReleaseBundlesService(

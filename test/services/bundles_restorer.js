@@ -59,6 +59,8 @@ describe('Bundles Restorer', () => {
       getShelteredBundles: sinon.stub().resolves([])
     };
     shelteredBundlesRepositoryMock = {
+      load: sinon.stub(),
+      save: sinon.stub(),
       ongoingResolutions: sinon.stub().resolves([])
     };
     workerLoggerMock = {
