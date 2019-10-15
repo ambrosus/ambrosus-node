@@ -219,6 +219,7 @@ describe('Account Access Definitions', () => {
     let checkOrganizationStub;
     let hasPermissionStub;
     let validateRequestStub;
+    let ensureNotBuiltInAccountStub;
 
     before(() => {
       ensureHasPermissionStub = sinon.stub(accountAccessDefinitions, 'ensureHasPermission');
@@ -226,6 +227,7 @@ describe('Account Access Definitions', () => {
       hasPermissionStub = sinon.stub(accountAccessDefinitions, 'hasPermission');
       checkOrganizationStub = sinon.stub(accountAccessDefinitions, 'ensureSameOrganization');
       validateRequestStub = sinon.stub(accountAccessDefinitions, 'validateModifyAccountRequest');
+      ensureNotBuiltInAccountStub = sinon.stub(accountAccessDefinitions, 'ensureNotBuiltInAccount');
     });
 
     beforeEach(() => {
@@ -234,6 +236,7 @@ describe('Account Access Definitions', () => {
       checkOrganizationStub.returns();
       hasPermissionStub.returns(false);
       validateRequestStub.returns();
+      ensureNotBuiltInAccountStub.returns();
     });
 
     it('calls ensureHasPermission to check if modifier exists and has manage_accounts permission', async () => {

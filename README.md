@@ -111,6 +111,13 @@ Finally, start the server:
 yarn start
 ```
 
+## Utils
+
+getToken - utility for manual AMB_TOKEN generation, usage: 
+```sh
+node getToken.js <privKey>
+```
+
 ## Postman collections
 
 Additionally we provide the postman collection to make it easier to test REST queries. To use them you need to run the server, create the admin account and:
