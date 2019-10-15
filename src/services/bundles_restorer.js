@@ -18,7 +18,7 @@ export default class BundlesRestorer {
   }
 
   async restore() {
-    await this.shelteredBundlesRepository.load();
+    await this.shelteredBundlesRepository.load(this.workerLogger.logger);
     await this.workerLogger.addLog('Getting sheltered bundles from DB...');
     const storedBundles = await this.bundleRepository.getShelteredBundles(0);
     await this.workerLogger.addLog(`Found ${storedBundles.length} bundles into DB`);
@@ -27,31 +27,35 @@ export default class BundlesRestorer {
     const blockchainBundles = await this.shelteredBundlesRepository.ongoingResolutions();
     await this.workerLogger.addLog(`Found ${blockchainBundles.length} bundles into blockchain`);
     const bundles = blockchainBundles.filter((bundle) => !storedBundlesIds.has(bundle.bundleId));
-    await this.workerLogger.addLog(`Need to restore ${bundles.length} bundles`);
 
-    for (const bundle of bundles) {
-      try {
-        await this.workerLogger.addLog('Try to restore bundle', {bundleId: bundle.bundleId});
-        const expirationTime = await this.shelteringWrapper.shelteringExpirationDate(bundle.bundleId);
-        const donors = await this.getBundleDonors(bundle);
-        while (donors.length > 0) {
-          const pos = this.getRandomInt(donors.length);
-          const donorId = donors[pos];
-          try {
-            await this.dataModelEngine.downloadBundle(bundle.bundleId, donorId, expirationTime);
-            await this.dataModelEngine.markBundleAsSheltered(bundle.bundleId);
-            await this.workerLogger.addLog('Bundle restored', {bundleId: bundle.bundleId});
-            break;
-          } catch (err) {
-            await this.workerLogger.logger.info(`Failed to download bundle: ${err.message || err}`, {bundleId: bundle.bundleId, donorId}, err.stack);
-            donors.splice(pos, 1);
+    if (bundles.length > 0) {
+      let restored = 0;
+      await this.workerLogger.addLog(`Need to restore ${bundles.length} bundles`);
+      for (const bundle of bundles) {
+        try {
+          await this.workerLogger.addLog('Try to restore bundle', {bundleId: bundle.bundleId});
+          const expirationTime = await this.shelteringWrapper.shelteringExpirationDate(bundle.bundleId);
+          const donors = await this.getBundleDonors(bundle);
+          while (donors.length > 0) {
+            const pos = this.getRandomInt(donors.length);
+            const donorId = donors[pos];
+            try {
+              await this.dataModelEngine.downloadBundle(bundle.bundleId, donorId, expirationTime);
+              await this.dataModelEngine.markBundleAsSheltered(bundle.bundleId);
+              await this.workerLogger.addLog('Bundle restored', {bundleId: bundle.bundleId});
+              restored++;
+              break;
+            } catch (err) {
+              this.workerLogger.logger.info(`Failed to download bundle: ${err.message || err}`, {bundleId: bundle.bundleId, donorId}, err.stack);
+              donors.splice(pos, 1);
+            }
           }
+        } catch (err) {
+          await this.workerLogger.addLog(`Failed to restore bundle: ${err.message || err}`, {bundleId: bundle.bundleId}, err.stack);
         }
-      } catch (err) {
-        await this.workerLogger.addLog(`Failed to restore bundle: ${err.message || err}`, {bundleId: bundle.bundleId}, err.stack);
       }
+      await this.workerLogger.addLog(`Restored ${restored} bundles`);
     }
-    await this.shelteredBundlesRepository.save();
   }
 
   getRandomInt(max) {

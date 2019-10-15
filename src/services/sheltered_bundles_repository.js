@@ -19,23 +19,22 @@ export default class ShelteredBundlesRepository extends ResolutionsRepository {
     this.db = db;
   }
 
-  async load() {
+  async load(logger) {
+    this.logger = logger;
     try {
+      logger.info(`Loading blockchain sheltering state...`);
       const stored = await this.db.collection('resolutions_repository').findOne({name:'shelteredbundles'}, {projection: {_id: 0}});
-      if (stored !== null) {
+      const cursor = await this.db.collection('blockchain_bundles').find({}, {projection: {_id: 0}});
+      if (stored !== null && cursor !== null) {
         this.lastSavedBlock = stored.lastSavedBlock;
-        this.activeResolutionsCache.setActiveResolutions(stored.activeResolutions);
+        const bundles = await cursor.toArray();
+        this.activeResolutionsCache.setActiveResolutions(bundles);
+        logger.info(`Blockchain sheltering state: LastBlock ${this.lastSavedBlock}, Loaded ${bundles.length} bundles`);
+      } else {
+        logger.info(`Blockchain sheltering state not found`);
       }
     } catch (err) {
-      // eslint-disable-next-line @typescript-eslint/no-empty
-    }
-  }
-
-  async save() {
-    try {
-      await this.db.collection('resolutions_repository').updateOne({name:'shelteredbundles'}, {$set : {name:'shelteredbundles', lastSavedBlock: this.lastSavedBlock, activeResolutions: this.activeResolutionsCache.activeResolutions}}, {upsert : true});
-    } catch (err) {
-      // eslint-disable-next-line @typescript-eslint/no-empty
+      logger.info(`Failed to load sheltering state: ${err.message || err}`);
     }
   }
 
@@ -48,6 +47,23 @@ export default class ShelteredBundlesRepository extends ResolutionsRepository {
       ['bundleId', 'shelterer']);
 
     this.activeResolutionsCache.applyIncomingResolutionEvents(addedBundles, [], removedBundles);
+    try {
+      await this.db.collection('resolutions_repository').updateOne({name:'shelteredbundles'}, {$set : {name:'shelteredbundles', lastSavedBlock: currentBlock}}, {upsert : true});
+      if (addedBundles.length > 0) {
+        for (const bundle of addedBundles) {
+          await this.db.collection('blockchain_bundles').insertOne(bundle);
+        }
+        this.logger.info(`Blockchain sheltering state: Stored ${addedBundles.length} bundles`);
+      }
+      if (removedBundles.length > 0) {
+        for (const bundle of removedBundles) {
+          await this.db.collection('blockchain_bundles').deleteOne({bundleId: bundle.bundleId});
+        }
+        this.logger.info(`Blockchain sheltering state: Removed ${removedBundles.length} bundles`);
+      }
+    } catch (err) {
+      this.logger.info(`Failed to store sheltering state: ${err.message || err}`);
+    }
   }
 
   async getFromBlock() {
