@@ -19,6 +19,7 @@ before_install:
   - sudo mv docker-compose /usr/local/bin
 
 install:
+  - sudo mkdir /opt/hermes
   - docker-compose pull
   - npx yarn install
   - docker pull hadolint/hadolint
