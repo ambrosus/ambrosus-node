@@ -28,13 +28,24 @@ export default class AccountAccessDefinitions {
     }
   }
 
+  async ensureNotBuiltInAccount(managedAccount) {
+    const adminAddress = await this.identityManager.adminAddress();
+
+    if (adminAddress === managedAccount.address) {
+      throw new PermissionError(`Can not modify built-in admin account`);
+    }
+  }
+
   async ensureCanCreateAsset(address) {
+    const creator = await this.accountRepository.get(address);
+    this.ensureActiveAccount(creator);
     return this.ensureHasPermission(address, allPermissions.createAsset);
   }
 
   async ensureCanCreateEvent(address, accessLevel) {
     await this.ensureHasPermission(address, allPermissions.createEvent);
     const creator = await this.accountRepository.get(address);
+    this.ensureActiveAccount(creator);
     if (accessLevel > creator.accessLevel) {
       throw new PermissionError(`The event's access level needs to be less than or equal to your access level`);
     }
@@ -44,6 +55,7 @@ export default class AccountAccessDefinitions {
     await this.ensureHasPermission(address, allPermissions.registerAccounts);
     this.validateAddAccountRequest(newAccountRequest);
     const creator = await this.accountRepository.get(address);
+    this.ensureActiveAccount(creator);
     if (this.hasPermission(creator, allPermissions.superAccount)) {
       return;
     }
@@ -56,6 +68,7 @@ export default class AccountAccessDefinitions {
     await this.ensureHasPermission(address, allPermissions.manageAccounts);
     this.validateModifyAccountRequest(accountModificationRequest);
     const modifier = await this.accountRepository.get(address);
+    this.ensureActiveAccount(modifier);
     this.ensureNotSameAccount(modifier, accountToChange);
     if (this.hasPermission(modifier, allPermissions.superAccount)) {
       return;
@@ -92,11 +105,9 @@ export default class AccountAccessDefinitions {
     }
   }
 
-  async ensureNotBuiltInAccount(managedAccount) {
-    const adminAddress = await this.identityManager.adminAddress();
-
-    if (adminAddress === managedAccount.address) {
-      throw new PermissionError(`Can not modify built-in admin account`);
+  ensureActiveAccount(account) {
+    if (!account.active) {
+      throw new PermissionError(`Account is disabled`);
     }
   }
 
@@ -118,6 +129,7 @@ export default class AccountAccessDefinitions {
   defaultAdminAccount(address) {
     return {
       address,
+      active: true,
       permissions: [allPermissions.superAccount],
       registeredOn: getTimestamp(),
       accessLevel: 1000
@@ -150,23 +162,25 @@ export default class AccountAccessDefinitions {
       'permissions',
       'accessLevel'
     ];
-    const allowedFields = [...requiredFields, 'organization'];
+    const allowedFields = [...requiredFields, 'organization', 'active'];
 
     validateAndCast(account)
       .required(requiredFields)
       .fieldsConstrainedToSet(allowedFields)
       .isNonNegativeInteger(['accessLevel', 'organization'])
+      .isBoolean(['active'])
       .isAddress(['address']);
 
     account.permissions.forEach(this.validateCorrectPermission);
   }
 
   validateModifyAccountRequest(params) {
-    const allowedParametersList = ['permissions', 'accessLevel', 'organization'];
+    const allowedParametersList = ['permissions', 'accessLevel', 'organization', 'active'];
 
     validateAndCast(params)
       .fieldsConstrainedToSet(allowedParametersList)
       .isNonNegativeInteger(['accessLevel', 'organization'])
+      .isBoolean(['active'])
       .validate(['permissions'], (permissions) => Array.isArray(permissions), 'Permissions should be an array');
 
     if (params.permissions) {

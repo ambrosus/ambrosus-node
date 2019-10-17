@@ -70,6 +70,17 @@ class ValidationAndCasting {
     return this;
   }
 
+  isBoolean(valueNames) {
+    for (const valueName of valueNames) {
+      const value = get(this.params, valueName);
+
+      if ((value !== undefined) && (typeof value !== 'boolean')) {
+        throw new ValidationError(`Invalid ${valueName} parameter value. Should be a boolean.`);
+      }
+    }
+    return this;
+  }
+
   isHexOfLength(valueNames, length) {
     const hexRegex = new RegExp(`^0x[0-9a-f]{${length}}$`, 'i');
     for (const valueName of valueNames) {

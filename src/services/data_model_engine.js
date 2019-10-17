@@ -56,6 +56,7 @@ export default class DataModelEngine {
     await this.accountAccessDefinitions.ensureCanAddAccount(tokenData.createdBy, accountRequest);
     const accountToStore = {
       address: accountRequest.address,
+      active: true,
       permissions: accountRequest.permissions,
       registeredBy: tokenData.createdBy,
       registeredOn: getTimestamp(),
