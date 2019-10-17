@@ -30,6 +30,7 @@ describe('Account Access Definitions', () => {
   const organization = 3;
   const mockAccount = {
     ...account,
+    active: true,
     permissions: mockPermissions,
     accessLevel,
     organization
