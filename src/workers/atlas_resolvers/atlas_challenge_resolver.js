@@ -18,7 +18,8 @@ export default class AtlasChallengeResolver extends BundleShelteringResolver {
     challengesRepository,
     failedChallengesCache,
     strategy,
-    workerLogger
+    workerLogger,
+    bundleStoreWrapper
   ) {
     super(web3,
       dataModelEngine,
@@ -28,6 +29,7 @@ export default class AtlasChallengeResolver extends BundleShelteringResolver {
       workerLogger,
       'Challenge'
     );
+    this.bundleStoreWrapper = bundleStoreWrapper;
   }
 
   getPropositionId(challenge) {
@@ -45,5 +47,49 @@ export default class AtlasChallengeResolver extends BundleShelteringResolver {
       labelNames: ['status'],
       registers: [registry]
     });
+  }
+
+  getRandomInt(max) {
+    return Math.floor(Math.random() * Math.floor(max));
+  }
+
+  async tryToDownload(proposition) {
+    const propositionExpirationTime = await this.resolutionsRepository.getExpirationTimeInMs(proposition);
+    let metadata;
+    try {
+      metadata = await this.dataModelEngine.downloadBundle(proposition.bundleId, this.getSheltererId(proposition), propositionExpirationTime);
+      await this.workerLogger.addLog('Bundle fetched', proposition);
+    } catch (err) {
+      await this.workerLogger.logger.info(`Failed to download bundle: ${err.message || err}`, proposition, err.stack);
+      const donors = await this.getBundleDonors(proposition);
+      while (donors.length > 0) {
+        const pos = this.getRandomInt(donors.length);
+        const donorId = donors[pos];
+        try {
+          metadata = await this.dataModelEngine.downloadBundle(proposition.bundleId, donorId, propositionExpirationTime);
+          await this.workerLogger.addLog('Bundle fetched', {bundleId: proposition.bundleId, donorId});
+          break;
+        } catch (err) {
+          await this.workerLogger.logger.info(`Failed to download bundle: ${err.message || err}`, {bundleId: proposition.bundleId, donorId}, err.stack);
+          donors.splice(pos, 1);
+        }
+      }
+    }
+    if (metadata === undefined) {
+      throw new Error('No donors available for downloading bundle');
+    }
+    return metadata;
+  }
+
+  async getBundleDonors(proposition) {
+    const contract = await this.bundleStoreWrapper.contract();
+    const shelterers = await contract.methods.getShelterers(proposition.bundleId).call();
+    let pos = shelterers.indexOf(proposition.sheltererId);
+    while (-1 !== pos) {
+      shelterers.splice(pos, 1);
+      pos = shelterers.indexOf(proposition.sheltererId);
+    }
+    shelterers.push(await contract.methods.getUploader(proposition.bundleId).call());
+    return shelterers;
   }
 }
