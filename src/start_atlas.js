@@ -46,7 +46,8 @@ async function start(logger) {
       builder.challengesRepository,
       builder.failedChallengesCache,
       challengeStrategy,
-      workerLogger
+      workerLogger,
+      builder.bundleStoreWrapper
     ),
     new AtlasTransferResolver(
       builder.web3,
