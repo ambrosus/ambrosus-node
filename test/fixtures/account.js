@@ -16,6 +16,7 @@ const addAccountRequest = (fields) => ({
 
 const account = {
   address: '0x742E62CC7A19Ef7D9c44306C07FAd54B5bF6d4bE',
+  active: true,
   permissions: [allPermissions.registerAccounts],
   accessLevel: 2,
   organization: 2

@@ -29,8 +29,6 @@ export default class IdentityManager {
     let privateKey = await this.stateModel.getPrivateKey();
 
     if (privateKey === null) {
-      console.log('adminAddress: not found ... generating ...');
-
       privateKey = await this.stateModel.generateAndStoreNewPrivateKey();
 
       if (privateKey === null) {
@@ -39,8 +37,6 @@ export default class IdentityManager {
     }
 
     const address = await this.stateModel.getAddress();
-
-    console.log('adminAddress: ', address);
 
     return address;
   }
