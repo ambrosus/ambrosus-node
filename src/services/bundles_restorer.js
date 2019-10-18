@@ -55,6 +55,8 @@ export default class BundlesRestorer {
         }
       }
       await this.workerLogger.addLog(`Restored ${restored} bundles`);
+    } else {
+      await this.workerLogger.addLog(`All ${storedBundles.length} bundles are present in DB`);
     }
   }
 

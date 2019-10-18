@@ -76,8 +76,7 @@ async function start(logger) {
     resolvers,
     builder.operationalMode,
     config,
-    releaseBundlesService,
-    bundlesRestorer
+    releaseBundlesService
   );
   const cleanupWorker = new CleanupWorker(
     builder.dataModelEngine,
@@ -87,6 +86,7 @@ async function start(logger) {
   );
   await atlasWorker.start();
   await cleanupWorker.start();
+  setTimeout(() => bundlesRestorer.restore(), 500);
 }
 
 function loadStrategy(strategyName) {
