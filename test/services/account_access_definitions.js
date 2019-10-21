@@ -37,6 +37,7 @@ describe('Account Access Definitions', () => {
   };
   let mockIdentityManager = null;
   let mockAccountRepository;
+  let mockOrganizationRepository;
   let accountAccessDefinitions;
 
   before(() => {
@@ -47,7 +48,10 @@ describe('Account Access Definitions', () => {
     mockAccountRepository = {
       get: sinon.stub()
     };
-    accountAccessDefinitions = new AccountAccessDefinitions(mockIdentityManager, mockAccountRepository);
+    mockOrganizationRepository = {
+      isActive: sinon.stub().returns(true)
+    };
+    accountAccessDefinitions = new AccountAccessDefinitions(mockIdentityManager, mockAccountRepository, mockOrganizationRepository);
   });
 
   beforeEach(() => {
