@@ -34,6 +34,7 @@ async function start(logger) {
     builder.client,
     config.serverPort
   );
+
   await worker.start();
 }
 

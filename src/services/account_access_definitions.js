@@ -13,9 +13,10 @@ import {getTimestamp} from '../utils/time_utils';
 import allPermissions from '../utils/all_permissions';
 
 export default class AccountAccessDefinitions {
-  constructor(identityManager, accountRepository) {
+  constructor(identityManager, accountRepository, organizationRepository) {
     this.identityManager = identityManager;
     this.accountRepository = accountRepository;
+    this.organizationRepository = organizationRepository;
   }
 
   async ensureHasPermission(address, permissionName) {
@@ -39,6 +40,7 @@ export default class AccountAccessDefinitions {
   async ensureCanCreateAsset(address) {
     const creator = await this.accountRepository.get(address);
     this.ensureActiveAccount(creator);
+    await this.ensureActiveOrganization(creator);
     return this.ensureHasPermission(address, allPermissions.createAsset);
   }
 
@@ -46,6 +48,7 @@ export default class AccountAccessDefinitions {
     await this.ensureHasPermission(address, allPermissions.createEvent);
     const creator = await this.accountRepository.get(address);
     this.ensureActiveAccount(creator);
+    await this.ensureActiveOrganization(creator);
     if (accessLevel > creator.accessLevel) {
       throw new PermissionError(`The event's access level needs to be less than or equal to your access level`);
     }
@@ -59,6 +62,7 @@ export default class AccountAccessDefinitions {
     if (this.hasPermission(creator, allPermissions.superAccount)) {
       return;
     }
+    await this.ensureActiveOrganization(creator);
     this.ensureNoExceedingPermissions(creator, newAccountRequest);
     this.ensureSameOrganization(creator, newAccountRequest);
   }
@@ -73,6 +77,7 @@ export default class AccountAccessDefinitions {
     if (this.hasPermission(modifier, allPermissions.superAccount)) {
       return;
     }
+    await this.ensureActiveOrganization(modifier);
     this.ensureNoExceedingPermissions(modifier, accountModificationRequest);
     this.ensureSameOrganization(modifier, accountToChange);
     if (this.hasPermission(accountToChange, allPermissions.protectedAccount)) {
@@ -108,6 +113,14 @@ export default class AccountAccessDefinitions {
   ensureActiveAccount(account) {
     if (!account.active) {
       throw new PermissionError(`Account is disabled`);
+    }
+  }
+
+  async ensureActiveOrganization(account) {
+    const isActiveOrganization = await this.organizationRepository.isActive(account.organization);
+
+    if (!isActiveOrganization) {
+      throw new PermissionError(`Organization is disabled`);
     }
   }
 
