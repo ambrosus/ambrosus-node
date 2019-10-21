@@ -168,7 +168,7 @@ class Builder {
     this.bundleDownloader = new BundleDownloader(this.httpsClient);
     this.accountRepository = new AccountRepository(this.db);
     this.findAccountQueryObjectFactory = new FindAccountQueryObjectFactory(this.db);
-    this.accountAccessDefinitions = new AccountAccessDefinitions(this.identityManager, this.accountRepository);
+    this.accountAccessDefinitions = new AccountAccessDefinitions(this.identityManager, this.accountRepository, this.organizationRepository);
     this.dataModelEngine = new DataModelEngine({
       identityManager: this.identityManager,
       tokenAuthenticator: this.tokenAuthenticator,
