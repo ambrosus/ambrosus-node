@@ -10,7 +10,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 // import {deployContract, link} from '../../src/utils/web3_tools';
 import {contractJsons, Deployer} from 'ambrosus-node-contracts';
 
-
 const deployAll = async (web3, privateKey, logger) => {
   const deployingAccount = web3.eth.accounts.privateKeyToAccount(privateKey);
   web3.eth.accounts.wallet.add(deployingAccount);
