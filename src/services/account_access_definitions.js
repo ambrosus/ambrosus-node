@@ -39,7 +39,7 @@ export default class AccountAccessDefinitions {
 
   async ensureCanCreateAsset(address) {
     const creator = await this.accountRepository.get(address);
-    await this.ensureActiveAccount(creator);
+    this.ensureActiveAccount(creator);
     await this.ensureActiveOrganization(creator);
     return this.ensureHasPermission(address, allPermissions.createAsset);
   }
@@ -47,7 +47,7 @@ export default class AccountAccessDefinitions {
   async ensureCanCreateEvent(address, accessLevel) {
     await this.ensureHasPermission(address, allPermissions.createEvent);
     const creator = await this.accountRepository.get(address);
-    await this.ensureActiveAccount(creator);
+    this.ensureActiveAccount(creator);
     await this.ensureActiveOrganization(creator);
     if (accessLevel > creator.accessLevel) {
       throw new PermissionError(`The event's access level needs to be less than or equal to your access level`);
@@ -58,7 +58,7 @@ export default class AccountAccessDefinitions {
     await this.ensureHasPermission(address, allPermissions.registerAccounts);
     this.validateAddAccountRequest(newAccountRequest);
     const creator = await this.accountRepository.get(address);
-    await this.ensureActiveAccount(creator);
+    this.ensureActiveAccount(creator);
     if (this.hasPermission(creator, allPermissions.superAccount)) {
       return;
     }
@@ -72,7 +72,7 @@ export default class AccountAccessDefinitions {
     await this.ensureHasPermission(address, allPermissions.manageAccounts);
     this.validateModifyAccountRequest(accountModificationRequest);
     const modifier = await this.accountRepository.get(address);
-    await this.ensureActiveAccount(modifier);
+    this.ensureActiveAccount(modifier);
     this.ensureNotSameAccount(modifier, accountToChange);
     if (this.hasPermission(modifier, allPermissions.superAccount)) {
       return;
