@@ -15,7 +15,7 @@ import BundleStatuses from '../utils/bundle_statuses';
 import removeDuplicates from '../utils/sutils.js';
 
 export default class DataModelEngine {
-  constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, bundleDownloader, bundleBuilder, bundleRepository, accountRepository, operationalModeRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, uploadRepository, rolesRepository, workerLogRepository}) {
+  constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, bundleDownloader, bundleBuilder, bundleRepository, accountRepository, operationalModeRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, uploadRepository, rolesRepository, workerLogRepository, organizationRepository}) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
@@ -33,6 +33,7 @@ export default class DataModelEngine {
     this.uploadRepository = uploadRepository;
     this.rolesRepository = rolesRepository;
     this.workerLogRepository = workerLogRepository;
+    this.organizationRepository = organizationRepository;
   }
 
   async addAdminAccount(address) {

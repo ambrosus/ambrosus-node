@@ -56,6 +56,7 @@ import ActiveResolutionsCache from './services/active_resolutions_cache';
 import WorkerTaskTrackingRepository from './services/worker_task_tracking_repository';
 import OperationalMode from './services/operational_mode';
 import OperationalModeRepository from './services/operational_mode_repository';
+import OrganizationRepository from './services/organization_repository';
 import * as Sentry from '@sentry/node';
 
 class Builder {
@@ -150,6 +151,7 @@ class Builder {
     );
     this.tokenAuthenticator = new TokenAuthenticator(this.identityManager);
     this.operationalModeRepository = new OperationalModeRepository(this.db);
+    this.organizationRepository = new OrganizationRepository(this.db);
     this.operationalMode = new OperationalMode(this.operationalModeRepository, this.tokenAuthenticator);
     const {maximumEntityTimestampOvertake, supportDeprecatedBundleVersions} = this.config;
     this.entityBuilder = new EntityBuilder(this.identityManager, maximumEntityTimestampOvertake);
@@ -166,7 +168,7 @@ class Builder {
     this.bundleDownloader = new BundleDownloader(this.httpsClient);
     this.accountRepository = new AccountRepository(this.db);
     this.findAccountQueryObjectFactory = new FindAccountQueryObjectFactory(this.db);
-    this.accountAccessDefinitions = new AccountAccessDefinitions(this.identityManager, this.accountRepository);
+    this.accountAccessDefinitions = new AccountAccessDefinitions(this.identityManager, this.accountRepository, this.organizationRepository);
     this.dataModelEngine = new DataModelEngine({
       identityManager: this.identityManager,
       tokenAuthenticator: this.tokenAuthenticator,
@@ -184,7 +186,8 @@ class Builder {
       mongoClient: this.client,
       uploadRepository: this.uploadRepository,
       rolesRepository: this.rolesRepository,
-      workerLogRepository: this.workerLogRepository
+      workerLogRepository: this.workerLogRepository,
+      organizationRepository: this.organizationRepository
     });
     return {dataModelEngine: this.dataModelEngine, client: this.client, kycWhitelistWrapper: this.kycWhitelistWrapper};
   }
