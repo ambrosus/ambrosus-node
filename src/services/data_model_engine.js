@@ -53,7 +53,7 @@ export default class DataModelEngine {
     return account;
   }
 
-  async addAccount(accountRequest, tokenData) {    
+  async addAccount(accountRequest, tokenData) {
     await this.accountAccessDefinitions.ensureCanAddAccount(tokenData.createdBy, accountRequest);
     const accountToStore = {
       address: accountRequest.address,

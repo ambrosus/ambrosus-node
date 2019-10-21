@@ -13,21 +13,15 @@ export default class OrganizationRepository {
   }
 
   async disable(organizationId) {
-    await this.db.collection('organization').updateOne({organizationId:organizationId}, {$set : {
-      active: false,
-      organizationId: organizationId
-    }});
+    await this.db.collection('organization').updateOne({organizationId}, {$set : {active: false, organizationId}});
   }
 
   async enable(organizationId) {
-    await this.db.collection('organization').updateOne({organizationId:organizationId}, {$set : {
-      active: true,
-      organizationId: organizationId
-    }});
+    await this.db.collection('organization').updateOne({organizationId}, {$set : {active: true, organizationId}});
   }
 
   async isActive(organizationId) {
-    const organization = await this.db.collection('organization').findOne({organizationId:organizationId});
+    const organization = await this.db.collection('organization').findOne({organizationId});
 
     if (organization === null) {
       return true;
