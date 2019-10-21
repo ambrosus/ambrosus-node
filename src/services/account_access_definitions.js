@@ -110,7 +110,7 @@ export default class AccountAccessDefinitions {
     }
   }
 
-  async ensureActiveAccount(account) {
+  ensureActiveAccount(account) {
     if (!account.active) {
       throw new PermissionError(`Account is disabled`);
     }
