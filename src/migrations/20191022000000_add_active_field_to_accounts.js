@@ -16,5 +16,5 @@ export const up = async (db, config, logger) => {
 
   if (registerCount > 0) {
     logger.info(`Added 'active' field to ${registerCount} accounts`);
-  };
+  }
 };
