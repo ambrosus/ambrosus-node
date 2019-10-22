@@ -9,12 +9,12 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 // eslint-disable-next-line import/prefer-default-export
 export const up = async (db, config, logger) => {
-  const registerCount = (await db.collection('accounts').updateMany(
+  const updatedCount = (await db.collection('accounts').updateMany(
     {active: {$exists: false}},
     {$set : {active: true}}
   )).modifiedCount;
 
-  if (registerCount > 0) {
-    logger.info(`Added 'active' field to ${registerCount} accounts`);
+  if (updatedCount > 0) {
+    logger.info(`Added 'active' field to ${updatedCount} accounts`);
   }
 };
