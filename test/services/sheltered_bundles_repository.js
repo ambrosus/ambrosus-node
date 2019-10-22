@@ -129,6 +129,9 @@ describe('Sheltered bundles repository', () => {
         .onSecondCall()
         .resolves(latestBlock + 3);
       shelteredBundlesRepository = new ShelteredBundlesRepository(atlasId, bundleStoreWrapperMock, blockchainStateWrapperMock, shelteredBundlesCacheMock);
+      shelteredBundlesRepository.logger = {
+        info: sinon.stub()
+      };
       sinon.spy(shelteredBundlesRepository, 'prepareEvents');
     });
 
