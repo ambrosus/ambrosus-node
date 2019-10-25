@@ -217,7 +217,8 @@ describe('Data Model Engine', () => {
         get: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        ensureHasPermission: sinon.stub().resolves()
+        ensureHasPermission: sinon.stub().resolves(),
+        ensureCanViewAccount: sinon.stub()
       };
       modelEngine = new DataModelEngine({
         accountRepository: mockAccountRepository,

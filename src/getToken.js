@@ -50,7 +50,7 @@ async function getToken(secret) {
       idData
     }));
 
-    console.log('AMB_TOKEN:', token);
+    console.log(token);
   } catch (err) {
     console.log('ERROR:', err);
   }

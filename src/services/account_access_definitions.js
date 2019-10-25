@@ -85,6 +85,22 @@ export default class AccountAccessDefinitions {
     }
   }
 
+  async ensureCanViewAccount(callerAddress, accountToView) {
+    const requestedBy = await this.accountRepository.get(callerAddress);
+
+    this.ensureActiveAccount(requestedBy);
+
+    if (this.hasPermission(requestedBy, allPermissions.superAccount)) {
+      return;
+    }
+
+    await this.ensureHasPermission(requestedBy.address, allPermissions.manageAccounts);
+
+    await this.ensureActiveOrganization(requestedBy);
+
+    this.ensureSameOrganization(requestedBy, accountToView);
+  }
+
   ensureNoExceedingPermissions(managingAccount, managedAccount) {
     if (managedAccount.permissions) {
       const hasExceedingPermissions = managedAccount.permissions.some(
