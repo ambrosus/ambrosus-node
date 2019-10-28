@@ -92,6 +92,18 @@ export default class DataModelEngine {
   }
 
   async findAccounts(params, tokenData) {
+    const requestedBy = await this.accountRepository.get(tokenData.createdBy);
+
+    if (requestedBy === null) {
+      throw new PermissionError(`Token account not found.`);
+    }
+
+    this.accountAccessDefinitions.ensureActiveAccount(requestedBy);
+
+    if (!this.accountAccessDefinitions.hasPermission(requestedBy, allPermissions.superAccount)) {
+      params.organization = requestedBy.organization;
+    }
+
     const validatedParams = this.accountAccessDefinitions.validateAndCastFindAccountParams(params);
     await this.accountAccessDefinitions.ensureHasPermission(tokenData.createdBy, allPermissions.manageAccounts);
     const findAccountQueryObject = this.findAccountQueryObjectFactory.create(validatedParams);
