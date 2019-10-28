@@ -24,7 +24,8 @@ export class FindAccountQueryObject extends FindQueryObject {
 
     const queryParts = {
       accessLevel: {accessLevel: {$gte: this.criteria.accessLevel}},
-      registeredBy: {registeredBy: this.criteria.registeredBy}
+      registeredBy: {registeredBy: this.criteria.registeredBy},
+      organization: {organization: this.criteria.organization}
     };
 
     this.queryBuilder.addNeededPartsToQuery(this.criteria, queryParts);

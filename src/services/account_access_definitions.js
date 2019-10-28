@@ -85,6 +85,22 @@ export default class AccountAccessDefinitions {
     }
   }
 
+  async ensureCanViewAccount(callerAddress, accountToView) {
+    const requestedBy = await this.accountRepository.get(callerAddress);
+
+    this.ensureActiveAccount(requestedBy);
+
+    if (this.hasPermission(requestedBy, allPermissions.superAccount)) {
+      return;
+    }
+
+    await this.ensureHasPermission(requestedBy.address, allPermissions.manageAccounts);
+
+    await this.ensureActiveOrganization(requestedBy);
+
+    this.ensureSameOrganization(requestedBy, accountToView);
+  }
+
   ensureNoExceedingPermissions(managingAccount, managedAccount) {
     if (managedAccount.permissions) {
       const hasExceedingPermissions = managedAccount.permissions.some(
@@ -157,11 +173,11 @@ export default class AccountAccessDefinitions {
   }
 
   validateAndCastFindAccountParams(params) {
-    const allowedParametersList = ['accessLevel', 'page', 'perPage', 'registeredBy'];
+    const allowedParametersList = ['accessLevel', 'page', 'perPage', 'registeredBy', 'organization'];
 
     return validateAndCast(params)
       .fieldsConstrainedToSet(allowedParametersList)
-      .castNumber(['accessLevel', 'page', 'perPage'])
+      .castNumber(['accessLevel', 'page', 'perPage', 'organization'])
       .isNonNegativeInteger(['accessLevel', 'page', 'perPage'])
       .validate(['perPage'], (perPage) => perPage <= 100, 'pageSize should not be higher than 100')
       .validate(['perPage'], (perPage) => 0 < perPage, 'pageSize should be positive')

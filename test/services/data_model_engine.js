@@ -217,7 +217,8 @@ describe('Data Model Engine', () => {
         get: sinon.stub()
       };
       mockAccountAccessDefinitions = {
-        ensureHasPermission: sinon.stub().resolves()
+        ensureHasPermission: sinon.stub().resolves(),
+        ensureCanViewAccount: sinon.stub()
       };
       modelEngine = new DataModelEngine({
         accountRepository: mockAccountRepository,
@@ -259,12 +260,14 @@ describe('Data Model Engine', () => {
   describe('Finding accounts', () => {
     const mockParams = {accessLevel: '1'};
     const validatedParams = {accessLevel: 1};
+    const mockAccount = {organization: 1};
     let mockFindAccountQueryObjectFactory;
     let mockFindAccountQueryObject;
     let mockAccountAccessDefinitions;
     let modelEngine;
     let account;
     let accountWithoutSecret;
+    let mockAccountRepository;
 
     before(() => {
       mockFindAccountQueryObjectFactory = {
@@ -273,11 +276,18 @@ describe('Data Model Engine', () => {
       mockFindAccountQueryObject = {
         execute: sinon.stub()
       };
+      mockAccountRepository = {
+        store: sinon.stub(),
+        get: sinon.stub().returns(mockAccount)
+      };
       mockAccountAccessDefinitions = {
         ensureHasPermission: sinon.stub(),
-        validateAndCastFindAccountParams: sinon.stub()
+        validateAndCastFindAccountParams: sinon.stub(),
+        ensureActiveAccount: sinon.stub(),
+        hasPermission: sinon.stub()
       };
       modelEngine = new DataModelEngine({
+        accountRepository: mockAccountRepository,
         findAccountQueryObjectFactory: mockFindAccountQueryObjectFactory,
         accountAccessDefinitions: mockAccountAccessDefinitions
       });

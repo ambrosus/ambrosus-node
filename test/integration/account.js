@@ -464,11 +464,21 @@ describe('Accounts - Integrations', async () => {
 
     it('user with manage_accounts permission can perform search', async () => {
       const permittedAccount = await injectAccount([allPermissions.manageAccounts]);
+
       const response = await apparatus.request()
         .get('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(permittedAccount.secret)}`)
         .send();
-      expect(response.body.resultCount).to.equal(5);
+      expect(response.body.resultCount).to.equal(4);
+
+      for (let index = 0; index < scenario.accounts.length;) {
+        if (scenario.accounts[index].organization === undefined) {
+          scenario.accounts.splice(index, 1);
+        } else {
+          index++;
+        }
+      }
+
       expect(response.body.results.map((account) => account.address).sort())
         .to.deep.equal(scenario.accounts.map((account) => account.address).sort());
     });

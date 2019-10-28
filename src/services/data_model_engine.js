@@ -55,6 +55,7 @@ export default class DataModelEngine {
 
   async addAccount(accountRequest, tokenData) {
     await this.accountAccessDefinitions.ensureCanAddAccount(tokenData.createdBy, accountRequest);
+
     const accountToStore = {
       address: accountRequest.address,
       active: true,
@@ -64,6 +65,7 @@ export default class DataModelEngine {
       accessLevel: accountRequest.accessLevel,
       organization: accountRequest.organization
     };
+
     if (await this.accountRepository.get(accountToStore.address)) {
       throw new ValidationError(`Account with address ${accountToStore.address} already exists`);
     }
@@ -76,15 +78,32 @@ export default class DataModelEngine {
     if (!sender) {
       throw new PermissionError(`Sender account ${tokenData.createdBy} not found.`);
     }
+
     await this.accountAccessDefinitions.ensureHasPermission(tokenData.createdBy, allPermissions.manageAccounts);
-    const result = await this.accountRepository.get(address);
-    if (!result) {
+
+    const account = await this.accountRepository.get(address);
+    if (!account) {
       throw new NotFoundError(`Account ${address} not found.`);
     }
-    return result;
+
+    await this.accountAccessDefinitions.ensureCanViewAccount(tokenData.createdBy, account);
+
+    return account;
   }
 
   async findAccounts(params, tokenData) {
+    const requestedBy = await this.accountRepository.get(tokenData.createdBy);
+
+    if (requestedBy === null) {
+      throw new PermissionError(`Token account not found.`);
+    }
+
+    this.accountAccessDefinitions.ensureActiveAccount(requestedBy);
+
+    if (!this.accountAccessDefinitions.hasPermission(requestedBy, allPermissions.superAccount)) {
+      params.organization = requestedBy.organization;
+    }
+
     const validatedParams = this.accountAccessDefinitions.validateAndCastFindAccountParams(params);
     await this.accountAccessDefinitions.ensureHasPermission(tokenData.createdBy, allPermissions.manageAccounts);
     const findAccountQueryObject = this.findAccountQueryObjectFactory.create(validatedParams);
