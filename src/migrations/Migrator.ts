@@ -113,6 +113,22 @@ class Migrator {
       .filter(this.isMigrationPath)
       .sort();
   }
+
+  public async ensureMigrationIsComplete(logger) {
+    let retries = 10;
+
+    const delay = ms => new Promise(res => setTimeout(res, ms));
+
+    while (retries-- > 0 && (await this.isMigrationNecessary())) {
+      logger.info({message: 'Migration did not complete yet. Retrying in 5 seconds'});
+
+      await delay(5000);
+    }
+
+    if (await this.isMigrationNecessary()) {
+      throw new Error('Migration did not complete, timeout expired.');
+    }
+ }
 }
 
 export default Migrator;

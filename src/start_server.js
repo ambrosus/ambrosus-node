@@ -17,9 +17,7 @@ import {setup} from './utils/instrument_process';
 async function start(logger) {
   const builder = new Builder();
   await builder.build(config);
-  if (await builder.migrator.isMigrationNecessary()) {
-    throw new Error('Migration needs to be done');
-  }
+  await builder.migrator.ensureMigrationIsComplete(logger);
   await builder.ensureAdminAccountExist();
   await waitForChainSync(builder.web3, 5, () => logger.info({
     message: 'Ethereum client is not in sync. Retrying in 5 seconds'

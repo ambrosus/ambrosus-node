@@ -23,9 +23,7 @@ import BundlesRestorer from './services/bundles_restorer';
 async function start(logger) {
   const builder = new Builder();
   await builder.build(config);
-  if (await builder.migrator.isMigrationNecessary()) {
-    throw new Error('Migration needs to be done');
-  }
+  await builder.migrator.ensureMigrationIsComplete(logger);
   await waitForChainSync(builder.web3, 5, () => logger.info('Ethereum client is not in sync. Retrying in 5 seconds'));
   await builder.ensureAccountIsOnboarded([Role.ATLAS]);
   const challengeStrategy = loadStrategy(config.challengeResolutionStrategy);
