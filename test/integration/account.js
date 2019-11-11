@@ -472,7 +472,7 @@ describe('Accounts - Integrations', async () => {
       expect(response.body.resultCount).to.equal(4);
 
       for (let index = 0; index < scenario.accounts.length;) {
-        if (scenario.accounts[index].organization === undefined) {
+        if (scenario.accounts[index].organization === 0) {
           scenario.accounts.splice(index, 1);
         } else {
           index++;
