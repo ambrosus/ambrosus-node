@@ -20,5 +20,5 @@ export const up = async (db, config, logger) => {
     }
   )).modifiedCount;
 
-  logger.info(`Replaced ${registerCount} 'register_account' permissions`);
+  logger.info(`Replaced ${registerCount} 'super_account' permissions`);
 };
