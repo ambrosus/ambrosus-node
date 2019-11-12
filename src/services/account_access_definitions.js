@@ -161,7 +161,8 @@ export default class AccountAccessDefinitions {
       active: true,
       permissions: [allPermissions.superAccount, allPermissions.manageAccounts, allPermissions.registerAccounts],
       registeredOn: getTimestamp(),
-      accessLevel: 1000
+      accessLevel: 1000,
+      organization: 0
     };
   }
 
