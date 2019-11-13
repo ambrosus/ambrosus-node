@@ -159,7 +159,7 @@ export default class AccountAccessDefinitions {
     return {
       address,
       active: true,
-      permissions: [allPermissions.superAccount],
+      permissions: [allPermissions.superAccount, allPermissions.manageAccounts, allPermissions.registerAccounts],
       registeredOn: getTimestamp(),
       accessLevel: 1000,
       organization: 0

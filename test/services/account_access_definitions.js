@@ -358,7 +358,7 @@ describe('Account Access Definitions', () => {
     expect(accountAccessDefinitions.defaultAdminAccount('0x1234')).to.deep.include(
       {
         address: '0x1234',
-        permissions: [allPermissions.superAccount],
+        permissions: [allPermissions.superAccount, allPermissions.manageAccounts, allPermissions.registerAccounts],
         accessLevel: 1000,
         registeredOn: 15
       });
