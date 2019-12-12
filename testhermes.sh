@@ -8,5 +8,7 @@ yarn dev:prerun:hermes;
 yarn dev:start:server &
 pid=$!;
 sleep 3;
-SERVER_PORT=9877 yarn dev:start:hermes;
+yarn dev:docker:hermes_server
+docker logs --follow hermes_extended
+#SERVER_PORT=9877 yarn dev:start:hermes;
 kill $pid;
