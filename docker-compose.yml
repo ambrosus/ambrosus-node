@@ -10,9 +10,17 @@ services:
 
   parity:
     container_name: "parity"
-    image: ambrosus/parity:v2.2.10
+    image: parity/parity:v2.4.5
     # Parity by default only exposes it's API on localhost. For it to be
     # accessible from the other containers we need --unsafe-expose
     command: ['--chain', 'dev', '--unsafe-expose']
     ports:
       - '8545:8545'
+
+  hermes_server:
+    image: quay.io/ambrosus/ambrosus-node-extended:latest
+    ports:
+      - '3000:3000'
+    command: ['yarn', 'dev:start']
+    network_mode: host
+    container_name: "hermes_extended"
