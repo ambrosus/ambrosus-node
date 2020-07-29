@@ -15,7 +15,7 @@ export default class PeriodicWorker extends Worker {
     super(logger);
     this.interval = interval;
     this.timerId = null;
-    this.quant = 10 * 1000;
+    this.quant = 30 * 1000;
     this.nextCall = 0;
   }
 
