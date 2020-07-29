@@ -54,6 +54,7 @@ import Migrator from './migrations/Migrator';
 import FailedResolutionsCache from './services/failed_resolutions_cache';
 import ActiveResolutionsCache from './services/active_resolutions_cache';
 import WorkerTaskTrackingRepository from './services/worker_task_tracking_repository';
+import WorkerIntervalsRepository from './services/workerIntervals_repository';
 import OperationalMode from './services/operational_mode';
 import OperationalModeRepository from './services/operational_mode_repository';
 import OrganizationRepository from './services/organization_repository';
@@ -160,6 +161,7 @@ class Builder {
     this.bundleRepository = new BundleRepository(this.db);
     this.workerLogRepository = new WorkerLogRepository(this.db);
     this.workerTaskTrackingRepository = new WorkerTaskTrackingRepository(this.db);
+    this.workerIntervalsRepository = new WorkerIntervalsRepository(this.db);
     this.findEventQueryObjectFactory = new FindEventQueryObjectFactory(this.db);
     this.findAssetQueryObjectFactory = new FindAssetQueryObjectFactory(this.db);
     this.failedChallengesCache = new FailedResolutionsCache();

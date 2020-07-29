@@ -15,7 +15,8 @@ export default class PeriodicWorker extends Worker {
     super(logger);
     this.interval = interval;
     this.timerId = null;
-    this.minimumInterval = 1000;
+    this.quant = 10 * 1000;
+    this.nextCall = 0;
   }
 
   async work() {
@@ -28,10 +29,24 @@ export default class PeriodicWorker extends Worker {
   }
 
   async periodicWorkInternal() {
-    const elapsedTimeInMilliseconds = await this.executeAndMeasureTime(() => this.periodicWork());
     if (this.started) {
-      const interval = Math.max(this.minimumInterval, (this.interval * 1000) - elapsedTimeInMilliseconds);
-      this.timerId = setTimeout(() => this.periodicWorkInternal(), interval);
+      this.timeLeft = this.nextCall - Date.now();
+
+      if ((this.timeLeft < 0) || (await this.isOutOfOrder())) {
+        this.nextCall = Date.now() + (this.interval * 1000);
+
+        await this.periodicWork();
+
+        this.timeLeft = this.nextCall - Date.now();
+      }
+
+      let currentInterval = this.quant;
+
+      if (this.timeLeft < this.quant) {
+        currentInterval = this.timeLeft;
+      }
+
+      this.timerId = setTimeout(() => this.periodicWorkInternal(), currentInterval);
     }
   }
 
@@ -48,19 +63,14 @@ export default class PeriodicWorker extends Worker {
     throw new Error('Abstract method work() needs to be overridden');
   }
 
+  /* placeholder */
+  async isOutOfOrder() {
+    return false;
+  }
+
   async beforeWorkLoop() {
   }
 
   async afterWorkLoop() {
-  }
-
-  async executeAndMeasureTime(functionToExecute) {
-    const startTime = Date.now();
-    try {
-      await functionToExecute();
-    } catch (err) {
-      this.logger.error(err);
-    }
-    return Date.now() - startTime;
   }
 }
