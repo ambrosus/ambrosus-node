@@ -71,9 +71,12 @@ describe('Periodic Worker', () => {
   describe('periodicWorkInternal', () => {
     beforeEach(async () => {
       worker.started = true;
+      worker.nextCall = 0;
     });
 
     it('calls periodicWork', async () => {
+      clock.tick(1);
+
       await worker.periodicWorkInternal();
       expect(periodicWorkStub).to.be.calledOnce;
     });
