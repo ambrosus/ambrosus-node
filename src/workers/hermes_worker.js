@@ -48,6 +48,7 @@ export default class HermesWorker extends PeriodicWorker {
       help: 'Total number of successfully uploaded bundles',
       registers: [registry]
     });
+
     this.totalBundleUploadFailures = new promClient.Counter({
       name: 'hermes_bundle_upload_failures_total',
       help: 'Total number of failed bundle upload attempts',
