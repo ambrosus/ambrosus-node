@@ -8,9 +8,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 export default class BundlesRestorer {
-  constructor(bundleStoreWrapper, shelteringWrapper, dataModelEngine, bundleRepository, shelteredBundlesRepository, workerLogger) {
+  constructor(bundleStoreWrapper, shelteringWrapper, shelteringTransfersWrapper, dataModelEngine, bundleRepository, shelteredBundlesRepository, workerLogger) {
     this.bundleStoreWrapper = bundleStoreWrapper;
     this.shelteringWrapper = shelteringWrapper;
+    this.shelteringTransfersWrapper = shelteringTransfersWrapper;
     this.dataModelEngine = dataModelEngine;
     this.bundleRepository = bundleRepository;
     this.shelteredBundlesRepository = shelteredBundlesRepository;
@@ -33,6 +34,13 @@ export default class BundlesRestorer {
       await this.workerLogger.addLog(`Need to restore ${bundles.length} bundles`);
       for (const bundle of bundles) {
         try {
+          if ((await this.shelteringWrapper.isSheltering(bundle.bundleId)) === false) {
+            const transferId = await this.shelteringTransfersWrapper.getTransferId(bundle.shelterer, bundle.bundleId);
+            if (await this.shelteringTransfersWrapper.isInProgress(transferId)) {
+              await this.shelteringTransfersWrapper.cancel(transferId);
+            }
+            continue;
+          }
           await this.workerLogger.addLog('Try to restore bundle', {bundleId: bundle.bundleId});
           const expirationTime = await this.shelteringWrapper.shelteringExpirationDate(bundle.bundleId);
           const donors = await this.getBundleDonors(bundle);
