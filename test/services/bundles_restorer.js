@@ -25,6 +25,7 @@ describe('Bundles Restorer', () => {
   let bundleStoreWrapperMock;
   let bundleRepositoryMock;
   let shelteringWrapperMock;
+  let shelteringTransfersWrapperMock;
   let dataModelEngineMock;
   let shelteredBundlesRepositoryMock;
   let workerLoggerMock;
@@ -51,6 +52,10 @@ describe('Bundles Restorer', () => {
     shelteringWrapperMock = {
       shelteringExpirationDate: sinon.stub().resolves(timestamp)
     };
+    shelteringTransfersWrapperMock = {
+      isSheltering: sinon.stub().resolves(true),
+      cancel: sinon.stub()
+    };
     dataModelEngineMock = {
       downloadBundle: sinon.spy(),
       markBundleAsSheltered: sinon.stub()
@@ -68,7 +73,7 @@ describe('Bundles Restorer', () => {
         info: sinon.spy()
       }
     };
-    restorer = new BundlesRestorer(bundleStoreWrapperMock, shelteringWrapperMock, dataModelEngineMock, bundleRepositoryMock, shelteredBundlesRepositoryMock, workerLoggerMock);
+    restorer = new BundlesRestorer(bundleStoreWrapperMock, shelteringWrapperMock, shelteringTransfersWrapperMock, dataModelEngineMock, bundleRepositoryMock, shelteredBundlesRepositoryMock, workerLoggerMock);
   });
 
   it('call with empty data works', async () => {
