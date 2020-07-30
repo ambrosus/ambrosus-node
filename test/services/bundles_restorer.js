@@ -50,10 +50,10 @@ describe('Bundles Restorer', () => {
       contract: sinon.stub().resolves(bundleStoreContractMock)
     };
     shelteringWrapperMock = {
+      isSheltering: sinon.stub().resolves(true),
       shelteringExpirationDate: sinon.stub().resolves(timestamp)
     };
     shelteringTransfersWrapperMock = {
-      isSheltering: sinon.stub().resolves(true),
       cancel: sinon.stub()
     };
     dataModelEngineMock = {
