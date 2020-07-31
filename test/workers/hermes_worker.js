@@ -60,7 +60,8 @@ describe('Hermes Worker', () => {
       finishWork: sinon.spy()
     };
     mockWworkerIntervalsRepository = {
-      get: sinon.stub()
+      get: sinon.stub().resolves({result: null}),
+      delete: sinon.stub()
     };
     mockLogger = {
       info: sinon.stub(),

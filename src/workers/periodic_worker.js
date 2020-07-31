@@ -54,13 +54,15 @@ export default class PeriodicWorker extends Worker {
     if (this.timerId) {
       clearTimeout(this.timerId);
     }
+
     this.timerId = null;
+
     await this.afterWorkLoop();
   }
 
   /** @abstract */
   async periodicWork() {
-    throw new Error('Abstract method work() needs to be overridden');
+    // throw new Error('Abstract method periodicWork() needs to be overridden');
   }
 
   /* placeholder */
