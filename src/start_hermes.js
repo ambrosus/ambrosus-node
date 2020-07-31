@@ -28,6 +28,7 @@ async function start(logger) {
     builder.dataModelEngine,
     new WorkerLogger(logger, builder.workerLogRepository),
     builder.workerTaskTrackingRepository,
+    builder.workerIntervalsRepository,
     strategy,
     builder.client,
     config.serverPort

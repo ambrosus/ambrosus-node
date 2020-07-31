@@ -28,6 +28,7 @@ describe('Hermes Worker', () => {
   const bundleId = '0xc0ffee';
   let mockDataModelEngine;
   let mockWorkerTaskTrackingRepository;
+  let mockWworkerIntervalsRepository;
   let mockLogger;
   let mockWorkerLogger;
   let mockStrategy;
@@ -58,6 +59,10 @@ describe('Hermes Worker', () => {
       tryToBeginWork: sinon.stub().resolves(exampleWorkId),
       finishWork: sinon.spy()
     };
+    mockWworkerIntervalsRepository = {
+      get: sinon.stub().resolves({result: null}),
+      delete: sinon.stub()
+    };
     mockLogger = {
       info: sinon.stub(),
       error: sinon.stub()
@@ -75,10 +80,12 @@ describe('Hermes Worker', () => {
       mockDataModelEngine,
       mockWorkerLogger,
       mockWorkerTaskTrackingRepository,
+      mockWworkerIntervalsRepository,
       mockStrategy,
       mongoClient,
       config.serverPort
     );
+
     await hermesWorker.beforeWorkLoop();
     const {port} = hermesWorker.server.address();
     serverAddress = `http://localhost:${port}`;

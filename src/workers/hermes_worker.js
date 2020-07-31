@@ -22,14 +22,17 @@ export default class HermesWorker extends PeriodicWorker {
     dataModelEngine,
     workerLogger,
     workerTaskTrackingRepository,
+    workerIntervalsRepository,
     strategy,
     mongoClient,
     serverPort
   ) {
     super(strategy.workerInterval, workerLogger.logger);
+
     this.dataModelEngine = dataModelEngine;
     this.bundleSequenceNumber = 0;
     this.workerTaskTrackingRepository = workerTaskTrackingRepository;
+    this.workerIntervalsRepository = workerIntervalsRepository;
     this.strategy = strategy;
     this.workerLogger = workerLogger;
     this.mongoClient = mongoClient;
@@ -45,6 +48,7 @@ export default class HermesWorker extends PeriodicWorker {
       help: 'Total number of successfully uploaded bundles',
       registers: [registry]
     });
+
     this.totalBundleUploadFailures = new promClient.Counter({
       name: 'hermes_bundle_upload_failures_total',
       help: 'Total number of failed bundle upload attempts',
@@ -58,6 +62,7 @@ export default class HermesWorker extends PeriodicWorker {
 
   async periodicWork() {
     let workId = null;
+
     try {
       workId = await this.workerTaskTrackingRepository.tryToBeginWork(HERMES_BUNDLING_WORK_TYPE);
     } catch (err) {
@@ -69,6 +74,22 @@ export default class HermesWorker extends PeriodicWorker {
     } finally {
       await this.workerTaskTrackingRepository.finishWork(workId);
     }
+  }
+
+  async isOutOfOrder() {
+    const bundlesWorker = await this.workerIntervalsRepository.get('bundlesWorker');
+
+    if (bundlesWorker !== null) {
+      const result = ((bundlesWorker.when - Date.now()) < 0);
+
+      if (result) {
+        await this.workerIntervalsRepository.delete('bundlesWorker');
+      }
+
+      return result;
+    }
+
+    return false;
   }
 
   async bundleCandidates() {
