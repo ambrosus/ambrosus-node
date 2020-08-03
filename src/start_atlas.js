@@ -32,6 +32,7 @@ async function start(logger) {
   const bundlesRestorer = new BundlesRestorer(
     builder.bundleStoreWrapper,
     builder.shelteringWrapper,
+    builder.shelteringTransfersWrapper,
     builder.dataModelEngine,
     builder.bundleRepository,
     builder.shelteredBundlesRepository,
