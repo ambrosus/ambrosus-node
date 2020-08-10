@@ -22,7 +22,7 @@ services:
     ports:
       - '3000:3000'
     volumes:
-      - ~/ambrosus-nop:/opt/hermes
+      - /opt/hermes:/opt/hermes
     command: ['yarn', 'dev:start']
     network_mode: host
     container_name: "hermes_extended"
