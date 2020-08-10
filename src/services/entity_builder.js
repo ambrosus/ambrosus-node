@@ -128,11 +128,13 @@ export default class EntityBuilder {
   }
 
   prepareEventForBundlePublication(event) {
-    /*if (event.content.idData.accessLevel === 0) {
+    /*
+    if (event.content.idData.accessLevel === 0) {
       return event;
     }
-    return pick(event, 'content.data');*/
-    
+    return pick(event, 'content.data');
+    */
+
     return event;
   }
 
