@@ -332,11 +332,13 @@ describe('Entity Builder', () => {
       entityBuilder = new EntityBuilder({}, oneDayInSeconds);
     });
 
-    it('removes data if access level is greater than 0', () => {
+    /*
+    it('encrypts data if access level is greater than 0', () => {
       const highAccessLevelEvent = put(exampleEvent, 'content.idData.accessLevel', 2);
       const ret = entityBuilder.prepareEventForBundlePublication(highAccessLevelEvent);
       expect(ret.content.data).to.be.undefined;
     });
+    */
 
     it('keeps data if access level equals 0', () => {
       const ret = entityBuilder.prepareEventForBundlePublication(exampleEvent);

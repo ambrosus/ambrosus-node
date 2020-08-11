@@ -18,9 +18,11 @@ services:
       - '8545:8545'
 
   hermes_server:
-    image: quay.io/ambrosus/ambrosus-node-extended:latest
+    image: quay.io/ambrosus/ambrosus-node-extended
     ports:
       - '3000:3000'
+    volumes:
+      - /opt/hermes:/opt/hermes
     command: ['yarn', 'dev:start']
     network_mode: host
     container_name: "hermes_extended"
