@@ -40,7 +40,7 @@ export default class HermesBundlesRepository extends ResolutionsRepository {
 
   async updateActiveResolutionsCache(fromBlock, currentBlock) {
     const addedBundles = await this.collectEvents(fromBlock, currentBlock,
-      async (start, end) => (await this.bundleStoreWrapper.bundleStored(start, end)).filter((event) => event.returnValues.uploader === this.address),
+      async (start, end) => (await this.bundleStoreWrapper.bundlesStored(start, end)).filter((event) => event.returnValues.uploader === this.address),
       ['bundleId', 'uploader']);
 
     /*
