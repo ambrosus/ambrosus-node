@@ -8,22 +8,27 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 export default class BundlesRestorerHermes {
-  constructor(bundleStoreWrapper, dataModelEngine, bundleRepository, shelteredBundlesRepository, workerLogger) {
+  constructor(bundleStoreWrapper, dataModelEngine, bundleRepository, hermesBundlesRepository, workerLogger) {
     this.bundleStoreWrapper = bundleStoreWrapper;
     this.dataModelEngine = dataModelEngine;
     this.bundleRepository = bundleRepository;
-    this.shelteredBundlesRepository = shelteredBundlesRepository;
+    this.hermesBundlesRepository = hermesBundlesRepository;
     this.workerLogger = workerLogger;
   }
 
   async restore() {
-    await this.shelteredBundlesRepository.load(this.workerLogger.logger);
+    console.log(`restore(): before load`);
+
+    await this.hermesBundlesRepository.load(this.workerLogger.logger);
+
+    console.log(`restore(): after load`);
+
     await this.workerLogger.addLog('Getting sheltered bundles from DB...');
     const storedBundles = await this.bundleRepository.getShelteredBundles(0);
     await this.workerLogger.addLog(`Found ${storedBundles.length} bundles into DB`);
     const storedBundlesIds = new Set(storedBundles.map((bundle) => bundle.bundleId));
     await this.workerLogger.addLog('Getting sheltered bundles from blockchain...');
-    const blockchainBundles = await this.shelteredBundlesRepository.ongoingResolutions();
+    const blockchainBundles = await this.hermesBundlesRepository.ongoingResolutions();
     await this.workerLogger.addLog(`Found ${blockchainBundles.length} bundles into blockchain`);
     const bundles = blockchainBundles.filter((bundle) => !storedBundlesIds.has(bundle.bundleId));
 
