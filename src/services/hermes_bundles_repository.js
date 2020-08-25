@@ -42,13 +42,17 @@ export default class HermesBundlesRepository extends ResolutionsRepository {
     const addedBundles = await this.collectEvents(fromBlock, currentBlock,
       async (start, end) => (await this.bundleStoreWrapper.bundleStored(start, end)).filter((event) => event.returnValues.uploader === this.address),
       ['bundleId', 'uploader']);
+
     /*
     const removedBundles = await this.collectEvents(fromBlock, currentBlock,
-      async (start, end) => (await this.bundleStoreWrapper.sheltererRemoved(start, end)).filter((event) => event.returnValues.shelterer === this.address),
+      async (start, end) => (await this.bundleStoreWrapper.sheltererRemoved(start, end)).filter((event) => event.returnValues.bundleId === this.address),
       ['bundleId', 'shelterer']);
+    */
+
+    const removedBundles = [];
 
     this.activeResolutionsCache.applyIncomingResolutionEvents(addedBundles, [], removedBundles);
-    */
+
     try {
       await this.db.collection('resolutions_repository').updateOne({name:'shelteredbundles'}, {$set : {name:'shelteredbundles', lastSavedBlock: currentBlock}}, {upsert : true});
       if (addedBundles.length > 0) {
