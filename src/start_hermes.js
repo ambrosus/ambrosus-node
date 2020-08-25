@@ -39,7 +39,7 @@ async function start(logger) {
     builder.bundleStoreWrapper,
     builder.dataModelEngine,
     builder.bundleRepository,
-    builder.shelteredBundlesRepository,
+    builder.hermesBundlesRepository,
     workerLogger
   );
 

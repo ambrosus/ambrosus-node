@@ -49,6 +49,7 @@ import UploadRepository from './services/upload_repository';
 import ChallengesRepository from './services/challenges_repository';
 import TransfersRepository from './services/transfers_repository';
 import ShelteredBundlesRepository from './services/sheltered_bundles_repository';
+import HermesBundlesRepository from './services/hermes_bundles_repository';
 import RetireTransfersRepository from './services/retire_transfers_repository';
 import Migrator from './migrations/Migrator';
 import FailedResolutionsCache from './services/failed_resolutions_cache';
@@ -138,6 +139,14 @@ class Builder {
     );
     this.shelteredBundlesCache = new ActiveResolutionsCache('bundleId');
     this.shelteredBundlesRepository = new ShelteredBundlesRepository(
+      defaultAddress,
+      this.bundleStoreWrapper,
+      this.blockChainStateWrapper,
+      this.shelteredBundlesCache,
+      this.db
+    );
+    this.hermesBundlesCache = new ActiveResolutionsCache('bundleId');
+    this.hermesBundlesRepository = new HermesBundlesRepository(
       defaultAddress,
       this.bundleStoreWrapper,
       this.blockChainStateWrapper,

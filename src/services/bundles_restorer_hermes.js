@@ -28,10 +28,11 @@ export default class BundlesRestorerHermes {
     const bundles = blockchainBundles.filter((bundle) => !storedBundlesIds.has(bundle.bundleId));
 
     if (bundles.length > 0) {
-      let restored = 0;
+      const restored = 0;
       await this.workerLogger.addLog(`Need to restore ${bundles.length} bundles`);
 
-      /*for (const bundle of bundles) {
+      /*
+      for (const bundle of bundles) {
         try {
           if ((await this.shelteringWrapper.isSheltering(bundle.bundleId)) === false) {
             const transferId = await this.shelteringTransfersWrapper.getTransferId(bundle.shelterer, bundle.bundleId);
@@ -60,7 +61,8 @@ export default class BundlesRestorerHermes {
         } catch (err) {
           await this.workerLogger.addLog(`Failed to restore bundle: ${err.message || err}`, {bundleId: bundle.bundleId}, err.stack);
         }
-      }*/
+      }
+      */
       await this.workerLogger.addLog(`Restored ${restored} bundles`);
     } else {
       await this.workerLogger.addLog(`All ${storedBundles.length} bundles are present in DB`);
