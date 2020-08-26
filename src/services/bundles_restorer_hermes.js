@@ -41,6 +41,9 @@ export default class BundlesRestorerHermes {
             if (await this.shelteringTransfersWrapper.isInProgress(transferId)) {
               await this.shelteringTransfersWrapper.cancel(transferId);
             }
+
+            console.log(`isSheltering: ${bundle.bundleId} false`);
+
             continue;
           }
 
