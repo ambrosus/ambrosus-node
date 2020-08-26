@@ -8,11 +8,12 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 export default class BundlesRestorerHermes {
-  constructor(bundleStoreWrapper, dataModelEngine, bundleRepository, hermesBundlesRepository, workerLogger) {
+  constructor(bundleStoreWrapper, dataModelEngine, bundleRepository, hermesBundlesRepository, shelteringWrapper, workerLogger) {
     this.bundleStoreWrapper = bundleStoreWrapper;
     this.dataModelEngine = dataModelEngine;
     this.bundleRepository = bundleRepository;
     this.hermesBundlesRepository = hermesBundlesRepository;
+    this.shelteringWrapper = shelteringWrapper;
     this.workerLogger = workerLogger;
   }
 

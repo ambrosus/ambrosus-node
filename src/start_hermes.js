@@ -30,6 +30,7 @@ async function start(logger) {
     new WorkerLogger(logger, builder.workerLogRepository),
     builder.workerTaskTrackingRepository,
     builder.workerIntervalsRepository,
+    builder.shelteringWrapper,
     strategy,
     builder.client,
     config.serverPort
