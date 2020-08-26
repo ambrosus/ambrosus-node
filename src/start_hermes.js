@@ -29,8 +29,7 @@ async function start(logger) {
     builder.dataModelEngine,
     new WorkerLogger(logger, builder.workerLogRepository),
     builder.workerTaskTrackingRepository,
-    builder.workerIntervalsRepository,
-    builder.shelteringWrapper,
+    builder.workerIntervalsRepository,    
     strategy,
     builder.client,
     config.serverPort
@@ -41,6 +40,7 @@ async function start(logger) {
     builder.dataModelEngine,
     builder.bundleRepository,
     builder.hermesBundlesRepository,
+    builder.shelteringWrapper,
     workerLogger
   );
 
