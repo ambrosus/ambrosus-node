@@ -79,7 +79,7 @@ class Builder {
   }
 
   async build(config, dependencies = {}) {
-    console.log(`DEV: 1`);
+    console.log(`DEV: 2`);
 
     this.config = config;
     const {web3} = dependencies;

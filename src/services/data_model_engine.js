@@ -15,7 +15,27 @@ import BundleStatuses from '../utils/bundle_statuses';
 import removeDuplicates from '../utils/sutils.js';
 
 export default class DataModelEngine {
-  constructor({identityManager, tokenAuthenticator, entityBuilder, entityRepository, bundleDownloader, bundleBuilder, bundleRepository, accountRepository, operationalModeRepository, findEventQueryObjectFactory, findAccountQueryObjectFactory, findAssetQueryObjectFactory, accountAccessDefinitions, mongoClient, uploadRepository, rolesRepository, workerLogRepository, organizationRepository}) {
+  constructor(
+    {
+      identityManager, 
+      tokenAuthenticator, 
+      entityBuilder, 
+      entityRepository, 
+      bundleDownloader, 
+      bundleBuilder, 
+      bundleRepository, 
+      accountRepository, 
+      operationalModeRepository, 
+      findEventQueryObjectFactory, 
+      findAccountQueryObjectFactory, 
+      findAssetQueryObjectFactory, 
+      accountAccessDefinitions, 
+      mongoClient, 
+      uploadRepository, 
+      rolesRepository, 
+      workerLogRepository, 
+      organizationRepository
+    }) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
     this.entityBuilder = entityBuilder;
@@ -292,6 +312,58 @@ export default class DataModelEngine {
     await this.bundleRepository.setBundleRepository(bundleId, BundleStatuses.downloaded, {nodeUrl, holdUntil: new Date(challengeExpirationTime)});
     const additionalMetadataFields = this.bundleRepository.additionalMetadataFields(initialMetadata, downloadedMetadata);
     await this.bundleRepository.updateBundleMetadata(bundleId, additionalMetadataFields);
+
+    return {...additionalMetadataFields, ...initialMetadata};
+  }
+
+  async downloadBundleHermes(bundleId, sheltererId, challengeExpirationTime) {
+    const initialMetadata = await this.uploadRepository.composeBundleMetadataFromBlockchain(bundleId);
+
+    await this.bundleRepository.createBundleMetadata(
+      bundleId, 
+      initialMetadata.storagePeriods, 
+      BundleStatuses.shelteringCandidate, 
+      {
+        holdUntil: new Date(challengeExpirationTime)
+      }
+    );
+
+    const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
+
+    const downloadedMetadata = await this.bundleDownloader.downloadBundleMetadata(nodeUrl, bundleId);    
+    if (!downloadedMetadata) {
+      throw new Error('Could not fetch the bundle metadata from the shelterer');
+    }
+
+    this.bundleBuilder.validateBundleMetadata(downloadedMetadata);
+
+    try {
+      //await this.downloadAndValidateBundleBody(nodeUrl, bundleId);
+
+      const bundle = this.bundleDownloader.downloadBundle(nodeUrl, bundleId);
+
+      console.log(`downloadBundleHermes: ${JSON.stringify(bundle)}`);
+    } catch (err) {
+      if (err instanceof ValidationError) {
+        await this.bundleRepository.setBundleRepository(bundleId, BundleStatuses.cleanup);
+        throw new Error(`Bundle failed to validate: ${err.message || err}`);
+      }
+      throw new Error(`Could not fetch the bundle from the shelterer: ${err.message || err}`);
+    }
+
+    /*await this.bundleRepository.setBundleRepository(
+      bundleId, 
+      BundleStatuses.downloaded, 
+      {
+        nodeUrl, 
+        holdUntil: new Date(challengeExpirationTime)
+      }
+    );
+
+    const additionalMetadataFields = this.bundleRepository.additionalMetadataFields(initialMetadata, downloadedMetadata);
+
+    await this.bundleRepository.updateBundleMetadata(bundleId, additionalMetadataFields);
+    */
 
     return {...additionalMetadataFields, ...initialMetadata};
   }

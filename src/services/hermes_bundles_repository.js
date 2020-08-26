@@ -54,7 +54,12 @@ export default class HermesBundlesRepository extends ResolutionsRepository {
     this.activeResolutionsCache.applyIncomingResolutionEvents(addedBundles, [], removedBundles);
 
     try {
-      await this.db.collection('resolutions_repository').updateOne({name:'shelteredbundles'}, {$set : {name:'shelteredbundles', lastSavedBlock: currentBlock}}, {upsert : true});
+      await this.db.collection('resolutions_repository').updateOne(
+      {name:'shelteredbundles'}, 
+      {$set : {name:'shelteredbundles', lastSavedBlock: currentBlock}}, 
+      {upsert : true}
+      );
+      
       if (addedBundles.length > 0) {
         for (const bundle of addedBundles) {
           await this.db.collection('blockchain_bundles').insertOne(bundle);

@@ -16,13 +16,9 @@ export default class BundlesRestorerHermes {
     this.workerLogger = workerLogger;
   }
 
-  async restore() {
-    console.log(`restore(): before load`);
-
+  async restore() {    
     await this.hermesBundlesRepository.load(this.workerLogger.logger);
-
-    console.log(`restore(): after load`);
-
+    
     await this.workerLogger.addLog('Getting sheltered bundles from DB...');
     const storedBundles = await this.bundleRepository.getShelteredBundles(0);
     await this.workerLogger.addLog(`Found ${storedBundles.length} bundles into DB`);
@@ -36,8 +32,8 @@ export default class BundlesRestorerHermes {
       const restored = 0;
       await this.workerLogger.addLog(`Need to restore ${bundles.length} bundles`);
 
-      /*
       for (const bundle of bundles) {
+
         try {
           if ((await this.shelteringWrapper.isSheltering(bundle.bundleId)) === false) {
             const transferId = await this.shelteringTransfersWrapper.getTransferId(bundle.shelterer, bundle.bundleId);
@@ -46,17 +42,22 @@ export default class BundlesRestorerHermes {
             }
             continue;
           }
+
           await this.workerLogger.addLog('Try to restore bundle', {bundleId: bundle.bundleId});
           const expirationTime = await this.shelteringWrapper.shelteringExpirationDate(bundle.bundleId);
           const donors = await this.getBundleDonors(bundle);
+
           while (donors.length > 0) {
             const pos = this.getRandomInt(donors.length);
             const donorId = donors[pos];
+
             try {
-              await this.dataModelEngine.downloadBundle(bundle.bundleId, donorId, expirationTime);
-              await this.dataModelEngine.markBundleAsSheltered(bundle.bundleId);
+              await this.dataModelEngine.downloadBundleHermes(bundle.bundleId, donorId, expirationTime);
+              // await this.dataModelEngine.markBundleAsSheltered(bundle.bundleId);
               await this.workerLogger.addLog('Bundle restored', {bundleId: bundle.bundleId});
+
               restored++;
+
               break;
             } catch (err) {
               this.workerLogger.logger.info(`Failed to download bundle: ${err.message || err}`, {bundleId: bundle.bundleId, donorId}, err.stack);
@@ -67,7 +68,7 @@ export default class BundlesRestorerHermes {
           await this.workerLogger.addLog(`Failed to restore bundle: ${err.message || err}`, {bundleId: bundle.bundleId}, err.stack);
         }
       }
-      */
+
       await this.workerLogger.addLog(`Restored ${restored} bundles`);
     } else {
       await this.workerLogger.addLog(`All ${storedBundles.length} bundles are present in DB`);
@@ -82,10 +83,12 @@ export default class BundlesRestorerHermes {
     const contract = await this.bundleStoreWrapper.contract();
     const shelterers = await contract.methods.getShelterers(bundle.bundleId).call();
     let pos = shelterers.indexOf(bundle.shelterer);
+
     while (-1 !== pos) {
       shelterers.splice(pos, 1);
       pos = shelterers.indexOf(bundle.shelterer);
     }
+
     shelterers.push(await contract.methods.getUploader(bundle.bundleId).call());
     return shelterers;
   }
