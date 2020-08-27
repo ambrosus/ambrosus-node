@@ -25,7 +25,7 @@ export default class BundlesRestorerHermes {
       console.log(`parseBundle(${bundle.bundleId}): already stored.`);
     };
 
-    for (const entry of bundle.entries) {
+    for (const entry of bundle.content.entries) {
       console.log(`parseBundle(${bundle.bundleId}): ${JSON.stringify(entry)}`);
     }
   }
