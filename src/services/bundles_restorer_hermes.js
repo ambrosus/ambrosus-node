@@ -18,15 +18,33 @@ export default class BundlesRestorerHermes {
     this.shelteringTransfersWrapper = shelteringTransfersWrapper;
   }
 
-  async parseBundle(bundle) {
-    console.log(`BundlesRestorerHermes.parseBundle: ${JSON.stringify(bundle)}`);
+  async parseAsset(asset) {
+    await this.workerLogger.addLog(`parseAsset(${asset.assetId}): `);
+  }
 
+  async parseEvent(event) {
+    await this.workerLogger.addLog(`parseEvent(${event.eventId}): `);
+  }
+
+  async parseBundle(bundle) {    
     if (await this.bundleRepository.isBundleStored(bundle.bundleId)) {
-      console.log(`parseBundle(${bundle.bundleId}): already stored.`);
+      await this.workerLogger.addLog(`parseBundle(${bundle.bundleId}): already stored.`);
     };
 
-    for (const entry of bundle.content.entries) {
-      console.log(`parseBundle(${bundle.bundleId}): ${JSON.stringify(entry)}`);
+    for (const entry of bundle.content.entries) {      
+      if (entry.assetId !== undefined) {
+        this.parseAsset(entry);
+
+        continue;
+      }
+
+      if (entry.eventId !== undefined) {
+        this.parseEvent(entry);
+
+        continue;
+      }
+
+      await this.workerLogger.addLog(`parseBundle(${bundle.bundleId}): unknown entry type`);
     }
   }
 
