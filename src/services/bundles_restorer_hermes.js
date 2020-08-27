@@ -18,6 +18,16 @@ export default class BundlesRestorerHermes {
     this.shelteringTransfersWrapper = shelteringTransfersWrapper;
   }
 
+  async parseBundle(bundle) {
+    console.log(`BundlesRestorerHermes.parseBundle: ${JSON.stringify(bundle)}`);
+
+    this.bundleRepository.isBundleStored(bundle.bundleId);
+
+    for (const entry of bundle.entries) {
+      
+    }
+  }
+
   async restore() {
     await this.hermesBundlesRepository.load(this.workerLogger.logger);
 
@@ -47,7 +57,7 @@ export default class BundlesRestorerHermes {
             try {
               const bundleBody = await this.dataModelEngine.downloadBundleHermes(bundle.bundleId, donorId, expirationTime);
 
-              console.log(`BundlesRestorerHermes.restore: ${JSON.stringify(bundleBody)}`);
+              await this.parseBundle(bundleBody);              
 
               await this.workerLogger.addLog('Bundle restored', {bundleId: bundle.bundleId});
 
