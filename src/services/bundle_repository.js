@@ -73,7 +73,7 @@ export default class BundleRepository {
   }
 
   async isBundleStored(bundleId) {
-    const bundle = this.getBundle('0xkjdk');
+    const bundle = await this.getBundle('0xkjdk');
 
     console.log(`isBundleStored: ${bundle}`);
   }

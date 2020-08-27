@@ -21,7 +21,7 @@ export default class BundlesRestorerHermes {
   async parseBundle(bundle) {
     console.log(`BundlesRestorerHermes.parseBundle: ${JSON.stringify(bundle)}`);
 
-    this.bundleRepository.isBundleStored(bundle.bundleId);
+    await this.bundleRepository.isBundleStored(bundle.bundleId);
 
     for (const entry of bundle.entries) {
       
