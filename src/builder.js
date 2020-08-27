@@ -98,6 +98,8 @@ class Builder {
 
     const defaultAddress = await getDefaultAddress(this.web3);
 
+    console.log(`defaultAddress: ${defaultAddress}`);
+
     this.headWrapper = new HeadWrapper(headContractAddress, this.web3, defaultAddress);
     this.rolesWrapper = new RolesWrapper(this.headWrapper, this.web3, defaultAddress);
     this.configWrapper = new ConfigWrapper(this.headWrapper, this.web3, defaultAddress);
