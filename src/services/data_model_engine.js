@@ -340,7 +340,7 @@ export default class DataModelEngine {
     try {
       // await this.downloadAndValidateBundleBody(nodeUrl, bundleId);
 
-      const bundle = this.bundleDownloader.downloadBundle(nodeUrl, bundleId);
+      const bundle = this.bundleDownloader.downloadBundleFull(nodeUrl, bundleId);
 
       console.log(`downloadBundleHermes: ${JSON.stringify(bundle)}`);
     } catch (err) {
