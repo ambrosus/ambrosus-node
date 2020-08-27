@@ -45,9 +45,9 @@ export default class BundlesRestorerHermes {
             const donorId = donors[pos];
 
             try {
-              bundle = await this.dataModelEngine.downloadBundleHermes(bundle.bundleId, donorId, expirationTime);
+              const bundleBody = await this.dataModelEngine.downloadBundleHermes(bundle.bundleId, donorId, expirationTime);
 
-              console.log(`BundlesRestorerHermes.restore: ${JSON.stringify(bundle)}`);
+              console.log(`BundlesRestorerHermes.restore: ${JSON.stringify(bundleBody)}`);
 
               await this.workerLogger.addLog('Bundle restored', {bundleId: bundle.bundleId});
 
