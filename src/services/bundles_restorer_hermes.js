@@ -36,19 +36,6 @@ export default class BundlesRestorerHermes {
 
       for (const bundle of bundles) {
         try {
-          /*
-          if ((await this.shelteringWrapper.isSheltering(bundle.bundleId)) === false) {
-            const transferId = await this.shelteringTransfersWrapper.getTransferId(bundle.shelterer, bundle.bundleId);
-            if (await this.shelteringTransfersWrapper.isInProgress(transferId)) {
-              await this.shelteringTransfersWrapper.cancel(transferId);
-            }
-
-            console.log(`isSheltering: ${bundle.bundleId} false`);
-
-            continue;
-          }
-          */
-
           await this.workerLogger.addLog('Try to restore bundle', {bundleId: bundle.bundleId});
           const expirationTime = await this.shelteringWrapper.shelteringExpirationDate(bundle.bundleId);
           const donors = await this.getBundleDonors(bundle);
