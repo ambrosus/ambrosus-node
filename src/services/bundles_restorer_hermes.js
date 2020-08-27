@@ -45,10 +45,14 @@ export default class BundlesRestorerHermes {
             const donorId = donors[pos];
 
             try {
-              await this.dataModelEngine.downloadBundleHermes(bundle.bundleId, donorId, expirationTime);
-              // await this.dataModelEngine.markBundleAsSheltered(bundle.bundleId);
+              bundle = await this.dataModelEngine.downloadBundleHermes(bundle.bundleId, donorId, expirationTime);
+
+              console.log(`BundlesRestorerHermes.restore: ${JSON.stringify(bundle)}`);
+
               await this.workerLogger.addLog('Bundle restored', {bundleId: bundle.bundleId});
+
               restored++;
+
               break;
             } catch (err) {
               this.workerLogger.logger.info(`Failed to download bundle: ${err.message || err}`, {bundleId: bundle.bundleId, donorId}, err.stack);

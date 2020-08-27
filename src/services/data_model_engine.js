@@ -337,36 +337,15 @@ export default class DataModelEngine {
 
     this.bundleBuilder.validateBundleMetadata(downloadedMetadata);
 
-    try {
-      // await this.downloadAndValidateBundleBody(nodeUrl, bundleId);
-
-      const bundle = await this.bundleDownloader.downloadBundleFull(nodeUrl, bundleId);
-
-      console.log(`downloadBundleHermes: ${JSON.stringify(bundle)}`);
+    try {      
+      return await this.bundleDownloader.downloadBundleFull(nodeUrl, bundleId);
     } catch (err) {
       if (err instanceof ValidationError) {
         await this.bundleRepository.setBundleRepository(bundleId, BundleStatuses.cleanup);
         throw new Error(`Bundle failed to validate: ${err.message || err}`);
       }
       throw new Error(`Could not fetch the bundle from the shelterer: ${err.message || err}`);
-    }
-
-    /*
-    await this.bundleRepository.setBundleRepository(
-      bundleId,
-      BundleStatuses.downloaded,
-      {
-        nodeUrl,
-        holdUntil: new Date(challengeExpirationTime)
-      }
-    );
-
-    const additionalMetadataFields = this.bundleRepository.additionalMetadataFields(initialMetadata, downloadedMetadata);
-
-    await this.bundleRepository.updateBundleMetadata(bundleId, additionalMetadataFields);
-
-    return {...additionalMetadataFields, ...initialMetadata};
-    */
+    }    
   }
 
   async downloadAndValidateBundleBody(nodeUrl, bundleId) {
