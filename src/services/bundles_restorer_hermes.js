@@ -19,7 +19,7 @@ export default class BundlesRestorerHermes {
   }
 
   async parseAsset(asset) {
-    await this.workerLogger.addLog(`parseAsset(${asset.assetId}): `);
+    await this.workerLogger.addLog(`parseAsset(${asset.assetId}): ${JSON.stringify(asset)}`);
   }
 
   async parseEvent(event) {
@@ -31,15 +31,17 @@ export default class BundlesRestorerHermes {
       await this.workerLogger.addLog(`parseBundle(${bundle.bundleId}): already stored.`);
     };
 
-    for (const entry of bundle.content.entries) {      
+    for (const entry of bundle.content.entries) {
+      entry.metadata.bundleId = bundleId;
+
       if (entry.assetId !== undefined) {
-        this.parseAsset(entry);
+        this.parseAsset(entry, bundle.bundleId);
 
         continue;
       }
 
       if (entry.eventId !== undefined) {
-        this.parseEvent(entry);
+        this.parseEvent(entry, bundle.bundleId);
 
         continue;
       }
