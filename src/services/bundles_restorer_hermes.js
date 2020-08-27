@@ -32,7 +32,7 @@ export default class BundlesRestorerHermes {
     };
 
     for (const entry of bundle.content.entries) {
-      entry.metadata.bundleId = bundleId;
+      entry.metadata.bundleId = bundle.bundleId;
 
       if (entry.assetId !== undefined) {
         this.parseAsset(entry, bundle.bundleId);
