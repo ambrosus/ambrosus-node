@@ -72,10 +72,8 @@ export default class BundleRepository {
     return await downloadJSONFromGridFSBucket(bundleId, this.bundlesBucket);
   }
 
-  async isBundleStored(bundleId) {
-    const bundle = await this.getBundle('0xkjdk');
-
-    console.log(`isBundleStored: ${bundle}`);
+  async isBundleStored(bundleId) {    
+    return ((await this.getBundle(bundleId)) !== null)
   }
 
   async createBundleMetadata(bundleId, storagePeriods, status = BundleStatuses.unknown, additionalFields = {}) {

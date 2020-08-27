@@ -21,10 +21,12 @@ export default class BundlesRestorerHermes {
   async parseBundle(bundle) {
     console.log(`BundlesRestorerHermes.parseBundle: ${JSON.stringify(bundle)}`);
 
-    await this.bundleRepository.isBundleStored(bundle.bundleId);
+    if (await this.bundleRepository.isBundleStored(bundle.bundleId)) {
+      console.log(`parseBundle(${bundle.bundleId}): already stored.`);
+    };
 
     for (const entry of bundle.entries) {
-      
+      console.log(`parseBundle(${bundle.bundleId}): ${JSON.stringify(entry)}`);
     }
   }
 
