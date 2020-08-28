@@ -21,10 +21,12 @@ export default class BundlesRestorerHermes {
   async parseAsset(asset, metadata) {
     asset.metadata = metadata;
 
-    await this.workerLogger.addLog(`parseAsset(${asset.assetId}): ${JSON.stringify}`);
+    await this.workerLogger.addLog(`parseAsset(${asset.assetId}): ${JSON.stringify(asset)}`);
   }
 
   async parseEvent(event, metadata) {
+    event.metadata = metadata;
+
     await this.workerLogger.addLog(`parseEvent(${event.eventId}): `);
   }
 
@@ -33,7 +35,7 @@ export default class BundlesRestorerHermes {
       await this.workerLogger.addLog(`parseBundle(${bundle.bundleId}): already stored.`);
     };
 
-    console.log(`parseBundle: ${JSON.stringify(bundle)}`);
+    //console.log(`parseBundle: ${JSON.stringify(bundle)}`);
 
     for (const entry of bundle.content.entries) {      
       if (entry.assetId !== undefined) {
