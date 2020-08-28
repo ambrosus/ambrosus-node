@@ -21,7 +21,8 @@ export default class BundlesRestorerHermes {
   async parseAsset(asset, metadata) {
     asset.metadata = metadata;
 
-    await this.workerLogger.addLog(`parseAsset(${asset.assetId}): ${JSON.stringify(asset)}`);
+    //await this.workerLogger.addLog(`parseAsset(${asset.assetId}): ${JSON.stringify(asset)}`);
+    console.log(`parseAsset(${asset.assetId}): ${JSON.stringify(asset)}`)
   }
 
   async parseEvent(event, metadata) {
