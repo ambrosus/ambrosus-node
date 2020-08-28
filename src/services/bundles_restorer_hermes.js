@@ -18,11 +18,13 @@ export default class BundlesRestorerHermes {
     this.shelteringTransfersWrapper = shelteringTransfersWrapper;
   }
 
-  async parseAsset(asset) {
-    await this.workerLogger.addLog(`parseAsset(${asset.assetId}): `);
+  async parseAsset(asset, metadata) {
+    asset.metadata = metadata;
+
+    await this.workerLogger.addLog(`parseAsset(${asset.assetId}): ${JSON.stringify}`);
   }
 
-  async parseEvent(event) {
+  async parseEvent(event, metadata) {
     await this.workerLogger.addLog(`parseEvent(${event.eventId}): `);
   }
 
@@ -33,17 +35,15 @@ export default class BundlesRestorerHermes {
 
     console.log(`parseBundle: ${JSON.stringify(bundle)}`);
 
-    for (const entry of bundle.content.entries) {
-      entry.metadata.bundleId = bundle.bundleId;
-
+    for (const entry of bundle.content.entries) {      
       if (entry.assetId !== undefined) {
-        this.parseAsset(entry, bundle.bundleId);
+        this.parseAsset(entry, bundle.metadata);
 
         continue;
       }
 
       if (entry.eventId !== undefined) {
-        this.parseEvent(entry, bundle.bundleId);
+        this.parseEvent(entry, bundle.metadata);
 
         continue;
       }
