@@ -346,6 +346,8 @@ export default class DataModelEngine {
 
       bundle.metadata = initialMetadata;
 
+      console.log(`downloadBundleHermes(): ${JSON.stringify(bundle)}`);
+
       return bundle;
     } catch (err) {
       if (err instanceof ValidationError) {
