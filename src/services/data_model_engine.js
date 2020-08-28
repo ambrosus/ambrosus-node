@@ -319,6 +319,8 @@ export default class DataModelEngine {
   async downloadBundleHermes(bundleId, sheltererId, challengeExpirationTime) {
     const initialMetadata = await this.uploadRepository.composeBundleMetadataFromBlockchain(bundleId);
 
+    console.log(`downloadBundleHermes(initialMetadata): ${initialMetadata}`);
+
     await this.bundleRepository.createBundleMetadata(
       bundleId,
       initialMetadata.storagePeriods,
@@ -334,6 +336,8 @@ export default class DataModelEngine {
     if (!downloadedMetadata) {
       throw new Error('Could not fetch the bundle metadata from the shelterer');
     }
+
+    console.log(`downloadBundleHermes(downloadedMetadata): ${downloadedMetadata}`);
 
     this.bundleBuilder.validateBundleMetadata(downloadedMetadata);
 

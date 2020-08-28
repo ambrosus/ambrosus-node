@@ -27,8 +27,6 @@ export default class BundleDownloader {
     
     await this.httpsClient.validateIncomingStatusCode(res.statusCode, vendorUrl);
 
-    console.log(`downloadBundleFull: ${JSON.stringify(res.body)}`);
-    
     return res.body;
   }
 
