@@ -337,7 +337,7 @@ export default class DataModelEngine {
       throw new Error('Could not fetch the bundle metadata from the shelterer');
     }
 
-    console.log(`downloadBundleHermes(downloadedMetadata): ${JSON.stringify(downloadedMetadata)}`);
+    console.log(`downloadBundleHermes(downloadedMetadata): ${bundleId} ${sheltererId} ${JSON.stringify(downloadedMetadata)}`);
 
     this.bundleBuilder.validateBundleMetadata(downloadedMetadata);
 
