@@ -33,7 +33,7 @@ export default class BundlesRestorerHermes {
       await this.workerLogger.addLog(`parseBundle(${bundle.bundleId}): already stored.`);
     };
 
-    //console.log(`parseBundle: ${JSON.stringify(bundle)}`);
+    console.log(`parseBundle: ${JSON.stringify(bundle)}`);
 
     for (const entry of bundle.content.entries) {      
       if (entry.assetId !== undefined) {
@@ -85,9 +85,9 @@ export default class BundlesRestorerHermes {
 
               await this.workerLogger.addLog('Bundle restored', {bundleId: bundle.bundleId});
 
-              /*restored++;
+              restored++;
 
-              break;*/
+              break;
             } catch (err) {
               this.workerLogger.logger.info(`Failed to download bundle: ${err.message || err}`, {bundleId: bundle.bundleId, donorId}, err.stack);
               donors.splice(pos, 1);
@@ -118,7 +118,6 @@ export default class BundlesRestorerHermes {
       pos = shelterers.indexOf(bundle.shelterer);
     }
 
-    shelterers.push(await contract.methods.getUploader(bundle.bundleId).call());
     return shelterers;
   }
 }
