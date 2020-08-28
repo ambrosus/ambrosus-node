@@ -97,12 +97,16 @@ export default class EntityRepository {
 
       if (next === nextAsset) {
         await this.db.collection('assets').updateOne({assetId: nextAsset.assetId}, updateBundleStubId);
+
+        console.log(`nextAsset: ${JSON.stringify(nextAsset)}`);
+
         selectedAssets.push(nextAsset);
         nextAsset = await assetsCursor.next();
-      } else {
+      } else {        
+        await this.db.collection('events').updateOne({eventId: nextEvent.eventId}, updateBundleStubId);
+
         console.log(`nextEvent: ${JSON.stringify(nextEvent)}`);
 
-        await this.db.collection('events').updateOne({eventId: nextEvent.eventId}, updateBundleStubId);
         selectedEvents.push(nextEvent);
         nextEvent = await eventsCursor.next();
       }
