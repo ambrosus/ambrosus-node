@@ -345,9 +345,7 @@ export default class DataModelEngine {
       const bundle =  await this.bundleDownloader.downloadBundleFull(nodeUrl, bundleId);
 
       bundle.metadata = initialMetadata;
-
-      console.log(`downloadBundleHermes(): ${JSON.stringify(bundle)}`);
-
+      
       return bundle;
     } catch (err) {
       if (err instanceof ValidationError) {
