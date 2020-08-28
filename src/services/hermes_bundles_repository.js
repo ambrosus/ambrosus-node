@@ -25,6 +25,7 @@ export default class HermesBundlesRepository extends ResolutionsRepository {
       logger.info(`Loading blockchain sheltering state...`);
       const stored = await this.db.collection('resolutions_repository').findOne({name:'shelteredbundles'}, {projection: {_id: 0}});
       const cursor = await this.db.collection('blockchain_bundles').find({}, {projection: {_id: 0}});
+      
       if (stored !== null && cursor !== null) {
         this.lastSavedBlock = stored.lastSavedBlock;
         const bundles = await cursor.toArray();
