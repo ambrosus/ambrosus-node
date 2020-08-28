@@ -36,6 +36,7 @@ import BundleDownloader from './services/bundle_downloader';
 import BundleBuilder from './services/bundle_builder';
 import BundleRepository from './services/bundle_repository';
 import AssetRepository from './services/asset_repository';
+import EventRepository from './services/event_repository';
 import WorkerLogRepository from './services/worker_log_repository';
 import FindEventQueryObjectFactory from './services/find_event_query_object';
 import FindAccountQueryObjectFactory from './services/find_account_query_object';
@@ -174,6 +175,7 @@ class Builder {
     this.bundleBuilder = new BundleBuilder(this.identityManager, this.entityBuilder, supportDeprecatedBundleVersions);
     this.bundleRepository = new BundleRepository(this.db);
     this.assetRepository = new AssetRepository(this.db);
+    this.eventRepository = new EventRepository(this.db);
     this.workerLogRepository = new WorkerLogRepository(this.db);
     this.workerTaskTrackingRepository = new WorkerTaskTrackingRepository(this.db);
     this.workerIntervalsRepository = new WorkerIntervalsRepository(this.db);

@@ -40,6 +40,7 @@ async function start(logger) {
     builder.dataModelEngine,
     builder.bundleRepository,
     builder.assetRepository,
+    builder.eventRepository,
     builder.hermesBundlesRepository,
     builder.shelteringWrapper,
     builder.shelteringTransfersWrapper,
