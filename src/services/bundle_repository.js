@@ -32,6 +32,16 @@ export default class BundleRepository {
     }
   }
 
+  async storeBundleHermes(bundle) {
+    /*const {bundleId} = bundle;
+    if (!await isFileInGridFSBucket(bundleId, this.bundlesBucket)) {
+      await uploadJSONToGridFSBucket(bundleId, bundle, this.bundlesBucket);
+    }*/
+    if (await this.db.collection('bundle_metadata').findOne({bundleId: bundle.bundleId}) === null) {
+      await this.db.collection('bundle_metadata').insertOne(bundle.metadata);
+    }
+  }
+
   async openBundleWriteStream(bundleId) {
     const uploadStream = this.bundlesBucket.openUploadStream(
       bundleId,

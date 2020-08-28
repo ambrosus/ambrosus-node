@@ -100,6 +100,8 @@ export default class EntityRepository {
         selectedAssets.push(nextAsset);
         nextAsset = await assetsCursor.next();
       } else {
+        console.log(`nextEvent: ${JSON.stringify(nextEvent)}`);
+
         await this.db.collection('events').updateOne({eventId: nextEvent.eventId}, updateBundleStubId);
         selectedEvents.push(nextEvent);
         nextEvent = await eventsCursor.next();
