@@ -19,6 +19,8 @@ export default class AssetRepository {
   async storeAsset(asset) {
     if (await this.db.collection('assets').findOne({assetId: asset.assetId}) === null) {
       await this.db.collection('assets').insertOne(asset);
+
+      console.log(`storeAsset(${asset.assetId}): stored`);
     } else {
       console.log(`storeAsset(${asset.assetId}): already stored`);
     }

@@ -8,10 +8,20 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 export default class BundlesRestorerHermes {
-  constructor(bundleStoreWrapper, dataModelEngine, bundleRepository, hermesBundlesRepository, shelteringWrapper, shelteringTransfersWrapper, workerLogger) {
+  constructor(
+    bundleStoreWrapper, 
+    dataModelEngine, 
+    bundleRepository, 
+    assetRepository, 
+    hermesBundlesRepository, 
+    shelteringWrapper, 
+    shelteringTransfersWrapper, 
+    workerLogger
+  ) {
     this.bundleStoreWrapper = bundleStoreWrapper;
     this.dataModelEngine = dataModelEngine;
     this.bundleRepository = bundleRepository;
+    this.assetRepository = assetRepository;
     this.hermesBundlesRepository = hermesBundlesRepository;
     this.shelteringWrapper = shelteringWrapper;
     this.workerLogger = workerLogger;
@@ -21,13 +31,15 @@ export default class BundlesRestorerHermes {
   async parseAsset(asset, metadata) {
     asset.metadata = metadata;
 
-    console.log(`parseAsset(${asset.assetId}): ${JSON.stringify(asset)}`);
+    this.assetRepository.storeAsset(asset);
+
+    // console.log(`parseAsset(${asset.assetId}): ${JSON.stringify(asset)}`);
   }
 
   async parseEvent(event, metadata) {
     event.metadata = metadata;
 
-    console.log(`parseEvent(${event.eventId}): ${JSON.stringify(event)}`);
+    // console.log(`parseEvent(${event.eventId}): ${JSON.stringify(event)}`);
   }
 
   async parseBundle(bundle) {    
