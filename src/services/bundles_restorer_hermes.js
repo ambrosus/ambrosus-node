@@ -27,7 +27,7 @@ export default class BundlesRestorerHermes {
   async parseEvent(event, metadata) {
     event.metadata = metadata;
 
-    await this.workerLogger.addLog(`parseEvent(${event.eventId}): `);
+    await this.workerLogger.addLog(`parseEvent(${event.eventId}): ${JSON.stringify(event)}`);
   }
 
   async parseBundle(bundle) {    
