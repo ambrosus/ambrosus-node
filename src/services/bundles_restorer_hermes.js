@@ -50,6 +50,8 @@ export default class BundlesRestorerHermes {
     if (await this.bundleRepository.isBundleStored(bundle.bundleId)) {
       await this.workerLogger.addLog(`parseBundle(${bundle.bundleId}): already stored.`);
     };
+
+    console.log(`parseBundle(metadata): ${bundle.metadata}`);
  
     for (const entry of bundle.content.entries) {      
       if (entry.assetId !== undefined) {
@@ -62,9 +64,7 @@ export default class BundlesRestorerHermes {
         this.parseEvent(entry, bundle.metadata);
 
         continue;
-      }
-
-      console.log(`parseBundle(metadata): ${bundle.metadata}`);
+      }      
 
       //this.bundleRepository.storeBundleProofMetadata(bundle.bundleId, bundle.metadata.);
 
