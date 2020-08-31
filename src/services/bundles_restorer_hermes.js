@@ -52,6 +52,8 @@ export default class BundlesRestorerHermes {
     };
 
     console.log(`parseBundle(metadata): ${JSON.stringify(bundle.metadata)}`);
+
+    this.bundleRepository.storeBundleHermes(bundle);
  
     for (const entry of bundle.content.entries) {      
       if (entry.assetId !== undefined) {
@@ -64,9 +66,7 @@ export default class BundlesRestorerHermes {
         this.parseEvent(entry, bundle.metadata);
 
         continue;
-      }      
-
-      //this.bundleRepository.storeBundleProofMetadata(bundle.bundleId, bundle.metadata.);
+      }            
 
       await this.workerLogger.addLog(`parseBundle(${bundle.bundleId}): unknown entry type`);
     }

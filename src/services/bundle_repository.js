@@ -33,12 +33,22 @@ export default class BundleRepository {
   }
 
   async storeBundleHermes(bundle) {
-    /*const {bundleId} = bundle;
+    const {bundleId} = bundle;
+
     if (!await isFileInGridFSBucket(bundleId, this.bundlesBucket)) {
       await uploadJSONToGridFSBucket(bundleId, bundle, this.bundlesBucket);
-    }*/
-    if (await this.db.collection('bundle_metadata').findOne({bundleId: bundle.bundleId}) === null) {
+
+      console.log(`storeBundleHermes(${bundleId}, grid): stored`);
+    } else {
+      console.log(`storeBundleHermes(${bundleId}, grid): already stored`);
+    }
+
+    if (await this.db.collection('bundle_metadata').findOne({bundleId}) === null) {
       await this.db.collection('bundle_metadata').insertOne(bundle.metadata);
+
+      console.log(`storeBundleHermes(${bundleId}, metadata): stored`);
+    } else {
+      console.log(`storeBundleHermes(${bundleId}, metadata): already stored`);
     }
   }
 
