@@ -64,6 +64,10 @@ export default class BundlesRestorerHermes {
         continue;
       }
 
+      console.log(`parseBundle(metadata): ${bundle.metadata}`);
+
+      //this.bundleRepository.storeBundleProofMetadata(bundle.bundleId, bundle.metadata.);
+
       await this.workerLogger.addLog(`parseBundle(${bundle.bundleId}): unknown entry type`);
     }
   }

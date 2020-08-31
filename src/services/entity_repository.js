@@ -30,18 +30,6 @@ export default class EntityRepository {
     await this.db.collection('events').insertOne({...event});
   }
 
-  hideEventDataIfNecessary(event, accessLevel) {
-    if (!event) {
-      return null;
-    }
-    return event.content.idData.accessLevel <= accessLevel ? event : pick(event, 'content.data');
-  }
-
-  async getEvent(eventId, accessLevel = 0) {
-    const event = await this.db.collection('events').findOne({eventId}, {projection: this.blacklistedFields});
-    return this.hideEventDataIfNecessary(event, accessLevel);
-  }
-
   selectEntityForBundling(asset, event) {
     if (asset === null) {
       return event;

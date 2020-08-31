@@ -253,8 +253,6 @@ export default class DataModelEngine {
     const bundleItemsCountLimit = parseInt(await this.uploadRepository.bundleItemsCountLimit(), 10);
     const notBundled = await this.entityRepository.fetchEntitiesForBundling(bundleStubId, bundleItemsCountLimit);
 
-    console.log(`prepareBundleCandidate: ${JSON.stringify(notBundled)}`);
-
     const nodeSecret = await this.identityManager.nodePrivateKey();
     return this.bundleBuilder.assembleBundle(notBundled.assets, notBundled.events, getTimestamp(), nodeSecret);
   }
