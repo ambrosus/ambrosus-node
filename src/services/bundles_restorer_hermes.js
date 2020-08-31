@@ -53,17 +53,17 @@ export default class BundlesRestorerHermes {
 
     console.log(`parseBundle(metadata): ${JSON.stringify(bundle.metadata)}`);
 
-    this.bundleRepository.storeBundleHermes(bundle);
+    await this.bundleRepository.storeBundleHermes(bundle);
  
     for (const entry of bundle.content.entries) {      
       if (entry.assetId !== undefined) {
-        this.parseAsset(entry, bundle.metadata);
+        await this.parseAsset(entry, bundle.metadata);
 
         continue;
       }
 
       if (entry.eventId !== undefined) {
-        this.parseEvent(entry, bundle.metadata);
+        await this.parseEvent(entry, bundle.metadata);
 
         continue;
       }            
