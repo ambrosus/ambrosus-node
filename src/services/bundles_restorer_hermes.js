@@ -51,7 +51,7 @@ export default class BundlesRestorerHermes {
       await this.workerLogger.addLog(`parseBundle(${bundle.bundleId}): already stored.`);
     };
 
-    console.log(`parseBundle(metadata): ${bundle.metadata}`);
+    console.log(`parseBundle(metadata): ${JSON.stringify(bundle.metadata)}`);
  
     for (const entry of bundle.content.entries) {      
       if (entry.assetId !== undefined) {
