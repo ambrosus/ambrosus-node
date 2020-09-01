@@ -32,26 +32,6 @@ export default class BundleRepository {
     }
   }
 
-  async storeBundleHermes(bundle) {
-    const {bundleId} = bundle;
-
-    if (!await isFileInGridFSBucket(bundleId, this.bundlesBucket)) {
-      await uploadJSONToGridFSBucket(bundleId, bundle, this.bundlesBucket);
-
-      console.log(`storeBundleHermes(${bundleId}, grid): stored`);
-    } else {
-      console.log(`storeBundleHermes(${bundleId}, grid): already stored`);
-    }
-
-    if (await this.db.collection('bundle_metadata').findOne({bundleId}) === null) {
-      await this.db.collection('bundle_metadata').insertOne(bundle.metadata);
-
-      console.log(`storeBundleHermes(${bundleId}, metadata): stored`);
-    } else {
-      console.log(`storeBundleHermes(${bundleId}, metadata): already stored`);
-    }
-  }
-
   async openBundleWriteStream(bundleId) {
     const uploadStream = this.bundlesBucket.openUploadStream(
       bundleId,
