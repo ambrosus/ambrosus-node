@@ -11,6 +11,9 @@ import Crypto from './services/crypto';
 import Store from './services/store';
 import StateModel from './models/state_model';
 
+import {WinstonConsoleLogger} from './utils/loggers';
+import WorkerLogger from './services/worker_logger';
+
 import AccountAccessDefinitions from './services/account_access_definitions';
 import AccountRepository from './services/account_repository';
 import {
@@ -97,7 +100,7 @@ class Builder {
     const {headContractAddress, lowFundsWarningAmount} = this.config;
 
     const defaultAddress = await getDefaultAddress(this.web3);
-    
+
     this.headWrapper = new HeadWrapper(headContractAddress, this.web3, defaultAddress);
     this.rolesWrapper = new RolesWrapper(this.headWrapper, this.web3, defaultAddress);
     this.configWrapper = new ConfigWrapper(this.headWrapper, this.web3, defaultAddress);
@@ -185,7 +188,7 @@ class Builder {
     this.findAccountQueryObjectFactory = new FindAccountQueryObjectFactory(this.db);
     this.accountAccessDefinitions = new AccountAccessDefinitions(this.identityManager, this.accountRepository, this.organizationRepository);
 
-    const builderLogger = new WorkerLogger(logger, builder.workerLogRepository);
+    const builderLogger = new WorkerLogger(new WinstonConsoleLogger(), this.workerLogRepository);
 
     builderLogger.addLog(`defaultAddress: ${defaultAddress}`);
 
