@@ -97,9 +97,7 @@ class Builder {
     const {headContractAddress, lowFundsWarningAmount} = this.config;
 
     const defaultAddress = await getDefaultAddress(this.web3);
-
-    console.log(`defaultAddress: ${defaultAddress}`);
-
+    
     this.headWrapper = new HeadWrapper(headContractAddress, this.web3, defaultAddress);
     this.rolesWrapper = new RolesWrapper(this.headWrapper, this.web3, defaultAddress);
     this.configWrapper = new ConfigWrapper(this.headWrapper, this.web3, defaultAddress);
@@ -186,6 +184,11 @@ class Builder {
     this.accountRepository = new AccountRepository(this.db);
     this.findAccountQueryObjectFactory = new FindAccountQueryObjectFactory(this.db);
     this.accountAccessDefinitions = new AccountAccessDefinitions(this.identityManager, this.accountRepository, this.organizationRepository);
+
+    const builderLogger = new WorkerLogger(logger, builder.workerLogRepository);
+
+    builderLogger.addLog(`defaultAddress: ${defaultAddress}`);
+
     this.dataModelEngine = new DataModelEngine({
       identityManager: this.identityManager,
       tokenAuthenticator: this.tokenAuthenticator,
