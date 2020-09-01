@@ -46,12 +46,16 @@ export default class BundlesRestorerHermes {
     // console.log(`parseEvent(${event.eventId}): ${JSON.stringify(event)}`);
   }
 
-  async parseBundle(bundle) {    
+  async parseBundle(bundle) {
+    await this.hermesBundlesRepository.delete(bundle.bundleId);
+
     if (await this.bundleRepository.isBundleStored(bundle.bundleId)) {
-      await this.workerLogger.addLog(`parseBundle(${bundle.bundleId}): already stored.`);
+      // await this.workerLogger.addLog(`parseBundle(${bundle.bundleId}): already stored.`);
+      
+      return;
     };
 
-    console.log(`parseBundle(metadata): ${JSON.stringify(bundle.metadata)}`);
+    // console.log(`parseBundle(metadata): ${JSON.stringify(bundle.metadata)}`);
 
     await this.bundleRepository.storeBundle(bundle);
  

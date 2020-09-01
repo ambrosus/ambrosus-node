@@ -39,6 +39,10 @@ export default class HermesBundlesRepository extends ResolutionsRepository {
     }
   }
 
+  async delete(bundleId) {
+    await this.db.collection('blockchain_bundles').deleteOne({bundleId});
+  }
+
   async updateActiveResolutionsCache(fromBlock, currentBlock) {
     const addedBundles = await this.collectEvents(fromBlock, currentBlock,
       async (start, end) => (await this.bundleStoreWrapper.bundlesStored(start, end)).filter((event) => event.returnValues.uploader === this.address),
