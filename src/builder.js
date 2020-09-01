@@ -81,8 +81,6 @@ class Builder {
   }
 
   async build(config, dependencies = {}) {
-    console.log(`debugVersion: 1`);
-
     this.config = config;
     const {web3} = dependencies;
     const {db, client} = await connectToMongo(this.config);
