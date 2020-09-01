@@ -7,6 +7,8 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+import {pick} from '../utils/dict_utils';
+
 export default class EntityRepository {
   constructor(db) {
     this.db = db;
@@ -26,6 +28,18 @@ export default class EntityRepository {
 
   async storeEvent(event) {
     await this.db.collection('events').insertOne({...event});
+  }
+
+  hideEventDataIfNecessary(event, accessLevel) {
+    if (!event) {
+      return null;
+    }
+    return event.content.idData.accessLevel <= accessLevel ? event : pick(event, 'content.data');
+  }
+
+  async getEvent(eventId, accessLevel = 0) {
+    const event = await this.db.collection('events').findOne({eventId}, {projection: this.blacklistedFields});
+    return this.hideEventDataIfNecessary(event, accessLevel);
   }
 
   selectEntityForBundling(asset, event) {
