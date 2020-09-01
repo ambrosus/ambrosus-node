@@ -14,6 +14,7 @@ import {Role} from './services/roles_repository';
 import WorkerLogger from './services/worker_logger';
 import {waitForChainSync} from './utils/web3_tools';
 import {setup} from './utils/instrument_process';
+import BundlesRestorerHermes from './services/bundles_restorer_hermes';
 
 async function start(logger) {
   const builder = new Builder();
@@ -33,6 +34,20 @@ async function start(logger) {
     builder.client,
     config.serverPort
   );
+  const workerLogger = new WorkerLogger(logger, builder.workerLogRepository);
+  const bundlesRestorer = new BundlesRestorerHermes(
+    builder.bundleStoreWrapper,
+    builder.dataModelEngine,
+    builder.bundleRepository,
+    builder.assetRepository,
+    builder.eventRepository,
+    builder.hermesBundlesRepository,
+    builder.shelteringWrapper,
+    builder.shelteringTransfersWrapper,
+    workerLogger
+  );
+
+  setTimeout(() => bundlesRestorer.restore(), 500);
 
   await worker.start();
 }

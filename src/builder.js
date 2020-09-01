@@ -11,6 +11,9 @@ import Crypto from './services/crypto';
 import Store from './services/store';
 import StateModel from './models/state_model';
 
+import {WinstonConsoleLogger} from './utils/loggers';
+import WorkerLogger from './services/worker_logger';
+
 import AccountAccessDefinitions from './services/account_access_definitions';
 import AccountRepository from './services/account_repository';
 import {
@@ -35,6 +38,8 @@ import EntityRepository from './services/entity_repository';
 import BundleDownloader from './services/bundle_downloader';
 import BundleBuilder from './services/bundle_builder';
 import BundleRepository from './services/bundle_repository';
+import AssetRepository from './services/asset_repository';
+import EventRepository from './services/event_repository';
 import WorkerLogRepository from './services/worker_log_repository';
 import FindEventQueryObjectFactory from './services/find_event_query_object';
 import FindAccountQueryObjectFactory from './services/find_account_query_object';
@@ -49,6 +54,7 @@ import UploadRepository from './services/upload_repository';
 import ChallengesRepository from './services/challenges_repository';
 import TransfersRepository from './services/transfers_repository';
 import ShelteredBundlesRepository from './services/sheltered_bundles_repository';
+import HermesBundlesRepository from './services/hermes_bundles_repository';
 import RetireTransfersRepository from './services/retire_transfers_repository';
 import Migrator from './migrations/Migrator';
 import FailedResolutionsCache from './services/failed_resolutions_cache';
@@ -144,6 +150,14 @@ class Builder {
       this.shelteredBundlesCache,
       this.db
     );
+    this.hermesBundlesCache = new ActiveResolutionsCache('bundleId');
+    this.hermesBundlesRepository = new HermesBundlesRepository(
+      defaultAddress,
+      this.bundleStoreWrapper,
+      this.blockChainStateWrapper,
+      this.shelteredBundlesCache,
+      this.db
+    );
     this.retireTransfersRepository = new RetireTransfersRepository(
       this.transfersEventEmitterWrapper,
       this.blockChainStateWrapper,
@@ -159,6 +173,8 @@ class Builder {
     this.entityRepository = new EntityRepository(this.db);
     this.bundleBuilder = new BundleBuilder(this.identityManager, this.entityBuilder, supportDeprecatedBundleVersions);
     this.bundleRepository = new BundleRepository(this.db);
+    this.assetRepository = new AssetRepository(this.db);
+    this.eventRepository = new EventRepository(this.db);
     this.workerLogRepository = new WorkerLogRepository(this.db);
     this.workerTaskTrackingRepository = new WorkerTaskTrackingRepository(this.db);
     this.workerIntervalsRepository = new WorkerIntervalsRepository(this.db);
@@ -171,6 +187,11 @@ class Builder {
     this.accountRepository = new AccountRepository(this.db);
     this.findAccountQueryObjectFactory = new FindAccountQueryObjectFactory(this.db);
     this.accountAccessDefinitions = new AccountAccessDefinitions(this.identityManager, this.accountRepository, this.organizationRepository);
+
+    const builderLogger = new WorkerLogger(new WinstonConsoleLogger(), this.workerLogRepository);
+
+    builderLogger.addLog(`defaultAddress: ${defaultAddress}`);
+
     this.dataModelEngine = new DataModelEngine({
       identityManager: this.identityManager,
       tokenAuthenticator: this.tokenAuthenticator,

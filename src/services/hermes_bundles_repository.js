@@ -11,7 +11,7 @@ import ResolutionsRepository from './resolutions_repository';
 
 const SHELTERING_EVENT_ONE_FETCH_LIMIT = 250;
 
-export default class ShelteredBundlesRepository extends ResolutionsRepository {
+export default class HermesBundlesRepository extends ResolutionsRepository {
   constructor(address, bundleStoreWrapper, blockchainStateWrapper, activeBundlesCache, db) {
     super(blockchainStateWrapper, activeBundlesCache, SHELTERING_EVENT_ONE_FETCH_LIMIT);
     this.address = address;
@@ -25,6 +25,7 @@ export default class ShelteredBundlesRepository extends ResolutionsRepository {
       logger.info(`Loading blockchain sheltering state...`);
       const stored = await this.db.collection('resolutions_repository').findOne({name:'shelteredbundles'}, {projection: {_id: 0}});
       const cursor = await this.db.collection('blockchain_bundles').find({}, {projection: {_id: 0}});
+
       if (stored !== null && cursor !== null) {
         this.lastSavedBlock = stored.lastSavedBlock;
         const bundles = await cursor.toArray();
@@ -38,17 +39,31 @@ export default class ShelteredBundlesRepository extends ResolutionsRepository {
     }
   }
 
+  async delete(bundleId) {
+    await this.db.collection('blockchain_bundles').deleteOne({bundleId});
+  }
+
   async updateActiveResolutionsCache(fromBlock, currentBlock) {
     const addedBundles = await this.collectEvents(fromBlock, currentBlock,
-      async (start, end) => (await this.bundleStoreWrapper.sheltererAdded(start, end)).filter((event) => event.returnValues.shelterer === this.address),
-      ['bundleId', 'shelterer']);
+      async (start, end) => (await this.bundleStoreWrapper.bundlesStored(start, end)).filter((event) => event.returnValues.uploader === this.address),
+      ['bundleId', 'uploader']);
+
+    /*
     const removedBundles = await this.collectEvents(fromBlock, currentBlock,
-      async (start, end) => (await this.bundleStoreWrapper.sheltererRemoved(start, end)).filter((event) => event.returnValues.shelterer === this.address),
+      async (start, end) => (await this.bundleStoreWrapper.sheltererRemoved(start, end)).filter((event) => event.returnValues.bundleId === this.address),
       ['bundleId', 'shelterer']);
+    */
+
+    const removedBundles = [];
 
     this.activeResolutionsCache.applyIncomingResolutionEvents(addedBundles, [], removedBundles);
+
     try {
-      await this.db.collection('resolutions_repository').updateOne({name:'shelteredbundles'}, {$set : {name:'shelteredbundles', lastSavedBlock: currentBlock}}, {upsert : true});
+      await this.db.collection('resolutions_repository').updateOne({name:'shelteredbundles'},
+        {$set : {name:'shelteredbundles', lastSavedBlock: currentBlock}},
+        {upsert : true}
+      );
+
       if (addedBundles.length > 0) {
         for (const bundle of addedBundles) {
           await this.db.collection('blockchain_bundles').insertOne(bundle);

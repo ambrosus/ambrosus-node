@@ -19,6 +19,17 @@ export default class BundleDownloader {
     return response;
   }
 
+  async downloadBundleFull(vendorUrl, bundleId) {
+    const fullPath = `/bundle/${bundleId}`;
+    const res = await this.httpsClient.performHTTPSGet(vendorUrl, fullPath);
+
+    console.log(`downloadBundleFull(vendorUrl): ${vendorUrl}`);
+
+    await this.httpsClient.validateIncomingStatusCode(res.statusCode, vendorUrl);
+
+    return res.body;
+  }
+
   async downloadBundleMetadata(vendorUrl, bundleId) {
     const fullPath = `/bundle/${bundleId}/info`;
     const res = await this.httpsClient.performHTTPSGet(vendorUrl, fullPath);

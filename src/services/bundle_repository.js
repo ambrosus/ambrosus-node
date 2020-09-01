@@ -72,6 +72,10 @@ export default class BundleRepository {
     return await downloadJSONFromGridFSBucket(bundleId, this.bundlesBucket);
   }
 
+  async isBundleStored(bundleId) {
+    return ((await this.getBundle(bundleId)) !== null);
+  }
+
   async createBundleMetadata(bundleId, storagePeriods, status = BundleStatuses.unknown, additionalFields = {}) {
     if (await this.db.collection('bundle_metadata').findOne({bundleId}) === null) {
       await this.db.collection('bundle_metadata').insertOne({

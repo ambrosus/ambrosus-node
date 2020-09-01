@@ -97,10 +97,12 @@ export default class EntityRepository {
 
       if (next === nextAsset) {
         await this.db.collection('assets').updateOne({assetId: nextAsset.assetId}, updateBundleStubId);
+
         selectedAssets.push(nextAsset);
         nextAsset = await assetsCursor.next();
       } else {
         await this.db.collection('events').updateOne({eventId: nextEvent.eventId}, updateBundleStubId);
+
         selectedEvents.push(nextEvent);
         nextEvent = await eventsCursor.next();
       }
