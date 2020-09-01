@@ -80,7 +80,7 @@ class Builder {
     return role;
   }
 
-  async build(config, dependencies = {}) {    
+  async build(config, dependencies = {}) {
     this.config = config;
     const {web3} = dependencies;
     const {db, client} = await connectToMongo(this.config);
