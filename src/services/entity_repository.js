@@ -7,8 +7,6 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {pick} from '../utils/dict_utils';
-
 export default class EntityRepository {
   constructor(db) {
     this.db = db;
@@ -85,10 +83,10 @@ export default class EntityRepository {
 
       if (next === nextAsset) {
         await this.db.collection('assets').updateOne({assetId: nextAsset.assetId}, updateBundleStubId);
-        
+
         selectedAssets.push(nextAsset);
         nextAsset = await assetsCursor.next();
-      } else {        
+      } else {
         await this.db.collection('events').updateOne({eventId: nextEvent.eventId}, updateBundleStubId);
 
         selectedEvents.push(nextEvent);

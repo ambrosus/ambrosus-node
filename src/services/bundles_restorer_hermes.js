@@ -51,15 +51,15 @@ export default class BundlesRestorerHermes {
 
     if (await this.bundleRepository.isBundleStored(bundle.bundleId)) {
       // await this.workerLogger.addLog(`parseBundle(${bundle.bundleId}): already stored.`);
-      
+
       return;
-    };
+    }
 
     // console.log(`parseBundle(metadata): ${JSON.stringify(bundle.metadata)}`);
 
     await this.bundleRepository.storeBundle(bundle);
- 
-    for (const entry of bundle.content.entries) {      
+
+    for (const entry of bundle.content.entries) {
       if (entry.assetId !== undefined) {
         await this.parseAsset(entry, bundle.metadata);
 
@@ -70,7 +70,7 @@ export default class BundlesRestorerHermes {
         await this.parseEvent(entry, bundle.metadata);
 
         continue;
-      }            
+      }
 
       await this.workerLogger.addLog(`parseBundle(${bundle.bundleId}): unknown entry type`);
     }
@@ -105,7 +105,7 @@ export default class BundlesRestorerHermes {
             try {
               const bundleBody = await this.dataModelEngine.downloadBundleHermes(bundle.bundleId, donorId, expirationTime);
 
-              await this.parseBundle(bundleBody);              
+              await this.parseBundle(bundleBody);
 
               await this.workerLogger.addLog('Bundle restored', {bundleId: bundle.bundleId});
 

@@ -24,7 +24,7 @@ export default class BundleDownloader {
     const res = await this.httpsClient.performHTTPSGet(vendorUrl, fullPath);
 
     console.log(`downloadBundleFull(vendorUrl): ${vendorUrl}`);
-    
+
     await this.httpsClient.validateIncomingStatusCode(res.statusCode, vendorUrl);
 
     return res.body;

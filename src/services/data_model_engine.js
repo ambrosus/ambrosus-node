@@ -341,7 +341,7 @@ export default class DataModelEngine {
 
     this.bundleBuilder.validateBundleMetadata(downloadedMetadata);
 
-    try {      
+    try {
       const bundle =  await this.bundleDownloader.downloadBundleFull(nodeUrl, bundleId);
 
       bundle.metadata = initialMetadata;
@@ -353,7 +353,7 @@ export default class DataModelEngine {
         throw new Error(`Bundle failed to validate: ${err.message || err}`);
       }
       throw new Error(`Could not fetch the bundle from the shelterer: ${err.message || err}`);
-    }    
+    }
   }
 
   async downloadAndValidateBundleBody(nodeUrl, bundleId) {
