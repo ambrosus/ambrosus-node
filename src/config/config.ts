@@ -1,6 +1,6 @@
 /*
 Copyright: Ambrosus Inc.
-Email: tech@ambrosus.com
+Email: tech@ambrosus.io
 
 This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
@@ -92,7 +92,7 @@ const config: Readonly<Config> = Object.freeze({
 
   gitCommit: process.env.GIT_COMMIT,
 
-  docsLink: process.env.DOCS_LINK || 'https://dev.ambrosus.com/',
+  docsLink: process.env.DOCS_LINK || 'https://dev.ambrosus.io/',
 
   requestSizeLimit: process.env.REQUEST_SIZE_LIMIT || '1mb',
 

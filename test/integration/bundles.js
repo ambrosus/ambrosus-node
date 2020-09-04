@@ -1,6 +1,6 @@
 /*
 Copyright: Ambrosus Inc.
-Email: tech@ambrosus.com
+Email: tech@ambrosus.io
 
 This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
@@ -24,7 +24,7 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Bundles - Integrations', () => {
-  const url = 'node.ambrosus.com';
+  const url = 'node.ambrosus.io';
   let apparatus;
   let scenario;
   let res;
