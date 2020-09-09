@@ -1,6 +1,6 @@
 /*
 Copyright: Ambrosus Inc.
-Email: tech@ambrosus.com
+Email: tech@ambrosus.io
 
 This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
@@ -36,13 +36,13 @@ describe('Fallback - Integrations', async () => {
       .and.have.property('status', 404);
     await expect(apparatus.request().post('/')).to.be.eventually.rejected
       .and.have.property('response')
-      .and.have.deep.property('body', {reason: 'Not found: Unknown path, see API documentation at: https://dev.ambrosus.com/'});
+      .and.have.deep.property('body', {reason: 'Not found: Unknown path, see API documentation at: https://dev.ambrosus.io/'});
     await expect(apparatus.request().delete('/')).to.be.eventually.rejected
       .and.have.property('response')
-      .and.have.deep.property('body', {reason: 'Not found: Unknown path, see API documentation at: https://dev.ambrosus.com/'});
+      .and.have.deep.property('body', {reason: 'Not found: Unknown path, see API documentation at: https://dev.ambrosus.io/'});
     await expect(apparatus.request().put('/')).to.be.eventually.rejected
       .and.have.property('response')
-      .and.have.deep.property('body', {reason: 'Not found: Unknown path, see API documentation at: https://dev.ambrosus.com/'});
+      .and.have.deep.property('body', {reason: 'Not found: Unknown path, see API documentation at: https://dev.ambrosus.io/'});
   });
 
   after(async () => {
