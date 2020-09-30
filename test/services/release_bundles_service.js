@@ -58,6 +58,12 @@ describe('Release Bundles Service', () => {
 
   beforeEach(() => {
     shelteringWrapperMock.isSheltering = sinon.stub().resolves(true);
+    shelteringWrapperMock.shelteringExpirationDate = sinon.stub();
+    shelteringWrapperMock.shelteringExpirationDate.onCall(0).resolves(10);
+    shelteringWrapperMock.shelteringExpirationDate.onCall(1).resolves(5);
+    shelteringWrapperMock.shelteringExpirationDate.onCall(2).resolves(20);
+    shelteringWrapperMock.shelteringExpirationDate.onCall(3).resolves(10);
+    shelteringWrapperMock.shelteringExpirationDate.onCall(4).resolves(1);
     shelteringTransfersWrapperMock.start = sinon.spy();
     service.reset();
   });

@@ -190,8 +190,6 @@ class Builder {
 
     const builderLogger = new WorkerLogger(new WinstonConsoleLogger(), this.workerLogRepository);
 
-    builderLogger.addLog(`defaultAddress: ${defaultAddress}`);
-
     this.dataModelEngine = new DataModelEngine({
       identityManager: this.identityManager,
       tokenAuthenticator: this.tokenAuthenticator,

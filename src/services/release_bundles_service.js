@@ -80,7 +80,7 @@ export default class ReleaseBundlesService {
     if (transfers.length < this.maxOngoingTransfers) {
       let startedTransersCount = 0;
       let shelteringChecks = 0;
-      for (const bundleId of this.shelteredBundles) {
+      for (const bundleId of await this.selectBundlesForTransfer()) {
         try {
           infoUpdated = true;
           shelteringChecks++;
@@ -119,6 +119,16 @@ export default class ReleaseBundlesService {
       this.modeInfo.now = this.shelteredBundles.size;
       this.operationalMode.setInfo(this.modeInfo);
     }
+  }
+
+  async selectBundlesForTransfer() {
+    const bundles = [];
+    for (const bundleId of this.shelteredBundles) {
+      const expired = await this.shelteringWrapper.shelteringExpirationDate(bundleId);
+      bundles.push({bundleId, expired});
+    }
+    bundles.sort((aa, bb) => bb.expired - aa.expired);
+    return bundles.map((bundle) => bundle.bundleId);
   }
 }
 
