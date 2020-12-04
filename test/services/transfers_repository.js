@@ -232,7 +232,7 @@ describe('Transfers repository', () => {
 
     beforeEach(() => {
       transferWrapperMock = {
-        resolve: sinon.stub().resolves({events:{'0':{raw:{topics:['0x3c966c8db7f2d3710208024f326cb0e40b2b7122b76c3dba57ae105918ff15a1']}}}}),
+        resolve: sinon.stub().resolves({events:{0:{raw:{topics:['0x3c966c8db7f2d3710208024f326cb0e40b2b7122b76c3dba57ae105918ff15a1']}}}}),
         canResolve: sinon.stub().resolves(true)
       };
       transfersRepository = new TransfersRepository(transferWrapperMock);
