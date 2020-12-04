@@ -49,7 +49,15 @@ export default class TransfersRepository extends ResolutionsRepository {
     if (!await this.shelteringTransfersWrapper.canResolve(transfer.transferId)) {
       throw new Error('Unable to resolve transfer - boundary check fail');
     }
-    return this.shelteringTransfersWrapper.resolve(transfer.transferId);
+    const status = await this.shelteringTransfersWrapper.resolve(transfer.transferId);
+    for (const event of Object.values(status.events)) {
+      for (const topic of event.raw.topics) {
+        if (topic === '0x3c966c8db7f2d3710208024f326cb0e40b2b7122b76c3dba57ae105918ff15a1') {
+          return status;
+        }
+      }
+    }
+    throw new Error('Transfer canceled');
   }
 
   async getDesignatedShelterer(transfer) {
