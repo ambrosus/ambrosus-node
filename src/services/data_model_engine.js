@@ -366,8 +366,11 @@ export default class DataModelEngine {
   async markBundleAsSheltered(bundleId) {
     const bundleExpirationDate = await this.uploadRepository.bundleExpirationDateInMs(bundleId);
     await this.bundleRepository.setBundleRepository(bundleId, BundleStatuses.sheltered, {holdUntil: new Date(bundleExpirationDate)});
+    await this.unpackBundleAfterSheltering(bundleId);
+  }
 
-    const bundleBody = await this.getBundle(bundleId);
+  async unpackBundleAfterSheltering(bundleId) {
+    const bundleBody = await this.bundleRepository.getBundle(bundleId);
     for (const entry of bundleBody.content.entries) {
       if (entry.assetId !== undefined) {
         const asset = {...entry, metadata: bundleBody.metadata};
@@ -386,14 +389,6 @@ export default class DataModelEngine {
   async cleanupOutdatedBundles() {
     await this.bundleRepository.findOutdatedBundles();
     const removedBundles = await this.bundleRepository.cleanupBundles();
-    for (const bundleId of removedBundles) {
-      for await (const assetId of this.entityRepository.getAssetsByBundleId(bundleId)) {
-        await this.entityRepository.removeAsset(assetId);
-      }
-      for await (const eventId of this.entityRepository.getEventsByBundleId(bundleId)) {
-        await this.entityRepository.removeEvent(eventId);
-      }
-    }
     return removedBundles.length;
   }
 

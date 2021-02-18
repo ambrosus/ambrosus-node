@@ -366,7 +366,7 @@ describe('Bundle Repository', () => {
     });
 
     it('returns removed bundles count', async () => {
-      expect(await storage.cleanupBundles()).to.equal(2);
+      expect((await storage.cleanupBundles()).length).to.equal(['bundle3', 'bundle5'].length);
     });
 
     afterEach(async () => {

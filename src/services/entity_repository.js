@@ -179,28 +179,4 @@ export default class EntityRepository {
     await this.db.collection('assets').updateMany(thisBundleQuery, update);
     await this.db.collection('events').updateMany(thisBundleQuery, update);
   }
-
-  async getAssetsByBundleId (bundleId) {
-    const assetIDs = [];
-    for await (const asset of this.db.collection('assets').find({'metadata.bundleId': bundleId})) {
-      assetIDs.push(asset.assetId);
-    }
-    return assetIDs;
-  }
-
-  async removeAsset(assetId) {
-    await this.db.collection('assets').removeOne({assetId});
-  }
-
-  async getEventsByBundleId (bundleId) {
-    const eventIDs = [];
-    for await (const event of this.db.collection('events').find({'metadata.bundleId': bundleId})) {
-      eventIDs.push(event.eventId);
-    }
-    return eventIDs;
-  }
-
-  async removeEvent(eventId) {
-    await this.db.collection('events').removeOne({eventId});
-  }
 }
