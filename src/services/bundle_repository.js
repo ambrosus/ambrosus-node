@@ -147,14 +147,15 @@ export default class BundleRepository {
 
   async cleanupBundles() {
     const cursor = await this.db.collection('bundle_metadata').find({'repository.status': BundleStatuses.cleanup}, {projection: {bundleId: 1, _id: 0}});
-    const totalCount = await cursor.count();
+    const removedBundles = [];
 
     while (await cursor.hasNext()) {
       const {bundleId} = await cursor.next();
       await this.removeBundle(bundleId);
+      removedBundles.push(bundleId);
     }
 
-    return totalCount;
+    return removedBundles;
   }
 
   async getShelteredBundles(bundlesCount) {

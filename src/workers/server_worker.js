@@ -63,11 +63,11 @@ export default class ServerWorker extends Worker {
     app.use('/bundle', bundlesRouter(this.modelEngine));
     app.get('/health', asyncMiddleware(healthCheckHandler(this.modelEngine.mongoClient, this.web3)));
     app.get('/metrics', prometheusMetricsHandler(registry));
+    app.use('/assets', assetsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine, this.config));
+    app.use('/events', eventsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine));
 
     if (this.role.is(Role.HERMES)) {
       app.use('/accounts', accountsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine, this.config));
-      app.use('/assets', assetsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine, this.config));
-      app.use('/events', eventsRouter(this.modelEngine.tokenAuthenticator, this.modelEngine.identityManager, this.modelEngine));
       app.use('/token', tokenRouter(this.modelEngine.tokenAuthenticator, this.config));
     }
 
