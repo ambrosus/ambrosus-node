@@ -19,7 +19,9 @@ export default class EntityRepository {
   }
 
   async storeAsset(asset) {
-    await this.db.collection('assets').insertOne({...asset});
+    if (await this.db.collection('assets').findOne({assetId: asset.assetId}) === null) {
+      await this.db.collection('assets').insertOne({...asset});
+    }
   }
 
   async getAsset(assetId) {
@@ -27,7 +29,9 @@ export default class EntityRepository {
   }
 
   async storeEvent(event) {
-    await this.db.collection('events').insertOne({...event});
+    if (await this.db.collection('events').findOne({eventId: event.eventId}) === null) {
+      await this.db.collection('events').insertOne({...event});
+    }
   }
 
   hideEventDataIfNecessary(event, accessLevel) {

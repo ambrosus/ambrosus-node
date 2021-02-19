@@ -64,6 +64,22 @@ describe('Atlas node endpoints availability - Integrations', async () => {
         .to.eventually.be.fulfilled;
     });
 
+    it('assets', async () => {
+      const pendingRequest = apparatus.request()
+        .get('/assets/0x123abcde')
+        .send();
+      await expect(pendingRequest)
+        .to.eventually.be.rejected.and.have.property('response').that.has.deep.property('body', {reason: 'Not found: No asset with id = 0x123abcde found'});
+    });
+
+    it('events', async () => {
+      const pendingRequest = apparatus.request()
+        .get('/events/0x123defe')
+        .send();
+      await expect(pendingRequest)
+        .to.eventually.be.rejected.and.have.property('response').that.has.deep.property('body', {reason: 'Not found: No event with id = 0x123defe found'});
+    });
+
     it('bundle', async () => {
       const pendingRequest = apparatus.request()
         .get('/bundle/0x123')
@@ -77,22 +93,6 @@ describe('Atlas node endpoints availability - Integrations', async () => {
     it('accounts', async () => {
       const pendingRequest = apparatus.request()
         .get('/accounts')
-        .send();
-      await expect(pendingRequest)
-        .to.eventually.be.rejected.and.have.property('status', 404);
-    });
-
-    it('assets', async () => {
-      const pendingRequest = apparatus.request()
-        .get('/assets')
-        .send();
-      await expect(pendingRequest)
-        .to.eventually.be.rejected.and.have.property('status', 404);
-    });
-
-    it('events', async () => {
-      const pendingRequest = apparatus.request()
-        .get('/events')
         .send();
       await expect(pendingRequest)
         .to.eventually.be.rejected.and.have.property('status', 404);

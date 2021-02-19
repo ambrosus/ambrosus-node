@@ -1556,11 +1556,25 @@ describe('Data Model Engine', () => {
     const expirationDate = 10;
     let mockBundleRepository;
     let mockUploadRepository;
+    let mockEntityRepository;
     let modelEngine;
+    let downloadedBundle; let exampleAsset; let exampleEvent;
+    let db; let client;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+      ({db, client} = await connectToMongo(config));
+      exampleAsset = createFullAsset(identityManager);
+      exampleEvent = createFullEvent(identityManager, {assetId: exampleAsset.assetId});
+      downloadedBundle = createFullBundle(identityManager, {}, [exampleAsset, exampleEvent]);
+
       mockBundleRepository = {
-        setBundleRepository: sinon.stub()
+        setBundleRepository: sinon.stub(),
+        getBundle: sinon.stub().resolves(downloadedBundle)
+      };
+
+      mockEntityRepository = {
+        storeAsset: sinon.stub(),
+        storeEvent: sinon.stub()
       };
 
       mockUploadRepository = {
@@ -1569,7 +1583,8 @@ describe('Data Model Engine', () => {
 
       modelEngine = new DataModelEngine({
         bundleRepository: mockBundleRepository,
-        uploadRepository: mockUploadRepository
+        uploadRepository: mockUploadRepository,
+        entityRepository: mockEntityRepository
       });
     });
 
@@ -1611,22 +1626,28 @@ describe('Data Model Engine', () => {
 
   describe('Cleanup outdated bundles', () => {
     let modelEngine;
-    let mockBundleRepository;
-    const exampleCleanedBundlesCount = 123;
+    let mockBundleRepository; let mockEntityRepository;
+    const exampleCleanedBundles = [1, 2, 3];
 
     beforeEach(() => {
       mockBundleRepository = {
         findOutdatedBundles: sinon.stub(),
-        cleanupBundles: sinon.stub().resolves(exampleCleanedBundlesCount)
+        cleanupBundles: sinon.stub().resolves(exampleCleanedBundles)
+      };
+
+      mockEntityRepository = {
+        getAssetsByBundleId: sinon.stub().resolves([]),
+        getEventsByBundleId: sinon.stub().resolves([])
       };
 
       modelEngine = new DataModelEngine({
-        bundleRepository: mockBundleRepository
+        bundleRepository: mockBundleRepository,
+        entityRepository: mockEntityRepository
       });
     });
 
     it('finds outdated bundles and then removes them', async () => {
-      expect(await modelEngine.cleanupOutdatedBundles()).to.equal(exampleCleanedBundlesCount);
+      expect(await modelEngine.cleanupOutdatedBundles()).to.equal(exampleCleanedBundles.length);
       expect(mockBundleRepository.findOutdatedBundles).to.be.calledOnce;
       expect(mockBundleRepository.cleanupBundles).to.be.calledOnce;
       expect(mockBundleRepository.cleanupBundles).to.be.calledAfter(mockBundleRepository.findOutdatedBundles);

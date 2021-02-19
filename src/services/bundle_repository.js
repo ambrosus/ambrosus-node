@@ -127,11 +127,42 @@ export default class BundleRepository {
     return repository ? repository.status === BundleStatuses.sheltered : false;
   }
 
+  async getAssetsByBundleId (bundleId) {
+    const assetIDs = [];
+    for await (const asset of this.db.collection('assets').find({'metadata.bundleId': bundleId})) {
+      assetIDs.push(asset.assetId);
+    }
+    return assetIDs;
+  }
+
+  async getEventsByBundleId (bundleId) {
+    const eventIDs = [];
+    for await (const event of this.db.collection('events').find({'metadata.bundleId': bundleId})) {
+      eventIDs.push(event.eventId);
+    }
+    return eventIDs;
+  }
+
+  async removeAsset(assetId) {
+    await this.db.collection('assets').removeOne({assetId});
+  }
+
+  async removeEvent(eventId) {
+    await this.db.collection('events').removeOne({eventId});
+  }
+
   async removeBundle(bundleId) {
     const cursor = await this.bundlesBucket.find({filename: bundleId});
     while (await cursor.hasNext()) {
       const {_id: id} = await cursor.next();
-      await this.bundlesBucket.delete(id);
+      await this.bundlesBucket.delete(id).then(async () => {
+        for (const assetId of await this.getAssetsByBundleId(bundleId)) {
+          await this.removeAsset(assetId);
+        }
+        for (const eventId of await this.getEventsByBundleId(bundleId)) {
+          await this.removeEvent(eventId);
+        }
+      });
     }
     await this.setBundleRepository(bundleId, BundleStatuses.expendable);
   }
@@ -147,14 +178,15 @@ export default class BundleRepository {
 
   async cleanupBundles() {
     const cursor = await this.db.collection('bundle_metadata').find({'repository.status': BundleStatuses.cleanup}, {projection: {bundleId: 1, _id: 0}});
-    const totalCount = await cursor.count();
+    const removedBundles = [];
 
     while (await cursor.hasNext()) {
       const {bundleId} = await cursor.next();
       await this.removeBundle(bundleId);
+      removedBundles.push(bundleId);
     }
 
-    return totalCount;
+    return removedBundles;
   }
 
   async getShelteredBundles(bundlesCount) {
