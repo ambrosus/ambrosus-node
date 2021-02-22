@@ -1592,6 +1592,10 @@ describe('Data Model Engine', () => {
       await modelEngine.markBundleAsSheltered(bundleId);
       expect(mockUploadRepository.bundleExpirationDateInMs).to.be.calledOnceWith(bundleId);
       expect(mockBundleRepository.setBundleRepository).to.be.calledOnceWith(bundleId, BundleStatuses.sheltered, {holdUntil: new Date(expirationDate)});
+      exampleAsset.metadata = {bundleId: '0x123'};
+      exampleEvent.metadata = {bundleId: '0x123'};
+      expect(mockEntityRepository.storeAsset).to.be.calledOnceWith(exampleAsset);
+      expect(mockEntityRepository.storeEvent).to.be.calledOnceWith(exampleEvent);
     });
   });
 
