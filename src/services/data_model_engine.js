@@ -373,11 +373,11 @@ export default class DataModelEngine {
     const bundleBody = await this.bundleRepository.getBundle(bundleId);
     for (const entry of bundleBody.content.entries) {
       if (entry.assetId !== undefined) {
-        const asset = {...entry, metadata: bundleBody.metadata};
+        const asset = {...entry, metadata: {...bundleBody.metadata, bundleId}};
         await this.entityRepository.storeAsset(asset);
       }
       if (entry.eventId !== undefined) {
-        const event = {...entry, metadata: bundleBody.metadata};
+        const event = {...entry, metadata: {...bundleBody.metadata, bundleId}};
         await this.entityRepository.storeEvent(event);
       }
     }
