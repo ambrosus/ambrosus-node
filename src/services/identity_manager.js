@@ -7,14 +7,14 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {ValidationError, AuthenticationError} from '../errors/errors';
+import {AuthenticationError, ValidationError} from '../errors/errors';
 import matchHexOfLength from '../utils/regex';
-import {getDefaultPrivateKey, getDefaultAddress} from '../utils/web3_tools';
+import {getDefaultAddress, getDefaultPrivateKey} from '../utils/web3_tools';
 
 export default class IdentityManager {
-  constructor(web3, stateModel) {
+  constructor(web3, privateKey) {
     this.web3 = web3;
-    this.stateModel = stateModel;
+    this.privateKey = privateKey;
   }
 
   async nodePrivateKey() {
@@ -26,19 +26,7 @@ export default class IdentityManager {
   }
 
   async adminAddress() {
-    let privateKey = await this.stateModel.getPrivateKey();
-
-    if (privateKey === null) {
-      privateKey = await this.stateModel.generateAndStoreNewPrivateKey();
-
-      if (privateKey === null) {
-        throw new ValidationError(`adminAddress: generation failed.`);
-      }
-    }
-
-    const address = await this.stateModel.getAddress();
-
-    return address;
+    return this.privateKey.getAddress();
   }
 
   sign(privateKey, data) {

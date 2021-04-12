@@ -7,9 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import Crypto from './services/crypto';
-import Store from './services/store';
-import StateModel from './models/state_model';
+import PrivateKey from './services/private_key';
 
 import {WinstonConsoleLogger} from './utils/loggers';
 import WorkerLogger from './services/worker_logger';
@@ -92,11 +90,9 @@ class Builder {
     this.web3 = web3 || await createWeb3(this.config);
     this.migrator = new Migrator(db, this.config);
 
-    this.crypto = new Crypto(this.web3);
-    this.store = new Store(config.storePath);
-    this.stateModel = new StateModel(this.store, this.crypto);
+    this.privateKey = new PrivateKey(config.privateKeyPath, this.web3);
+    this.identityManager = new IdentityManager(this.web3, this.privateKey);
 
-    this.identityManager = new IdentityManager(this.web3, this.stateModel);
     const {headContractAddress, lowFundsWarningAmount} = this.config;
 
     const defaultAddress = await getDefaultAddress(this.web3);

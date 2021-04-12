@@ -110,7 +110,7 @@ const config: Readonly<Config> = Object.freeze({
   atlasWorkerInterval: Number(process.env.ATLAS_WORKER_INTERVAL) || 5, // 5 sec
   cleanupWorkerInterval: Number(process.env.CLEANUP_WORKER_INTERVAL) || 86400, // 1 day
 
-  storePath: process.env.STORE_PATH || '/opt/hermes/state.json'
+  privateKeyPath: process.env.STORE_PATH || './config/hermes/privateKey.txt'
 });
 
 export default config;
