@@ -24,10 +24,6 @@ install:
   - docker pull hadolint/hadolint
 
 script:
-  - npx yarn dev:docker:db
-  - npx yarn dev:lint
-  - export MONGO_HOSTS="localhost:27017" MONGO_DB_NAME="ambrosus" && npx yarn migrate
-  - npx yarn test
   - echo $GIT_COMMIT
   - docker run --rm -i hadolint/hadolint hadolint --ignore DL3018 - < Dockerfile
 
