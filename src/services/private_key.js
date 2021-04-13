@@ -28,6 +28,7 @@ export default class PrivateKey {
       return privateKey;
     }
 
+    console.log('adminAddress: generating new private key');
     privateKey = this.generatePrivateKey();
     if (privateKey === null) {
       throw new ValidationError(`adminAddress: generation failed.`);
@@ -44,7 +45,6 @@ export default class PrivateKey {
   addressForPrivateKey(privateKey) {
     return this.web3.eth.accounts.privateKeyToAccount(privateKey).address;
   }
-
 
 
   readPk() {
