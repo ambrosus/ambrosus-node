@@ -23,6 +23,7 @@ describe('Sheltered bundles repository', () => {
 
   let bundleStoreWrapperMock;
   let shelteredBundlesCacheMock;
+  let rolesEventEmmiterWrapperMock;
   let blockchainStateWrapperMock;
   let shelteredBundlesRepository;
 
@@ -111,6 +112,7 @@ describe('Sheltered bundles repository', () => {
         blockNumber: 6,
         logIndex: 0
       }];
+    const roleEvents = [];
 
     beforeEach(() => {
       shelteredBundlesCacheMock = {
@@ -124,15 +126,20 @@ describe('Sheltered bundles repository', () => {
         sheltererAdded: sinon.stub().resolves(addSheltererEvents),
         sheltererRemoved: sinon.stub().resolves(removeSheltererEvents)
       };
+      rolesEventEmmiterWrapperMock = {
+        nodeOnboardings: sinon.stub().resolves(roleEvents)
+      };
       blockchainStateWrapperMock.getCurrentBlockNumber.onFirstCall()
         .resolves(latestBlock)
         .onSecondCall()
         .resolves(latestBlock + 3);
-      shelteredBundlesRepository = new ShelteredBundlesRepository(atlasId, bundleStoreWrapperMock, blockchainStateWrapperMock, shelteredBundlesCacheMock);
+      shelteredBundlesRepository = new ShelteredBundlesRepository(atlasId, bundleStoreWrapperMock, blockchainStateWrapperMock, shelteredBundlesCacheMock, null, rolesEventEmmiterWrapperMock);
       shelteredBundlesRepository.logger = {
         info: sinon.stub()
       };
       sinon.spy(shelteredBundlesRepository, 'prepareEvents');
+      sinon.stub(shelteredBundlesRepository, 'getOnboardBlock');
+      shelteredBundlesRepository.getOnboardBlock.resolves(0);
     });
 
     it('on first call: gets transfers from earliest possible block and caches them', async () => {
