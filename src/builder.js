@@ -24,6 +24,7 @@ import {
   HeadWrapper,
   KycWhitelistWrapper,
   RolesWrapper,
+  RolesEventEmitterWrapper,
   ShelteringWrapper,
   UploadActions,
   UploadsWrapper,
@@ -110,6 +111,7 @@ class Builder {
     this.challengesEventEmitterWrapper = new ChallengesEventEmitterWrapper(this.headWrapper, this.web3, defaultAddress);
     this.shelteringTransfersWrapper = new ShelteringTransfersWrapper(this.headWrapper, this.web3, defaultAddress);
     this.transfersEventEmitterWrapper = new TransfersEventEmitterWrapper(this.headWrapper, this.web3, defaultAddress);
+    this.rolesEventEmitterWrapper = new RolesEventEmitterWrapper(this.headWrapper, this.web3, defaultAddress);
     this.shelteringWrapper = new ShelteringWrapper(this.headWrapper, this.web3, defaultAddress);
     this.kycWhitelistWrapper = new KycWhitelistWrapper(this.headWrapper, this.web3, defaultAddress);
     this.bundleStoreWrapper = new BundleStoreWrapper(this.headWrapper, this.web3, defaultAddress);
@@ -148,7 +150,8 @@ class Builder {
       this.bundleStoreWrapper,
       this.blockChainStateWrapper,
       this.shelteredBundlesCache,
-      this.db
+      this.db,
+      this.rolesEventEmitterWrapper
     );
     this.hermesBundlesCache = new ActiveResolutionsCache('bundleId');
     this.hermesBundlesRepository = new HermesBundlesRepository(
