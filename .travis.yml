@@ -23,6 +23,7 @@ install:
   - sudo chown travis:travis /opt/hermes
   - docker-compose pull
   - npx yarn install
+  - npx yarn cache clean
   - docker pull hadolint/hadolint
 
 script:
