@@ -10,7 +10,7 @@ node_js:
 cache:
   yarn: true
   directories:
-  - node_modules
+    - node_modules
 
 before_install:
   - sudo rm /usr/local/bin/docker-compose
@@ -23,6 +23,7 @@ install:
   - sudo chown travis:travis /opt/hermes
   - docker-compose pull
   - npx yarn install
+  - npx yarn cache clean
   - docker pull hadolint/hadolint
 
 script:
