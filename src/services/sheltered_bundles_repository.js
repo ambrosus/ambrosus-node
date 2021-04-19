@@ -40,6 +40,8 @@ export default class ShelteredBundlesRepository extends ResolutionsRepository {
   }
 
   async updateActiveResolutionsCache(fromBlock, currentBlock) {
+    this.logger.info(`Scan blockchain from block ${fromBlock} to ${currentBlock}`);
+
     const addedBundles = await this.collectEvents(fromBlock, currentBlock,
       async (start, end) => (await this.bundleStoreWrapper.sheltererAdded(start, end)).filter((event) => event.returnValues.shelterer === this.address),
       ['bundleId', 'shelterer']);
@@ -78,14 +80,17 @@ export default class ShelteredBundlesRepository extends ResolutionsRepository {
     let to = await this.blockchainStateWrapper.getCurrentBlockNumber();
     const blocks = 100000;
 
+    this.logger.info(`getOnboardBlock: start`);
+
     while (to > 0) {
       let from = to - blocks + 1;
       if (from < 0) {
         from = 0;
       }
+      this.logger.info(`getOnboardBlock: ${from} to ${to}`);
       const onboarded = (await this.rolesEventEmitterWrapper.nodeOnboardings(from, to)).filter((event) => event.returnValues.nodeAddress === this.address);
       if (onboarded.length > 0) {
-        this.logger.info(`Onboarded at block number ${onboarded[onboarded.length - 1].blockNumber}`);
+        this.logger.info(`getOnboardBlock: Onboarded at block number ${onboarded[onboarded.length - 1].blockNumber}`);
         return onboarded[onboarded.length - 1].blockNumber;
       }
       to = from - 1;
