@@ -145,7 +145,7 @@ describe('Transfers repository', () => {
         .resolves(latestBlock + 3);
       transfersRepository = new TransfersRepository(transferWrapperMock, transfersEventEmitterWrapper, configWrapperMock, blockchainStateWrapperMock, activeTransfersCacheMock);
       sinon.spy(transfersRepository, 'prepareEvents');
-      transfersRepository["getFromBlock"] = async () => {
+      transfersRepository.getFromBlock = async () => {
         if (transfersRepository.lastSavedBlock > 0) {
           return transfersRepository.lastSavedBlock + 1;
         }
