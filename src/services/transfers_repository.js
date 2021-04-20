@@ -7,6 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+import {constants} from 'ambrosus-node-contracts';
 import ResolutionsRepository from './resolutions_repository';
 
 const TRANSFER_EVENT_ONE_FETCH_LIMIT = 50000;
@@ -36,7 +37,8 @@ export default class TransfersRepository extends ResolutionsRepository {
     if (this.lastSavedBlock > 0) {
       return this.lastSavedBlock + 1;
     }
-    return 0;
+    const transferDuration = await this.configWrapper.challengeDuration();
+    return Math.max(0, await this.blockchainStateWrapper.getCurrentBlockNumber() - Math.ceil(transferDuration / constants.MIN_BLOCK_TIME));
   }
 
   async getExpirationTimeInMs(transfer) {
