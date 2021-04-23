@@ -70,7 +70,7 @@ export default class BundleShelteringResolver extends AtlasResolver {
       }
       if (!await this.isTurnToResolve(proposition)) {
         this.atlasResolverMetrics.inc({status: atlasResolutionStatus.shouldNotResolve});
-        await this.workerLogger.logger.info(`Not the node's turn to resolve`, proposition);
+        // await this.workerLogger.logger.info(`Not the node's turn to resolve`, proposition);
         return false;
       }
 

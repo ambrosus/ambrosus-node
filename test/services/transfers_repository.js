@@ -82,6 +82,7 @@ describe('Transfers repository', () => {
     const transferId = 3;
     const fromBlock = 0;
     const latestBlock = 7;
+    const challengeDuration = 15;
     const events = [
       {
         blockNumber: 4,
@@ -124,6 +125,7 @@ describe('Transfers repository', () => {
 
     beforeEach(() => {
       configWrapperMock = {
+        challengeDuration: sinon.stub().resolves(challengeDuration)
       };
       activeTransfersCacheMock = {
         applyIncomingResolutionEvents: sinon.stub(),
@@ -143,6 +145,12 @@ describe('Transfers repository', () => {
         .resolves(latestBlock + 3);
       transfersRepository = new TransfersRepository(transferWrapperMock, transfersEventEmitterWrapper, configWrapperMock, blockchainStateWrapperMock, activeTransfersCacheMock);
       sinon.spy(transfersRepository, 'prepareEvents');
+      transfersRepository.getFromBlock = async () => {
+        if (transfersRepository.lastSavedBlock > 0) {
+          return transfersRepository.lastSavedBlock + 1;
+        }
+        return 0;
+      };
     });
 
     it('on first call: gets transfers from earliest possible block and caches them', async () => {
