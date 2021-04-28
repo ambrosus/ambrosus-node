@@ -6,4 +6,5 @@ data
 yarn-error.log
 nodePrivateKey.json
 registryContractAddress.json
+state.json 
 config
