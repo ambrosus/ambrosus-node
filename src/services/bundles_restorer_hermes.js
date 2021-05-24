@@ -80,7 +80,7 @@ export default class BundlesRestorerHermes {
     await this.hermesBundlesRepository.load(this.workerLogger.logger);
 
     await this.workerLogger.addLog('Getting sheltered bundles from DB...');
-    const storedBundles = await this.bundleRepository.getShelteredBundles(0);
+    const storedBundles = await this.bundleRepository.getHermesBundles(0);
     await this.workerLogger.addLog(`Found ${storedBundles.length} bundles into DB`);
     const storedBundlesIds = new Set(storedBundles.map((bundle) => bundle.bundleId));
     await this.workerLogger.addLog('Getting sheltered bundles from blockchain...');
