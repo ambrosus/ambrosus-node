@@ -401,9 +401,18 @@ export default class DataModelEngine {
     }
   }
 
-  async isValidBundle(bundleId, sheltererId) {
+  async downloadAndValidateBundleNoWrite(bundleId, sheltererId) {
     const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
     await this.downloadAndValidateBundleBodyNoWrite(nodeUrl, bundleId); // throws ValidationError
+  }
+
+  async remoteBundleRestoreCall(bundleId, sheltererId) {
+    const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
+    const fullPath = `/bundle/${bundleId}/restore`;
+    //!! quick hack: bundleDownloader.httpsClient
+    const res = await this.bundleDownloader.httpsClient.performHTTPSGet(nodeUrl, fullPath);
+    //await this.bundleDownloader.httpsClient.validateIncomingStatusCode(res.statusCode, nodeUrl + fullPath);
+    return res.body;
   }
 
   async downloadAndValidateBundleBody(nodeUrl, bundleId) {

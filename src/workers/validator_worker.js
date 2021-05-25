@@ -31,42 +31,75 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
       return;
     }
     try {
-      const now = Math.floor(Date.now() / 1000);
-      this.logger.info(`HermesBundlesValidatorWorker: validation start`);
+      this.log_info(`Validation start`);
       const hermresBundles = await this.bundleRepository.getHermesBundles(0);
-      this.logger.info(`HermesBundlesValidatorWorker: hermes bundles count ${hermresBundles.length}`);
+      this.log_info(`Hermes bundles count ${hermresBundles.length}`);
       //console.log(hermresBundles);
       for (const {bundleId, storagePeriods, bundleUploadTimestamp} of hermresBundles) {
         const expirationTime = bundleUploadTimestamp + storagePeriods*STORAGE_PERIOD_DURATION;
-        if (now > expirationTime) {
+        if (this.now() > expirationTime) {
           continue; //skip expired bundles
         }
         const bundleStore = await this.bundleStoreWrapper.contract();
         const shelterers = await bundleStore.methods.getShelterers(bundleId).call();
         //console.log(bundleId, shelterers);
         for (const shelterer of shelterers) {
-          const sheltering = await this.shelteringWrapper.contract();
-          const sheltererExpirationTime = await sheltering.methods.getShelteringExpirationDate(bundleId, shelterer).call();
-          if (now > sheltererExpirationTime) {
-            continue; //skip expired bundles (when sheltererExpirationTime < expirationTime)
-          }
+          //
           try {
-            await this.dataModelEngine.isValidBundle(bundleId, shelterer);
+            await this.validateAndRestoreBundle(bundleId, shelterer);
+            this.log_info(`Valid bundle (${bundleId}, ${shelterer})`);
           } catch (err) {
-            if (err instanceof ValidationError) {
-              this.logger.info(`HermesBundlesValidatorWorker: Bundle failed to validate (${bundleId}, ${shelterer}): ${err.message || err}`);
-              //todo: call atlas restore
-            }
-            throw new Error(`Could not fetch the bundle from the shelterer (${bundleId}, ${shelterer}): ${err.message || err}`);
+            this.log_info(`(${bundleId}, ${shelterer}) - ${err.message || err}`);
           }
-          this.logger.info(`HermesBundlesValidatorWorker: Valid bundle (${bundleId}, ${shelterer})`);
+          //
         }
       }
     } catch (err) {
-      this.logger.error(`HermesBundlesValidatorWorker: ${err}`);
+      this.log_error(`${err.message || err}`);
       //throw err; //unhadled error!
     } finally {
       await this.workerTaskTrackingRepository.finishWork(workId);
     }
+  }
+
+  async validateAndRestoreBundle(bundleId, shelterer) {
+    const sheltering = await this.shelteringWrapper.contract();
+    const sheltererExpirationTime = await sheltering.methods.getShelteringExpirationDate(bundleId, shelterer).call();
+    if (this.now() > sheltererExpirationTime) {
+      throw new Error('Bundle expired'); //skip expired bundles (when sheltererExpirationTime < expirationTime)
+    }
+    try {
+      await this.dataModelEngine.downloadAndValidateBundleNoWrite(bundleId, shelterer);
+      //throw new ValidationError('TEST ERROR!');
+      //throw new Error('TEST ERROR!');
+      
+      //bundle is valid here
+      return;
+    } catch (err) {
+      if ( !(err instanceof ValidationError) ) {
+        throw new Error(`Could not fetch the bundle from the shelterer (${bundleId}, ${shelterer}): ${err.message || err}`);
+      }
+      this.log_info(`Bundle failed to validate (${bundleId}, ${shelterer}): ${err.message || err}`);
+    }
+    //bundle is invalid here
+    this.log_info(`Trying to restore (${bundleId}, ${shelterer})`);
+    try {
+      const response = await this.dataModelEngine.remoteBundleRestoreCall(bundleId, shelterer);
+      console.log(response);
+    } catch (err) {
+      console.log("error", err.message || err);
+    }
+  }
+
+  now() {
+    return Math.floor(Date.now() / 1000);
+  }
+
+  log_info(str) {
+    this.logger.info(`HermesBundlesValidatorWorker: ${str}`);
+  }
+  
+  log_error(str) {
+    this.logger.error(`HermesBundlesValidatorWorker: ${str}`);
   }
 }

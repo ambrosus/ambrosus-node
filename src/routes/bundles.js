@@ -32,7 +32,7 @@ export const getBundleRestoreHandler = (modelEngine) => async (req, res) => {
     } catch (err) {
       res.status(500)
       .type('json')
-      .send(JSON.stringify({status: "error", message: err.message || err}));
+      .send(JSON.stringify({status: "error", reason: err.message || err}));
     }
 };
 
