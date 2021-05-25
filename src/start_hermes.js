@@ -52,6 +52,7 @@ async function start(logger) {
     builder.workerTaskTrackingRepository,
     builder.bundleRepository,
     builder.bundleStoreWrapper,
+    builder.shelteringWrapper,
     logger,
     30 //config.hermesBundlesValidatorWorkerInterval
   );

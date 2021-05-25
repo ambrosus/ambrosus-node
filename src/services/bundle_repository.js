@@ -201,7 +201,7 @@ export default class BundleRepository {
   }
 
   async getHermesBundles(bundlesCount) {
-    const cursor = await this.db.collection('bundle_metadata').find({}, {projection: {bundleId: 1, _id: 0}})
+    const cursor = await this.db.collection('bundle_metadata').find({}, {projection: {_id: 0}})
       .limit(bundlesCount);
     return await cursor.toArray();
   }

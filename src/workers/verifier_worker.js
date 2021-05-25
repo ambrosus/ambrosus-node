@@ -10,15 +10,17 @@ import {ValidationError} from '../errors/errors';
 import PeriodicWorker from './periodic_worker';
 
 const BUNDLES_VERIFY_WORK_TYPE = 'BundlesVerify';
+const STORAGE_PERIOD_DURATION = 13 * 28 * 86400; //in seconds
 
 
 export default class HermesBundlesValidatorWorker extends PeriodicWorker {
-  constructor(dataModelEngine, workerTaskTrackingRepository, bundleRepository, bundleStoreWrapper, logger, workerInterval) {
+  constructor(dataModelEngine, workerTaskTrackingRepository, bundleRepository, bundleStoreWrapper, shelteringWrapper, logger, workerInterval) {
     super(workerInterval, logger);
     this.workerTaskTrackingRepository = workerTaskTrackingRepository;
     this.dataModelEngine = dataModelEngine;
     this.bundleRepository = bundleRepository;
     this.bundleStoreWrapper = bundleStoreWrapper;
+    this.shelteringWrapper = shelteringWrapper;
   }
 
   async periodicWork() {
@@ -29,15 +31,25 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
       return;
     }
     try {
+      const now = Math.floor(Date.now() / 1000);
       this.logger.info(`HermesBundlesValidatorWorker: validation start`);
       const hermresBundles = await this.bundleRepository.getHermesBundles(0);
       this.logger.info(`HermesBundlesValidatorWorker: hermes bundles count ${hermresBundles.length}`);
-      //console.log(hermresBundles);
-      for (const {bundleId} of hermresBundles) {
-        const contract = await this.bundleStoreWrapper.contract();
-        const shelterers = await contract.methods.getShelterers(bundleId).call();
+      console.log(hermresBundles);
+      for (const {bundleId, storagePeriods, bundleUploadTimestamp} of hermresBundles) {
+        const expirationTime = bundleUploadTimestamp + storagePeriods*STORAGE_PERIOD_DURATION;
+        if (now > expirationTime) {
+          continue; //skip expired bundles
+        }
+        const bundleStore = await this.bundleStoreWrapper.contract();
+        const shelterers = await bundleStore.methods.getShelterers(bundleId).call();
         //console.log(bundleId, shelterers);  
         for (const shelterer of shelterers) {
+          const sheltering = await this.shelteringWrapper.contract();
+          const sheltererExpirationTime = await sheltering.methods.getShelteringExpirationDate(bundleId, shelterer).call();
+          if (now > sheltererExpirationTime) {
+            continue; //skip expired bundles (when sheltererExpirationTime < expirationTime)
+          }
           try {
             await this.dataModelEngine.isValidBundle(bundleId, shelterer);
           } catch (err) {
