@@ -35,7 +35,7 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
       this.logger.info(`HermesBundlesValidatorWorker: validation start`);
       const hermresBundles = await this.bundleRepository.getHermesBundles(0);
       this.logger.info(`HermesBundlesValidatorWorker: hermes bundles count ${hermresBundles.length}`);
-      console.log(hermresBundles);
+      //console.log(hermresBundles);
       for (const {bundleId, storagePeriods, bundleUploadTimestamp} of hermresBundles) {
         const expirationTime = bundleUploadTimestamp + storagePeriods*STORAGE_PERIOD_DURATION;
         if (now > expirationTime) {
@@ -43,7 +43,7 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
         }
         const bundleStore = await this.bundleStoreWrapper.contract();
         const shelterers = await bundleStore.methods.getShelterers(bundleId).call();
-        //console.log(bundleId, shelterers);  
+        //console.log(bundleId, shelterers);
         for (const shelterer of shelterers) {
           const sheltering = await this.shelteringWrapper.contract();
           const sheltererExpirationTime = await sheltering.methods.getShelteringExpirationDate(bundleId, shelterer).call();

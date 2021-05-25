@@ -23,6 +23,19 @@ export const getBundleMetadataHandler = (modelEngine) => async (req, res) => {
     .send(JSON.stringify(result));
 };
 
+export const getBundleRestoreHandler = (modelEngine) => async (req, res) => {
+    try {
+      await modelEngine.restoreBundle(req.params.bundleId);
+      res.status(200)
+      .type('json')
+      .send(JSON.stringify({status: "success"}));
+    } catch (err) {
+      res.status(500)
+      .type('json')
+      .send(JSON.stringify({status: "error", message: err.message || err}));
+    }
+};
+
 const bundlesRouter = (modelEngine) => {
   const router = new express.Router();
   router.get('/:bundleId',
@@ -30,6 +43,9 @@ const bundlesRouter = (modelEngine) => {
   );
   router.get('/:bundleId/info',
     asyncMiddleware(getBundleMetadataHandler(modelEngine))
+  );
+  router.get('/:bundleId/restore',
+    asyncMiddleware(getBundleRestoreHandler(modelEngine))
   );
   return router;
 };

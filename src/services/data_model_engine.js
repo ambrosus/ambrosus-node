@@ -34,7 +34,9 @@ export default class DataModelEngine {
       uploadRepository,
       rolesRepository,
       workerLogRepository,
-      organizationRepository
+      organizationRepository,
+      bundleStoreWrapper,
+      shelteringWrapper
     }) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
@@ -54,6 +56,8 @@ export default class DataModelEngine {
     this.rolesRepository = rolesRepository;
     this.workerLogRepository = workerLogRepository;
     this.organizationRepository = organizationRepository;
+    this.bundleStoreWrapper = bundleStoreWrapper;
+    this.shelteringWrapper = shelteringWrapper;
   }
 
   async addAdminAccount(address) {
@@ -314,6 +318,47 @@ export default class DataModelEngine {
     await this.bundleRepository.updateBundleMetadata(bundleId, additionalMetadataFields);
 
     return {...additionalMetadataFields, ...initialMetadata};
+  }
+
+  async getBundleDonors(bundleId, sheltererId = null) {
+    const contract = await this.bundleStoreWrapper.contract();
+    const shelterers = await contract.methods.getShelterers(bundleId).call();
+    if (sheltererId) {
+      let pos = shelterers.indexOf(sheltererId);
+      while (-1 !== pos) {
+        shelterers.splice(pos, 1);
+        pos = shelterers.indexOf(sheltererId);
+      }
+    }
+    shelterers.push(await contract.methods.getUploader(bundleId).call());
+    return shelterers;
+  }
+
+  getRandomInt(max) {
+    return Math.floor(Math.random() * Math.floor(max));
+  }
+
+  async restoreBundle(bundleId) {
+    const now = Math.floor(Date.now() / 1000);
+    const expirationTime = await this.shelteringWrapper.shelteringExpirationDate(bundleId);
+    if (now > expirationTime) {
+      throw new Error('Bundle expired');
+    }
+    const donors = await this.getBundleDonors(bundleId, this.identityManager.nodeAddress());
+    while (donors.length > 0) {
+      const pos = this.getRandomInt(donors.length);
+      const donorId = donors[pos];
+      try {
+        await this.downloadBundle(bundleId, donorId, expirationTime);
+        await this.markBundleAsSheltered(bundleId);
+        //await this.workerLogger.addLog('Bundle restored', {bundleId: bundleId});
+        return;
+      } catch (err) {
+        //this.workerLogger.logger.info(`Failed to download bundle: ${err.message || err}`, {bundleId: bundleId, donorId}, err.stack);
+        donors.splice(pos, 1);
+      }
+    }
+    throw new Error('Failed to restore bundle');
   }
 
   async downloadBundleHermes(bundleId, sheltererId, challengeExpirationTime) {
