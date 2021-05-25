@@ -15,7 +15,7 @@ import WorkerLogger from './services/worker_logger';
 import {waitForChainSync} from './utils/web3_tools';
 import {setup} from './utils/instrument_process';
 import BundlesRestorerHermes from './services/bundles_restorer_hermes';
-import HermesBundlesValidatorWorker from './workers/verifier_worker';
+import HermesBundlesValidatorWorker from './workers/validator_worker';
 
 async function start(logger) {
   const builder = new Builder();
@@ -47,7 +47,7 @@ async function start(logger) {
     builder.shelteringTransfersWrapper,
     workerLogger
   );
-  const verifierWorker = new HermesBundlesValidatorWorker(
+  const validatorWorker = new HermesBundlesValidatorWorker(
     builder.dataModelEngine,
     builder.workerTaskTrackingRepository,
     builder.bundleRepository,
@@ -57,7 +57,7 @@ async function start(logger) {
     30 //config.hermesBundlesValidatorWorkerInterval
   );
 
-  setTimeout(() => bundlesRestorer.restore().then(() => verifierWorker.start()), 500);
+  setTimeout(() => bundlesRestorer.restore().then(() => validatorWorker.start()), 500);
 
   await worker.start();
 }
