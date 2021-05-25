@@ -55,20 +55,26 @@ export default class BundleBuilder {
     };
   }
 
-  async validateStreamedBundle(readStream, writeStream, bundleItemsCountLimit) {
-    readStream.on('error', (err) => {
-      writeStream.abort(err);
-    });
-    const [minimalBundleForLatestVersionValidation] = await Promise.all([
-      this.extractBundleDataNecessaryForValidationFromStream(readStream),
-      pipeline(readStream, writeStream)
-    ]);
+  async validateStreamedBundleNoWrite(readStream, bundleItemsCountLimit) {
+    const minimalBundleForLatestVersionValidation = await this.extractBundleDataNecessaryForValidationFromStream(readStream);
     if (minimalBundleForLatestVersionValidation.content.idData.version === LATEST_BUNDLE_VERSION) {
       this.validateBundle(minimalBundleForLatestVersionValidation, bundleItemsCountLimit);
     } else if (this.supportDeprecatedBundleVersions) {
       this.validateBundleWithVersionBefore3(minimalBundleForLatestVersionValidation, bundleItemsCountLimit);
     } else {
       throw new ValidationError(`Only bundles with version ${LATEST_BUNDLE_VERSION} are supported`);
+    }
+  }
+
+  async validateStreamedBundle(readStream, writeStream, bundleItemsCountLimit) {
+    try {
+      await Promise.all([
+        validateStreamedBundleNoWrite(readStream, bundleItemsCountLimit),
+        pipeline(readStream, writeStream)
+      ]);
+    } catch (err) {
+      writeStream.abort(err);
+      throw err;
     }
   }
 

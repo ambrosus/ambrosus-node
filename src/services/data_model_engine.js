@@ -356,11 +356,22 @@ export default class DataModelEngine {
     }
   }
 
+  async isValidBundle(bundleId, sheltererId) {
+    const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
+    await this.downloadAndValidateBundleBodyNoWrite(nodeUrl, bundleId); // throws ValidationError
+  }
+
   async downloadAndValidateBundleBody(nodeUrl, bundleId) {
     const downloadStream = await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
     const writeStream = await this.bundleRepository.openBundleWriteStream(bundleId);
     const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
     await this.bundleBuilder.validateStreamedBundle(downloadStream, writeStream, bundleItemsCountLimit);
+  }
+
+  async downloadAndValidateBundleBodyNoWrite(nodeUrl, bundleId) {
+    const downloadStream = await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
+    const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
+    await this.bundleBuilder.validateStreamedBundleNoWrite(downloadStream, bundleItemsCountLimit);
   }
 
   async markBundleAsSheltered(bundleId) {

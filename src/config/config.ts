@@ -55,6 +55,7 @@ export interface Config {
 
   atlasWorkerInterval: number;
   cleanupWorkerInterval: number;
+  hermesBundlesValidatorWorkerInterval: number;
 }
 
 const config: Readonly<Config> = Object.freeze({
@@ -109,6 +110,7 @@ const config: Readonly<Config> = Object.freeze({
 
   atlasWorkerInterval: Number(process.env.ATLAS_WORKER_INTERVAL) || 5, // 5 sec
   cleanupWorkerInterval: Number(process.env.CLEANUP_WORKER_INTERVAL) || 86400, // 1 day
+  hermesBundlesValidatorWorkerInterval: Number(process.env.HERMES_BUNDLES_VALIDATOR_WORKER_INTERVAL) || 86400, // 1 day
 
   storePath: process.env.STORE_PATH || '/opt/hermes/state.json'
 });
