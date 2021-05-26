@@ -25,7 +25,7 @@ export const getBundleMetadataHandler = (modelEngine) => async (req, res) => {
 
 export const getBundleRestoreHandler = (modelEngine) => async (req, res) => {
     try {
-      await modelEngine.restoreBundle(req.params.bundleId);
+      await modelEngine.tryRestoreBundle(req.params.bundleId);
       res.status(200)
       .type('json')
       .send(JSON.stringify({status: "success"}));
