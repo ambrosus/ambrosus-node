@@ -103,6 +103,10 @@ export default class BundleRepository {
     return await this.db.collection('bundle_metadata').findOne({bundleId}, {projection: this.blacklistedFields});
   }
 
+  async removeBundleMetadata(bundleId) {
+    return await this.db.collection('bundle_metadata').deleteOne({bundleId});
+  }
+
   async setBundleRepository(bundleId, status, additionalFields = {}) {
     return this.db.collection('bundle_metadata').updateOne({bundleId}, {
       $set: {

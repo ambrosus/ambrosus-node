@@ -320,47 +320,6 @@ export default class DataModelEngine {
     return {...additionalMetadataFields, ...initialMetadata};
   }
 
-  async getBundleDonors(bundleId, sheltererId = null) {
-    const contract = await this.bundleStoreWrapper.contract();
-    const shelterers = await contract.methods.getShelterers(bundleId).call();
-    if (sheltererId) {
-      let pos = shelterers.indexOf(sheltererId);
-      while (-1 !== pos) {
-        shelterers.splice(pos, 1);
-        pos = shelterers.indexOf(sheltererId);
-      }
-    }
-    shelterers.push(await contract.methods.getUploader(bundleId).call());
-    return shelterers;
-  }
-
-  getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max));
-  }
-
-  async restoreBundle(bundleId) {
-    const now = Math.floor(Date.now() / 1000);
-    const expirationTime = await this.shelteringWrapper.shelteringExpirationDate(bundleId);
-    if (now > expirationTime) {
-      throw new Error('Bundle expired');
-    }
-    const donors = await this.getBundleDonors(bundleId, this.identityManager.nodeAddress());
-    while (donors.length > 0) {
-      const pos = this.getRandomInt(donors.length);
-      const donorId = donors[pos];
-      try {
-        await this.downloadBundle(bundleId, donorId, expirationTime);
-        await this.markBundleAsSheltered(bundleId);
-        //await this.workerLogger.addLog('Bundle restored', {bundleId: bundleId});
-        return;
-      } catch (err) {
-        //this.workerLogger.logger.info(`Failed to download bundle: ${err.message || err}`, {bundleId: bundleId, donorId}, err.stack);
-        donors.splice(pos, 1);
-      }
-    }
-    throw new Error('Failed to restore bundle');
-  }
-
   async downloadBundleHermes(bundleId, sheltererId, challengeExpirationTime) {
     const initialMetadata = await this.uploadRepository.composeBundleMetadataFromBlockchain(bundleId);
 
@@ -401,31 +360,11 @@ export default class DataModelEngine {
     }
   }
 
-  async downloadAndValidateBundleNoWrite(bundleId, sheltererId) {
-    const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
-    await this.downloadAndValidateBundleBodyNoWrite(nodeUrl, bundleId); // throws ValidationError
-  }
-
-  async remoteBundleRestoreCall(bundleId, sheltererId) {
-    const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
-    const fullPath = `/bundle/${bundleId}/restore`;
-    //!! quick hack: bundleDownloader.httpsClient
-    const res = await this.bundleDownloader.httpsClient.performHTTPSGet(nodeUrl, fullPath);
-    //await this.bundleDownloader.httpsClient.validateIncomingStatusCode(res.statusCode, nodeUrl + fullPath);
-    return res.body;
-  }
-
   async downloadAndValidateBundleBody(nodeUrl, bundleId) {
     const downloadStream = await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
     const writeStream = await this.bundleRepository.openBundleWriteStream(bundleId);
     const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
     await this.bundleBuilder.validateStreamedBundle(downloadStream, writeStream, bundleItemsCountLimit);
-  }
-
-  async downloadAndValidateBundleBodyNoWrite(nodeUrl, bundleId) {
-    const downloadStream = await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
-    const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
-    await this.bundleBuilder.validateStreamedBundleNoWrite(downloadStream, bundleItemsCountLimit);
   }
 
   async markBundleAsSheltered(bundleId) {
@@ -459,5 +398,124 @@ export default class DataModelEngine {
 
   async getWorkerLogs(logsCount = 10) {
     return await this.workerLogRepository.getLogs(logsCount);
+  }
+
+  async downloadAndValidateBundleNoWrite(bundleId, sheltererId) {
+    const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
+    const stream = await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
+    await this.validateStreamedBundleNoWrite_(stream);
+  }
+
+  async validateStoredBundleNoWrite(bundleId) {
+    const bundleStream = await this.getBundleStream(bundleId);
+    await this.validateStreamedBundleNoWrite_(bundleStream);
+  }
+
+  async validateStreamedBundleNoWrite_(stream) {
+    const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
+    await this.bundleBuilder.validateStreamedBundleNoWrite(stream, bundleItemsCountLimit); // throws ValidationError
+  }
+
+  getRandomInt(max) {
+    return Math.floor(Math.random() * Math.floor(max));
+  }
+
+  async getBundleDonors(bundleId, nodeId = null) {
+    const contract = await this.bundleStoreWrapper.contract();
+    const donors = await contract.methods.getShelterers(bundleId).call();
+    if (nodeId) {
+      let pos = donors.indexOf(nodeId);
+      while (-1 !== pos) {
+        donors.splice(pos, 1);
+        pos = donors.indexOf(nodeId);
+      }
+    }
+    const uploaderId = await contract.methods.getUploader(bundleId).call();
+    if (uploaderId !== nodeId) donors.push(uploaderId);
+    return donors;
+  }
+
+  async isBundleValid(bundleId, shelterer = null) {
+    try {
+      if (shelterer && shelterer !== this.identityManager.nodeAddress()) {
+        await this.downloadAndValidateBundleNoWrite(bundleId, shelterer);
+      } else {
+        await this.validateStoredBundleNoWrite(bundleId);
+      } 
+      //bundle is valid here
+      return true;
+    } catch (err) {
+      if ( !(err instanceof ValidationError) ) { //todo: more careful error handling required
+        throw new Error(`Error (${bundleId}, ${shelterer}): ${err.message || err}`);
+      }
+      //console.log(`Bundle failed to validate (${bundleId}, ${shelterer}): ${err.message || err}`);
+    }
+    //bundle is invalid here
+    return false;
+  }
+
+  async restoreBundle(bundleId) {
+    const donors = await this.getBundleDonors(bundleId, this.identityManager.nodeAddress());
+    //!!
+    console.log('donors',donors);
+    while (donors.length > 0) {
+      const pos = this.getRandomInt(donors.length);
+      const donorId = donors[pos];
+      try {
+        await this.downloadBundle(bundleId, donorId, expirationTime);
+        await this.markBundleAsSheltered(bundleId);
+        console.log('Bundle restored', {bundleId});
+        return;
+      } catch (err) {
+        console.log(`Failed to download bundle: ${err.message || err}`, {bundleId, donorId}, err.stack);
+        donors.splice(pos, 1);
+      }
+    }
+    throw new Error('Failed to restore bundle');
+  }
+
+  async tryRestoreBundle(bundleId) {
+    //!!
+    console.log('tryRestoreBundle', bundleId);
+    if (!await this.shelteringWrapper.isSheltering(bundleId)) {
+      throw new Error('Bundle not sheltered');
+    }
+    const now = Math.floor(Date.now() / 1000);
+    const expirationTime = await this.shelteringWrapper.shelteringExpirationDate(bundleId);
+    if (now > expirationTime) {
+      throw new Error('Bundle expired');
+    }
+
+    if (await this.bundleRepository.isBundleStored(bundleId)) {
+      //!!
+      console.log('isBundleValid', bundleId);
+      if (await this.isBundleValid(bundleId)) {
+        throw new Error('Bundle valid');
+      }
+      //!!
+      console.log('removeBundle', bundleId);
+      await this.bundleRepository.removeBundle(bundleId);
+    }
+
+      //!!
+      console.log('getBundleMetadata', bundleId);
+    if (await this.bundleRepository.getBundleMetadata(bundleId)) {
+      //!!
+      console.log('removeBundleMetadata', bundleId);
+      await this.bundleRepository.removeBundleMetadata(bundleId);
+    }
+
+      //!!
+      console.log('restoreBundle', bundleId);
+    await restoreBundle(bundleId);
+  }
+
+  async remoteBundleRestoreCall(bundleId, sheltererId) {
+    const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
+    const fullPath = `/bundle/${bundleId}/restore`;
+    //!! quick hack: bundleDownloader.httpsClient
+    const res = await this.bundleDownloader.httpsClient.performHTTPSGet(nodeUrl, fullPath);
+    //await this.bundleDownloader.httpsClient.validateIncomingStatusCode(res.statusCode, nodeUrl + fullPath);
+    return res.body;
   }
 }

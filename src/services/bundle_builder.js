@@ -69,7 +69,7 @@ export default class BundleBuilder {
   async validateStreamedBundle(readStream, writeStream, bundleItemsCountLimit) {
     try {
       await Promise.all([
-        validateStreamedBundleNoWrite(readStream, bundleItemsCountLimit),
+        this.validateStreamedBundleNoWrite(readStream, bundleItemsCountLimit),
         pipeline(readStream, writeStream)
       ]);
     } catch (err) {
