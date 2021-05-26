@@ -454,7 +454,7 @@ export default class DataModelEngine {
     return false;
   }
 
-  async restoreBundle(bundleId) {
+  async restoreBundle(bundleId, expirationTime) {
     const donors = await this.getBundleDonors(bundleId, this.identityManager.nodeAddress());
     //!!
     console.log('donors',donors);
@@ -507,7 +507,7 @@ export default class DataModelEngine {
 
       //!!
       console.log('restoreBundle', bundleId);
-    await restoreBundle(bundleId);
+    await restoreBundle(bundleId, expirationTime);
   }
 
   async remoteBundleRestoreCall(bundleId, sheltererId) {
