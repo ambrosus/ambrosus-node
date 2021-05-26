@@ -448,7 +448,7 @@ export default class DataModelEngine {
       if ( !(err instanceof ValidationError) ) { //todo: more careful error handling required
         throw new Error(`Error (${bundleId}, ${shelterer}): ${err.message || err}`);
       }
-      //console.log(`Bundle failed to validate (${bundleId}, ${shelterer}): ${err.message || err}`);
+      console.log(`Bundle failed to validate (${bundleId}, ${shelterer}): ${err.message || err}`);
     }
     //bundle is invalid here
     return false;

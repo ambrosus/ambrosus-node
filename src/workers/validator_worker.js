@@ -6,7 +6,6 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
-import {ValidationError} from '../errors/errors';
 import PeriodicWorker from './periodic_worker';
 
 const BUNDLES_VERIFY_WORK_TYPE = 'BundlesVerify';
@@ -47,9 +46,8 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
           //
           try {
             await this.validateAndRestoreBundle(bundleId, shelterer);
-            this.log_info(`Valid bundle (${bundleId}, ${shelterer})`);
           } catch (err) {
-            this.log_info(`(${bundleId}, ${shelterer}) - ${err.message || err}`);
+            this.log_info(`validateAndRestoreBundle(${bundleId}, ${shelterer}) - ${err.message || err}`);
           }
           //
         }
@@ -68,27 +66,14 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
     if (this.now() > sheltererExpirationTime) {
       throw new Error('Bundle expired'); //skip expired bundles (when sheltererExpirationTime < expirationTime)
     }
-    try {
-      await this.dataModelEngine.downloadAndValidateBundleNoWrite(bundleId, shelterer);
-      //throw new ValidationError('TEST ERROR!');
-      //throw new Error('TEST ERROR!');
-      
-      //bundle is valid here
-      return;
-    } catch (err) {
-      if ( !(err instanceof ValidationError) ) {
-        throw new Error(`Could not fetch the bundle from the shelterer (${bundleId}, ${shelterer}): ${err.message || err}`);
-      }
-      this.log_info(`Bundle failed to validate (${bundleId}, ${shelterer}): ${err.message || err}`);
+
+    if (await this.dataModelEngine.isBundleValid(bundleId, shelterer)) {
+      throw new Error('Bundle is valid');
     }
-    //bundle is invalid here
+
     this.log_info(`Trying to restore (${bundleId}, ${shelterer})`);
-    try {
-      const response = await this.dataModelEngine.remoteBundleRestoreCall(bundleId, shelterer);
-      console.log(response);
-    } catch (err) {
-      console.log("error", err.message || err);
-    }
+    const response = await this.dataModelEngine.remoteBundleRestoreCall(bundleId, shelterer);
+    this.log_info(`Remote restore call returned: (${response})`);
   }
 
   now() {

@@ -39,8 +39,8 @@ export default class BundleDownloader {
 
   async remoteBundleRestoreCall(vendorUrl, bundleId) {
     const fullPath = `/bundle/${bundleId}/restore`;
-    const res = await this.bundleDownloader.httpsClient.performHTTPSGet(vendorUrl, fullPath);
-    await this.bundleDownloader.httpsClient.validateIncomingStatusCode(res.statusCode, nodeUrl + fullPath);
+    const res = await this.httpsClient.performHTTPSGet(vendorUrl, fullPath);
+    await this.httpsClient.validateIncomingStatusCode(res.statusCode, vendorUrl + fullPath);
     return res.body;
   }
 }
