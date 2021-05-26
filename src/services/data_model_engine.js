@@ -403,15 +403,15 @@ export default class DataModelEngine {
   async downloadAndValidateBundleNoWrite(bundleId, sheltererId) {
     const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
     const stream = await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
-    await this.validateStreamedBundleNoWrite_(stream);
+    await this.validateStreamedBundleNoWrite(stream);
   }
 
   async validateStoredBundleNoWrite(bundleId) {
     const bundleStream = await this.getBundleStream(bundleId);
-    await this.validateStreamedBundleNoWrite_(bundleStream);
+    await this.validateStreamedBundleNoWrite(bundleStream);
   }
 
-  async validateStreamedBundleNoWrite_(stream) {
+  async validateStreamedBundleNoWrite(stream) {
     const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
     await this.bundleBuilder.validateStreamedBundleNoWrite(stream, bundleItemsCountLimit); // throws ValidationError
   }
@@ -456,18 +456,17 @@ export default class DataModelEngine {
 
   async restoreBundle(bundleId, expirationTime) {
     const donors = await this.getBundleDonors(bundleId, this.identityManager.nodeAddress());
-    //!!
-    console.log('donors',donors);
+    //console.log('donors',donors);
     while (donors.length > 0) {
       const pos = this.getRandomInt(donors.length);
       const donorId = donors[pos];
       try {
         await this.downloadBundle(bundleId, donorId, expirationTime);
         await this.markBundleAsSheltered(bundleId);
-        console.log('Bundle restored', {bundleId});
+        //console.log('Bundle restored', {bundleId});
         return;
       } catch (err) {
-        console.log(`Failed to download bundle: ${err.message || err}`, {bundleId, donorId}, err.stack);
+        //console.log(`Failed to download bundle: ${err.message || err}`, {bundleId, donorId}, err.stack);
         donors.splice(pos, 1);
       }
     }
@@ -475,10 +474,8 @@ export default class DataModelEngine {
   }
 
   async tryRestoreBundle(bundleId) {
-    //!!
-    console.log('tryRestoreBundle', bundleId);
     if (!await this.shelteringWrapper.isSheltering(bundleId)) {
-      throw new Error('Bundle not sheltered');
+      throw new Error('Bundle is not sheltered');
     }
     const now = Math.floor(Date.now() / 1000);
     const expirationTime = await this.shelteringWrapper.shelteringExpirationDate(bundleId);
@@ -487,35 +484,21 @@ export default class DataModelEngine {
     }
 
     if (await this.bundleRepository.isBundleStored(bundleId)) {
-      //!!
-      console.log('isBundleValid', bundleId);
       if (await this.isBundleValid(bundleId)) {
-        throw new Error('Bundle valid');
+        throw new Error('Bundle is valid');
       }
-      //!!
-      console.log('removeBundle', bundleId);
       await this.bundleRepository.removeBundle(bundleId);
     }
 
-      //!!
-      console.log('getBundleMetadata', bundleId);
     if (await this.bundleRepository.getBundleMetadata(bundleId)) {
-      //!!
-      console.log('removeBundleMetadata', bundleId);
       await this.bundleRepository.removeBundleMetadata(bundleId);
     }
 
-      //!!
-      console.log('restoreBundle', bundleId);
-    await restoreBundle(bundleId, expirationTime);
+    await this.restoreBundle(bundleId, expirationTime);
   }
 
   async remoteBundleRestoreCall(bundleId, sheltererId) {
     const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
-    const fullPath = `/bundle/${bundleId}/restore`;
-    //!! quick hack: bundleDownloader.httpsClient
-    const res = await this.bundleDownloader.httpsClient.performHTTPSGet(nodeUrl, fullPath);
-    //await this.bundleDownloader.httpsClient.validateIncomingStatusCode(res.statusCode, nodeUrl + fullPath);
-    return res.body;
+    return await this.bundleDownloader.remoteBundleRestoreCall(nodeUrl, bundleId);
   }
 }
