@@ -67,14 +67,19 @@ export default class BundleBuilder {
   }
 
   async validateStreamedBundle(readStream, writeStream, bundleItemsCountLimit) {
-    try {
-      await Promise.all([
-        this.validateStreamedBundleNoWrite(readStream, bundleItemsCountLimit),
-        pipeline(readStream, writeStream)
-      ]);
-    } catch (err) {
+    readStream.on('error', (err) => {
       writeStream.abort(err);
-      throw err;
+    });
+    const [minimalBundleForLatestVersionValidation] = await Promise.all([
+      this.extractBundleDataNecessaryForValidationFromStream(readStream),
+      pipeline(readStream, writeStream)
+    ]);
+    if (minimalBundleForLatestVersionValidation.content.idData.version === LATEST_BUNDLE_VERSION) {
+      this.validateBundle(minimalBundleForLatestVersionValidation, bundleItemsCountLimit);
+    } else if (this.supportDeprecatedBundleVersions) {
+      this.validateBundleWithVersionBefore3(minimalBundleForLatestVersionValidation, bundleItemsCountLimit);
+    } else {
+      throw new ValidationError(`Only bundles with version ${LATEST_BUNDLE_VERSION} are supported`);
     }
   }
 
