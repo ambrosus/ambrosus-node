@@ -54,7 +54,7 @@ async function start(logger) {
     builder.bundleStoreWrapper,
     builder.shelteringWrapper,
     logger,
-    30 // config.hermesBundlesValidatorWorkerInterval
+    config.hermesBundlesValidatorWorkerInterval
   );
 
   setTimeout(() => bundlesRestorer.restore().then(() => validatorWorker.start()), 500);
