@@ -24,16 +24,16 @@ export const getBundleMetadataHandler = (modelEngine) => async (req, res) => {
 };
 
 export const getBundleRestoreHandler = (modelEngine) => async (req, res) => {
-    try {
-      await modelEngine.tryRestoreBundle(req.params.bundleId);
-      res.status(200)
+  try {
+    await modelEngine.tryRestoreBundle(req.params.bundleId);
+    res.status(200)
       .type('json')
-      .send(JSON.stringify({status: "success"}));
-    } catch (err) {
-      res.status(500)
+      .send(JSON.stringify({status: 'success'}));
+  } catch (err) {
+    res.status(500)
       .type('json')
-      .send(JSON.stringify({status: "error", reason: err.message || err}));
-    }
+      .send(JSON.stringify({status: 'error', reason: err.message || err}));
+  }
 };
 
 const bundlesRouter = (modelEngine) => {

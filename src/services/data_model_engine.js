@@ -431,7 +431,9 @@ export default class DataModelEngine {
       }
     }
     const uploaderId = await contract.methods.getUploader(bundleId).call();
-    if (uploaderId !== nodeId) donors.push(uploaderId);
+    if (uploaderId !== nodeId) {
+      donors.push(uploaderId);
+    }
     return donors;
   }
 
@@ -441,32 +443,32 @@ export default class DataModelEngine {
         await this.downloadAndValidateBundleNoWrite(bundleId, shelterer);
       } else {
         await this.validateStoredBundleNoWrite(bundleId);
-      } 
-      //bundle is valid here
+      }
+      // bundle is valid here
       return true;
     } catch (err) {
-      if ( !(err instanceof ValidationError) ) { //todo: more careful error handling required
+      if (!(err instanceof ValidationError)) { // todo: more careful error handling required
         throw new Error(`Error (${bundleId}, ${shelterer}): ${err.message || err}`);
       }
       console.log(`Bundle failed to validate (${bundleId}, ${shelterer}): ${err.message || err}`);
     }
-    //bundle is invalid here
+    // bundle is invalid here
     return false;
   }
 
   async restoreBundle(bundleId, expirationTime) {
     const donors = await this.getBundleDonors(bundleId, this.identityManager.nodeAddress());
-    //console.log('donors',donors);
+    // console.log('donors',donors);
     while (donors.length > 0) {
       const pos = this.getRandomInt(donors.length);
       const donorId = donors[pos];
       try {
         await this.downloadBundle(bundleId, donorId, expirationTime);
         await this.markBundleAsSheltered(bundleId);
-        //console.log('Bundle restored', {bundleId});
+        // console.log('Bundle restored', {bundleId});
         return;
       } catch (err) {
-        //console.log(`Failed to download bundle: ${err.message || err}`, {bundleId, donorId}, err.stack);
+        // console.log(`Failed to download bundle: ${err.message || err}`, {bundleId, donorId}, err.stack);
         donors.splice(pos, 1);
       }
     }
