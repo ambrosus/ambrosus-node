@@ -347,6 +347,7 @@ export default class DataModelEngine {
 
     try {
       const bundle =  await this.bundleDownloader.downloadBundleFull(nodeUrl, bundleId);
+      // todo: check if bundle valid
 
       bundle.metadata = initialMetadata;
 
@@ -361,7 +362,7 @@ export default class DataModelEngine {
   }
 
   async downloadAndValidateBundleBody(nodeUrl, bundleId) {
-    const downloadStream = await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
+    const downloadStream = await this.openBundleDownloadStream(nodeUrl, bundleId);
     const writeStream = await this.bundleRepository.openBundleWriteStream(bundleId);
     const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
     await this.bundleBuilder.validateStreamedBundle(downloadStream, writeStream, bundleItemsCountLimit);
@@ -400,9 +401,21 @@ export default class DataModelEngine {
     return await this.workerLogRepository.getLogs(logsCount);
   }
 
+  async openBundleDownloadStream(nodeUrl, bundleId) {
+    try {
+      return await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
+    } catch (err) {
+      if (err instanceof ValidationError) {
+        // do not mix http errors with bundle validation errors 
+        throw new Error(err.message);
+      }
+      throw err;
+    }
+  }
+
   async downloadAndValidateBundleNoWrite(bundleId, sheltererId) {
     const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
-    const stream = await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
+    const stream = await this.openBundleDownloadStream(nodeUrl, bundleId);
     await this.validateStreamedBundleNoWrite(stream);
   }
 
