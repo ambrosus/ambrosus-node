@@ -406,7 +406,7 @@ export default class DataModelEngine {
       return await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
     } catch (err) {
       if (err instanceof ValidationError) {
-        // do not mix http errors with bundle validation errors 
+        // do not mix http errors with bundle validation errors
         throw new Error(err.message);
       }
       throw err;
