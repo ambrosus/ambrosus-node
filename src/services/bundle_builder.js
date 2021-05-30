@@ -56,31 +56,20 @@ export default class BundleBuilder {
   }
 
   async validateStreamedBundleNoWrite(readStream, bundleItemsCountLimit) {
-    const minimalBundleForLatestVersionValidation = await this.extractBundleDataNecessaryForValidationFromStream(readStream);
-    if (minimalBundleForLatestVersionValidation.content.idData.version === LATEST_BUNDLE_VERSION) {
-      this.validateBundle(minimalBundleForLatestVersionValidation, bundleItemsCountLimit);
-    } else if (this.supportDeprecatedBundleVersions) {
-      this.validateBundleWithVersionBefore3(minimalBundleForLatestVersionValidation, bundleItemsCountLimit);
-    } else {
-      throw new ValidationError(`Only bundles with version ${LATEST_BUNDLE_VERSION} are supported`);
-    }
+    const minimalBundleForValidation = await this.extractBundleDataNecessaryForValidationFromStream(readStream);
+    this.validateBundleVersioned(minimalBundleForValidation, bundleItemsCountLimit);
   }
 
   async validateStreamedBundle(readStream, writeStream, bundleItemsCountLimit) {
     readStream.on('error', (err) => {
       writeStream.abort(err);
     });
-    const [minimalBundleForLatestVersionValidation] = await Promise.all([
+    const [minimalBundleForValidation] = await Promise.all([
       this.extractBundleDataNecessaryForValidationFromStream(readStream),
       pipeline(readStream, writeStream)
     ]);
-    if (minimalBundleForLatestVersionValidation.content.idData.version === LATEST_BUNDLE_VERSION) {
-      this.validateBundle(minimalBundleForLatestVersionValidation, bundleItemsCountLimit);
-    } else if (this.supportDeprecatedBundleVersions) {
-      this.validateBundleWithVersionBefore3(minimalBundleForLatestVersionValidation, bundleItemsCountLimit);
-    } else {
-      throw new ValidationError(`Only bundles with version ${LATEST_BUNDLE_VERSION} are supported`);
-    }
+    this.validateBundleVersioned(minimalBundleForValidation, bundleItemsCountLimit);
+    // todo: invalidate writeStream on validation errors
   }
 
   async extractBundleDataNecessaryForValidationFromStream(readableStream) {
@@ -98,6 +87,16 @@ export default class BundleBuilder {
       Asm.connectTo(tokenStream).on('done', (asm) => resolve(asm.current));
       tokenStream.on('error', (err) => reject(new ValidationError(err.message)));
     }));
+  }
+
+  validateBundleVersioned(bundle, bundleItemsCountLimit) {
+    if (bundle.content.idData.version === LATEST_BUNDLE_VERSION) {
+      this.validateBundle(bundle, bundleItemsCountLimit);
+    } else if (this.supportDeprecatedBundleVersions) {
+      this.validateBundleWithVersionBefore3(bundle, bundleItemsCountLimit);
+    } else {
+      throw new ValidationError(`Only bundles with version ${LATEST_BUNDLE_VERSION} are supported`);
+    }
   }
 
   validateBundle(bundle, bundleItemsCountLimit) {
