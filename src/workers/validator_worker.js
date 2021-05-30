@@ -20,6 +20,8 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
     this.bundleRepository = bundleRepository;
     this.bundleStoreWrapper = bundleStoreWrapper;
     this.shelteringWrapper = shelteringWrapper;
+    this.bundleStoreContract = null;
+    this.shelteringContract = null;
   }
 
   async periodicWork() {
@@ -31,49 +33,47 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
     }
     try {
       this.logInfo(`Validation start`);
+      this.bundleStoreContract = await this.bundleStoreWrapper.contract();
+      this.shelteringContract = await this.shelteringWrapper.contract();
+
       const hermresBundles = await this.bundleRepository.getHermesBundles(0);
       this.logInfo(`Hermes bundles count ${hermresBundles.length}`);
-      // console.log(hermresBundles);
+      
       for (const {bundleId, storagePeriods, bundleUploadTimestamp} of hermresBundles) {
         const expirationTime = bundleUploadTimestamp + (storagePeriods * STORAGE_PERIOD_DURATION);
         if (this.now() > expirationTime) {
           continue; // skip expired bundles
         }
-        const bundleStore = await this.bundleStoreWrapper.contract();
-        const shelterers = await bundleStore.methods.getShelterers(bundleId).call();
-        // console.log(bundleId, shelterers);
+        const shelterers = await this.bundleStoreContract.methods.getShelterers(bundleId).call();
+
         for (const shelterer of shelterers) {
-          //
-          try {
-            await this.validateAndRestoreBundle(bundleId, shelterer);
-          } catch (err) {
-            this.logInfo(`validateAndRestoreBundle(${bundleId}, ${shelterer}) - ${err.message || err}`);
-          }
-          //
+          await this.validateAndRestoreBundle(bundleId, shelterer);
         }
       }
     } catch (err) {
-      this.logError(`${err.message || err}`);
-      // throw err; //unhadled error!
+      this.logError(`unhandled error - ${err.message || err}`);
     } finally {
       await this.workerTaskTrackingRepository.finishWork(workId);
     }
   }
 
   async validateAndRestoreBundle(bundleId, shelterer) {
-    const sheltering = await this.shelteringWrapper.contract();
-    const sheltererExpirationTime = await sheltering.methods.getShelteringExpirationDate(bundleId, shelterer).call();
-    if (this.now() > sheltererExpirationTime) {
-      throw new Error('Bundle expired'); // skip expired bundles (when sheltererExpirationTime < expirationTime)
-    }
+    try {
+      const sheltererExpirationTime = await this.shelteringContract.methods.getShelteringExpirationDate(bundleId, shelterer).call();
+      if (this.now() > sheltererExpirationTime) {
+        throw new Error('Bundle expired'); // skip expired bundles (when sheltererExpirationTime < expirationTime)
+      }
+      if (await this.dataModelEngine.isBundleValid(bundleId, shelterer)) {
+        throw new Error('Bundle is valid');
+      }
+  
+      this.logInfo(`Trying to restore (${bundleId}, ${shelterer})`);
+      const response = await this.dataModelEngine.remoteBundleRestoreCall(bundleId, shelterer);
+      this.logInfo(`Remote restore call returned: (${response})`);
 
-    if (await this.dataModelEngine.isBundleValid(bundleId, shelterer)) {
-      throw new Error('Bundle is valid');
+    } catch (err) {
+      this.logInfo(`validateAndRestoreBundle(${bundleId}, ${shelterer}) - ${err.message || err}`);
     }
-
-    this.logInfo(`Trying to restore (${bundleId}, ${shelterer})`);
-    const response = await this.dataModelEngine.remoteBundleRestoreCall(bundleId, shelterer);
-    this.logInfo(`Remote restore call returned: (${response})`);
   }
 
   now() {
