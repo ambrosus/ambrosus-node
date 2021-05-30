@@ -38,7 +38,7 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
 
       const hermresBundles = await this.bundleRepository.getHermesBundles(0);
       this.logInfo(`Hermes bundles count ${hermresBundles.length}`);
-      
+
       for (const {bundleId, storagePeriods, bundleUploadTimestamp} of hermresBundles) {
         const expirationTime = bundleUploadTimestamp + (storagePeriods * STORAGE_PERIOD_DURATION);
         if (this.now() > expirationTime) {
@@ -66,11 +66,10 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
       if (await this.dataModelEngine.isBundleValid(bundleId, shelterer)) {
         throw new Error('Bundle is valid');
       }
-  
+
       this.logInfo(`Trying to restore (${bundleId}, ${shelterer})`);
       const response = await this.dataModelEngine.remoteBundleRestoreCall(bundleId, shelterer);
       this.logInfo(`Remote restore call returned: (${response})`);
-
     } catch (err) {
       this.logInfo(`validateAndRestoreBundle(${bundleId}, ${shelterer}) - ${err.message || err}`);
     }
