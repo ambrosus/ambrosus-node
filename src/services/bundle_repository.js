@@ -103,6 +103,10 @@ export default class BundleRepository {
     return await this.db.collection('bundle_metadata').findOne({bundleId}, {projection: this.blacklistedFields});
   }
 
+  async removeBundleMetadata(bundleId) {
+    return await this.db.collection('bundle_metadata').deleteOne({bundleId});
+  }
+
   async setBundleRepository(bundleId, status, additionalFields = {}) {
     return this.db.collection('bundle_metadata').updateOne({bundleId}, {
       $set: {
@@ -198,5 +202,11 @@ export default class BundleRepository {
   async getShelteredBundlesCount() {
     return await this.db.collection('bundle_metadata').find({'repository.status': BundleStatuses.sheltered}, {projection: {bundleId: 1, _id: 0}})
       .count();
+  }
+
+  async getHermesBundles(bundlesCount) {
+    const cursor = await this.db.collection('bundle_metadata').find({}, {projection: {_id: 0}})
+      .limit(bundlesCount);
+    return await cursor.toArray();
   }
 }

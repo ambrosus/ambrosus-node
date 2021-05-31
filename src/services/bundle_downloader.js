@@ -36,4 +36,11 @@ export default class BundleDownloader {
     await this.httpsClient.validateIncomingStatusCode(res.statusCode, vendorUrl);
     return res.body;
   }
+
+  async remoteBundleRestoreCall(vendorUrl, bundleId) {
+    const fullPath = `/bundle/${bundleId}/restore`;
+    const res = await this.httpsClient.performHTTPSGet(vendorUrl, fullPath);
+    await this.httpsClient.validateIncomingStatusCode(res.statusCode, vendorUrl + fullPath);
+    return res.body;
+  }
 }

@@ -34,7 +34,9 @@ export default class DataModelEngine {
       uploadRepository,
       rolesRepository,
       workerLogRepository,
-      organizationRepository
+      organizationRepository,
+      bundleStoreWrapper,
+      shelteringWrapper
     }) {
     this.identityManager = identityManager;
     this.tokenAuthenticator = tokenAuthenticator;
@@ -54,6 +56,8 @@ export default class DataModelEngine {
     this.rolesRepository = rolesRepository;
     this.workerLogRepository = workerLogRepository;
     this.organizationRepository = organizationRepository;
+    this.bundleStoreWrapper = bundleStoreWrapper;
+    this.shelteringWrapper = shelteringWrapper;
   }
 
   async addAdminAccount(address) {
@@ -343,6 +347,7 @@ export default class DataModelEngine {
 
     try {
       const bundle =  await this.bundleDownloader.downloadBundleFull(nodeUrl, bundleId);
+      // todo: check if bundle valid
 
       bundle.metadata = initialMetadata;
 
@@ -357,7 +362,7 @@ export default class DataModelEngine {
   }
 
   async downloadAndValidateBundleBody(nodeUrl, bundleId) {
-    const downloadStream = await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
+    const downloadStream = await this.openBundleDownloadStream(nodeUrl, bundleId);
     const writeStream = await this.bundleRepository.openBundleWriteStream(bundleId);
     const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
     await this.bundleBuilder.validateStreamedBundle(downloadStream, writeStream, bundleItemsCountLimit);
@@ -394,5 +399,121 @@ export default class DataModelEngine {
 
   async getWorkerLogs(logsCount = 10) {
     return await this.workerLogRepository.getLogs(logsCount);
+  }
+
+  async openBundleDownloadStream(nodeUrl, bundleId) {
+    try {
+      return await this.bundleDownloader.openBundleDownloadStream(nodeUrl, bundleId);
+    } catch (err) {
+      if (err instanceof ValidationError) {
+        // do not mix http errors with bundle validation errors
+        throw new Error(err.message);
+      }
+      throw err;
+    }
+  }
+
+  async downloadAndValidateBundleNoWrite(bundleId, sheltererId) {
+    const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
+    const stream = await this.openBundleDownloadStream(nodeUrl, bundleId);
+    await this.validateStreamedBundleNoWrite(stream);
+  }
+
+  async validateStoredBundleNoWrite(bundleId) {
+    const bundleStream = await this.getBundleStream(bundleId);
+    await this.validateStreamedBundleNoWrite(bundleStream);
+  }
+
+  async validateStreamedBundleNoWrite(stream) {
+    const bundleItemsCountLimit = await this.uploadRepository.bundleItemsCountLimit();
+    await this.bundleBuilder.validateStreamedBundleNoWrite(stream, bundleItemsCountLimit); // throws ValidationError
+  }
+
+  getRandomInt(max) {
+    return Math.floor(Math.random() * Math.floor(max));
+  }
+
+  async getBundleDonors(bundleId, nodeId = null) {
+    const contract = await this.bundleStoreWrapper.contract();
+    const donors = await contract.methods.getShelterers(bundleId).call();
+    if (nodeId) {
+      let pos = donors.indexOf(nodeId);
+      while (-1 !== pos) {
+        donors.splice(pos, 1);
+        pos = donors.indexOf(nodeId);
+      }
+    }
+    const uploaderId = await contract.methods.getUploader(bundleId).call();
+    if (uploaderId !== nodeId) {
+      donors.push(uploaderId);
+    }
+    return donors;
+  }
+
+  async isBundleValid(bundleId, shelterer = null) {
+    try {
+      if (shelterer && shelterer !== this.identityManager.nodeAddress()) {
+        await this.downloadAndValidateBundleNoWrite(bundleId, shelterer);
+      } else {
+        await this.validateStoredBundleNoWrite(bundleId);
+      }
+      // bundle is valid here
+      return true;
+    } catch (err) {
+      if (!(err instanceof ValidationError)) { // todo: more careful error handling required
+        throw new Error(`Error (${bundleId}, ${shelterer}): ${err.message || err}`);
+      }
+      console.log(`Bundle failed to validate (${bundleId}, ${shelterer}): ${err.message || err}`);
+    }
+    // bundle is invalid here
+    return false;
+  }
+
+  async restoreBundle(bundleId, expirationTime) {
+    const donors = await this.getBundleDonors(bundleId, this.identityManager.nodeAddress());
+    // console.log('donors',donors);
+    while (donors.length > 0) {
+      const pos = this.getRandomInt(donors.length);
+      const donorId = donors[pos];
+      try {
+        await this.downloadBundle(bundleId, donorId, expirationTime);
+        await this.markBundleAsSheltered(bundleId);
+        // console.log('Bundle restored', {bundleId});
+        return;
+      } catch (err) {
+        // console.log(`Failed to download bundle: ${err.message || err}`, {bundleId, donorId}, err.stack);
+        donors.splice(pos, 1);
+      }
+    }
+    throw new Error('Failed to restore bundle');
+  }
+
+  async tryRestoreBundle(bundleId) {
+    if (!await this.shelteringWrapper.isSheltering(bundleId)) {
+      throw new Error('Bundle is not sheltered');
+    }
+    const now = Math.floor(Date.now() / 1000);
+    const expirationTime = await this.shelteringWrapper.shelteringExpirationDate(bundleId);
+    if (now > expirationTime) {
+      throw new Error('Bundle expired');
+    }
+
+    if (await this.bundleRepository.isBundleStored(bundleId)) {
+      if (await this.isBundleValid(bundleId)) {
+        throw new Error('Bundle is valid');
+      }
+      await this.bundleRepository.removeBundle(bundleId);
+    }
+
+    if (await this.bundleRepository.getBundleMetadata(bundleId)) {
+      await this.bundleRepository.removeBundleMetadata(bundleId);
+    }
+
+    await this.restoreBundle(bundleId, expirationTime);
+  }
+
+  async remoteBundleRestoreCall(bundleId, sheltererId) {
+    const nodeUrl = await this.rolesRepository.nodeUrl(sheltererId);
+    return await this.bundleDownloader.remoteBundleRestoreCall(nodeUrl, bundleId);
   }
 }

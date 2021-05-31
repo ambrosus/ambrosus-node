@@ -211,7 +211,9 @@ class Builder {
       uploadRepository: this.uploadRepository,
       rolesRepository: this.rolesRepository,
       workerLogRepository: this.workerLogRepository,
-      organizationRepository: this.organizationRepository
+      organizationRepository: this.organizationRepository,
+      bundleStoreWrapper: this.bundleStoreWrapper,
+      shelteringWrapper: this.shelteringWrapper
     });
     return {dataModelEngine: this.dataModelEngine, client: this.client, kycWhitelistWrapper: this.kycWhitelistWrapper};
   }
