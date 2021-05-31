@@ -7,3 +7,4 @@ yarn-error.log
 nodePrivateKey.json
 registryContractAddress.json
 state.json
+package-lock.json
