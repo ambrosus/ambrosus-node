@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import Web3 from 'web3';
 import config, {Config} from '../config/config';
 import BN from 'bn.js';
-import {Account, Contract, Provider} from 'web3/types';
+import {Account, provider} from 'web3-core';
 
 export const DEFAULT_GAS = 4700000;
 
@@ -22,9 +22,9 @@ function isUsingGanache(rpc: string): boolean {
   return rpc === 'ganache';
 }
 
-async function createGanacheProvider(secretKey: string): Promise<Provider> {
+async function createGanacheProvider(secretKey: string): Promise<provider> {
+  const ganache = await(require('ganache-core'));
   // import in code with purpose:D
-  const Ganache = await import('ganache-core');
   const ganacheOptions = {
     accounts: [
       {
@@ -34,7 +34,7 @@ async function createGanacheProvider(secretKey: string): Promise<Provider> {
       ...Array(9).fill({balance: '100000000000000000000000000'})
     ]
   };
-  const provider = Ganache.provider(ganacheOptions);
+  const provider = ganache.provider(ganacheOptions);
   provider.setMaxListeners(750);
   return provider;
 }
@@ -95,13 +95,13 @@ export function getDefaultPrivateKey(web3: Web3): string {
   return account.privateKey;
 }
 
-export function loadContract(web3: Web3, abi: any[], address: string): Contract {
+export function loadContract(web3: Web3, abi: any[], address: string): any {
   return new web3.eth.Contract(abi, address, {
     gas: DEFAULT_GAS,
     gasPrice: web3.utils.toWei(config.defaultGasPrice.toString(), 'shannon')
   });
 }
-export async function deployContract(web3: Web3, json: any, args = [], options = {}): Promise<Contract> {
+export async function deployContract(web3: Web3, json: any, args = [], options = {}): Promise<any> {
   const defaultAddress = getDefaultAddress(web3);
   return new web3.eth.Contract(json.abi, undefined, {
     gas: DEFAULT_GAS,
