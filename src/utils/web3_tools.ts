@@ -63,8 +63,7 @@ function importPrivateKey(web3: Web3, config: Config): Account {
 
 export async function createWeb3(conf: Config = config): Promise<Web3> {
   const web3 = new Web3();
-  // const rpc = conf.web3Rpc;
-  const rpc = 'ws://127.0.0.1:8546';
+  const rpc = conf.web3Rpc;
 
   const account = importPrivateKey(web3, conf);
 
