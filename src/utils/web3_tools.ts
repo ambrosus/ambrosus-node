@@ -11,11 +11,12 @@ import Web3 from 'web3';
 import config, {Config} from '../config/config';
 import BN from 'bn.js';
 import {Account, provider} from 'web3-core';
+import {WebsocketProvider} from "web3/providers";
 
 export const DEFAULT_GAS = 4700000;
 
 function isValidRPCAddress(rpc: string): boolean {
-  return /^((?:https?)|(?:ws)):\/\//g.test(rpc);
+  return /^(http|ws)s?:\/\//.test(rpc);
 }
 
 function isUsingGanache(rpc: string): boolean {
@@ -61,6 +62,27 @@ function importPrivateKey(web3: Web3, config: Config): Account {
   }
 }
 
+async function createWebSocketRPC(rpc: string) {
+  const socketProvider: provider = new Web3.providers.WebsocketProvider(rpc, {
+    clientConfig: {
+      keepalive: true,
+      keepaliveInterval: 6000
+    },
+    reconnect: {
+      auto: true,
+      delay: 1000,
+      maxAttempts: 10
+    }
+  });
+  // testing purposes
+  socketProvider.on('close', () => console.error(`Socket closed`));
+  socketProvider.on('connect', () => console.error(`Socket connected`));
+  socketProvider.on('error', (err?) => console.error(`Socket error occured`, `${err}`));
+  socketProvider.on('reconnect', (err?) => console.error(`Socket reconnected`, `${err}`));
+  // testing purposes
+  return socketProvider;
+}
+
 export async function createWeb3(conf: Config = config): Promise<Web3> {
   const web3 = new Web3();
   const rpc = conf.web3Rpc;
@@ -77,23 +99,19 @@ export async function createWeb3(conf: Config = config): Promise<Web3> {
     if (rpc.startsWith('http')) {
       web3.setProvider(new Web3.providers.HttpProvider(rpc));
     } else if (rpc.startsWith('ws')) {
-      const socketProvider: provider = new Web3.providers.WebsocketProvider(rpc, {
-        clientConfig: {
-          keepalive: true,
-          keepaliveInterval: 60000
-        },
-        reconnect: {
-          auto: true,
-          delay: 1000,
-          maxAttempts: 10
+      const socketProvider: provider = await createWebSocketRPC(rpc) || null;
+      if (socketProvider === null) {
+        throw new Error(`Unable to create web socket connection to RPC provider`);
+      }
+
+      const checkConnection = async () => {
+        if (!socketProvider.connected) {
+          console.log(`socketProvider is not connected`);
+          web3.setProvider(await createWebSocketRPC(rpc)); // replace provider
         }
-      });
-      // testing purposes
-      socketProvider.on('close', () => console.error(`Socket closed`));
-      socketProvider.on('connect', () => console.error(`Socket connected`));
-      socketProvider.on('error', (err?) => console.error(`Socket error occured`, `${err}`));
-      socketProvider.on('reconnect', (err?) => console.error(`Socket reconnected`, `${err}`));
-      // testing purposes
+      };
+      setInterval(checkConnection, 1000);
+
       web3.setProvider(socketProvider);
     } else {
       throw new Error('Unsupported RPC provider');
