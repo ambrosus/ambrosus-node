@@ -63,7 +63,8 @@ function importPrivateKey(web3: Web3, config: Config): Account {
 
 export async function createWeb3(conf: Config = config): Promise<Web3> {
   const web3 = new Web3();
-  const rpc = conf.web3Rpc;
+  // const rpc = conf.web3Rpc;
+  const rpc = 'ws://127.0.0.1:8546';
 
   const account = importPrivateKey(web3, conf);
 
@@ -77,7 +78,24 @@ export async function createWeb3(conf: Config = config): Promise<Web3> {
     if (rpc.startsWith('http')) {
       web3.setProvider(new Web3.providers.HttpProvider(rpc));
     } else if (rpc.startsWith('ws')) {
-      web3.setProvider(new Web3.providers.WebsocketProvider(rpc));
+      const socketProvider: provider = new Web3.providers.WebsocketProvider(rpc, {
+        clientConfig: {
+          keepalive: true,
+          keepaliveInterval: 60000
+        },
+        reconnect: {
+          auto: true,
+          delay: 1000,
+          maxAttempts: 10
+        }
+      });
+      // testing purposes
+      socketProvider.on('close', () => console.error(`Socket closed`));
+      socketProvider.on('connect', () => console.error(`Socket connected`));
+      socketProvider.on('error', (err?) => console.error(`Socket error occured`, `${err}`));
+      socketProvider.on('reconnect', (err?) => console.error(`Socket reconnected`, `${err}`));
+      // testing purposes
+      web3.setProvider(socketProvider);
     } else {
       throw new Error('Unsupported RPC provider');
     }
