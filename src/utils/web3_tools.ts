@@ -66,13 +66,14 @@ async function createWebSocketRPC(rpc: string) {
   const socketProvider: provider = new Web3.providers.WebsocketProvider(rpc, {
     clientConfig: {
       keepalive: true,
-      keepaliveInterval: 6000
+      keepaliveInterval: -1
     },
     reconnect: {
       auto: true,
-      delay: 1000,
+      delay: 5000,
       maxAttempts: 10
-    }
+    },
+    timeout: 60000
   });
   // testing purposes
   socketProvider.on('close', () => console.error(`Socket closed`));
@@ -99,20 +100,7 @@ export async function createWeb3(conf: Config = config): Promise<Web3> {
     if (rpc.startsWith('http')) {
       web3.setProvider(new Web3.providers.HttpProvider(rpc));
     } else if (rpc.startsWith('ws')) {
-      const socketProvider: provider = await createWebSocketRPC(rpc) || null;
-      if (socketProvider === null) {
-        throw new Error(`Unable to create web socket connection to RPC provider`);
-      }
-
-      const checkConnection = async () => {
-        if (!socketProvider.connected) {
-          console.log(`socketProvider is not connected`);
-          web3.setProvider(await createWebSocketRPC(rpc)); // replace provider
-        }
-      };
-      setInterval(checkConnection, 1000);
-
-      web3.setProvider(socketProvider);
+      web3.setProvider(await createWebSocketRPC(rpc));
     } else {
       throw new Error('Unsupported RPC provider');
     }
