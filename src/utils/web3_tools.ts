@@ -65,16 +65,21 @@ function importPrivateKey(web3: Web3, config: Config): Account {
 async function createWebSocketRPC(rpc: string) {
   const socketProvider: provider = new Web3.providers.WebsocketProvider(rpc, {
     clientConfig: {
+      maxReceivedFrameSize: 104857600,
+      maxReceivedMessageSize: 104857600,
+      fragmentationThreshold: 1048576,
       keepalive: true,
-      keepaliveInterval: -1
+      keepaliveInterval: 50000
     },
     reconnect: {
       auto: true,
       delay: 5000,
-      maxAttempts: 10
+      maxAttempts: 10,
+      onTimeout: true
     },
     timeout: 60000
   });
+
   // testing purposes
   socketProvider.on('close', () => console.error(`Socket closed`));
   socketProvider.on('connect', () => console.error(`Socket connected`));
