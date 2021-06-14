@@ -32,17 +32,11 @@ describe('Fallback - Integrations', async () => {
   });
 
   it('should throw 404 with link to API docs on unknown paths', async () => {
-    await expect(apparatus.request().get('/unknownpath')).to.be.eventually.rejected
-      .and.have.property('status', 404);
-    await expect(apparatus.request().post('/')).to.be.eventually.rejected
-      .and.have.property('response')
-      .and.have.deep.property('body', {reason: 'Not found: Unknown path, see API documentation at: https://dev.ambrosus.io/'});
-    await expect(apparatus.request().delete('/')).to.be.eventually.rejected
-      .and.have.property('response')
-      .and.have.deep.property('body', {reason: 'Not found: Unknown path, see API documentation at: https://dev.ambrosus.io/'});
-    await expect(apparatus.request().put('/')).to.be.eventually.rejected
-      .and.have.property('response')
-      .and.have.deep.property('body', {reason: 'Not found: Unknown path, see API documentation at: https://dev.ambrosus.io/'});
+    const notFoundBody = {reason: 'Not found: Unknown path, see API documentation at: https://dev.ambrosus.io/'};
+    expect(await apparatus.request().get('/unknownpath')).to.have.status(404);
+    expect((await apparatus.request().post('/')).body).to.deep.equal(notFoundBody);
+    expect((await apparatus.request().delete('/')).body).to.deep.equal(notFoundBody);
+    expect((await apparatus.request().put('/')).body).to.deep.equal(notFoundBody);
   });
 
   after(async () => {

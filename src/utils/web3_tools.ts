@@ -11,7 +11,6 @@ import Web3 from 'web3';
 import config, {Config} from '../config/config';
 import BN from 'bn.js';
 import {Account, provider} from 'web3-core';
-import {WebsocketProvider} from "web3/providers";
 
 export const DEFAULT_GAS = 4700000;
 

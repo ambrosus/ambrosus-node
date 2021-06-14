@@ -194,7 +194,7 @@ describe('Entity Builder', () => {
         );
         expect(() => entityBuilder.validateEvent(brokenEvent))
           .to.throw(JsonValidationError)
-          .and.have.nested.property('errors[0].message', `should have required property 'type'`);
+          .and.have.nested.property('errors[0].message', `must have required property 'type'`);
       });
 
       it('throws ValidationError if event not passing custom entity validation', () => {
@@ -204,8 +204,9 @@ describe('Entity Builder', () => {
           [...exampleEvent.content.data, {type: 'ambrosus.event.location', geoJson: {type: 'Point', coordinates: [50]}}]
         );
         expect(() => entityBuilder.validateEvent(brokenEvent))
-          .to.throw(JsonValidationError)
-          .and.have.nested.property('errors[0].dataPath', '.geoJson.coordinates');
+          .to.throw(JsonValidationError);
+        expect(() => entityBuilder.validateEvent(brokenEvent))
+          .to.throw('Invalid data: must NOT have fewer than 2 items');
       });
 
       it('throws ValidationError if event exceeds the 10KB size limit', () => {

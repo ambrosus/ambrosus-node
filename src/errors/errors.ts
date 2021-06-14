@@ -51,8 +51,8 @@ export class JsonValidationError extends ValidationError {
 
   public constructor(errors: AjvError[]) {
     const messageForError = (err: AjvError): string => {
-      if (err.dataPath) {
-        return `${err.dataPath} ${err.message}`;
+      if (err.data) {
+        return `${err.data} ${err.message}`;
       }
       return err.message || '';
     };

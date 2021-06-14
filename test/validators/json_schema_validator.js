@@ -34,7 +34,7 @@ describe('JsonSchemaValidator', () => {
     const validator = new JsonSchemaValidator(schema);
     expect(() => validator.validate(dataWithMissingField))
       .to.throw(JsonValidationError)
-      .and.have.property('message', `Invalid data: should have required property 'aRequiredString'`);
+      .and.have.property('message', `Invalid data: must have required property 'aRequiredString'`);
   });
 
   describe('events', () => {
@@ -55,19 +55,19 @@ describe('JsonSchemaValidator', () => {
       it('throws JsonValidationError when data is not an array', async () => {
         expect(() => validator.validate({data: {}}))
           .to.throw(JsonValidationError)
-          .with.nested.property('errors[0].message', 'should be array');
+          .with.nested.property('errors[0].message', 'must be array');
       });
 
       it('throws JsonValidationError when empty data', () => {
         expect(() => validator.validate({data: []}))
           .to.throw(JsonValidationError)
-          .with.nested.property('errors[0].message', 'should NOT have fewer than 1 items');
+          .with.nested.property('errors[0].message', 'must NOT have fewer than 1 items');
       });
 
       it('throws JsonValidationError when some entry in data is not object', async () => {
         const event = {data: [...validEvent.data, '']};
         expect(() => validator.validate(event)).to.throw(JsonValidationError)
-          .with.nested.property('errors[0].message', 'should be object');
+          .with.nested.property('errors[0].message', 'must be object');
       });
 
       it('throws JsonValidationError when some entry in data has no type', async () => {
