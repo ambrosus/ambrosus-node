@@ -69,8 +69,8 @@ describe('Bundles - Integrations', () => {
     await apparatus.stop();
   });
 
-  describe('finalising bundles', () => {
-    it('should only include assets and events uploaded up until finalisation', () => {
+  describe('finalizing bundles', () => {
+    it('should only include assets and events uploaded up until finalization', () => {
       const includedEntities = res.content.entries.map(mapEntitiesToIds);
       expect(includedEntities).to.deep.include.members(entitiesIds);
       expect(includedEntities.length).to.equal(entitiesIds.length);
@@ -107,10 +107,11 @@ describe('Bundles - Integrations', () => {
     });
 
     it('return 404 if bundle with requested id does not exist', async () => {
-      const request = apparatus.request()
-        .get(`/bundle/nonexistingBundle`);
-      await expect(request).to.eventually.be.rejected
-        .and.have.property('status', 404);
+      await apparatus.request()
+        .get(`/bundle/nonexistingBundle`)
+        .then((res) => {
+          expect(res).to.have.status(404);
+        });
     });
   });
 
@@ -124,10 +125,11 @@ describe('Bundles - Integrations', () => {
     });
 
     it('return 404 if bundle with requested id does not exist', async () => {
-      const request = apparatus.request()
-        .get(`/bundle/nonexistingBundle/info`);
-      await expect(request).to.eventually.be.rejected
-        .and.have.property('status', 404);
+      await apparatus.request()
+        .get(`/bundle/nonexistingBundle/info`)
+        .then((res) => {
+          expect(res).to.have.status(404);
+        });
     });
   });
 });

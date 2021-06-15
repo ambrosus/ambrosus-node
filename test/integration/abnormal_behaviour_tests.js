@@ -36,31 +36,37 @@ describe('Abnormal behaviour tests', async () => {
 
   describe('Request size limiter', () => {
     it('should not accept requests bigger than requestSizeLimit', async () => {
-      const request = apparatus.request()
+      await apparatus.request()
         .post('/token')
         .set('authorization', `AMB ${pkPair.secret}`)
         .type('json')
-        .send(tooLargeBody);
-      await expect(request).to.be.eventually.rejected.and.have.property('status', 413);
+        .send(tooLargeBody)
+        .then((res) => {
+          expect(res).to.have.status(413);
+        });
     });
 
     it('should accept requests under requestSizeLimit', async () => {
-      const request = apparatus.request()
+      await apparatus.request()
         .post('/token')
         .set('authorization', `AMB ${pkPair.secret}`)
         .type('json')
-        .send(requestBody);
-      await expect(request).to.be.eventually.fulfilled;
+        .send(requestBody)
+        .then((res) => {
+          expect(res).to.have.status(201);
+        });
     });
   });
 
   it('should return 400 when invalid json format has been passed', async () => {
-    const request = apparatus.request()
+    await apparatus.request()
       .post('/token')
       .set('authorization', `AMB ${pkPair.secret}`)
       .type('json')
-      .send('Definitely not JSON');
-    await expect(request).to.be.eventually.rejected.and.have.property('status', 400);
+      .send('Definitely not JSON')
+      .then((res) => {
+        expect(res).to.have.status(400);
+      });
   });
 
   after(async () => {

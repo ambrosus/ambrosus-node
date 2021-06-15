@@ -38,6 +38,7 @@ describe('Logger middleware', () => {
       url: '/some'
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     logger(request, response, () => {
     });
 
@@ -54,6 +55,7 @@ describe('Logger middleware', () => {
         url: urlToSkip
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       logger(request, response, () => {
       });
 

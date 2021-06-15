@@ -1277,6 +1277,7 @@ describe('Data Model Engine', () => {
         bundleRepository: mockBundleRepository
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       await modelEngine.uploadAcceptedBundleCandidates({success: async () => {}, fail: async () => {}});
       expect(mockUploadRepository.ensureBundleIsUploaded).to.have.callCount(1);
       expect(mockEntityRepository.storeBundleProofMetadata).not.to.be.have.been.calledWith('bundle2', blockNumber, txHash);

@@ -73,72 +73,70 @@ describe('Assets - Integrations', () => {
 
     it('returns 400 for invalid input (missing required field)', async () => {
       const brokenAsset = pick(asset, 'content.idData.timestamp');
-      const request = apparatus.request()
+      await apparatus.request()
         .post('/assets')
         .set('Authorization', `AMB ${pkPair.secret}`)
-        .send(brokenAsset);
-      await expect(request)
-        .to.eventually.be.rejected
-        .and.have.property('status', 400);
+        .send(brokenAsset)
+        .then((res) => {
+          expect(res).to.have.status(400);
+        });
     });
 
     it('returns 400 for invalid input (unexpected field)', async () => {
       const brokenAsset = put(asset, 'content.idData.foo', 'bar');
-      const request = apparatus.request()
+      await apparatus.request()
         .post('/assets')
         .set('Authorization', `AMB ${pkPair.secret}`)
-        .send(brokenAsset);
-      await expect(request)
-        .to.eventually.be.rejected
-        .and.have.property('status', 400);
+        .send(brokenAsset)
+        .then((res) => {
+          expect(res).to.have.status(400);
+        });
     });
 
     it('returns 400 for invalid input (timestamp not integer)', async () => {
       const brokenAsset = put(asset, 'content.idData.timestamp', 3.14);
-      const request = apparatus.request()
+      await apparatus.request()
         .post('/assets')
         .set('Authorization', `AMB ${pkPair.secret}`)
-        .send(brokenAsset);
-      await expect(request)
-        .to.eventually.be.rejected
-        .and.have.property('status', 400);
+        .send(brokenAsset)
+        .then((res) => {
+          expect(res).to.have.status(400);
+        });
     });
 
     it('returns 400 when same asset added twice', async () => {
       await apparatus.request()
         .post('/assets')
         .send(asset);
-      const request = apparatus.request()
+      await apparatus.request()
         .post('/assets')
-        .send(asset);
-      await expect(request)
-        .to.eventually.be.rejected
-        .and.have.property('status', 400);
+        .send(asset)
+        .then((res) => {
+          expect(res).to.have.status(400);
+        });
     });
 
-    it('returns 403 for authorisation error (user does not exist)', async () => {
+    it('returns 403 for authorization error (user does not exist)', async () => {
       const failingAsset = createFullAsset(apparatus.identityManager, {createdBy: notRegisteredAccount.address}, notRegisteredAccount.secret);
 
-      const request = apparatus.request()
+      await apparatus.request()
         .post('/assets')
-        .send(failingAsset);
-
-      await expect(request)
-        .to.eventually.be.rejected
-        .and.have.property('status', 403);
+        .send(failingAsset)
+        .then((res) => {
+          expect(res).to.have.status(403);
+        });
     });
 
     it('returns 403 for permission error (no `create_asset` permission)', async () => {
       const notPermittedAsset = createFullAsset(apparatus.identityManager, {createdBy: otherAccount.address},
         otherAccount.secret);
 
-      const request = apparatus.request()
+      await apparatus.request()
         .post('/assets')
-        .send(notPermittedAsset);
-
-      await expect(request)
-        .to.eventually.be.rejected
-        .and.have.property('status', 403);
+        .send(notPermittedAsset)
+        .then((res) => {
+          expect(res).to.have.status(403);
+        });
     });
   });
 
@@ -156,10 +154,11 @@ describe('Assets - Integrations', () => {
     });
 
     it('should return 404 if asset with that id doesn\'t exist', async () => {
-      const request = apparatus.request()
-        .get(`/assets/nonexistingAsset`);
-      await expect(request).to.eventually.be.rejected
-        .and.have.property('status', 404);
+      await apparatus.request()
+        .get(`/assets/nonexistingAsset`)
+        .then((res) => {
+          expect(res).to.have.status(404);
+        });
     });
   });
 

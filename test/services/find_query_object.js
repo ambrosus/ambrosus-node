@@ -37,7 +37,7 @@ describe('FindQueryObject', () => {
       _id: 0,
       repository: 0
     };
-    mockSortingKey = 'aabb';
+    mockSortingKey = '_id';
     assembledOptions = {
       skip : 4,
       limit : 2,

@@ -53,79 +53,79 @@ describe(`Event Entry Validator - 'ambrosus.asset.location'`, () => {
 
   it('throws if provided invalid "assetId"', async () => {
     const brokenEntry = put(validEntry, 'assetId', '0x39d59c8c1cdefb95f4df15fd4f43bce842a761e189e11bedcc1d54zzzzzzzzzz');
-    const errorMessage = 'should match pattern "^0x[a-fA-F0-9]{64}$"';
+    const errorMessage = 'must match pattern "^0x[a-fA-F0-9]{64}$"';
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "name" is not a string', async () => {
     const brokenEntry = put(validEntry, 'name', 0);
-    const errorMessage = 'should be string';
+    const errorMessage = 'must be string';
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "country" is not a string', async () => {
     const brokenEntry = put(validEntry, 'country', 0);
-    const errorMessage = 'should be string';
+    const errorMessage = 'must be string';
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "city" is not a string', async () => {
     const brokenEntry = put(validEntry, 'city', 0);
-    const errorMessage = 'should be string';
+    const errorMessage = 'must be string';
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if missing coordinate', async () => {
     const brokenEntry = put(validEntry, 'geoJson.coordinates', [0]);
-    const errorMessage = 'should NOT have fewer than 2 items';
+    const errorMessage = 'must NOT have fewer than 2 items';
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if surplus coordinate', async () => {
     const brokenEntry = put(validEntry, 'geoJson.coordinates', [0, 0, 0]);
-    const errorMessage = 'should NOT have more than 2 items';
+    const errorMessage = 'must NOT have more than 2 items';
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if longitude is too big', async () => {
     const brokenEntry = put(validEntry, 'geoJson.coordinates', [500, 0]);
-    const errorMessage = 'should be <= 180';
+    const errorMessage = 'must be <= 180';
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if longitude is too small', async () => {
     const brokenEntry = put(validEntry, 'geoJson.coordinates', [-500, 0]);
-    const errorMessage = 'should be >= -180';
+    const errorMessage = 'must be >= -180';
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if latitude is too big', async () => {
     const brokenEntry = put(validEntry, 'geoJson.coordinates', [0, 500]);
-    const errorMessage = 'should be <= 90';
+    const errorMessage = 'must be <= 90';
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if latitude is too small', async () => {
     const brokenEntry = put(validEntry, 'geoJson.coordinates', [0, -500]);
-    const errorMessage = 'should be >= -90';
+    const errorMessage = 'must be >= -90';
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "geoJson" contains extra fields', async () => {
     const brokenEntry = put(validEntry, 'geoJson.extraField', 'superValue');
-    const errorMessage = 'should NOT have additional properties';
+    const errorMessage = 'must NOT have additional properties';
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "geoJson.type" is not Point', async () => {
     const brokenEntry = put(validEntry, 'geoJson.type', 'totallyNotAPoint');
-    const errorMessage = 'should be equal to constant';
+    const errorMessage = 'must be equal to constant';
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if missing "geoJson.type"', async () => {
     const brokenEntry = pick(validEntry, 'geoJson.type');
-    const errorMessage = `should have required property 'type'`;
+    const errorMessage = `must have required property 'type'`;
     expectValidationError(brokenEntry, errorMessage);
   });
 });

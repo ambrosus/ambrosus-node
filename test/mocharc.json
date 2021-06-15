@@ -1,0 +1,10 @@
+{
+  "require": [
+    "ts-node/register",
+    "test/mocha_env.js"
+  ],
+  "recursive": true,
+  "timeout": 60000,
+  "exit": true,
+  "extension": ["js","ts"]
+}

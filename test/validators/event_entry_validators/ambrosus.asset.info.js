@@ -69,109 +69,109 @@ describe(`Event Entry Validator - 'ambrosus.asset.info'`, () => {
 
   it('throws if "assetType" is not a string', async () => {
     const brokenEntry = put(validEntry, 'assetType', 0);
-    const errorMessage = `should be string`;
+    const errorMessage = `must be string`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "name" is missing', async () => {
     const brokenEntry = pick(validEntry, 'name');
-    const errorMessage = `should have required property 'name'`;
+    const errorMessage = `must have required property 'name'`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "name" is not a string', async () => {
     const brokenEntry = put(validEntry, 'name', 0);
-    const errorMessage = `should be string`;
+    const errorMessage = `must be string`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "localisedName" is not an object', async () => {
     const brokenEntry = put(validEntry, 'localisedName', 0);
-    const errorMessage = `should be object`;
+    const errorMessage = `must be object`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "localisedName" properties are not strings', async () => {
     const brokenEntry = put(validEntry, 'localisedName.field', 0);
-    const errorMessage = `should be string`;
+    const errorMessage = `must be string`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "description" is not a string', async () => {
     const brokenEntry = put(validEntry, 'description', 0);
-    const errorMessage = `should be string`;
+    const errorMessage = `must be string`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "localisedDescription" is not an object', async () => {
     const brokenEntry = put(validEntry, 'localisedDescription', 0);
-    const errorMessage = `should be object`;
+    const errorMessage = `must be object`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "localisedDescription" properties are not strings', async () => {
     const brokenEntry = put(validEntry, 'localisedDescription.field', 0);
-    const errorMessage = `should be string`;
+    const errorMessage = `must be string`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "tags" is not an array', async () => {
     const brokenEntry = put(validEntry, 'tags', {});
-    const errorMessage = `should be array`;
+    const errorMessage = `must be array`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "tags" items are not strings', async () => {
     const brokenEntry = put(validEntry, 'tags', [0, 1, 2]);
-    const errorMessage = `should be string`;
+    const errorMessage = `must be string`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "images" is not an object', async () => {
     const brokenEntry = put(validEntry, 'images', 0);
-    const errorMessage = `should be object`;
+    const errorMessage = `must be object`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "images" is an empty object', async () => {
     const brokenEntry = put(validEntry, 'images', {});
-    const errorMessage = `should NOT have fewer than 1 properties`;
+    const errorMessage = `must NOT have fewer than 1 items`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "images" property does not contain url', async () => {
     const brokenEntry = pick(validEntry, 'images.default.url');
-    const errorMessage = `should have required property 'url'`;
+    const errorMessage = `must have required property 'url'`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "images.url" is not string', async () => {
     const brokenEntry = put(validEntry, 'images.default.url', 0);
-    const errorMessage = `should be string`;
+    const errorMessage = `must be string`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "images.size" does not contain "width"', async () => {
     const brokenEntry = pick(validEntry, 'images.default.size.width');
-    const errorMessage = `should have required property 'width'`;
+    const errorMessage = `must have required property 'width'`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "images.size" does not contain "height"', async () => {
     const brokenEntry = pick(validEntry, 'images.default.size.height');
-    const errorMessage = `should have required property 'height'`;
+    const errorMessage = `must have required property 'height'`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "images.size.width" is not a number', async () => {
     const brokenEntry = put(validEntry, 'images.default.size.width', 'sampleString');
-    const errorMessage = `should be number`;
+    const errorMessage = `must be number`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws if "images.size.height" is not a number', async () => {
     const brokenEntry = put(validEntry, 'images.default.size.height', 'sampleString');
-    const errorMessage = `should be number`;
+    const errorMessage = `must be number`;
     expectValidationError(brokenEntry, errorMessage);
   });
 });

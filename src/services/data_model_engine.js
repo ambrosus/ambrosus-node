@@ -272,6 +272,7 @@ export default class DataModelEngine {
     await this.entityRepository.discardBundling(bundleStubId);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   async uploadAcceptedBundleCandidates(uploadProgressCallbacks = {success: async () => {}, fail: async () => {}}) {
     const waitingBundlesMetadata = await this.bundleRepository.findBundlesWaitingForUpload();
     for (const {bundleId, storagePeriods} of waitingBundlesMetadata) {

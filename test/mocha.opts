@@ -1,6 +1,0 @@
---require ts-node/register
---require test/mocha_env.js
---watch-extensions js,ts
---timeout 60000
---recursive
---exit

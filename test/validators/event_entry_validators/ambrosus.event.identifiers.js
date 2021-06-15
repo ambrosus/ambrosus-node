@@ -41,43 +41,43 @@ describe(`Event Entry Validator - 'ambrosus.event.identifiers'`, () => {
 
   it('throws when no "identifiers"', () => {
     const brokenEntry = {type: 'ambrosus.event.identifiers'};
-    const errorMessage = `should have required property 'identifiers'`;
+    const errorMessage = `must have required property 'identifiers'`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws when additional properties', () => {
     const brokenEntry = {type: 'ambrosus.event.identifiers', identifiers: {abc: ['abc']}, extraField: 'superValue'};
-    const errorMessage = `should NOT have additional properties`;
+    const errorMessage = `must NOT have additional properties`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws when "identifiers" field is not an object', () => {
     const brokenEntry = {type: 'ambrosus.event.identifiers', identifiers: 0};
-    const errorMessage = `should be object`;
+    const errorMessage = `must be object`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws when "identifiers" field is an empty object', () => {
     const brokenEntry = {type: 'ambrosus.event.identifiers', identifiers: {}};
-    const errorMessage = `should NOT have fewer than 1 properties`;
+    const errorMessage = `must NOT have fewer than 1 items`;
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws when identifier is an empty array', () => {
     const brokenEntry = {type: 'ambrosus.event.identifiers', identifiers: {isbn: []}};
-    const errorMessage = 'should NOT have fewer than 1 items';
+    const errorMessage = 'must NOT have fewer than 1 items';
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws when identifier is not an object', () => {
     const brokenEntry = {type: 'ambrosus.event.identifiers', identifiers: {isbn: 0}};
-    const errorMessage = 'should be array';
+    const errorMessage = 'must be array';
     expectValidationError(brokenEntry, errorMessage);
   });
 
   it('throws when identifier item is not a string', () => {
     const brokenEntry = {type: 'ambrosus.event.identifiers', identifiers: {isbn: [0]}};
-    const errorMessage = 'should be string';
+    const errorMessage = 'must be string';
     expectValidationError(brokenEntry, errorMessage);
   });
 });

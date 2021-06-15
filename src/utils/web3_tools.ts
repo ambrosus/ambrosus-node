@@ -15,7 +15,7 @@ import {Account, provider} from 'web3-core';
 export const DEFAULT_GAS = 4700000;
 
 function isValidRPCAddress(rpc: string): boolean {
-  return /^((?:https?)|(?:ws)):\/\//g.test(rpc);
+  return /^(http|ws)s?:\/\//.test(rpc);
 }
 
 function isUsingGanache(rpc: string): boolean {
@@ -63,21 +63,28 @@ function importPrivateKey(web3: Web3, config: Config): Account {
 
 export async function createWeb3(conf: Config = config): Promise<Web3> {
   const web3 = new Web3();
-
   const rpc = conf.web3Rpc;
 
   const account = importPrivateKey(web3, conf);
 
-  if (isValidRPCAddress(rpc)) {
-    web3.setProvider(new Web3.providers.HttpProvider(rpc));
-  } else if (isUsingGanache(rpc)) {
+  if (isUsingGanache(rpc)) {
     web3.setProvider(await createGanacheProvider(account.privateKey));
     await ganacheTopUpDefaultAccount(web3);
-  } else {
-    throw new Error('A configuration value for web3 rpc server is missing');
+    return web3; // ganache use
   }
 
-  return web3;
+  if (isValidRPCAddress(rpc)) {
+    if (rpc.startsWith('http')) {
+      web3.setProvider(new Web3.providers.HttpProvider(rpc));
+    } else if (rpc.startsWith('ws')) {
+      web3.setProvider(new Web3.providers.WebsocketProvider(rpc));
+    } else {
+      throw new Error('Unsupported RPC provider');
+    }
+    return web3; // normal use
+  }
+
+  throw new Error('A configuration value for web3 rpc server is missing');
 }
 
 export function getDefaultAddress(web3: Web3): string {

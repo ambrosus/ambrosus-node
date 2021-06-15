@@ -97,60 +97,46 @@ describe('Accounts - Integrations', async () => {
     });
 
     it('should fail to create if no token given', async () => {
-      const pendingRequest = apparatus.request()
+      await apparatus.request()
         .post('/accounts')
-        .send(newAccount);
-      await expect(pendingRequest)
-        .to.eventually.be.rejected
-        .and.have.property('status', 401);
+        .send(newAccount)
+        .then((res) => {
+          expect(res).to.have.status(401);
+        });
     });
 
     it('should fail to create account if non-existing user', async () => {
-      await expect(createAccountRequest(newAccount, notRegisteredAccount))
-        .to.eventually.be.rejected
-        .and.have.property('status', 403);
+      expect(await createAccountRequest(newAccount, notRegisteredAccount)).to.have.status(403);
     });
 
     it('should fail to create account with same address twice', async () => {
       await createAccountRequest(newAccount, adminAccountWithSecret);
-      await expect(createAccountRequest(newAccount, adminAccountWithSecret))
-        .to.eventually.be.rejected
-        .and.have.property('status', 400);
+      expect(await createAccountRequest(newAccount, adminAccountWithSecret)).to.have.status(400);
     });
 
     it('should fail to create when creator lacks register_accounts permission', async () => {
       const accountWithoutPermissions = await injectAccount([allPermissions.manageAccounts, allPermissions.createEvent]);
-      await expect(createAccountRequest(newAccount, accountWithoutPermissions))
-        .to.eventually.be.rejected
-        .and.have.property('status', 403);
+      expect(await createAccountRequest(newAccount, accountWithoutPermissions)).to.have.status(403);
     });
 
     it('should fail to create the account with permissions the creator lacks', async () => {
       const notAdminAccount = await injectAccount([allPermissions.registerAccounts, allPermissions.createEvent]);
-      await expect(createAccountRequest({...newAccount, permissions: [allPermissions.createAsset]}, notAdminAccount))
-        .to.eventually.be.rejected
-        .and.have.property('status', 403);
+      expect(await createAccountRequest({...newAccount, permissions: [allPermissions.createAsset]}, notAdminAccount)).to.have.status(403);
     });
 
     it('should fail to create super account', async () => {
       const notAdminAccount = await injectAccount(Object.values(pick(allPermissions, 'superAccount')));
-      await expect(createAccountRequest({...newAccount, permissions: [allPermissions.superAccount]}, notAdminAccount))
-        .to.eventually.be.rejected
-        .and.have.property('status', 403);
+      expect(await createAccountRequest({...newAccount, permissions: [allPermissions.superAccount]}, notAdminAccount)).to.have.status(403);
     });
 
     it('should fail to create the account with higher access level', async () => {
       const accountWithPermissions = await injectAccount([allPermissions.registerAccounts]);
-      await expect(createAccountRequest({...newAccount, accessLevel: 1000}, accountWithPermissions))
-        .to.eventually.be.rejected
-        .and.have.property('status', 403);
+      expect(await createAccountRequest({...newAccount, accessLevel: 1000}, accountWithPermissions)).to.have.status(403);
     });
 
     it('should fail to create the account from another organization', async () => {
       const accountWithPermissions = await injectAccount([allPermissions.registerAccounts], 5);
-      await expect(createAccountRequest({...newAccount, organization: 1000}, accountWithPermissions))
-        .to.eventually.be.rejected
-        .and.have.property('status', 403);
+      expect(await createAccountRequest({...newAccount, organization: 1000}, accountWithPermissions)).to.have.status(403);
     });
   });
 
@@ -194,23 +180,23 @@ describe('Accounts - Integrations', async () => {
         .post('/accounts')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
         .send(newAccount);
-      const pendingRequest = apparatus.request()
+      await apparatus.request()
         .get(`/accounts/${registeredAccount.body.address}`)
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(accountWithoutPermissions.secret)}`)
-        .send({});
-      await expect(pendingRequest)
-        .to.eventually.be.rejected
-        .and.have.property('status', 403);
+        .send({})
+        .then((res) => {
+          expect(res).to.have.status(403);
+        });
     });
 
     it('should return 404 code if non-existing account', async () => {
-      const pendingRequest = apparatus.request()
+      await apparatus.request()
         .get(`/accounts/0x1234567`)
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
-        .send({});
-      await expect(pendingRequest)
-        .to.eventually.be.rejected
-        .and.have.property('status', 404);
+        .send({})
+        .then((res) => {
+          expect(res).to.have.status(404);
+        });
     });
   });
 
@@ -238,36 +224,28 @@ describe('Accounts - Integrations', async () => {
       .send(request);
 
     it('should fail to modify if no token given', async () => {
-      const pendingRequest = apparatus.request()
+      await apparatus.request()
         .put(`/accounts/${storedAccount.body.address}`)
-        .send(modifyRequest);
-      await expect(pendingRequest)
-        .to.eventually.be.rejected
-        .and.have.property('status', 401);
+        .send(modifyRequest)
+        .then((res) => {
+          expect(res.status).to.equal(401);
+        });
     });
 
     it('should fail to modify account if non-existing sender', async () => {
-      await expect(modifyAccountRequest(modifyRequest, notRegisteredAccount))
-        .to.eventually.be.rejected
-        .and.have.property('status', 403);
+      expect(await modifyAccountRequest(modifyRequest, notRegisteredAccount)).to.have.status(403);
     });
 
     it('should fail if trying to modify non-existing account', async () => {
-      await expect(modifyAccountRequest(modifyRequest, adminAccountWithSecret, '0x1234567'))
-        .to.eventually.be.rejected
-        .and.have.property('status', 404);
+      expect(await modifyAccountRequest(modifyRequest, adminAccountWithSecret, '0x1234567')).to.have.status(404);
     });
 
     it('should fail to modify if unsupported parameters passed', async () => {
-      await expect(modifyAccountRequest(put(modifyRequest, 'extraParam', 'superValue'), adminAccountWithSecret))
-        .to.eventually.be.rejected
-        .and.have.property('status', 400);
+      expect(await modifyAccountRequest(put(modifyRequest, 'extraParam', 'superValue'), adminAccountWithSecret)).to.have.status(400);
     });
 
     it('should fail to modify if any of parameters are invalid', async () => {
-      await expect(modifyAccountRequest(put(modifyRequest, 'permissions', 'notArrayValue'), adminAccountWithSecret))
-        .to.eventually.be.rejected
-        .and.have.property('status', 400);
+      expect(await modifyAccountRequest(put(modifyRequest, 'permissions', 'notArrayValue'), adminAccountWithSecret)).to.have.status(400);
     });
 
     describe('By admin', () => {
@@ -337,30 +315,22 @@ describe('Accounts - Integrations', async () => {
 
       it('should fail when account lacks manage_accounts permission', async () => {
         const noPermissionAccount = await injectAccount([allPermissions.createEvent]);
-        await expect(modifyAccountRequest(modifyRequest, noPermissionAccount))
-          .to.eventually.be.rejected
-          .and.have.property('status', 403);
+        await expect(await modifyAccountRequest(modifyRequest, noPermissionAccount)).to.have.status(403);
       });
 
       it('should fail to modify the protected account', async () => {
         const protectedAccount = await injectAccount([allPermissions.protectedAccount]);
-        await expect(modifyAccountRequest(modifyRequest, managerAccount, protectedAccount.address))
-          .to.eventually.be.rejected
-          .and.have.property('status', 403);
+        expect(await modifyAccountRequest(modifyRequest, managerAccount, protectedAccount.address)).to.have.status(403);
       });
 
       it('should fail to modify the protected account even if is protected itself', async () => {
         const protectedAccount = await injectAccount([allPermissions.manageAccounts, allPermissions.protectedAccount]);
         const otherProtectedAccount = await injectAccount([allPermissions.protectedAccount]);
-        await expect(modifyAccountRequest(modifyRequest, protectedAccount, otherProtectedAccount.address))
-          .to.eventually.be.rejected
-          .and.have.property('status', 403);
+        expect(await modifyAccountRequest(modifyRequest, protectedAccount, otherProtectedAccount.address)).to.have.status(403);
       });
 
       it('should fail to add any permission the modifier does not have', async () => {
-        await expect(modifyAccountRequest({permissions: [allPermissions.createEvent]}, managerAccount))
-          .to.eventually.be.rejected
-          .and.have.property('status', 403);
+        expect(await modifyAccountRequest({permissions: [allPermissions.createEvent]}, managerAccount)).to.have.status(403);
       });
 
       it('protected account should be able to add the protected_account permission', async () => {
@@ -371,28 +341,27 @@ describe('Accounts - Integrations', async () => {
 
       it('should fail to set higher access level than own', async () => {
         const notAdminAccount = await injectAccount([allPermissions.manageAccounts]);
-        await expect(modifyAccountRequest({accessLevel: 1000}, notAdminAccount))
-          .to.eventually.be.rejected
-          .and.have.property('status', 403);
+        expect(await modifyAccountRequest({accessLevel: 1000}, notAdminAccount)).to.have.status(403);
       });
 
       it('can change access level of account with higher access level than own', async () => {
-        const hugeAccessLevelAccount = await apparatus.request()
+        await apparatus.request()
           .post('/accounts')
           .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
-          .send(put(pick(notRegisteredAccount, 'secret'), 'accessLevel', 10000));
-        const modifiedAccount = await modifyAccountRequest(modifyRequest, managerAccount, hugeAccessLevelAccount.body.address);
-        expect(modifiedAccount.body.accessLevel).to.equal(accessLevel);
+          .send(put(pick(notRegisteredAccount, 'secret'), 'accessLevel', 10000))
+          .then(async (res) => {
+            expect(await modifyAccountRequest(modifyRequest, managerAccount, res.body.address).then((modified) => modified.body.accessLevel)).to.equal(accessLevel);
+          });
       });
 
       it('should fail to modify the account from another organization', async () => {
-        const differentOrganizationAccount = await apparatus.request()
+        await apparatus.request()
           .post('/accounts')
           .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
-          .send(put(pick(notRegisteredAccount, 'secret'), 'organization', 1234));
-        await expect(modifyAccountRequest(modifyRequest, managerAccount, differentOrganizationAccount.body.address))
-          .to.eventually.be.rejected
-          .and.have.property('status', 403);
+          .send(put(pick(notRegisteredAccount, 'secret'), 'organization', 1234))
+          .then(async (res) => {
+            expect(await modifyAccountRequest(modifyRequest, managerAccount, res.body.address)).to.have.status(403);
+          });
       });
 
       it('should be able to set different organization than own', async () => {
@@ -484,33 +453,33 @@ describe('Accounts - Integrations', async () => {
     });
 
     it('should fail if no token', async () => {
-      const pendingRequest = apparatus.request()
+      await apparatus.request()
         .get(`/accounts`)
-        .send();
-      await expect(pendingRequest)
-        .to.eventually.be.rejected
-        .and.have.property('status', 401);
+        .send()
+        .then((res) => {
+          expect(res).to.have.status(401);
+        });
     });
 
     it('should fail if non-existing requester user', async () => {
-      const pendingRequest = apparatus.request()
+      await apparatus.request()
         .get(`/accounts`)
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(notRegisteredAccount.secret)}`)
-        .send();
-      await expect(pendingRequest)
-        .to.eventually.be.rejected
-        .and.have.property('status', 403);
+        .send()
+        .then((res) => {
+          expect(res).to.have.status(403);
+        });
     });
 
     it('should fail if no manage_account permission', async () => {
       const noPermissionsAccount = await injectAccount([allPermissions.registerAccounts]);
-      const pendingRequest = apparatus.request()
+      await apparatus.request()
         .get(`/accounts`)
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken(noPermissionsAccount.secret)}`)
-        .send();
-      await expect(pendingRequest)
-        .to.eventually.be.rejected
-        .and.have.property('status', 403);
+        .send()
+        .then((res) => {
+          expect(res).to.have.status(403);
+        });
     });
 
     it('should filter by accessLevel', async () => {
@@ -523,23 +492,26 @@ describe('Accounts - Integrations', async () => {
         .to.deep.equal([scenario.accounts[1].address, scenario.accounts[3].address, adminAccountWithSecret.address].sort());
     });
 
-    it('should fail if access level is not a number', async () => {
-      const pendingRequest = apparatus.request()
+    it('should fail if access level is not a number', () => {
+      apparatus.request()
         .get('/accounts?accessLevel=2n')
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
-        .send();
-      await expect(pendingRequest)
-        .to.eventually.be.rejected
-        .and.have.property('status', 400);
+        .send()
+        .end((err, res) => {
+          expect(res).to.have.status(400);
+        });
     });
 
     it('should filter by registeredBy', async () => {
-      const response = await apparatus.request()
+      await apparatus.request()
         .get(`/accounts?registeredBy=${scenario.accounts[1].address}`)
         .set('Authorization', `AMB_TOKEN ${apparatus.generateToken()}`)
-        .send();
-      expect(response.body.resultCount).to.equal(1);
-      expect(response.body.results[0].address).to.equal(scenario.accounts[2].address);
+        .send()
+        .then((res) => {
+          expect(res).to.have.status(200);
+          expect(res.body.resultCount).to.equal(1);
+          expect(res.body.results[0].address).to.equal(scenario.accounts[2].address);
+        });
     });
 
     it('should apply paging', async () => {

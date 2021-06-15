@@ -33,15 +33,15 @@ describe('Health check tests', () => {
   it('returns 500 if MongoDb is not connected', async () => {
     await apparatus.dataModelEngine.mongoClient.close();
 
-    const {response} = await apparatus.request()
+    await apparatus.request()
       .get('/health')
-      .catch((err) => err);
-
-    expect(response.status).to.eql(500);
-    expect(response.body).to.eql({
-      mongo: {connected: false},
-      web3: {connected: true}
-    });
+      .then((res) => {
+        expect(res.body).to.eql({
+          mongo: {connected: false},
+          web3: {connected: true}
+        });
+        expect(res).to.have.status(500);
+      });
   });
 
   it('returns 500 if web3 is not connected', async () => {
@@ -50,15 +50,15 @@ describe('Health check tests', () => {
     const stub = sinon.stub(apparatus.web3.eth, 'getNodeInfo');
     stub.rejects('Error: Invalid JSON RPC response: ""');
 
-    const {response} = await apparatus.request()
+    await apparatus.request()
       .get('/health')
-      .catch((err) => err);
-
-    expect(response.status).to.eql(500);
-    expect(response.body).to.eql({
-      mongo: {connected: true},
-      web3: {connected: false}
-    });
+      .then((res) => {
+        expect(res.body).to.eql({
+          mongo: {connected: true},
+          web3: {connected: false}
+        });
+        expect(res).to.have.status(500);
+      });
   });
 
   it('returns 500 if web3 or mongo are not connected', async () => {
@@ -67,14 +67,14 @@ describe('Health check tests', () => {
     const stub = sinon.stub(apparatus.web3.eth, 'getNodeInfo');
     stub.rejects('Error: Invalid JSON RPC response: ""');
 
-    const {response} = await apparatus.request()
+    await apparatus.request()
       .get('/health')
-      .catch((err) => err);
-
-    expect(response.status).to.eql(500);
-    expect(response.body).to.eql({
-      mongo: {connected: false},
-      web3: {connected: false}
-    });
+      .then((res) => {
+        expect(res.body).to.eql({
+          mongo: {connected: false},
+          web3: {connected: false}
+        });
+        expect(res).to.have.status(500);
+      });
   });
 });

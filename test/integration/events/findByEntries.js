@@ -89,8 +89,7 @@ describe('Events Integrations: Find by data entries', () => {
   });
 
   it('fails when array index provided in query', async () => {
-    expect(get(`/events?data[acceleration][0]=1`))
-      .to.eventually.be.rejected.and.have.property('status', 400);
+    expect(await get(`/events?data[acceleration][0]=1`)).to.have.status(400);
   });
 
   it('with conjunction', async () => {
