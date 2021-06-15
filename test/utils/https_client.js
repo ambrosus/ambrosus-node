@@ -24,8 +24,6 @@ describe('Https client', () => {
   let httpsClient;
 
   const url = 'google.com';
-  // before(async () => {
-  // });
 
   beforeEach(() => {
     this.mitm = new Mitm();
@@ -81,15 +79,6 @@ describe('Https client', () => {
   });
 
   describe('handles response timeout', () => {
-    let clientRequest;
-
-    beforeEach(() => {
-      this.mitm.on('request', (req) => {
-        clientRequest;
-        // no response from server
-      });
-    });
-
     it('in fetch', async () => {
       await expect(httpsClient.performHTTPSGet('http://not-an-url.com', '/foo', {timeout: 50})).to.be.rejectedWith(/^(Request timed out|getaddrinfo ENOTFOUND not-an-url.com)/);
     });
