@@ -61,33 +61,6 @@ function importPrivateKey(web3: Web3, config: Config): Account {
   }
 }
 
-async function createWebSocketRPC(rpc: string) {
-  const socketProvider: provider = new Web3.providers.WebsocketProvider(rpc, {
-    clientConfig: {
-      maxReceivedFrameSize: 104857600,
-      maxReceivedMessageSize: 104857600,
-      fragmentationThreshold: 1048576,
-      keepalive: true,
-      keepaliveInterval: 50000
-    },
-    reconnect: {
-      auto: true,
-      delay: 5000,
-      maxAttempts: 10,
-      onTimeout: true
-    },
-    timeout: 60000
-  });
-
-  // testing purposes
-  socketProvider.on('close', () => console.error(`Socket closed`));
-  socketProvider.on('connect', () => console.error(`Socket connected`));
-  socketProvider.on('error', (err?) => console.error(`Socket error occured`, `${err}`));
-  socketProvider.on('reconnect', (err?) => console.error(`Socket reconnected`, `${err}`));
-  // testing purposes
-  return socketProvider;
-}
-
 export async function createWeb3(conf: Config = config): Promise<Web3> {
   const web3 = new Web3();
   const rpc = conf.web3Rpc;
@@ -104,7 +77,7 @@ export async function createWeb3(conf: Config = config): Promise<Web3> {
     if (rpc.startsWith('http')) {
       web3.setProvider(new Web3.providers.HttpProvider(rpc));
     } else if (rpc.startsWith('ws')) {
-      web3.setProvider(await createWebSocketRPC(rpc));
+      web3.setProvider(new Web3.providers.WebsocketProvider(rpc));
     } else {
       throw new Error('Unsupported RPC provider');
     }
