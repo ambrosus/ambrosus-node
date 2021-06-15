@@ -12,11 +12,8 @@ import {AuthenticationError, ValidationError} from '../errors/errors';
 import Filter from 'stream-json/filters/Filter';
 import Asm from 'stream-json/Assembler';
 
-const pipeline = import('util').then((util) => {
-  import('stream').then((stream) => {
-    util.promisify(stream.pipeline);
-  });
-});
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pipeline = require('util').promisify(require('stream').pipeline);
 
 const LATEST_BUNDLE_VERSION = 3;
 

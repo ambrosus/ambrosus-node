@@ -63,7 +63,8 @@ async function start(logger) {
 }
 
 function loadStrategy(uploadStrategy) {
-  const HermesUploadStrategy = import(`./workers/hermes_strategies/${uploadStrategy}`).default;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const HermesUploadStrategy = require(`./workers/hermes_strategies/${uploadStrategy}`).default;
   return new HermesUploadStrategy();
 }
 
