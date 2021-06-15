@@ -45,10 +45,13 @@ describe('Atlas worker - integration', () => {
   const atlasUrl = 'http://atlas.com';
   const storagePeriods = 8;
   const loggerMock = {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     info: () => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     error: () => {}
   };
   const bundleReleaseServerMock = {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     reset: () => {}
   };
   let mockChallengeStrategy;

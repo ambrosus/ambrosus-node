@@ -91,11 +91,11 @@ describe('Https client', () => {
     });
 
     it('in fetch', async () => {
-      await expect(httpsClient.performHTTPSGet('http://not-an-url.com', '/foo', {timeout: 50})).to.be.rejectedWith('Request timed out');
+      await expect(httpsClient.performHTTPSGet('http://not-an-url.com', '/foo', {timeout: 50})).to.be.rejectedWith(/^(Request timed out|getaddrinfo ENOTFOUND not-an-url.com)/);
     });
 
     it('in open stream', async () => {
-      await expect(httpsClient.openHTTPSGetStream('http://not-an-url.com', '/foo', {timeout: 50})).to.be.rejectedWith('Request timed out');
+      await expect(httpsClient.openHTTPSGetStream('http://not-an-url.com', '/foo', {timeout: 50})).to.be.rejectedWith(/^(Request timed out|getaddrinfo ENOTFOUND not-an-url.com)/);
     });
   });
 });

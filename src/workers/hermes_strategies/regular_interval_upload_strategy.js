@@ -26,6 +26,7 @@ export default class RegularIntervalUploadStrategy extends HermesUploadStrategy 
     return {result: true};
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   async bundlingSucceeded() {
   }
 }

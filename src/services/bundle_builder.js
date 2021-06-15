@@ -12,7 +12,7 @@ import {AuthenticationError, ValidationError} from '../errors/errors';
 import Filter from 'stream-json/filters/Filter';
 import Asm from 'stream-json/Assembler';
 
-const pipeline = require('util').promisify(require('stream').pipeline);
+const pipeline = import('util').promisify(import('stream').pipeline);
 
 const LATEST_BUNDLE_VERSION = 3;
 

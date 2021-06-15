@@ -89,7 +89,7 @@ async function start(logger) {
 }
 
 function loadStrategy(strategyName) {
-  const ResolutionStrategy = require(`./workers/atlas_strategies/${strategyName}`).default;
+  const ResolutionStrategy = import(`./workers/atlas_strategies/${strategyName}`).default;
   return new ResolutionStrategy();
 }
 
