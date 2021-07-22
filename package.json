@@ -28,7 +28,7 @@
     "getToken": "node src/getToken.js"
   },
   "engines": {
-    "node": ">=10.0",
+    "node": ">=14.0",
     "yarn": ">=1.3.2 <2.0.0"
   },
   "dependencies": {
