@@ -16,6 +16,7 @@ import {waitForChainSync} from './utils/web3_tools';
 import {setup} from './utils/instrument_process';
 import BundlesRestorerHermes from './services/bundles_restorer_hermes';
 import HermesBundlesValidatorWorker from './workers/validator_worker';
+import HermesBackupWorker from './workers/backup_worker';
 
 async function start(logger) {
   const builder = new Builder();
@@ -56,14 +57,25 @@ async function start(logger) {
     logger,
     config.hermesBundlesValidatorWorkerInterval
   );
+  const backupWorker = new HermesBackupWorker(
+    builder.db,
+    builder.identityManager,
+    builder.workerTaskTrackingRepository,
+    logger,
+    config.HermesBackupWorkerInterval
+  );
 
-  setTimeout(() => bundlesRestorer.restore().then(() => validatorWorker.start()), 500);
+  setTimeout(async () => {
+    /**/
+    await backupWorker.start();
+    await bundlesRestorer.restore();
+    await validatorWorker.start();
+  }, 500);
 
   await worker.start();
 }
 
 function loadStrategy(uploadStrategy) {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const HermesUploadStrategy = require(`./workers/hermes_strategies/${uploadStrategy}`).default;
   return new HermesUploadStrategy();
 }
