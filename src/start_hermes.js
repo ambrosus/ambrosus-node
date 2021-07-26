@@ -60,6 +60,8 @@ async function start(logger) {
   const backupWorker = new HermesBackupWorker(
     builder.db,
     builder.identityManager,
+    builder.store,
+    builder.dataModelEngine,
     builder.workerTaskTrackingRepository,
     logger,
     config.HermesBackupWorkerInterval
