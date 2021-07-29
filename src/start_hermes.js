@@ -63,6 +63,7 @@ async function start(logger) {
 }
 
 function loadStrategy(uploadStrategy) {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const HermesUploadStrategy = require(`./workers/hermes_strategies/${uploadStrategy}`).default;
   return new HermesUploadStrategy();
 }

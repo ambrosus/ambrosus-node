@@ -65,45 +65,48 @@ describe('Atlas node endpoints availability - Integrations', async () => {
     });
 
     it('assets', async () => {
-      const pendingRequest = apparatus.request()
+      await apparatus.request()
         .get('/assets/0x123abcde')
-        .send();
-      await expect(pendingRequest)
-        .to.eventually.be.rejected.and.have.property('response').that.has.deep.property('body', {reason: 'Not found: No asset with id = 0x123abcde found'});
+        .then((res) => {
+          expect(res).to.have.status(404);
+          expect(res.body).to.deep.equal({reason: 'Not found: No asset with id = 0x123abcde found'});
+        });
     });
 
     it('events', async () => {
-      const pendingRequest = apparatus.request()
+      await apparatus.request()
         .get('/events/0x123defe')
-        .send();
-      await expect(pendingRequest)
-        .to.eventually.be.rejected.and.have.property('response').that.has.deep.property('body', {reason: 'Not found: No event with id = 0x123defe found'});
+        .then((res) => {
+          expect(res).to.have.status(404);
+          expect(res.body).to.deep.equal({reason: 'Not found: No event with id = 0x123defe found'});
+        });
     });
 
     it('bundle', async () => {
-      const pendingRequest = apparatus.request()
+      await apparatus.request()
         .get('/bundle/0x123')
-        .send();
-      await expect(pendingRequest)
-        .to.eventually.be.rejected.and.have.property('response').that.has.deep.property('body', {reason: 'Not found: No bundle with id = 0x123 found'});
+        .then((res) => {
+          expect(res).to.have.status(404);
+          expect(res.body).to.deep.equal({reason: 'Not found: No bundle with id = 0x123 found'});
+        });
     });
   });
 
   describe('Unavailable routes', () => {
     it('accounts', async () => {
-      const pendingRequest = apparatus.request()
+      await apparatus.request()
         .get('/accounts')
-        .send();
-      await expect(pendingRequest)
-        .to.eventually.be.rejected.and.have.property('status', 404);
+        .then((res) => {
+          expect(res).to.have.status(404);
+        });
     });
 
     it('token', async () => {
-      const pendingRequest = apparatus.request()
+      await apparatus.request()
         .get('/token')
-        .send();
-      await expect(pendingRequest)
-        .to.eventually.be.rejected.and.have.property('status', 404);
+        .then((res) => {
+          expect(res).to.have.status(404);
+        });
     });
   });
 

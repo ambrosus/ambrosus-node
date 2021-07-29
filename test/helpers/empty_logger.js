@@ -10,8 +10,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {Logger} from '../../src/utils/loggers';
 
 class EmptyLogger extends Logger {
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   info() { }
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   error() { }
 }
 

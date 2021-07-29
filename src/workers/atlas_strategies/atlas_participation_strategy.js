@@ -23,6 +23,6 @@ export default class AtlasParticipationStrategy {
     throw new Error('Should be implemented');
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/no-empty-function
   async afterResolution(entity) { }
 }

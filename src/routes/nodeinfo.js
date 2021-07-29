@@ -14,6 +14,7 @@ import asyncMiddleware from '../middlewares/async_middleware';
 
 export const getNodeInfoHandler = (modelEngine, identityManager, gitCommit, operationalMode) => async (req, res) => {
   const workerLogs = await modelEngine.getWorkerLogs();
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   require('pkginfo')(module, 'version');
   if (operationalMode !== null) {
     const mode = await operationalMode.get();

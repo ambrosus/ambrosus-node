@@ -42,13 +42,15 @@ describe('Token - Integrations', async () => {
     });
 
     it('gets new token', async () => {
-      const token = await apparatus.request()
+      await apparatus.request()
         .post('/token')
         .set('authorization', `AMB ${pkPair.secret}`)
-        .send(requestData);
-      expect(token.body).to.deep.eq({
-        token: expectedToken
-      });
+        .send(requestData)
+        .then((res) => {
+          expect(res.body).to.deep.eq({
+            token: expectedToken
+          });
+        });
     });
 
     it('does not allow to cache', async () => {
@@ -60,40 +62,48 @@ describe('Token - Integrations', async () => {
     });
 
     it('throws 401 if bad secret', async () => {
-      const request = apparatus.request()
+      await apparatus.request()
         .post('/token')
         .set('authorization', `AMB 0xxyz`)
-        .send(requestData);
-      await expect(request).to.eventually.be.rejected.and.have.property('status', 401);
+        .send(requestData)
+        .then((res) => {
+          expect(res).to.have.status(401);
+        });
     });
 
     it('throws 401 if no secret provided', async () => {
-      const request = apparatus.request()
+      await apparatus.request()
         .post('/token')
-        .send(requestData);
-      await expect(request).to.eventually.be.rejected.and.have.property('status', 401);
+        .send(requestData)
+        .then((res) => {
+          expect(res).to.have.status(401);
+        });
     });
 
     it('throws 400 if no `validUntil` provided', async () => {
-      const request = apparatus.request()
+      await apparatus.request()
         .post('/token')
         .set('authorization', `AMB ${pkPair.secret}`)
-        .send({});
-      await expect(request).to.eventually.be.rejected.and.have.property('status', 400);
+        .send({})
+        .then((res) => {
+          expect(res).to.have.status(400);
+        });
     });
 
     it('ignores all fields other than `validUntil`', async () => {
-      const token = await apparatus.request()
+      await apparatus.request()
         .post('/token')
         .set('authorization', `AMB ${pkPair.secret}`)
         .send({
           ...requestData,
           createdBy: '0x2331232131213123',
           one: 1
+        })
+        .then((res) => {
+          expect(res.body).to.deep.eq({
+            token: expectedToken
+          });
         });
-      expect(token.body).to.deep.eq({
-        token: expectedToken
-      });
     });
   });
 
@@ -108,11 +118,13 @@ describe('Token - Integrations', async () => {
     });
 
     it('throws 403 if amb auth is disabled', async () => {
-      const request = apparatus.request()
+      await apparatus.request()
         .post('/token')
         .set('authorization', `AMB ${pkPair.secret}`)
-        .send(requestData);
-      await expect(request).to.eventually.be.rejected.and.have.property('status', 403);
+        .send(requestData)
+        .then((res) => {
+          expect(res).to.have.status(403);
+        });
     });
   });
 });

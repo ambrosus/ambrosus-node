@@ -70,9 +70,11 @@ export default class PeriodicWorker extends Worker {
     return false;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   async beforeWorkLoop() {
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   async afterWorkLoop() {
   }
 }

@@ -68,36 +68,36 @@ describe('Events Integrations: Create', () => {
 
   it('returns 400 for invalid input (missing required field)', async () => {
     const brokenEvent = pick(event, 'content.idData.timestamp');
-    const request = apparatus.request()
+    await apparatus.request()
       .post(`/assets/${asset.assetId}/events`)
       .set('Authorization', `AMB ${pkPair.secret}`)
-      .send(brokenEvent);
-    await expect(request)
-      .to.eventually.be.rejected
-      .and.have.property('status', 400);
+      .send(brokenEvent)
+      .then((res) => {
+        expect(res).to.have.status(400);
+      });
   });
 
   it('returns 400 for invalid input (unexpected field)', async () => {
     const brokenEvent = put(event, 'content.idData.foo', 'bar');
-    const request = apparatus.request()
+    await apparatus.request()
       .post(`/assets/${asset.assetId}/events`)
       .set('Authorization', `AMB ${pkPair.secret}`)
-      .send(brokenEvent);
-    await expect(request)
-      .to.eventually.be.rejected
-      .and.have.property('status', 400);
+      .send(brokenEvent)
+      .then((res) => {
+        expect(res).to.have.status(400);
+      });
   });
 
   it('returns 400 when same event added twice', async () => {
     await apparatus.request()
       .post(`/assets/${asset.assetId}/events`)
       .send(event);
-    const request = apparatus.request()
+    await apparatus.request()
       .post(`/assets/${asset.assetId}/events`)
-      .send(event);
-    await expect(request)
-      .to.eventually.be.rejected
-      .and.have.property('status', 400);
+      .send(event)
+      .then((res) => {
+        expect(res).to.have.status(400);
+      });
   });
 
   it('returns 403 for authorisation error (user does not exist)', async () => {
@@ -106,13 +106,12 @@ describe('Events Integrations: Create', () => {
       undefined,
       notRegisteredAccount.secret);
 
-    const request = apparatus.request()
+    await apparatus.request()
       .post(`/assets/${asset.assetId}/events`)
-      .send(failingEvent);
-
-    await expect(request)
-      .to.eventually.be.rejected
-      .and.have.property('status', 403);
+      .send(failingEvent)
+      .then((res) => {
+        expect(res).to.have.status(403);
+      });
   });
 
   it('returns 403 for permission error (no `create_event` permission)', async () => {
@@ -122,13 +121,12 @@ describe('Events Integrations: Create', () => {
         assetId: asset.assetId
       }, undefined, otherAccount.secret);
 
-    const request = apparatus.request()
+    await apparatus.request()
       .post(`/assets/${asset.assetId}/events`)
-      .send(notPermittedEvent);
-
-    await expect(request)
-      .to.eventually.be.rejected
-      .and.have.property('status', 403);
+      .send(notPermittedEvent)
+      .then((res) => {
+        expect(res).to.have.status(403);
+      });
   });
 
   it('returns 403 when trying to create an event with access level higher than own access level', async () => {
@@ -138,13 +136,12 @@ describe('Events Integrations: Create', () => {
       accessLevel: 9999
     }, undefined, adminAccount.secret);
 
-    const request = apparatus.request()
+    await apparatus.request()
       .post(`/assets/${asset.assetId}/events`)
-      .send(highAccessLevelEvent);
-
-    await expect(request)
-      .to.eventually.be.rejected
-      .and.have.property('status', 403);
+      .send(highAccessLevelEvent)
+      .then((res) => {
+        expect(res).to.have.status(403);
+      });
   });
 
   it('returns 400 when trying to create an event that exceeds the 10KB size limit', async () => {
@@ -166,13 +163,12 @@ describe('Events Integrations: Create', () => {
       adminAccount.secret
     );
 
-    const request = apparatus.request()
+    await apparatus.request()
       .post(`/assets/${asset.assetId}/events`)
-      .send(largeEvent);
-
-    await expect(request)
-      .to.eventually.be.rejected
-      .and.have.property('status', 400);
+      .send(largeEvent)
+      .then((res) => {
+        expect(res).to.have.status(400);
+      });
   });
 
   afterEach(async () => {

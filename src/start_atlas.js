@@ -89,6 +89,7 @@ async function start(logger) {
 }
 
 function loadStrategy(strategyName) {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const ResolutionStrategy = require(`./workers/atlas_strategies/${strategyName}`).default;
   return new ResolutionStrategy();
 }

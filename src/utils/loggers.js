@@ -25,7 +25,7 @@ export class WinstonConsoleLogger extends Logger {
     this.logger = createLogger({
       format: format.combine(
         format.timestamp(),
-        format.json(),
+        format.json()
       ),
       transports: [
         new transports.Console()
