@@ -73,7 +73,7 @@ async function start(logger) {
   );
 
   setTimeout(async () => {
-    // check & restore bundles 
+    // check & restore bundles
     await bundlesRestorer.restore();
     // then check & restore infrastructure (organizations/accounts & state.json)
     await hermesBackup.restore();
@@ -87,6 +87,7 @@ async function start(logger) {
 }
 
 function loadStrategy(uploadStrategy) {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const HermesUploadStrategy = require(`./workers/hermes_strategies/${uploadStrategy}`).default;
   return new HermesUploadStrategy();
 }

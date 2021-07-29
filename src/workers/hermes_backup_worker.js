@@ -27,9 +27,7 @@ export default class HermesBackupWorker extends PeriodicWorker {
       return;
     }
     try {
-
       await this.hermesBackup.save();
-
     } catch (err) {
       this.logger.info(`HermesBackupWorker: unhandled error - ${err.message || err}`);
     } finally {
