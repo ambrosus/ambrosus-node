@@ -51,14 +51,14 @@ export default class HermesBackup {
         rawData: await this.encryptBackup({db, state})
       };
 
-      const secret = await this.store.safeRead('builtInPrivateKey');
-      const address = this.identityManager.addressFromSecret(state.builtInPrivateKey);
+      const creatorSecret = state.builtInPrivateKey;
+      const creatorAddress = this.identityManager.addressFromSecret(creatorSecret);
 
-      const asset = await this.generateAsset(address, secret);
+      const asset = await this.generateAsset(creatorAddress, creatorSecret);
       await this.dataModelEngine.createAsset(asset);
       this.logInfo(`created backup asset ${asset.assetId}`);
 
-      const event = await this.generateEvent(asset.assetId, data, address, secret);
+      const event = await this.generateEvent(asset.assetId, data, creatorAddress, creatorSecret);
       await this.dataModelEngine.createEvent(event);
       this.logInfo(`created backup event ${event.eventId}`);
     } catch (err) {
