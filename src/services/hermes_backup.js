@@ -39,11 +39,23 @@ export default class HermesBackup {
 
       const state = await this.store.readFile();
 
+      if (typeof state.builtInPrivateKey !== 'string') {
+        this.logError(`nothing to save (no builtInPrivateKey)`);
+        return;
+      }
+
       const db = {};
       for (const colName of this.allCollectionsForBackup) {
-        db[colName] = await this.db.collection(colName)
+        const colArray = await this.db.collection(colName)
           .find({}, {projection: {_id: 0}})
           .toArray();
+
+        if (colArray.length === 0 && this.requiredCollections.includes(colName)) {
+          this.logError(`nothing to save (empty ${colName})`);
+          return;
+        }
+
+        db[colName] = colArray;
       }
 
       const data = {
