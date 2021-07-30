@@ -97,6 +97,10 @@ export default class BundlesRestorerHermes {
           await this.workerLogger.addLog('Try to restore bundle', {bundleId: bundle.bundleId});
           const expirationTime = await this.shelteringWrapper.shelteringExpirationDate(bundle.bundleId);
           const donors = await this.getBundleDonors(bundle);
+          if (donors.length === 0) {
+            await this.workerLogger.addLog(`Bundle ${bundle.bundleId} has no donors`);
+            continue;
+          }
 
           while (donors.length > 0) {
             const pos = this.getRandomInt(donors.length);
