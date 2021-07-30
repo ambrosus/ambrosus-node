@@ -41,40 +41,25 @@ export default class HermesBackup {
 
       const db = {};
       for (const colName of this.allCollectionsForBackup) {
-        db[colName] = await this.db.collection(colName).find({}, {projection: {_id: 0}})
+        db[colName] = await this.db.collection(colName)
+          .find({}, {projection: {_id: 0}})
           .toArray();
-      }
-
-      const backup = {db, state};
-
-      const secret = await this.store.safeRead('builtInPrivateKey');
-      const address = this.identityManager.addressFromSecret(state.builtInPrivateKey);
-
-      let assetId;
-      const latestBackupEvent = await this.getLatestBackupEvent();
-      if (null !== latestBackupEvent) {
-        // eslint-disable-next-line prefer-destructuring
-        assetId = latestBackupEvent.content.idData.assetId;
-
-        // check asset expired?
-
-        this.logInfo(`found backup asset ${assetId}`);
-      } else {
-        const asset = await this.generateAsset(address, secret);
-        await this.dataModelEngine.createAsset(asset);
-        // eslint-disable-next-line prefer-destructuring
-        assetId = asset.assetId;
-        this.logInfo(`created backup asset ${assetId}`);
       }
 
       const data = {
         type: 'ambrosus.backup',
-        rawData: await this.encryptBackup(backup)
+        rawData: await this.encryptBackup({db, state})
       };
 
-      const event = await this.generateEvent(assetId, data, address, secret);
-      await this.dataModelEngine.createEvent(event);
+      const secret = await this.store.safeRead('builtInPrivateKey');
+      const address = this.identityManager.addressFromSecret(state.builtInPrivateKey);
 
+      const asset = await this.generateAsset(address, secret);
+      await this.dataModelEngine.createAsset(asset);
+      this.logInfo(`created backup asset ${asset.assetId}`);
+
+      const event = await this.generateEvent(asset.assetId, data, address, secret);
+      await this.dataModelEngine.createEvent(event);
       this.logInfo(`created backup event ${event.eventId}`);
     } catch (err) {
       this.logError(`unhandled error - ${err.message || err}`);
@@ -87,7 +72,6 @@ export default class HermesBackup {
 
       if (! await this.isRestoreRequired()) {
         this.logInfo(`restore not required`);
-        //
         return;
       }
 
@@ -97,47 +81,33 @@ export default class HermesBackup {
         return null;
       }
 
-      //
-      // console.log(latestBackupEvent);
-
       const latestBackup = await this.decryptBackup(latestBackupEvent.content.data[0].rawData);
-
-      //
-      // console.log(latestBackup);
-
-      // validate backup?
 
       // restore collections
       for (const colName in latestBackup.db) {
-        // console.log('restore', colName);
-        const oldColName = `${colName}_old`;
-
         try {
+          const oldColName = `${colName}_old`;
+
           try {
             await this.db.collection(oldColName).drop();
           } catch (err) {
-            //
+            // ignore error
           }
 
           try {
             await this.db.collection(colName).rename(oldColName);
           } catch (err) {
-            //
+            // ignore error
           }
 
           await this.db.collection(colName).insertMany(latestBackup.db[colName]);
-
           this.logInfo(`restored ${colName}`);
         } catch (err) {
           this.logError(`error restoring ${colName} - ${err.message || err}`);
         }
       }
-
-      // restore state.json?
     } catch (err) {
       this.logError(`unhandled error - ${err.message || err}`);
-      //
-      // console.error(err);
     }
   }
 
