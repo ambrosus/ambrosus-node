@@ -44,6 +44,12 @@ export default class HermesBackup {
         return;
       }
 
+      const latestBackup = await this.getLatestBackup();
+      if (null !== latestBackup && latestBackup.state.builtInPrivateKey !== state.builtInPrivateKey) {
+        this.logError('builtInPrivateKey mismatch');
+        return;
+      }
+
       const db = {};
       for (const colName of this.allCollectionsForBackup) {
         const colArray = await this.db.collection(colName)
@@ -87,13 +93,17 @@ export default class HermesBackup {
         return;
       }
 
-      const latestBackupEvent = await this.getLatestBackupEvent();
-      if (null === latestBackupEvent) {
-        this.logInfo('no backup event found');
-        return null;
+      const latestBackup = await this.getLatestBackup();
+      if (null === latestBackup) {
+        this.logError('no backup found');
+        return;
       }
 
-      const latestBackup = await this.decryptBackup(latestBackupEvent.content.data[0].rawData);
+      const state = await this.store.readFile();
+      if (latestBackup.state.builtInPrivateKey !== state.builtInPrivateKey) {
+        this.logError('builtInPrivateKey mismatch');
+        return;
+      }
 
       // restore collections
       for (const colName in latestBackup.db) {
@@ -166,6 +176,15 @@ export default class HermesBackup {
     };
 
     return event;
+  }
+
+  async getLatestBackup() {
+    const latestBackupEvent = await this.getLatestBackupEvent();
+    if (null === latestBackupEvent) {
+      return null;
+    }
+
+    return await this.decryptBackup(latestBackupEvent.content.data[0].rawData);
   }
 
   async getLatestBackupEvent() {
