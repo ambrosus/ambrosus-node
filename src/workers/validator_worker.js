@@ -45,6 +45,9 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
           continue; // skip expired bundles
         }
         const shelterers = await this.bundleStoreContract.methods.getShelterers(bundleId).call();
+        if (shelterers.length === 0) {
+          this.logInfo(`No shelterers: ${bundleId}`);
+        }
 
         for (const shelterer of shelterers) {
           await this.validateAndRestoreBundle(bundleId, shelterer);
