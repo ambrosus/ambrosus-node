@@ -16,6 +16,8 @@ import {waitForChainSync} from './utils/web3_tools';
 import {setup} from './utils/instrument_process';
 import BundlesRestorerHermes from './services/bundles_restorer_hermes';
 import HermesBundlesValidatorWorker from './workers/validator_worker';
+import HermesBackupWorker from './workers/hermes_backup_worker';
+import HermesBackup from './services/hermes_backup';
 
 async function start(logger) {
   const builder = new Builder();
@@ -56,8 +58,30 @@ async function start(logger) {
     logger,
     config.hermesBundlesValidatorWorkerInterval
   );
+  const hermesBackup = new HermesBackup(
+    builder.db,
+    builder.store,
+    builder.identityManager,
+    builder.dataModelEngine,
+    logger
+  );
+  const backupWorker = new HermesBackupWorker(
+    hermesBackup,
+    builder.workerTaskTrackingRepository,
+    logger,
+    config.HermesBackupWorkerInterval
+  );
 
-  setTimeout(() => bundlesRestorer.restore().then(() => validatorWorker.start()), 500);
+  setTimeout(async () => {
+    // check & restore bundles
+    await bundlesRestorer.restore();
+    // then check & restore infrastructure (organizations/accounts & state.json)
+    await hermesBackup.restore();
+    //
+    await backupWorker.start();
+    //
+    await validatorWorker.start();
+  }, 500);
 
   await worker.start();
 }
