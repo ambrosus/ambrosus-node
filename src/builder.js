@@ -14,7 +14,7 @@ import StateModel from './models/state_model';
 import {WinstonConsoleLogger} from './utils/loggers';
 import WorkerLogger from './services/worker_logger';
 
-// import PrivateKeyRetriever from './services/privatekey_retriever';
+import PrivateKeyRetriever from './services/privatekey_retriever';
 
 import AccountAccessDefinitions from './services/account_access_definitions';
 import AccountRepository from './services/account_repository';
@@ -87,8 +87,8 @@ class Builder {
   }
 
   async build(config, dependencies = {}) {
-    // config.nodePrivateKey = config.nodePrivateKey || await PrivateKeyRetriever.retrieve();
-    this.config = config;
+    const nodePrivateKey = config.nodePrivateKey || await PrivateKeyRetriever.retrieve() || '';
+    this.config = Object.freeze({...config, nodePrivateKey});
     const {web3} = dependencies;
     const {db, client} = await connectToMongo(this.config);
     this.db = db;
