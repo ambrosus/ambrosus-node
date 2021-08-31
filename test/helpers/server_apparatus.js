@@ -33,7 +33,7 @@ export default class ServerApparatus extends Builder {
     this.role = role;
     // Read defaults from global config, but allow the options to be customized
     // for each test.
-    this.config = {...config, ...customConfig};
+    this.config = Object.freeze({...config, ...customConfig});
     this.devConfig = devConfig;
     this.worker = null;
   }

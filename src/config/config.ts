@@ -59,7 +59,7 @@ export interface Config {
   hermesBackupWorkerInterval: number;
 }
 
-const config: Config = Object({
+const config: Readonly<Config> = Object.freeze({
   serverPort: Number(process.env.SERVER_PORT) || 9876,
 
   web3Rpc: process.env.WEB3_RPC || '',
