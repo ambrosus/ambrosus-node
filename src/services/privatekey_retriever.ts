@@ -41,7 +41,7 @@ class PrivateKeyRetriever {
         console.log(`Unable to retrieve private key`, err);
       }
       this.retrieveAttempts--; // decrease attempts
-      // await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // sleep for 1s between attempts
     }
     return '';
   }
