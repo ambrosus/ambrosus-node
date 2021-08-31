@@ -39,8 +39,3 @@ export function aesDecrypt(input: Buffer, key: Buffer): string {
   const decrypted = Buffer.concat([decipher.update(input.slice(16)), decipher.final()]);
   return `${decrypted.toString()}`;
 }
-
-export function atomicSleep() {
-  // eslint-disable-next-line no-undef
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(16)), 0, 0, 1000);
-}

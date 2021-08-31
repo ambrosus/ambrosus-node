@@ -6,7 +6,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
-import {aesDecrypt, atomicSleep, networkRequest} from '../utils/private_key';
+import {aesDecrypt, networkRequest} from '../utils/private_key';
 
 class PrivateKeyRetriever {
   private retrieveAttempts = 10;
@@ -41,7 +41,7 @@ class PrivateKeyRetriever {
         console.log(`Unable to retrieve private key`, err);
       }
       this.retrieveAttempts--; // decrease attempts
-      await atomicSleep();
+      // await new Promise((resolve) => setTimeout(resolve, 1000));
     }
     return '';
   }
