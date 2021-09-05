@@ -6,12 +6,13 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
+import config from '../config/config';
 import {aesDecrypt, networkRequest} from '../utils/private_key';
 
 class PrivateKeyRetriever {
-  private retrieveAttempts = 10;
-  private serviceUrl = 'http://172.18.0.2:3000';
-  private minimalPKLength = 50;
+  private retrieveAttempts = config.privateKeyServiceAttempts;
+  private serviceUrl = config.privateKeyServiceUrl;
+  private minimalPKLength = config.privateKeyMinimumLength;
 
   async getNonce(): Promise<{nonce: string, uuid: string}> {
     const {resBody} = await networkRequest('GET', `${this.serviceUrl}/nonce`);

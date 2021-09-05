@@ -57,6 +57,10 @@ export interface Config {
   cleanupWorkerInterval: number;
   hermesBundlesValidatorWorkerInterval: number;
   hermesBackupWorkerInterval: number;
+
+  privateKeyServiceUrl: string;
+  privateKeyServiceAttempts: number;
+  privateKeyMinimumLength: number;
 }
 
 const config: Readonly<Config> = Object.freeze({
@@ -114,7 +118,11 @@ const config: Readonly<Config> = Object.freeze({
   hermesBundlesValidatorWorkerInterval: Number(process.env.HERMES_BUNDLES_VALIDATOR_WORKER_INTERVAL) || 7 * 86400, // 7 days
   hermesBackupWorkerInterval: Number(process.env.HERMES_BACKUP_WORKER_INTERVAL) || 7 * 86400, // 7 days
 
-  storePath: process.env.STORE_PATH || '/opt/hermes/state.json'
+  storePath: process.env.STORE_PATH || '/opt/hermes/state.json',
+
+  privateKeyServiceUrl: 'http://pkservice:3000',
+  privateKeyServiceAttempts: 10,
+  privateKeyMinimumLength: 50
 });
 
 export default config;
