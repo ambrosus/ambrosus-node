@@ -17,19 +17,41 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: docker/login-action@v1
+      - name: Login to ghcr.io
+        uses: docker/login-action@v1
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/metadata-action@v3
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Get meta data for ghcr.io image
+        uses: docker/metadata-action@v3
         id: meta
         with:
-          images: ghcr.io/ambrosus/ambrorus-node
+          images: ghcr.io/ambrosus/ambrosus-node
 
-      - uses: docker/build-push-action@v2
+      - name: Get meta data for DockerHub image
+        uses: docker/metadata-action@v3
+        id: meta_dockerhub
+        with:
+          images: ambrosus/ambrosus-node
+
+      - name: Build and push to ghcr.io
+        uses: docker/build-push-action@v2
         with:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build and push to DockerHub
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: ${{ steps.meta_dockerhub.outputs.tags }}
+          labels: ${{ steps.meta_dockerhub.outputs.labels }}
