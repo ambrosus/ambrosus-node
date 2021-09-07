@@ -26,10 +26,21 @@ jobs:
       - uses: docker/metadata-action@v3
         id: meta
         with:
-          images: ghcr.io/ambrosus/ambrorus-node
+          images: ghcr.io/ambrosus/ambrosus-node
+
+      - uses: docker/metadata-action@v3
+        id: meta_quay
+        with:
+          images: quay.io/ambrosus/ambrosus-node
 
       - uses: docker/build-push-action@v2
         with:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: ${{ steps.meta_quay.outputs.tags }}
+          labels: ${{ steps.meta_quay.outputs.labels }}
