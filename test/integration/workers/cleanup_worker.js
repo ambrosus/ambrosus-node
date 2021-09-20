@@ -29,7 +29,7 @@ describe('Cleanup worker – integration', () => {
 
   before(async () => {
     builder = new Builder();
-    await builder.build({...config, headContractAddress: '0x0000000000000000000000000000000000000F10'});
+    await builder.build({...config, headContractAddress: '0x0000000000000000000000000000000000000F10'}, 'testmode');
   });
 
   beforeEach(async () => {
