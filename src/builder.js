@@ -215,6 +215,10 @@ class Builder {
       bundleStoreWrapper: this.bundleStoreWrapper,
       shelteringWrapper: this.shelteringWrapper
     });
+
+    this.contracts.bundleStoreWrapperContract = await this.bundleStoreWrapper.contract();
+    this.contracts.shelteringWrapperContract = await this.shelteringWrapper.contract();
+
     return {dataModelEngine: this.dataModelEngine, client: this.client, kycWhitelistWrapper: this.kycWhitelistWrapper};
   }
 }

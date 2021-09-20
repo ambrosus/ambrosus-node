@@ -7,6 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 import PeriodicWorker from './periodic_worker';
+import Builder from '../builder';
 
 const BUNDLES_VERIFY_WORK_TYPE = 'BundlesVerify';
 const STORAGE_PERIOD_DURATION = 13 * 28 * 86400; // in seconds
@@ -20,8 +21,6 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
     this.bundleRepository = bundleRepository;
     this.bundleStoreWrapper = bundleStoreWrapper;
     this.shelteringWrapper = shelteringWrapper;
-    this.bundleStoreContract = null;
-    this.shelteringContract = null;
   }
 
   async periodicWork() {
@@ -33,8 +32,6 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
     }
     try {
       this.logInfo(`Validation start`);
-      this.bundleStoreContract = await this.bundleStoreWrapper.contract();
-      this.shelteringContract = await this.shelteringWrapper.contract();
 
       const hermresBundles = await this.bundleRepository.getHermesBundles(0);
       this.logInfo(`Hermes bundles count ${hermresBundles.length}`);
@@ -44,7 +41,7 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
         if (this.now() > expirationTime) {
           continue; // skip expired bundles
         }
-        const shelterers = await this.bundleStoreContract.methods.getShelterers(bundleId).call();
+        const shelterers = await Builder.contracts.bundleStoreWrapperContract.methods.getShelterers(bundleId).call();
         if (shelterers.length === 0) {
           this.logInfo(`No shelterers: ${bundleId}`);
         }
@@ -62,7 +59,7 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
 
   async validateAndRestoreBundle(bundleId, shelterer) {
     try {
-      const sheltererExpirationTime = await this.shelteringContract.methods.getShelteringExpirationDate(bundleId, shelterer).call();
+      const sheltererExpirationTime = await Builder.contracts.shelteringWrapperContract.methods.getShelteringExpirationDate(bundleId, shelterer).call();
       if (this.now() > sheltererExpirationTime) {
         throw new Error('Bundle expired'); // skip expired bundles (when sheltererExpirationTime < expirationTime)
       }
