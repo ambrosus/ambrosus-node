@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import promClient from 'prom-client';
 import BundleShelteringResolver from './bundle_sheltering_resolver';
 import {atlasResolutionStatus} from './atlas_resolver';
-import Builder from "../../builder";
+import Builder from '../../builder';
 
 export default class AtlaTransferResolver extends BundleShelteringResolver {
   constructor(
