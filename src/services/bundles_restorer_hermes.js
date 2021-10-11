@@ -7,6 +7,8 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+import Builder from '../builder';
+
 export default class BundlesRestorerHermes {
   constructor(
     bundleStoreWrapper,
@@ -137,8 +139,7 @@ export default class BundlesRestorerHermes {
   }
 
   async getBundleDonors(bundle) {
-    const contract = await this.bundleStoreWrapper.contract();
-    const shelterers = await contract.methods.getShelterers(bundle.bundleId).call();
+    const shelterers = await Builder.contracts.bundleStoreWrapperContract.methods.getShelterers(bundle.bundleId).call();
     let pos = shelterers.indexOf(bundle.shelterer);
 
     while (-1 !== pos) {
