@@ -1,5 +1,3 @@
-# Security Policy
-
-## Reporting a Vulnerability
+# Reporting a Vulnerability
 
 Please report security issues to <tech@ambrosus.io>
