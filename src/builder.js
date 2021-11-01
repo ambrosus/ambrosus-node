@@ -216,10 +216,13 @@ export class Builder {
       shelteringWrapper: this.shelteringWrapper
     });
 
-    this.contracts = {
-      bundleStoreWrapperContract: await this.bundleStoreWrapper.contract(),
-      shelteringWrapperContract: await this.shelteringWrapper.contract()
-    };
+    // testmode prevents out of gas errors when run from mocha
+    if (dependencies !== 'testmode') {
+      this.contracts = {
+        bundleStoreWrapperContract: await this.bundleStoreWrapper.contract(),
+        shelteringWrapperContract: await this.shelteringWrapper.contract()
+      };
+    }
 
     return {dataModelEngine: this.dataModelEngine, client: this.client, kycWhitelistWrapper: this.kycWhitelistWrapper};
   }
