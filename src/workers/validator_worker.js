@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 import PeriodicWorker from './periodic_worker';
-import Builder from '../builder';
+import builder from '../builder';
 
 const BUNDLES_VERIFY_WORK_TYPE = 'BundlesVerify';
 const STORAGE_PERIOD_DURATION = 13 * 28 * 86400; // in seconds
@@ -41,7 +41,7 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
         if (this.now() > expirationTime) {
           continue; // skip expired bundles
         }
-        const shelterers = await Builder.contracts.bundleStoreWrapperContract.methods.getShelterers(bundleId).call();
+        const shelterers = await builder.contracts.bundleStoreWrapperContract.methods.getShelterers(bundleId).call();
         if (shelterers.length === 0) {
           this.logInfo(`No shelterers: ${bundleId}`);
         }
@@ -59,7 +59,7 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
 
   async validateAndRestoreBundle(bundleId, shelterer) {
     try {
-      const sheltererExpirationTime = await Builder.contracts.shelteringWrapperContract.methods.getShelteringExpirationDate(bundleId, shelterer).call();
+      const sheltererExpirationTime = await builder.contracts.shelteringWrapperContract.methods.getShelteringExpirationDate(bundleId, shelterer).call();
       if (this.now() > sheltererExpirationTime) {
         throw new Error('Bundle expired'); // skip expired bundles (when sheltererExpirationTime < expirationTime)
       }

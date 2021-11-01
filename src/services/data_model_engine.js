@@ -13,7 +13,7 @@ import {pick, put} from '../utils/dict_utils';
 import allPermissions from '../utils/all_permissions';
 import BundleStatuses from '../utils/bundle_statuses';
 import removeDuplicates from '../utils/sutils.js';
-import Builder from '../builder';
+import builder from '../builder';
 
 export default class DataModelEngine {
   constructor(
@@ -436,7 +436,7 @@ export default class DataModelEngine {
   }
 
   async getBundleDonors(bundleId, nodeId = null) {
-    const donors = await Builder.contracts.bundleStoreWrapperContract.methods.getShelterers(bundleId).call();
+    const donors = await builder.contracts.bundleStoreWrapperContract.methods.getShelterers(bundleId).call();
     if (nodeId) {
       let pos = donors.indexOf(nodeId);
       while (-1 !== pos) {
@@ -444,7 +444,7 @@ export default class DataModelEngine {
         pos = donors.indexOf(nodeId);
       }
     }
-    const uploaderId = await Builder.contracts.bundleStoreWrapperContract.methods.getUploader(bundleId).call();
+    const uploaderId = await builder.contracts.bundleStoreWrapperContract.methods.getUploader(bundleId).call();
     if (uploaderId !== nodeId) {
       donors.push(uploaderId);
     }
