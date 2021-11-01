@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import builder from '../../../src/builder';
+import {Builder} from '../../../src/builder';
 import config from '../../../src/config/config';
 import {cleanDatabase} from '../../../src/utils/db_utils';
 import CleanupWorker from '../../../src/workers/cleanup_worker';
@@ -21,12 +21,14 @@ chai.use(sinonChai);
 const {expect} = chai;
 
 describe('Cleanup worker – integration', () => {
+  let builder;
   let loggerSpy;
   const now = 150000000;
   let clock;
   let worker;
 
   before(async () => {
+    builder = new Builder();
     await builder.build({...config, headContractAddress: '0x0000000000000000000000000000000000000F10'});
   });
 
