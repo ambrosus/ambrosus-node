@@ -70,7 +70,7 @@ describe('Atlas worker - integration', () => {
   const prepareHermesSetup = async (web3, hermesAddress) => {
     const hermesWeb3 = new Web3(web3.currentProvider);
     hermesWeb3.eth.defaultAccount = hermesAddress;
-    const hermesBuilder = new Builder();
+    const hermesBuilder = Builder;
     await hermesBuilder.build({...config, headContractAddress}, {web3: hermesWeb3});
     await addToKycWhitelist(Role.HERMES, '0', hermesBuilder.dataModelEngine, builder.kycWhitelistWrapper, loggerMock);
     await hermesBuilder.rolesRepository.onboardAsHermes(hermesBuilder.identityManager.nodeAddress(), hermesUrl);
@@ -90,7 +90,7 @@ describe('Atlas worker - integration', () => {
   beforeEach(async () => {
     const headContract = await deployAll(web3, config.nodePrivateKey, loggerMock);
     headContractAddress = headContract.options.address;
-    builder = new Builder();
+    builder = Builder;
     await builder.build({...config, headContractAddress}, {web3});
     const [, hermesAddress] = await web3.eth.getAccounts();
     hermesUploadActions = (await prepareHermesSetup(web3, hermesAddress)).uploadActions;

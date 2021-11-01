@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {WinstonConsoleLogger} from '../utils/loggers';
-import Builder from '../builder';
+import builder from '../builder';
 import config from '../config/config';
 import devConfig from '../config/devConfig';
 import {addToKycWhitelist, onboardAsAtlas, registerAdminAccount} from '../utils/prerun';
@@ -20,7 +20,6 @@ async function setupDevelopment(dataModelEngine, kycWhitelistWrapper, logger) {
   await onboardAsAtlas(dataModelEngine, dataModelEngine.rolesRepository, logger);
 }
 
-const builder = new Builder();
 const logger = new WinstonConsoleLogger();
 
 builder.build(config)

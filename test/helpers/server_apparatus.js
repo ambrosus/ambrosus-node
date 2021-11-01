@@ -16,7 +16,7 @@ import {adminAccountWithSecret} from '../fixtures/account';
 import EmptyLogger from './empty_logger';
 import config from '../../src/config/config';
 import devConfig from '../../src/config/devConfig';
-import Builder from '../../src/builder';
+import {Builder} from '../../src/builder';
 import ServerWorker from '../../src/workers/server_worker';
 import deployAll from '../../src/utils/deployment';
 import {Role} from '../../src/services/roles_repository';

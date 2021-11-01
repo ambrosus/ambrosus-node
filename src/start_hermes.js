@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import config from './config/config';
-import Builder from './builder';
+import builder from './builder';
 import HermesWorker from './workers/hermes_worker';
 import {Role} from './services/roles_repository';
 import WorkerLogger from './services/worker_logger';
@@ -20,7 +20,6 @@ import HermesBackupWorker from './workers/hermes_backup_worker';
 import HermesBackup from './services/hermes_backup';
 
 async function start(logger) {
-  const builder = new Builder();
   await builder.build(config);
   await builder.migrator.ensureMigrationIsComplete(logger);
   await waitForChainSync(builder.web3, 5, () => logger.info({

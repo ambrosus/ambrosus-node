@@ -8,14 +8,13 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import config from './config/config';
-import Builder from './builder';
+import builder from './builder';
 import ServerWorker from './workers/server_worker';
 import {Role} from './services/roles_repository';
 import {waitForChainSync} from './utils/web3_tools';
 import {setup} from './utils/instrument_process';
 
 async function start(logger) {
-  const builder = new Builder();
   await builder.build(config);
   await builder.migrator.ensureMigrationIsComplete(logger);
   await builder.ensureAdminAccountExist();

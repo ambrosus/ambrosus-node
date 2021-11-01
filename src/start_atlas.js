@@ -11,7 +11,7 @@ import AtlasWorker from './workers/atlas_worker';
 import AtlasChallengeResolver from './workers/atlas_resolvers/atlas_challenge_resolver';
 import AtlasTransferResolver from './workers/atlas_resolvers/atlas_transfer_resolver';
 import config from './config/config';
-import Builder from './builder';
+import builder from './builder';
 import {Role} from './services/roles_repository';
 import WorkerLogger from './services/worker_logger';
 import {waitForChainSync} from './utils/web3_tools';
@@ -21,7 +21,6 @@ import ReleaseBundlesService from './services/release_bundles_service';
 import BundlesRestorer from './services/bundles_restorer';
 
 async function start(logger) {
-  const builder = new Builder();
   await builder.build(config);
   await builder.migrator.ensureMigrationIsComplete(logger);
   await waitForChainSync(builder.web3, 5, () => logger.info('Ethereum client is not in sync. Retrying in 5 seconds'));
