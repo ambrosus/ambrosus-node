@@ -42,10 +42,10 @@ export default class ShelteredBundlesRepository extends ResolutionsRepository {
   async updateActiveResolutionsCache(fromBlock, currentBlock) {
     this.logger.info(`ShelteredBundlesRepository: Scan blockchain from block ${fromBlock} to ${currentBlock}`);
 
-    const addedBundles = await this.collectEvents(fromBlock, currentBlock,
+    const addedBundles = await this.collectEvents(10000000, 11000000,
       async (start, end) => (await this.bundleStoreWrapper.sheltererAdded(start, end)).filter((event) => event.returnValues.shelterer === this.address),
       ['bundleId', 'shelterer']);
-    const removedBundles = await this.collectEvents(fromBlock, currentBlock,
+    const removedBundles = await this.collectEvents(10000000, 11000000,
       async (start, end) => (await this.bundleStoreWrapper.sheltererRemoved(start, end)).filter((event) => event.returnValues.shelterer === this.address),
       ['bundleId', 'shelterer']);
 

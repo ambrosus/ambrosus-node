@@ -73,14 +73,13 @@ export default class BundlesRestorer {
   }
 
   async getBundleDonors(bundle) {
-    const contract = await this.bundleStoreWrapper.contract();
-    const shelterers = await contract.methods.getShelterers(bundle.bundleId).call();
+    const shelterers = await this.bundleStoreWrapper.getShelterers(bundle.bundleId);
     let pos = shelterers.indexOf(bundle.shelterer);
     while (-1 !== pos) {
       shelterers.splice(pos, 1);
       pos = shelterers.indexOf(bundle.shelterer);
     }
-    shelterers.push(await contract.methods.getUploader(bundle.bundleId).call());
+    shelterers.push(await this.bundleStoreWrapper.getUploader(bundle.bundleId));
     return shelterers;
   }
 }

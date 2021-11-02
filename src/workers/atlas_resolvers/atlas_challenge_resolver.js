@@ -82,14 +82,13 @@ export default class AtlasChallengeResolver extends BundleShelteringResolver {
   }
 
   async getBundleDonors(proposition) {
-    const contract = await this.bundleStoreWrapper.contract();
-    const shelterers = await contract.methods.getShelterers(proposition.bundleId).call();
+    const shelterers = await this.bundleStoreWrapper.getShelterers(proposition.bundleId);
     let pos = shelterers.indexOf(proposition.sheltererId);
     while (-1 !== pos) {
       shelterers.splice(pos, 1);
       pos = shelterers.indexOf(proposition.sheltererId);
     }
-    shelterers.push(await contract.methods.getUploader(proposition.bundleId).call());
+    shelterers.push(await this.bundleStoreWrapper.getUploader(proposition.bundleId));
     return shelterers;
   }
 }

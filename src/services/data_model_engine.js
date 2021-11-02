@@ -435,8 +435,7 @@ export default class DataModelEngine {
   }
 
   async getBundleDonors(bundleId, nodeId = null) {
-    const contract = await this.bundleStoreWrapper.contract();
-    const donors = await contract.methods.getShelterers(bundleId).call();
+    const donors = await this.bundleStoreWrapper.getShelterers(bundleId);
     if (nodeId) {
       let pos = donors.indexOf(nodeId);
       while (-1 !== pos) {
@@ -444,7 +443,7 @@ export default class DataModelEngine {
         pos = donors.indexOf(nodeId);
       }
     }
-    const uploaderId = await contract.methods.getUploader(bundleId).call();
+    const uploaderId = await this.bundleStoreWrapper.getUploader(bundleId);
     if (uploaderId !== nodeId) {
       donors.push(uploaderId);
     }
