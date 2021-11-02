@@ -106,7 +106,7 @@ export default class BundleShelteringResolver extends AtlasResolver {
   async resolveOne() {
     const resolutions = await this.resolutionsRepository.ongoingResolutions();
     const recentlyFailedResolutions = resolutions.filter((proposition) => this.getPropositionId(proposition) in this.failedResolutionsCache.failedResolutionsEndTime);
-    // await this.workerLogger.logger.info(`${this.propositionName}s preselected for resolution: ${resolutions.length} (out of which ${recentlyFailedResolutions.length} have failed recently)`);
+    await this.workerLogger.logger.info(`${this.propositionName}s preselected for resolution: ${resolutions.length} (out of which ${recentlyFailedResolutions.length} have failed recently)`);
     for (const resolution of resolutions) {
       const successful = await this.resolve(resolution);
       if (successful) {
@@ -119,7 +119,7 @@ export default class BundleShelteringResolver extends AtlasResolver {
   async resolveAll() {
     const resolutions = await this.resolutionsRepository.ongoingResolutions();
     const recentlyFailedResolutions = resolutions.filter((proposition) => this.getPropositionId(proposition) in this.failedResolutionsCache.failedResolutionsEndTime);
-    // await this.workerLogger.logger.info(`${this.propositionName}s preselected for resolution: ${resolutions.length} (out of which ${recentlyFailedResolutions.length} have failed recently)`);
+    await this.workerLogger.logger.info(`${this.propositionName}s preselected for resolution: ${resolutions.length} (out of which ${recentlyFailedResolutions.length} have failed recently)`);
     for (const resolution of resolutions) {
       await this.resolve(resolution);
     }
