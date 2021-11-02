@@ -87,10 +87,10 @@ describe('Bundles Restorer', () => {
     expect(dataModelEngineMock.markBundleAsSheltered).to.not.have.been.called;
   });
 
-  // it('get bundle donors works', async () => {
-  //   sinon.spy(restorer, 'getBundleDonors');
-  //   expect(await restorer.getBundleDonors({bundleId: 1, shelterer: 'shelterer'})).to.deep.equal(['donor1', 'donor2', 'donor3', 'uploader']);
-  // });
+  it('get bundle donors works', async () => {
+    sinon.spy(restorer, 'getBundleDonors');
+    expect(await restorer.getBundleDonors({bundleId: 1, shelterer: 'shelterer'})).to.deep.equal(['donor1', 'donor2', 'donor3', 'uploader']);
+  });
 
   it('restore works', async () => {
     const shelterer = 'shelterer';

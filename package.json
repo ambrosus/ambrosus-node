@@ -1,7 +1,7 @@
 {
   "name": "ambrosus-node",
   "description": "",
-  "version": "1.1.16",
+  "version": "1.1.15",
   "author": "Ambrosus",
   "repository": "git@github.com:ambrosus/ambrosus-node.git",
   "private": false,
@@ -34,7 +34,7 @@
   "dependencies": {
     "@sentry/node": "^6.7.1",
     "ajv": "^8.6.0",
-    "ambrosus-node-contracts": "^0.0.83",
+    "ambrosus-node-contracts": "^0.0.79",
     "base64url": "^3.0.1",
     "bn.js": "^5.2.0",
     "body-parser": "^1.19.0",
