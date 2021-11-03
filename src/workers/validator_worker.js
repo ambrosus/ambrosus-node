@@ -20,7 +20,6 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
     this.bundleRepository = bundleRepository;
     this.bundleStoreWrapper = bundleStoreWrapper;
     this.shelteringWrapper = shelteringWrapper;
-    this.shelteringContract = null;
   }
 
   async periodicWork() {
