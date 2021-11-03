@@ -29,25 +29,13 @@ describe('Bundles Restorer', () => {
   let dataModelEngineMock;
   let shelteredBundlesRepositoryMock;
   let workerLoggerMock;
-  let bundleStoreContractMock;
 
   const timestamp = 1500000000;
 
   beforeEach(async () => {
-    getShelterersCall = {
-      call: sinon.stub().resolves(['donor1', 'donor2', 'donor3', 'shelterer'])
-    };
-    getUploaderCall = {
-      call: sinon.stub().resolves('uploader')
-    };
-    bundleStoreContractMock = {
-      methods: {
-        getShelterers: sinon.stub().returns(getShelterersCall),
-        getUploader: sinon.stub().returns(getUploaderCall)
-      }
-    };
     bundleStoreWrapperMock = {
-      contract: sinon.stub().resolves(bundleStoreContractMock)
+      getShelterers: sinon.stub().returns(['donor1', 'donor2', 'donor3', 'shelterer']),
+      getUploader: sinon.stub().returns('uploader')
     };
     shelteringWrapperMock = {
       isSheltering: sinon.stub().resolves(true),
@@ -87,10 +75,10 @@ describe('Bundles Restorer', () => {
     expect(dataModelEngineMock.markBundleAsSheltered).to.not.have.been.called;
   });
 
-  // it('get bundle donors works', async () => {
-  //   sinon.spy(restorer, 'getBundleDonors');
-  //   expect(await restorer.getBundleDonors({bundleId: 1, shelterer: 'shelterer'})).to.deep.equal(['donor1', 'donor2', 'donor3', 'uploader']);
-  // });
+  it('get bundle donors works', async () => {
+    sinon.spy(restorer, 'getBundleDonors');
+    expect(await restorer.getBundleDonors({bundleId: 1, shelterer: 'shelterer'})).to.deep.equal(['donor1', 'donor2', 'donor3', 'uploader']);
+  });
 
   it('restore works', async () => {
     const shelterer = 'shelterer';

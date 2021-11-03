@@ -10,7 +10,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import promClient from 'prom-client';
 import BundleShelteringResolver from './bundle_sheltering_resolver';
 import {atlasResolutionStatus} from './atlas_resolver';
-import Builder from '../../builder';
 
 export default class AtlaTransferResolver extends BundleShelteringResolver {
   constructor(
@@ -83,13 +82,13 @@ export default class AtlaTransferResolver extends BundleShelteringResolver {
   }
 
   async getBundleDonors(proposition) {
-    const shelterers = await Builder.contracts.bundleStoreWrapperContract.methods.getShelterers(proposition.bundleId).call();
+    const shelterers = await this.bundleStoreWrapper.getShelterers(proposition.bundleId);
     let pos = shelterers.indexOf(proposition.donorId);
     while (-1 !== pos) {
       shelterers.splice(pos, 1);
       pos = shelterers.indexOf(proposition.donorId);
     }
-    shelterers.push(await Builder.contracts.bundleStoreWrapperContract.methods.getUploader(proposition.bundleId).call());
+    shelterers.push(await this.bundleStoreWrapper.getUploader(proposition.bundleId));
     return shelterers;
   }
 }

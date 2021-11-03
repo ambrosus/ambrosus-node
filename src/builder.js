@@ -215,14 +215,6 @@ class Builder {
       bundleStoreWrapper: this.bundleStoreWrapper,
       shelteringWrapper: this.shelteringWrapper
     });
-
-    if (dependencies !== 'testmode') {
-      this.contracts = {
-        bundleStoreWrapperContract: await this.bundleStoreWrapper.contract(),
-        shelteringWrapperContract: await this.shelteringWrapper.contract()
-      };
-    }
-
     return {dataModelEngine: this.dataModelEngine, client: this.client, kycWhitelistWrapper: this.kycWhitelistWrapper};
   }
 }
