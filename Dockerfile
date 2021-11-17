@@ -12,9 +12,4 @@ COPY . ./
 
 RUN yarn build
 
-ARG GIT_COMMIT
-RUN test -n "$GIT_COMMIT"
-ENV GIT_COMMIT="$GIT_COMMIT"
-LABEL git-commit="$GIT_COMMIT"
-
 CMD ["yarn", "start"]

@@ -621,11 +621,12 @@ ajv@^8.0.1, ajv@^8.6.0:
     require-from-string "^2.0.2"
     uri-js "^4.2.2"
 
-ambrosus-node-contracts@^0.0.79:
-  version "0.0.79"
-  resolved "https://registry.yarnpkg.com/ambrosus-node-contracts/-/ambrosus-node-contracts-0.0.79.tgz#bb42db5d5fbf385302f6e923bfce1dd7cb291c7c"
-  integrity sha512-9CoWEXK5KEicCJV/QM7kch5GPHRxecTJ2MHgypr+icBtnhaAHdJ0P1IsRPezHn5whFUpEWwI86i4M2m84PpKow==
+ambrosus-node-contracts@^0.0.88:
+  version "0.0.88"
+  resolved "https://registry.yarnpkg.com/ambrosus-node-contracts/-/ambrosus-node-contracts-0.0.88.tgz#80e15465a54231cca4933876441363c6ab4ed90c"
+  integrity sha512-GagaaxZV+D0qIcYq7l3vIcG+nSq5gJM7tGT3oC0ELNTEXZMb0mTSkR+eXds6uDYo0iqM7rmLNPpsKFk4lZzYCA==
   dependencies:
+    babel-runtime "^6.26.0"
     bignumber.js "^9.0.1"
     bn.js "^5.2.0"
     command-line-args "^5.1.1"

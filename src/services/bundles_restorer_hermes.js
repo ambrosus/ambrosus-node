@@ -137,8 +137,7 @@ export default class BundlesRestorerHermes {
   }
 
   async getBundleDonors(bundle) {
-    const contract = await this.bundleStoreWrapper.contract();
-    const shelterers = await contract.methods.getShelterers(bundle.bundleId).call();
+    const shelterers = await this.bundleStoreWrapper.getShelterers(bundle.bundleId);
     let pos = shelterers.indexOf(bundle.shelterer);
 
     while (-1 !== pos) {

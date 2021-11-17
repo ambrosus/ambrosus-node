@@ -20,8 +20,6 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
     this.bundleRepository = bundleRepository;
     this.bundleStoreWrapper = bundleStoreWrapper;
     this.shelteringWrapper = shelteringWrapper;
-    this.bundleStoreContract = null;
-    this.shelteringContract = null;
   }
 
   async periodicWork() {
@@ -33,7 +31,6 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
     }
     try {
       this.logInfo(`Validation start`);
-      this.bundleStoreContract = await this.bundleStoreWrapper.contract();
       this.shelteringContract = await this.shelteringWrapper.contract();
 
       const hermresBundles = await this.bundleRepository.getHermesBundles(0);
@@ -44,7 +41,7 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
         if (this.now() > expirationTime) {
           continue; // skip expired bundles
         }
-        const shelterers = await this.bundleStoreContract.methods.getShelterers(bundleId).call();
+        const shelterers = await this.bundleStoreWrapper.getShelterers(bundleId);
         if (shelterers.length === 0) {
           this.logInfo(`No shelterers: ${bundleId}`);
         }
