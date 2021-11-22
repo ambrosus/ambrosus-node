@@ -30,6 +30,9 @@ Example asset could look like this:
 
 ![Asset structure](asset.png?raw=true "Asset structure")
 
+Read more about [assets](https://github.com/ambrosus/ambrosus-node/blob/master/docs/BasicEventEntryTypes.md). \
+Read more about [asset styling](https://github.com/ambrosus/ambrosus-node/blob/master/docs/ApplicationEntryTypes.md)
+
 ### Events
 An event describes something that happened in a supply chain. Typical events are connected to producing, verification and delivery of assets, however it is possible to define custom events. Each event is associated with exactly one asset by the subject field.
 
@@ -56,6 +59,8 @@ Example event could look like this:
 Meaning of the fields is analogous to those in assets. Additionally, we have the `data` object, which can hold all the descriptive details about an event (e.g., type, context, location and more). `accessLevel` is used to define permissions. `dataHash` is hash of serialized `data` field. The image below shows the basic structure of an event.
 
 ![Asset structure](event.png?raw=true "Asset structure")
+
+Read more about [events](https://github.com/ambrosus/ambrosus-node/blob/master/docs/BasicEventEntryTypes.md).
 
 ### Bundles
 Multiple entities (assets and events) are packed into bundles. The proof of the bundle is stored in a smart contract deployed to the blockchain.
