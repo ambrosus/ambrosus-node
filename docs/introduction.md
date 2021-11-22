@@ -1,5 +1,9 @@
 #  Introduction to ambrosus
 
+Ambrosus is a blockchain based solution in logistics.
+Learn more about project on [official website](https://ambrosus.io/) and
+[community wiki](https://github.com/ambrosus/community-wiki)
+
 ## Basic constructs
 
 Ambrosus uses two core entities to model supply chain: assets and events. There is also the notion of a bundle explained later. You will see JSON is used widely to store and transfer entities.
