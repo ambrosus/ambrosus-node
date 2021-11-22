@@ -108,7 +108,11 @@ yarn dev:start:atlas
 ## Running in production mode
 ### This is instruction for developers. To run your own node in Ambrosus network see [ambrosus-nop](https://github.com/ambrosus/ambrosus-nop).
 
-In order to run in production mode you will need access to a ethereum client instance, and a mongoDB instance. 
+This project shouldn't be running on it own. See [ambrosus-nop](https://github.com/ambrosus/ambrosus-nop) to find 
+start scripts. For additional information about running in test mode contact ambrosus development team.
+
+Below are instructions to run this particular project. \
+Your should have an ethereum client instance and a mongoDB instance.
 
 Build the whole suit:
 ```sh
@@ -117,9 +121,25 @@ yarn build
 
 Configure environment variables for `WEB3_RPC`, `WEB3_NODEPRIVATEKEY`, `MONGODB_URI`, `HEAD_CONTRACT_ADDRESS` (provided by the Ambrosus developer team).
 
-Finally, start the server:
+Run database migration
 ```sh
-yarn start
+yarn migrate
+```
+
+Finally, start desired server: \
+Api
+```sh
+yarn start:server
+```
+
+Or Hermes
+```sh
+yarn start:hermes
+```
+
+Or Atlas
+```sh
+yarn start:atlas
 ```
 
 ## Utils
