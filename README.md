@@ -19,6 +19,11 @@ Start the MongoDB container
 yarn dev:docker:db
 ```
 
+Run data migrations
+```sh
+yarn dev:migrate
+```
+
 Install the dependencies
 ```sh
 yarn install
@@ -48,9 +53,13 @@ yarn dev:clean
 ## Running in development mode
 
 Start the MongoDB container
-
 ```sh
 yarn dev:docker:db
+```
+
+Run data migration
+```sh
+yarn dev:migrate
 ```
 
 Start an ethereum client of your choice. For example, the provided parity container (in dev mode).
