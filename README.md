@@ -1,7 +1,9 @@
 [![Build Status](https://travis-ci.com/ambrosus/ambrosus-node.svg?branch=master)](https://travis-ci.com/ambrosus/ambrosus-node)
 
 # The Ambrosus Node
-The repository for Ambrosus Node. 
+The repository for Ambrosus Node.
+
+###To run your own node in ambrosus network see [ambrosus-nop](https://github.com/ambrosus/ambrosus-nop).
 
 The best way to learn Ambrosus is to:
 1. First go to [General introduction](https://github.com/ambrosus/ambrosus-node/blob/master/docs/introduction.md)
@@ -103,8 +105,7 @@ yarn dev:start:atlas
 ```
 
 ## Running in production mode
-
-Currently we only allow a selected few external nodes to run and connect to the various networks.
+### This is instruction for developers. To run your own node in Ambrosus network see [ambrosus-nop](https://github.com/ambrosus/ambrosus-nop).
 
 In order to run in production mode you will need access to a ethereum client instance, and a mongoDB instance. 
 
