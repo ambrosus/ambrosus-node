@@ -111,8 +111,10 @@ Additional api stored in [ambrosus-node-extended](https://github.com/ambrosus/am
 
 ## What is next?
 
-Learn more about ambrosus on community [wiki](https://github.com/ambrosus/community-wiki).
+* Learn more about ambrosus on community [wiki](https://github.com/ambrosus/community-wiki).
 
-Go to step-by-step [tutorial](https://github.com/ambrosus/ambrosus-node/blob/master/docs/tutorial.md).
+* Go to step-by-step [tutorial](https://github.com/ambrosus/ambrosus-node/blob/master/docs/tutorial.md).
 
-Alternatively, visit [ambrosus.docs.apiary.io](https://ambrosus.docs.apiary.io/) for full API documentation.
+* Visit [ambrosus.docs.apiary.io](https://ambrosus.docs.apiary.io/) for full API documentation.
+
+* Check other repositories of [ambrosus](https://github.com/ambrosus) project.
