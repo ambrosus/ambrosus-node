@@ -101,7 +101,17 @@ All `idData` of every entity is always publicly available. Entity creator can ho
  * If access level equals `0` it means entity `data` is publicly available.
  * If access level is greater than `0` it means entity `data` is only available to users registered with given node and with adequate `accessLevel` (e.g.m you need to have permission level 3 to access data on `accessLevel` 1, 2, 3).
 
+## Role of ambrosus-node in ambrosus
+This repository contains Hermes, Atlas and partially external api. 
+Additional api stored in [ambrosus-node-extended](https://github.com/ambrosus/ambrosus-node-extended) repository. 
+
+* Hermes responsible for producing and uploading bundles to the network.
+* Atlas responsible for storing and securing data(bundles) uploaded to the network.
+* Api responsible for communicating with external applications and receiving assets and event to proceed in network.
+
 ## What is next?
+
+Learn more about ambrosus on community [wiki](https://github.com/ambrosus/community-wiki).
 
 Go to step-by-step [tutorial](https://github.com/ambrosus/ambrosus-node/blob/master/docs/tutorial.md).
 
