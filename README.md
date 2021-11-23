@@ -4,30 +4,19 @@
 ### The source code of Hermes and Atlas nodes. Part of the [ambrosus project](https://ambrosus.io/).
 
 ## Table of contents
-- [Introduction](#)
-- [Running your own node](#)
-- [Running tests](#running-tests-and-linting)
-- [Building project](#building-and-clean-up)
+- [Introduction](#introduction)
+- [Running tests](#running-tests)
+- [Building project](#building)
 - [Running locally](#running-in-development-mode)
+- [Running your own node](#running-your-own-node)
 - [Running in production](#running-in-production-mode)
 - [Contributing](#contribution)
 
 ## Introduction
 Contains source code of Hermes and Atlas nodes that are part of ambrosus blockchain network.
-Read more about [ambrosus](https://github.com/ambrosus/ambrosus-node/blob/master/docs/introduction.md)
+Read more about [ambrosus](https://github.com/ambrosus/ambrosus-node/blob/master/docs/introduction.md).
 
-## To run your own node in ambrosus network see [ambrosus-nop](https://github.com/ambrosus/ambrosus-nop).
-
-The best way to learn Ambrosus is to:
-1. First go to [General introduction](https://github.com/ambrosus/ambrosus-node/blob/master/docs/introduction.md)
-2. Follow up with [tutorial](https://github.com/ambrosus/ambrosus-node/blob/master/docs/tutorial.md).
-3. Detailed RESTful API documentation is available at [ambrosus.docs.apiary.io](https://ambrosus.docs.apiary.io/).
-
-Scroll to the bottom to get [instructions on how to use postman collection for the API](#postman-collections).
-
-Read below to learn about ambrosus node development.
-
-## Running tests and linting
+## Running tests
 
 Start the MongoDB container
 ```sh
@@ -54,7 +43,18 @@ Run linter:
 yarn dev:lint
 ```
 
-## Building and clean-up
+### Postman collections
+
+Additionally we provide the postman collection to make it easier to test REST queries. To use them you need to run the server, create the admin account and:
+
+1. Import the environment from `postman/AMB-template.postman_environment.json`, rename it if you want, and select it.
+2. If needed, change `url` variable (by default url=localhost:9876) to your gateway instance
+3. In the environment set `adminSecret` and `adminAddress` variables with a existing admins private and public keys respectively. If you don't have access to an admin account, but rather a normal user account, you can set the `userSecret` and `userAddress`. Note: functionality will be limited.
+4. Import collection from `Ambrosus.postman_collection.json`
+5. [admin only] Add or modify accounts with the `Add account` and `Modify account` requests
+6. Create tokens by calling the `Generate Token` request
+
+## Building
 Building consists of transpiling the source code. It is performed by running:
 ```sh
 yarn build
@@ -117,9 +117,10 @@ or
 yarn dev:start:atlas
 ```
 
-## Running in production mode
-### This is instruction for developers. To run your own node in Ambrosus network see [ambrosus-nop](https://github.com/ambrosus/ambrosus-nop).
+## Running your own node
+To run your own node in ambrosus network see [ambrosus-nop](https://github.com/ambrosus/ambrosus-nop).
 
+## Running in production mode
 This project shouldn't be running on it own. See [ambrosus-nop](https://github.com/ambrosus/ambrosus-nop) to find 
 start scripts. For additional information about running in test mode contact ambrosus development team.
 
@@ -160,17 +161,6 @@ getToken - utility for manual AMB_TOKEN generation, usage:
 ```sh
 node getToken.js <privKey>
 ```
-
-## Postman collections
-
-Additionally we provide the postman collection to make it easier to test REST queries. To use them you need to run the server, create the admin account and:
-
-1. Import the environment from `postman/AMB-template.postman_environment.json`, rename it if you want, and select it.
-2. If needed, change `url` variable (by default url=localhost:9876) to your gateway instance
-3. In the environment set `adminSecret` and `adminAddress` variables with a existing admins private and public keys respectively. If you don't have access to an admin account, but rather a normal user account, you can set the `userSecret` and `userAddress`. Note: functionality will be limited.
-4. Import collection from `Ambrosus.postman_collection.json`
-5. [admin only] Add or modify accounts with the `Add account` and `Modify account` requests
-6. Create tokens by calling the `Generate Token` request
 
 
 ## Contribution
