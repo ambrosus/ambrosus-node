@@ -1,12 +1,19 @@
 [![Build Status](https://travis-ci.com/ambrosus/ambrosus-node.svg?branch=master)](https://travis-ci.com/ambrosus/ambrosus-node)
 
 # The Ambrosus Node
-### The source code of Hermes and Atlas nodes.
+### The source code of Hermes and Atlas nodes. Part of the [ambrosus project](https://ambrosus.io/).
 
-Part of the [ambrosus project](https://ambrosus.io/). 
+## Table of contents
+- [Introduction](#)
+- [Running your own node](#)
+- [Running tests](#running-tests-and-linting)
+- [Building project](#building-and-clean-up)
+- [Running locally](#running-in-development-mode)
+- [Running in production](#running-in-production-mode)
+- [Contributing](#contribution)
 
 
-###To run your own node in ambrosus network see [ambrosus-nop](https://github.com/ambrosus/ambrosus-nop).
+## To run your own node in ambrosus network see [ambrosus-nop](https://github.com/ambrosus/ambrosus-nop).
 
 The best way to learn Ambrosus is to:
 1. First go to [General introduction](https://github.com/ambrosus/ambrosus-node/blob/master/docs/introduction.md)
