@@ -1,8 +1,10 @@
 [![Build Status](https://travis-ci.com/ambrosus/ambrosus-node.svg?branch=master)](https://travis-ci.com/ambrosus/ambrosus-node)
 
 # The Ambrosus Node
-The repository for Ambrosus Node. Contains source code of Hermes and Atlas nodes. \
-[Read more about ambrosus project](https://ambrosus.io/)
+### The source code of Hermes and Atlas nodes.
+
+Part of the [ambrosus project](https://ambrosus.io/). 
+
 
 ###To run your own node in ambrosus network see [ambrosus-nop](https://github.com/ambrosus/ambrosus-nop).
 
