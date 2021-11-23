@@ -12,6 +12,9 @@
 - [Running in production](#running-in-production-mode)
 - [Contributing](#contribution)
 
+## Introduction
+Contains source code of Hermes and Atlas nodes that are part of ambrosus blockchain network.
+Read more about [ambrosus](https://github.com/ambrosus/ambrosus-node/blob/master/docs/introduction.md)
 
 ## To run your own node in ambrosus network see [ambrosus-nop](https://github.com/ambrosus/ambrosus-nop).
 
