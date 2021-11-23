@@ -28,7 +28,19 @@ import asyncMiddleware from '../middlewares/async_middleware';
 import {Role} from '../services/roles_repository';
 import fallbackRouter from '../routes/fallback';
 
+/**
+ * Class to create server worker - the REST API server.
+ * @extends Worker
+ */
 export default class ServerWorker extends Worker {
+  /**
+   * @param {DataModelEngine} modelEngine - the smart contracts wrapper
+   * @param {Web3} web3 - the web3.js library
+   * @param {Role} role - the Role of this instance in ambrosus network
+   * @param {Config} config - the config object
+   * @param {Logger} logger - an instance of logger abstract class
+   * @param {OperationalMode} operationalMode //TODO: find out what is OperationalMode class
+   */
   constructor(modelEngine, web3, role, config, logger, operationalMode) {
     super(logger);
     this.modelEngine = modelEngine;
@@ -38,6 +50,10 @@ export default class ServerWorker extends Worker {
     this.operationalMode = operationalMode;
   }
 
+  /**
+   * Starts REST API server
+   * @returns {Promise<void>}
+   */
   async work() {
     this.logger.info({message: 'Starting server'});
 
@@ -81,6 +97,10 @@ export default class ServerWorker extends Worker {
     this.apiServer = app.listen(this.config.serverPort);
   }
 
+  /**
+   * Internal method of Worker abstract class
+   * @returns {Promise<void>}
+   */
   async teardown() {
     clearInterval(this.collectMetricsInterval);
     promClient.register.clear();

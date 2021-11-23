@@ -14,6 +14,11 @@ import {Role} from './services/roles_repository';
 import {waitForChainSync} from './utils/web3_tools';
 import {setup} from './utils/instrument_process';
 
+/**
+ * Configures and starts server service (REST API)
+ * @param logger
+ * @returns {Promise<void>}
+ */
 async function start(logger) {
   const builder = new Builder();
   await builder.build(config);
