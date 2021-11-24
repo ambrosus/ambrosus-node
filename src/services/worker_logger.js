@@ -7,12 +7,22 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+/**
+ * Logging utility to use in workers
+ */
 export default class WorkerLogger {
   constructor(logger, workerLogRepository) {
     this.logger = logger;
     this.workerLogRepository = workerLogRepository;
   }
 
+  /**
+   * Loggs message and stores it in DB
+   * @param {String} message - the message
+   * @param {Object} [additionalFields] - the object with fields to be added in message
+   * @param {Object} [stacktrace]
+   * @returns {Promise<void>}
+   */
   async addLog(message, additionalFields, stacktrace) {
     const log = {
       message,
