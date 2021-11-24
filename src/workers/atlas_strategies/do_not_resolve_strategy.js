@@ -9,12 +9,26 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import AtlasParticipationStrategy from './atlas_participation_strategy';
 
+/**
+ * Atlas resolve strategy that prohibit everything
+ * @extends AtlasParticipationStrategy
+ */
 export default class DoNotResolveStrategy extends AtlasParticipationStrategy {
+  /**
+   * Overwritten method of AtlasParticipationStrategy abstract class
+   * @param {Object} entity
+   * @returns {Promise<boolean>}
+   */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async shouldFetchBundle(entity) {
     return false;
   }
 
+  /**
+   * Overwritten method of AtlasParticipationStrategy abstract class
+   * @param bundleMetadata
+   * @returns {Promise<boolean>}
+   */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async shouldResolve(bundleMetadata) {
     return false;
