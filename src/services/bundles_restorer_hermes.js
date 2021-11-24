@@ -7,7 +7,21 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+/**
+ * Restores Bundles from them local DB and the blockchain
+ */
 export default class BundlesRestorerHermes {
+  /**
+   * @param {BundleStoreWrapper} bundleStoreWrapper - the smart contract to handle stored Bundles
+   * @param {DataModelEngine} dataModelEngine - the utility to safely handle data models
+   * @param {BundleRepository} bundleRepository - the Bundle storage
+   * @param {AssetRepository} assetRepository - the Asset storage
+   * @param {EventRepository} eventRepository - the Event storage
+   * @param {HermesBundlesRepository} hermesBundlesRepository - the hermes utility to store sheltered Bundles
+   * @param {ShelteringWrapper} shelteringWrapper - the wrapper around smart contract from ambrosus-node-contracts
+   * @param {shelteringTransfersWrapper} shelteringTransfersWrapper - the wrapper around smart contract from ambrosus-node-contracts
+   * @param {WorkerLogger} workerLogger - the logging utility for workers
+   */
   constructor(
     bundleStoreWrapper,
     dataModelEngine,
@@ -30,6 +44,12 @@ export default class BundlesRestorerHermes {
     this.shelteringTransfersWrapper = shelteringTransfersWrapper;
   }
 
+  /**
+   * Stores asset in the DB
+   * @param {Object} asset - the Asset
+   * @param {Object} metadata  - the Asset's metadata
+   * @returns {Promise<void>}
+   */
   async parseAsset(asset, metadata) {
     asset.metadata = metadata;
 
@@ -38,6 +58,12 @@ export default class BundlesRestorerHermes {
     // console.log(`parseAsset(${asset.assetId}): ${JSON.stringify(asset)}`);
   }
 
+  /**
+   * Stores event in the DB
+   * @param {Object} event - the Event
+   * @param {Object} metadata the Event's metadata
+   * @returns {Promise<void>}
+   */
   async parseEvent(event, metadata) {
     event.metadata = metadata;
 
@@ -46,6 +72,11 @@ export default class BundlesRestorerHermes {
     // console.log(`parseEvent(${event.eventId}): ${JSON.stringify(event)}`);
   }
 
+  /**
+   * Stores Bundle and its contents in the DB
+   * @param {Object} bundle - the Bundle
+   * @returns {Promise<void>}
+   */
   async parseBundle(bundle) {
     await this.hermesBundlesRepository.delete(bundle.bundleId);
 
@@ -76,6 +107,10 @@ export default class BundlesRestorerHermes {
     }
   }
 
+  /**
+   * Restores sheltered bundles from the DB and sync them with blockchain
+   * @returns {Promise<void>}
+   */
   async restore() {
     await this.hermesBundlesRepository.load(this.workerLogger.logger);
 
@@ -132,10 +167,20 @@ export default class BundlesRestorerHermes {
     }
   }
 
+  /**
+   * Generates random number
+   * @param {number} max - the maximum value
+   * @returns {number}
+   */
   getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
   }
 
+  /**
+   * Get sheltered Bundles from blockchain to help restore them
+   * @param {Object} bundle
+   * @returns {Promise<*>}
+   */
   async getBundleDonors(bundle) {
     const shelterers = await this.bundleStoreWrapper.getShelterers(bundle.bundleId);
     let pos = shelterers.indexOf(bundle.shelterer);
