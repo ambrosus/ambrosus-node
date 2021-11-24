@@ -14,7 +14,6 @@ import {encrypt, decrypt} from '../utils/crypto.util';
  */
 export default class HermesBackup {
   /**
-   *
    * @param {MongoClient} db - the MongoDb client
    * @param {Store} store - the key-value store
    * @param {IdentityManager} identityManager - the utility for credential validation

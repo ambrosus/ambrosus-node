@@ -10,7 +10,16 @@ import PeriodicWorker from './periodic_worker';
 
 const HERMES_BACKUP_WORK_TYPE = 'HermesBackup';
 
+/**
+ *
+ */
 export default class HermesBackupWorker extends PeriodicWorker {
+  /**
+   * @param {HermesBackup} hermesBackup - the backup handling service
+   * @param {WorkerTaskTrackingRepository} workerTaskTrackingRepository - the utility to store worker's tasks in progress
+   * @param {Logger} logger - the logging utility
+   * @param {number} workerInterval - the worker interval in seconds
+   */
   constructor(hermesBackup, workerTaskTrackingRepository, logger, workerInterval) {
     super(workerInterval, logger);
     this.hermesBackup = hermesBackup;
@@ -18,6 +27,11 @@ export default class HermesBackupWorker extends PeriodicWorker {
     this.logger = logger;
   }
 
+  /**
+   * Overwritten method of PeriodicWorker abstract class
+   * Contains work that should be done periodically and used by PeriodicWorker internally
+   * @returns {Promise<void>}
+   */
   async periodicWork() {
     this.logger.info(`HermesBackupWorker: start`);
     let workId = null;
