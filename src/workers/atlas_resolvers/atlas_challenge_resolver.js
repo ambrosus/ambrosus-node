@@ -11,7 +11,19 @@ import promClient from 'prom-client';
 import BundleShelteringResolver from './bundle_sheltering_resolver';
 import {atlasResolutionStatus} from './atlas_resolver';
 
+/**
+ *
+ */
 export default class AtlasChallengeResolver extends BundleShelteringResolver {
+  /**
+   * @param {Web3} web3 - the web3.js library
+   * @param {DataModelEngine} dataModelEngine - the utility to handle data operations
+   * @param {ChallengesRepository} challengesRepository - the utility to handle challenge events storage
+   * @param {FailedResolutionsCache} failedChallengesCache - the utility to store failed challenge events
+   * @param {AtlasParticipationStrategy} strategy - the resolution strategy
+   * @param {WorkerLogger} workerLogger - the logging utility
+   * @param {BundleStoreWrapper} bundleStoreWrapper - the wrapper around smart contract from ambrosus-node-contracts
+   */
   constructor(
     web3,
     dataModelEngine,
@@ -32,14 +44,28 @@ export default class AtlasChallengeResolver extends BundleShelteringResolver {
     this.bundleStoreWrapper = bundleStoreWrapper;
   }
 
+  /**
+   * Overwritten method of BundleShelteringResolver abstract class
+   * @param challenge
+   * @returns {*}
+   */
   getPropositionId(challenge) {
     return challenge.challengeId;
   }
 
+  /**
+   * Overwritten method of BundleShelteringResolver abstract class
+   * @param challenge
+   * @returns {*}
+   */
   getSheltererId(challenge) {
     return challenge.sheltererId;
   }
 
+  /**
+   * Overwritten method of AtlasResolver abstract class
+   * @param registry
+   */
   addMetrics(registry) {
     this.atlasResolverMetrics = new promClient.Counter({
       name: 'atlas_challenges_total',
@@ -49,10 +75,20 @@ export default class AtlasChallengeResolver extends BundleShelteringResolver {
     });
   }
 
+  /**
+   * Generates random number
+   * @param max
+   * @returns {number}
+   */
   getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
   }
 
+  /**
+   * Overwritten method of BundleShelteringResolver abstract class
+   * @param proposition
+   * @returns {Promise<*>}
+   */
   async tryToDownload(proposition) {
     const propositionExpirationTime = await this.resolutionsRepository.getExpirationTimeInMs(proposition);
     let metadata;
@@ -81,6 +117,11 @@ export default class AtlasChallengeResolver extends BundleShelteringResolver {
     return metadata;
   }
 
+  /**
+   * Gets shelter Bundles from the blockchain network
+   * @param proposition
+   * @returns {Promise<*>}
+   */
   async getBundleDonors(proposition) {
     const shelterers = await this.bundleStoreWrapper.getShelterers(proposition.bundleId);
     let pos = shelterers.indexOf(proposition.sheltererId);

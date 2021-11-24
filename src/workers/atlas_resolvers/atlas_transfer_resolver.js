@@ -11,7 +11,20 @@ import promClient from 'prom-client';
 import BundleShelteringResolver from './bundle_sheltering_resolver';
 import {atlasResolutionStatus} from './atlas_resolver';
 
+/**
+ * Utility method to resolve transfer of Bundles between Atlas nodes
+ * @extends BundleShelteringResolver
+ */
 export default class AtlaTransferResolver extends BundleShelteringResolver {
+  /**
+   * @param {Web3} web3 - the web3.js library
+   * @param {DataModelEngine} dataModelEngine - the utility to handle data operations
+   * @param {TransfersRepository} transfersRepository - the utility to handle transfer events storage
+   * @param {FailedResolutionsCache} failedTransfersCache - the utility to store failed transfer events
+   * @param {AtlasParticipationStrategy} strategy - the Atlas resolution strategy
+   * @param {WorkerLogger} workerLogger - the logging utility
+   * @param {BundleStoreWrapper} bundleStoreWrapper - the wrapper around smart contract from ambrosus-node-contracts
+   */
   constructor(
     web3,
     dataModelEngine,
@@ -32,14 +45,28 @@ export default class AtlaTransferResolver extends BundleShelteringResolver {
     this.bundleStoreWrapper = bundleStoreWrapper;
   }
 
+  /**
+   * Overwritten method of BundleShelteringResolver abstract class
+   * @param transfer
+   * @returns {*}
+   */
   getPropositionId(transfer) {
     return transfer.transferId;
   }
 
+  /**
+   * Overwritten method of BundleShelteringResolver abstract class
+   * @param transfer
+   * @returns {*}
+   */
   getSheltererId(transfer) {
     return transfer.donorId;
   }
 
+  /**
+   * Overwritten method of AtlasResolver abstract class
+   * @param registry
+   */
   addMetrics(registry) {
     this.atlasResolverMetrics = new promClient.Counter({
       name: 'atlas_transfers_total',
@@ -49,10 +76,20 @@ export default class AtlaTransferResolver extends BundleShelteringResolver {
     });
   }
 
+  /**
+   * Generates random number
+   * @param max
+   * @returns {number}
+   */
   getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
   }
 
+  /**
+   * Overwritten method of BundleShelteringResolver abstract class
+   * @param proposition
+   * @returns {Promise<*>}
+   */
   async tryToDownload(proposition) {
     const propositionExpirationTime = await this.resolutionsRepository.getExpirationTimeInMs(proposition);
     let metadata;
@@ -70,7 +107,10 @@ export default class AtlaTransferResolver extends BundleShelteringResolver {
           await this.workerLogger.addLog('Bundle fetched', {bundleId: proposition.bundleId, donorId});
           break;
         } catch (err) {
-          await this.workerLogger.logger.info(`Failed to download bundle: ${err.message || err}`, {bundleId: proposition.bundleId, donorId}, err.stack);
+          await this.workerLogger.logger.info(`Failed to download bundle: ${err.message || err}`, {
+            bundleId: proposition.bundleId,
+            donorId
+          }, err.stack);
           donors.splice(pos, 1);
         }
       }
@@ -81,6 +121,11 @@ export default class AtlaTransferResolver extends BundleShelteringResolver {
     return metadata;
   }
 
+  /**
+   * Gets shelter Bundles from the blockchain network
+   * @param proposition
+   * @returns {Promise<*>}
+   */
   async getBundleDonors(proposition) {
     const shelterers = await this.bundleStoreWrapper.getShelterers(proposition.bundleId);
     let pos = shelterers.indexOf(proposition.donorId);

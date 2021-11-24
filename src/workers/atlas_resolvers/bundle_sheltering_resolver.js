@@ -11,7 +11,20 @@ import AtlasParticipationStrategy from '../atlas_strategies/atlas_participation_
 import {AtlasResolver, atlasResolutionStatus} from './atlas_resolver';
 import {getDefaultAddress} from '../../utils/web3_tools';
 
+/**
+ * Contains common resolution logic
+ * @abstract
+ */
 export default class BundleShelteringResolver extends AtlasResolver {
+  /**
+   * @param {Web3} web3 - the web3 blockchain library
+   * @param {DataModelEngine} dataModelEngine - the utility to handle data operations
+   * @param {ResolutionsRepository} resolutionsRepository - the resolution events storage
+   * @param {FailedResolutionsCache} failedResolutionsCache - the utility to remember failed resolutions
+   * @param {AtlasParticipationStrategy} strategy - the resolution strategy
+   * @param {WorkerLogger} workerLogger - the logging utility
+   * @param {string} propositionName - the resolvers name
+   */
   constructor(
     web3,
     dataModelEngine,
@@ -35,22 +48,43 @@ export default class BundleShelteringResolver extends AtlasResolver {
     }
   }
 
+  /**
+   * @abstract
+   * Should return event's id
+   * @param proposition
+   */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getPropositionId(proposition) {
     throw new Error('Should be implemented');
   }
 
+  /**
+   * @abstract
+   * Should return sheltered Bundle's id
+   * @param proposition
+   */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getSheltererId(proposition) {
     throw new Error('Should be implemented');
   }
 
+  /**
+   * Tries to resolve event. For internal usage
+   * @param {number} bundleId
+   * @param proposition
+   * @returns {Promise<void>}
+   */
   async tryToResolve(bundleId, proposition) {
     await this.resolutionsRepository.resolve(proposition);
     await this.dataModelEngine.markBundleAsSheltered(bundleId);
     await this.workerLogger.addLog('🍾 Yahoo! The bundle is ours.', {bundleId});
   }
 
+  /**
+   * Tries to download Bundle
+   * @param proposition
+   * @returns {Promise<*>}
+   */
   async tryToDownload(proposition) {
     const propositionExpirationTime = await this.resolutionsRepository.getExpirationTimeInMs(proposition);
     const metadata = await this.dataModelEngine.downloadBundle(proposition.bundleId, this.getSheltererId(proposition), propositionExpirationTime);
@@ -58,11 +92,21 @@ export default class BundleShelteringResolver extends AtlasResolver {
     return metadata;
   }
 
+  /**
+   * Tells is other Atlas instance available
+   * @param proposition
+   * @returns {Promise<boolean>}
+   */
   async isTurnToResolve(proposition) {
     const currentResolver = await this.resolutionsRepository.getDesignatedShelterer(proposition);
     return (currentResolver === getDefaultAddress(this.web3));
   }
 
+  /**
+   * Tries to resolve event. Saves failed to cache and retries them. For internal usage
+   * @param proposition
+   * @returns {Promise<boolean>}
+   */
   async tryWith(proposition) {
     try {
       if (this.failedResolutionsCache.didResolutionFailRecently(this.getPropositionId(proposition))) {
@@ -99,10 +143,19 @@ export default class BundleShelteringResolver extends AtlasResolver {
     }
   }
 
+  /**
+   * Overwritten method of AtlasResolver abstract class
+   * @param proposition
+   * @returns {Promise<boolean>}
+   */
   async resolve(proposition) {
     return await this.tryWith(proposition);
   }
 
+  /**
+   * Overwritten method of AtlasResolver abstract class
+   * @returns {Promise<void>}
+   */
   async resolveOne() {
     const resolutions = await this.resolutionsRepository.ongoingResolutions();
     const recentlyFailedResolutions = resolutions.filter((proposition) => this.getPropositionId(proposition) in this.failedResolutionsCache.failedResolutionsEndTime);
@@ -116,6 +169,10 @@ export default class BundleShelteringResolver extends AtlasResolver {
     this.failedResolutionsCache.clearOutdatedResolutions();
   }
 
+  /**
+   * Overwritten method of AtlasResolver abstract class
+   * @returns {Promise<void>}
+   */
   async resolveAll() {
     const resolutions = await this.resolutionsRepository.ongoingResolutions();
     const recentlyFailedResolutions = resolutions.filter((proposition) => this.getPropositionId(proposition) in this.failedResolutionsCache.failedResolutionsEndTime);
