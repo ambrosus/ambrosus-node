@@ -9,15 +9,32 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import HermesUploadStrategy from './upload_strategy';
 
+/**
+ * Upload strategy that requires regular upload of newly created Bundles
+ * @abstract
+ */
 export default class RegularIntervalUploadStrategy extends HermesUploadStrategy {
+  /**
+   * Overwritten method of HermesUploadStrategy abstract class
+   * @returns {string|number}
+   */
   get workerInterval() {
     return process.env.WORKER_INTERVAL || 300; // 5 minutes
   }
 
+  /**
+   * Overwritten method of HermesUploadStrategy abstract class
+   * @returns {number}
+   */
   storagePeriods() {
     return 1;
   }
 
+  /**
+   * Overwritten method of HermesUploadStrategy abstract class
+   * @param bundle
+   * @returns {Promise<{result: boolean, reason: string}|{result: boolean}>}
+   */
   async shouldBundle(bundle) {
     const minimumItemsInBundle = process.env.WORKER_MINIMUM_ITEMS || 1;
     if (bundle.content.entries.length < minimumItemsInBundle) {
@@ -26,6 +43,10 @@ export default class RegularIntervalUploadStrategy extends HermesUploadStrategy 
     return {result: true};
   }
 
+  /**
+   * Overwritten method of HermesUploadStrategy abstract class
+   * @returns {Promise<void>}
+   */
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   async bundlingSucceeded() {
   }
