@@ -34,7 +34,7 @@ import fallbackRouter from '../routes/fallback';
  */
 export default class ServerWorker extends Worker {
   /**
-   * @param {DataModelEngine} modelEngine - the smart contracts wrapper
+   * @param {DataModelEngine} modelEngine - the utility to safely handle data models
    * @param {Web3} web3 - the web3.js library
    * @param {Role} role - the Role of this instance in ambrosus network
    * @param {Config} config - the config object

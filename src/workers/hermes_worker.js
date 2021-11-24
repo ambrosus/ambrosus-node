@@ -17,7 +17,19 @@ import HermesUploadStrategy from './hermes_strategies/upload_strategy';
 
 const HERMES_BUNDLING_WORK_TYPE = 'HermesBundling';
 
+/**
+ * Hermes node instance
+ */
 export default class HermesWorker extends PeriodicWorker {
+  /**
+   * @param {DataModelEngine} dataModelEngine - the smart contracts wrapper
+   * @param {WorkerLogger} workerLogger - the logging utility
+   * @param {WorkerTaskTrackingRepository} workerTaskTrackingRepository - the utility to store works in progress
+   * @param {WorkerIntervalsRepository} workerIntervalsRepository - the utility to retrieve periodic workers
+   * @param {HermesUploadStrategy} strategy - the Upload strategy for Hermes instance
+   * @param {MongoClient} mongoClient - the MongoDb client
+   * @param {number} serverPort - the system port to listen
+   */
   constructor(
     dataModelEngine,
     workerLogger,
@@ -60,6 +72,11 @@ export default class HermesWorker extends PeriodicWorker {
     }
   }
 
+  /**
+   * Overwritten method of PeriodicWork abstract class.
+   * Periodically tries to create new bundles and upload existing
+   * @returns {Promise<void>}
+   */
   async periodicWork() {
     let workId = null;
 
@@ -76,6 +93,11 @@ export default class HermesWorker extends PeriodicWorker {
     }
   }
 
+  /**
+   * Overwritten method of PeriodicWorker abstract class
+   * Used by PeriodicWorker internally
+   * @returns {Promise<boolean>}
+   */
   async isOutOfOrder() {
     const bundlesWorker = await this.workerIntervalsRepository.get('bundlesWorker');
 
@@ -92,6 +114,10 @@ export default class HermesWorker extends PeriodicWorker {
     return false;
   }
 
+  /**
+   * Tries to create bundle
+   * @returns {Promise<void>}
+   */
   async bundleCandidates() {
     const storagePeriods = this.strategy.storagePeriods();
 
@@ -109,6 +135,10 @@ export default class HermesWorker extends PeriodicWorker {
     }
   }
 
+  /**
+   * Tries to upload new Bundles
+   * @returns {Promise<void>}
+   */
   async uploadWaitingCandidates() {
     await this.dataModelEngine.uploadAcceptedBundleCandidates({
       success: async (bundleId, uploadResult) => {
@@ -122,10 +152,20 @@ export default class HermesWorker extends PeriodicWorker {
     });
   }
 
+  /**
+   * Overwritten method of PeriodicWorker abstract class
+   * Used by PeriodicWorker internally
+   * @returns {Promise<void>}
+   */
   async beforeWorkLoop() {
     this.server = this.expressApp.listen(this.serverPort);
   }
 
+  /**
+   * Overwritten method of PeriodicWorker abstract class
+   * User by PeriodicWorker internally
+   * @returns {Promise<void>}
+   */
   async afterWorkLoop() {
     await this.server.close();
     await this.mongoClient.close();

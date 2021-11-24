@@ -19,6 +19,11 @@ import HermesBundlesValidatorWorker from './workers/validator_worker';
 import HermesBackupWorker from './workers/hermes_backup_worker';
 import HermesBackup from './services/hermes_backup';
 
+/**
+ * Creates Hermes instance
+ * @param {Logger} logger - the logging utility
+ * @returns {Promise<void>}
+ */
 async function start(logger) {
   const builder = new Builder();
   await builder.build(config);
