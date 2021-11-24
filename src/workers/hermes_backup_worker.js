@@ -11,7 +11,8 @@ import PeriodicWorker from './periodic_worker';
 const HERMES_BACKUP_WORK_TYPE = 'HermesBackup';
 
 /**
- *
+ * Instance of PeriodicWorker
+ * Periodically does DB backups
  */
 export default class HermesBackupWorker extends PeriodicWorker {
   /**

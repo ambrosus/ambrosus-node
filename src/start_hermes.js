@@ -91,6 +91,11 @@ async function start(logger) {
   await worker.start();
 }
 
+/**
+ * Creates HermesUploadStrategy object
+ * @param {string} uploadStrategy
+ * @returns {HermesUploadStrategy}
+ */
 function loadStrategy(uploadStrategy) {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const HermesUploadStrategy = require(`./workers/hermes_strategies/${uploadStrategy}`).default;
