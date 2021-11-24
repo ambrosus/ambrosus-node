@@ -7,7 +7,19 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+/**
+ * The utility to restore Bundles from blockchain
+ */
 export default class BundlesRestorer {
+  /**
+   * @param {BundleStoreWrapper} bundleStoreWrapper - the wrapper around smart contract from ambrosus-node-contracts
+   * @param {ShelteringWrapper}shelteringWrapper - the wrapper around smart contract from ambrosus-node-contracts
+   * @param {ShelteringTransfersWrapper} shelteringTransfersWrapper - the wrapper around smart contract from ambrosus-node-contracts
+   * @param {DataModelEngine} dataModelEngine - the utility to safely handle data operations
+   * @param {BundleRepository} bundleRepository - the utility to handle local Bundle storage
+   * @param {ShelteredBundlesRepository} shelteredBundlesRepository - the utility to handle Bundle stored in blockchain
+   * @param {WorkerLogger} workerLogger - the logging utility
+   */
   constructor(bundleStoreWrapper, shelteringWrapper, shelteringTransfersWrapper, dataModelEngine, bundleRepository, shelteredBundlesRepository, workerLogger) {
     this.bundleStoreWrapper = bundleStoreWrapper;
     this.shelteringWrapper = shelteringWrapper;
@@ -18,6 +30,10 @@ export default class BundlesRestorer {
     this.workerLogger = workerLogger;
   }
 
+  /**
+   * Restores Bundles from blockchain
+   * @returns {Promise<void>}
+   */
   async restore() {
     await this.shelteredBundlesRepository.load(this.workerLogger.logger);
     await this.workerLogger.addLog('Getting sheltered bundles from DB...');
@@ -68,10 +84,20 @@ export default class BundlesRestorer {
     }
   }
 
+  /**
+   * Generates random number
+   * @param {number} max - the maximum value
+   * @returns {number}
+   */
   getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
   }
 
+  /**
+   * Gets sheltered Bundles from blockchain to help restore them
+   * @param {Object} bundle - the Bundle object
+   * @returns {Promise<Iterable>}
+   */
   async getBundleDonors(bundle) {
     const shelterers = await this.bundleStoreWrapper.getShelterers(bundle.bundleId);
     let pos = shelterers.indexOf(bundle.shelterer);

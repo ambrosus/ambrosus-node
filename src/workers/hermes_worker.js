@@ -22,7 +22,7 @@ const HERMES_BUNDLING_WORK_TYPE = 'HermesBundling';
  */
 export default class HermesWorker extends PeriodicWorker {
   /**
-   * @param {DataModelEngine} dataModelEngine - the utility to safely handle data models
+   * @param {DataModelEngine} dataModelEngine - the utility to safely handle data operations
    * @param {WorkerLogger} workerLogger - the logging utility
    * @param {WorkerTaskTrackingRepository} workerTaskTrackingRepository - the utility to store works in progress
    * @param {WorkerIntervalsRepository} workerIntervalsRepository - the utility to retrieve periodic workers

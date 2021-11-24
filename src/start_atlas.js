@@ -20,6 +20,11 @@ import CleanupWorker from './workers/cleanup_worker';
 import ReleaseBundlesService from './services/release_bundles_service';
 import BundlesRestorer from './services/bundles_restorer';
 
+/**
+ * Creates Server (REST API) instance
+ * @param logger
+ * @returns {Promise<void>}
+ */
 async function start(logger) {
   const builder = new Builder();
   await builder.build(config);
@@ -88,6 +93,11 @@ async function start(logger) {
   setTimeout(() => bundlesRestorer.restore(), 500);
 }
 
+/**
+ * Create AtlasParticipationStrategy object
+ * @param {string} strategyName
+ * @returns {AtlasParticipationStrategy}
+ */
 function loadStrategy(strategyName) {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const ResolutionStrategy = require(`./workers/atlas_strategies/${strategyName}`).default;

@@ -177,7 +177,7 @@ export default class BundlesRestorerHermes {
   }
 
   /**
-   * Get sheltered Bundles from blockchain to help restore them
+   * Gets sheltered Bundles from blockchain to help restore them
    * @param {Object} bundle
    * @returns {Promise<*>}
    */
