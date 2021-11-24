@@ -10,13 +10,27 @@ import PeriodicWorker from './periodic_worker';
 
 const CLEANUP_WORK_TYPE = 'BundleCleanup';
 
+/**
+ *
+ */
 export default class CleanupWorker extends PeriodicWorker {
+  /**
+   * @param {DataModelEngine} dataModelEngine - the utility to safely handle data operations
+   * @param {WorkerTaskTrackingRepository} workerTaskTrackingRepository - the utility to store active workers
+   * @param {Logger} logger - the logging utility
+   * @param {number} workerInterval - the time of work intervals in seconds
+   */
   constructor(dataModelEngine, workerTaskTrackingRepository, logger, workerInterval) {
     super(workerInterval, logger);
     this.workerTaskTrackingRepository = workerTaskTrackingRepository;
     this.dataModelEngine = dataModelEngine;
   }
 
+  /**
+   * Overwritten method of PeriodicWorker abstract class
+   * Contains works that would be done periodically. User by PeriodicWorker internally
+   * @returns {Promise<void>}
+   */
   async periodicWork() {
     let workId = null;
     try {
