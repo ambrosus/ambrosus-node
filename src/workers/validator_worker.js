@@ -13,6 +13,7 @@ const STORAGE_PERIOD_DURATION = 13 * 28 * 86400; // in seconds
 
 /**
  * Periodically synchronise locally stored Bundles with blockchain
+ * @extends PeriodicWorker
  */
 export default class HermesBundlesValidatorWorker extends PeriodicWorker {
   /**

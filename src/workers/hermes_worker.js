@@ -19,6 +19,7 @@ const HERMES_BUNDLING_WORK_TYPE = 'HermesBundling';
 
 /**
  * Hermes node instance
+ * @extends PeriodicWorker
  */
 export default class HermesWorker extends PeriodicWorker {
   /**

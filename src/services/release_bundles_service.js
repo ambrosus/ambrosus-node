@@ -21,7 +21,7 @@ const sleep = async (timeout) => new Promise((resolve) => {
 });
 
 /**
- *
+ * Utility to handle Bundle transfers from Atlas to Atlas
  */
 export default class ReleaseBundlesService {
   /**

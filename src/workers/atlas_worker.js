@@ -21,6 +21,7 @@ const RELEASE_BUNDLES_WORK_TYPE = 'ReleaseBundles';
 
 /**
  * Atlas node instance
+ * @extends PeriodicWorker
  */
 export default class AtlasWorker extends PeriodicWorker {
   /**

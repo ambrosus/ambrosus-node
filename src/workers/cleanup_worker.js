@@ -12,6 +12,7 @@ const CLEANUP_WORK_TYPE = 'BundleCleanup';
 
 /**
  * Utility to periodically clean outdated Bundles
+ * @extends PeriodicWorker
  */
 export default class CleanupWorker extends PeriodicWorker {
   /**
