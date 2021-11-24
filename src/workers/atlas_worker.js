@@ -19,7 +19,21 @@ import availableDiskSpace from '../utils/disk_usage';
 const ATLAS_RESOLUTION_WORK_TYPE = 'AtlasResolutions';
 const RELEASE_BUNDLES_WORK_TYPE = 'ReleaseBundles';
 
+/**
+ * Atlas node instance
+ */
 export default class AtlasWorker extends PeriodicWorker {
+  /**
+   * @param {Web3} web3 - the web3 library object
+   * @param {DataModelEngine} dataModelEngine - the utility to safely handle data operations
+   * @param {WorkerLogger} workerLogger - the logging utility
+   * @param {WorkerTaskTrackingRepository} workerTaskTrackingRepository - the utility for tracking active tasks
+   * @param {MongoClient} mongoClient - the MongoDB Client
+   * @param {Array<AtlasResolver>} resolvers - the array of Atlas event resolvers
+   * @param {OperationalMode} operationalMode - the mode of Atlas work
+   * @param {Config} config - the config
+   * @param {ReleaseBundlesService} releaseBundlesService - the utility to handle Bundle transfer
+   */
   constructor(
     web3,
     dataModelEngine,
@@ -58,6 +72,11 @@ export default class AtlasWorker extends PeriodicWorker {
     }
   }
 
+  /**
+   * Overwritten method of the PeriodicWorker abstract class
+   * Contain work that should be done periodically. Used internally by PeriodicWorker
+   * @returns {Promise<void>}
+   */
   async periodicWork() {
     if (await this.operationalMode.isRetire()) {
       await this.retireOperation();
@@ -67,6 +86,11 @@ export default class AtlasWorker extends PeriodicWorker {
     }
   }
 
+  /**
+   * Tries to resolve challenge
+   * Represents regular challenge operation
+   * @returns {Promise<void>}
+   */
   async normalOperation() {
     let workId = null;
     try {
@@ -95,6 +119,11 @@ export default class AtlasWorker extends PeriodicWorker {
     }
   }
 
+  /**
+   * Tries to resolve System Challenge
+   * Represents System Challenge operation
+   * @returns {Promise<void>}
+   */
   async retireOperation() {
     let workId = null;
     try {
@@ -112,6 +141,10 @@ export default class AtlasWorker extends PeriodicWorker {
     }
   }
 
+  /**
+   * Finds out if there is enough funds to pay for Gas
+   * @returns {Promise<boolean>}
+   */
   async isEnoughFundsToPayForGas() {
     if (!await checkIfEnoughFundsToPayForGas(this.web3, getDefaultAddress(this.web3))) {
       if (!this.isOutOfFunds) {
@@ -124,6 +157,10 @@ export default class AtlasWorker extends PeriodicWorker {
     return true;
   }
 
+  /**
+   * Finds out if there is enought funds to pay for Gas
+   * @returns {Promise<boolean>}
+   */
   async isEnoughAvailableDiskSpace() {
     if (await availableDiskSpace() < this.requiredFreeDiskSpace) {
       if (!this.isOutOfSpace) {
@@ -136,10 +173,17 @@ export default class AtlasWorker extends PeriodicWorker {
     return true;
   }
 
+  /**
+   * Sets express server to listen a port
+   */
   beforeWorkLoop() {
     this.server = this.expressApp.listen(this.serverPort);
   }
 
+  /**
+   * Cleaning used resources
+   * @returns {Promise<void>}
+   */
   async afterWorkLoop() {
     await this.server.close();
     await this.mongoClient.close();

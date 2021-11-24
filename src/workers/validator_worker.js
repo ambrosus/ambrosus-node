@@ -16,7 +16,7 @@ const STORAGE_PERIOD_DURATION = 13 * 28 * 86400; // in seconds
  */
 export default class HermesBundlesValidatorWorker extends PeriodicWorker {
   /**
-   * @param {DataModelEngine} dataModelEngine - the utility to safely handle data models
+   * @param {DataModelEngine} dataModelEngine - the utility to safely handle data operations
    * @param {WorkerTaskTrackingRepository} workerTaskTrackingRepository - the utility to store worker's tasks in progress
    * @param {BundleRepository} bundleRepository - the utility to handle Bundles storage
    * @param {BundleStoreWrapper} bundleStoreWrapper - the wrapper around smart contracts from ambrosus-node-contracts
