@@ -11,8 +11,20 @@ import PeriodicWorker from './periodic_worker';
 const BUNDLES_VERIFY_WORK_TYPE = 'BundlesVerify';
 const STORAGE_PERIOD_DURATION = 13 * 28 * 86400; // in seconds
 
-
+/**
+ * Periodically synchronise locally stored Bundles with blockchain
+ */
 export default class HermesBundlesValidatorWorker extends PeriodicWorker {
+  /**
+   *
+   * @param {DataModelEngine} dataModelEngine
+   * @param {WorkerTaskTrackingRepository} workerTaskTrackingRepository
+   * @param {BundleRepository} bundleRepository
+   * @param {BundleStoreWrapper} bundleStoreWrapper
+   * @param {ShelteringWrapper} shelteringWrapper
+   * @param {Logger} logger
+   * @param {number} workerInterval
+   */
   constructor(dataModelEngine, workerTaskTrackingRepository, bundleRepository, bundleStoreWrapper, shelteringWrapper, logger, workerInterval) {
     super(workerInterval, logger);
     this.workerTaskTrackingRepository = workerTaskTrackingRepository;
@@ -22,6 +34,11 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
     this.shelteringWrapper = shelteringWrapper;
   }
 
+  /**
+   * Overwritten method of PeriodicWorker abstract class
+   * Contains work that would be done periodically
+   * @returns {Promise<void>}
+   */
   async periodicWork() {
     let workId = null;
     try {
@@ -57,6 +74,12 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
     }
   }
 
+  /**
+   * Validates Bundle and restores it from blockchain
+   * @param {Object} bundleId
+   * @param {Object} shelterer
+   * @returns {Promise<void>}
+   */
   async validateAndRestoreBundle(bundleId, shelterer) {
     try {
       const sheltererExpirationTime = await this.shelteringContract.methods.getShelteringExpirationDate(bundleId, shelterer).call();
@@ -75,14 +98,26 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
     }
   }
 
+  /**
+   * Returns current time
+   * @returns {number}
+   */
   now() {
     return Math.floor(Date.now() / 1000);
   }
 
+  /**
+   * Write to info logg
+   * @param {string} str - the message to logg
+   */
   logInfo(str) {
     this.logger.info(`HermesBundlesValidatorWorker: ${str}`);
   }
 
+  /**
+   * Write to error logg
+   * @param {string} str - the message to logg
+   */
   logError(str) {
     this.logger.error(`HermesBundlesValidatorWorker: ${str}`);
   }
