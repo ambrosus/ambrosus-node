@@ -11,11 +11,28 @@ const MAX_ONGOING_TRANSFERS = 20;
 const MAX_SHELTERING_CHECKS = 25;
 const TRANSACTIONS_INTERVAL = 1000;
 
+/**
+ * Keeps current thread inactive
+ * @param {number} timeout - the time of inactivity in milliseconds
+ * @returns {Promise<unknown>}
+ */
 const sleep = async (timeout) => new Promise((resolve) => {
   setTimeout(resolve, timeout);
 });
 
+/**
+ *
+ */
 export default class ReleaseBundlesService {
+  /**
+   * @param {BundleRepository} bundleRepository - the utility to handle Bundles storage
+   * @param {ShelteringWrapper} shelteringWrapper - the wrapper around smart contracts from ambrosus-node-contracts
+   * @param {ShelteringTransfersWrapper} shelteringTransfersWrapper - the wrapper around smart contracts from ambrosus-node-contracts
+   * @param {RetireTransfersRepository} retireTransfersRepository - the utility to store active transfer events
+   * @param {WorkerLogger} workerLogger - the logging utility
+   * @param {OperationalMode} operationalMode - the Operational mode of the Atlas instance
+   * @param {number} transactionsInterval - the interval of performing single transaction
+   */
   constructor(bundleRepository, shelteringWrapper, shelteringTransfersWrapper, retireTransfersRepository, workerLogger, operationalMode, transactionsInterval = TRANSACTIONS_INTERVAL) {
     this.bundleRepository = bundleRepository;
     this.shelteringWrapper = shelteringWrapper;
@@ -28,11 +45,18 @@ export default class ReleaseBundlesService {
     this.shelteredBundles = null;
   }
 
+  /**
+   * Resets execution cycle
+   */
   reset() {
     this.shelteredBundles = null;
     this.modeInfo = null;
   }
 
+  /**
+   * Tries to start Bundles transfer
+   * @returns {Promise<void>}
+   */
   async process() {
     let infoUpdated = false;
     if (null === this.shelteredBundles) {
@@ -121,6 +145,10 @@ export default class ReleaseBundlesService {
     }
   }
 
+  /**
+   * Collects bundles for transfer
+   * @returns {Promise<Array<Object>>}
+   */
   async selectBundlesForTransfer() {
     const bundles = [];
     for (const bundleId of this.shelteredBundles) {

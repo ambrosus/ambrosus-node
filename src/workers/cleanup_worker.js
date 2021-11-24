@@ -11,7 +11,7 @@ import PeriodicWorker from './periodic_worker';
 const CLEANUP_WORK_TYPE = 'BundleCleanup';
 
 /**
- *
+ * Utility to periodically clean outdated Bundles
  */
 export default class CleanupWorker extends PeriodicWorker {
   /**
@@ -28,7 +28,7 @@ export default class CleanupWorker extends PeriodicWorker {
 
   /**
    * Overwritten method of PeriodicWorker abstract class
-   * Contains works that would be done periodically. User by PeriodicWorker internally
+   * Periodically deletes outdated Bundles. User by PeriodicWorker internally
    * @returns {Promise<void>}
    */
   async periodicWork() {
