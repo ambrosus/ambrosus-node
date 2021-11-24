@@ -16,8 +16,7 @@ const STORAGE_PERIOD_DURATION = 13 * 28 * 86400; // in seconds
  */
 export default class HermesBundlesValidatorWorker extends PeriodicWorker {
   /**
-   *
-   * @param {DataModelEngine} dataModelEngine
+   * @param {DataModelEngine} dataModelEngine - the utility to safely handle data models
    * @param {WorkerTaskTrackingRepository} workerTaskTrackingRepository
    * @param {BundleRepository} bundleRepository
    * @param {BundleStoreWrapper} bundleStoreWrapper
@@ -107,7 +106,7 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
   }
 
   /**
-   * Write to info logg
+   * Writes to info logg
    * @param {string} str - the message to logg
    */
   logInfo(str) {
@@ -115,7 +114,7 @@ export default class HermesBundlesValidatorWorker extends PeriodicWorker {
   }
 
   /**
-   * Write to error logg
+   * Writes to error logg
    * @param {string} str - the message to logg
    */
   logError(str) {

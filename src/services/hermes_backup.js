@@ -9,7 +9,18 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {encrypt, decrypt} from '../utils/crypto.util';
 
+/**
+ * Service to handle DB backups
+ */
 export default class HermesBackup {
+  /**
+   *
+   * @param {MongoClient} db - the MongoDb client
+   * @param {Store} store - the key-value store
+   * @param {IdentityManager} identityManager - the utility for credential validation
+   * @param {DataModelEngine} dataModelEngine - the utility to safely handle data models
+   * @param {Logger} logger - the logging utility
+   */
   constructor(db, store, identityManager, dataModelEngine, logger) {
     this.db = db;
     this.store = store;
@@ -33,6 +44,10 @@ export default class HermesBackup {
     ];
   }
 
+  /**
+   * Creates backup event
+   * @returns {Promise<void>}
+   */
   async save() {
     try {
       this.logInfo(`save()`);
@@ -84,6 +99,11 @@ export default class HermesBackup {
     }
   }
 
+
+  /**
+   * Restores DB from backup
+   * @returns {Promise<void>}
+   */
   async restore() {
     try {
       this.logInfo(`restore()`);
@@ -133,6 +153,12 @@ export default class HermesBackup {
     }
   }
 
+  /**
+   * Generates Asset Object
+   * @param {string} address
+   * @param {string} secret
+   * @returns {Promise<{assetId: *, content: {signature: *, idData: {sequenceNumber: number, createdBy, timestamp: number}}}>}
+   */
   async generateAsset(address, secret) {
     const idData = {
       createdBy: address,
@@ -153,6 +179,14 @@ export default class HermesBackup {
     return asset;
   }
 
+  /**
+   * Generates Event Object
+   * @param _assetId
+   * @param _data
+   * @param address
+   * @param secret
+   * @returns {Promise<{eventId: *, content: {data: *[], signature: *, idData: {accessLevel: number, createdBy, dataHash: *, assetId, timestamp: number}}}>}
+   */
   async generateEvent(_assetId, _data, address, secret) {
     const data = [_data];
 
@@ -178,6 +212,10 @@ export default class HermesBackup {
     return event;
   }
 
+  /**
+   * Retrieves data from last backup event
+   * @returns {Promise<null|any>}
+   */
   async getLatestBackup() {
     const latestBackupEvent = await this.getLatestBackupEvent();
     if (null === latestBackupEvent) {
@@ -187,6 +225,10 @@ export default class HermesBackup {
     return await this.decryptBackup(latestBackupEvent.content.data[0].rawData);
   }
 
+  /**
+   * Retrieves last backup event
+   * @returns {Promise<*>}
+   */
   async getLatestBackupEvent() {
     return this.db.collection('events')
       .find({'content.data.0.type':'ambrosus.backup'}, {projection: {_id: 0, metadata: 0, repository: 0}})
@@ -194,6 +236,10 @@ export default class HermesBackup {
       .next();
   }
 
+  /**
+   * Decides if database should be restored
+   * @returns {Promise<boolean>}
+   */
   async isRestoreRequired() {
     for (const colName of this.requiredCollections) {
       const colArray = await this.db.collection(colName).find({}, {projection: {_id: 1}})
@@ -205,20 +251,38 @@ export default class HermesBackup {
     return false;
   }
 
+  /**
+   * Encrypts backup with unique private key
+   * @param {Object} backupObj - the object to be encrypted
+   * @returns {Promise<string>}
+   */
   async encryptBackup(backupObj) {
     const encryptionKey = await this.identityManager.nodePrivateKey();
     return encrypt(JSON.stringify(backupObj), encryptionKey);
   }
 
+  /**
+   * Decrypts backup with unique private key
+   * @param {Object} encryptedString - the object to be decrypted
+   * @returns {Promise<any>}
+   */
   async decryptBackup(encryptedString) {
     const encryptionKey = await this.identityManager.nodePrivateKey();
     return JSON.parse(decrypt(encryptedString, encryptionKey));
   }
 
+  /**
+   * Writes to error logg
+   * @param str
+   */
   logInfo(str) {
     this.logger.info(`HermesBackup: ${str}`);
   }
 
+  /**
+   * Writes to error logg
+   * @param str
+   */
   logError(str) {
     this.logger.error(`HermesBackup: ${str}`);
   }
