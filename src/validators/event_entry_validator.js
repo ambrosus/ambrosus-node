@@ -9,13 +9,27 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import Validator from './validator';
 
+/**
+ * Validates custom schemas
+ * @extends Validator
+ */
 export default class EventEntryValidator extends Validator {
+  /**
+   *
+   * @param {string} type - the event type
+   * @param {Validator} validator - the validator obejct
+   */
   constructor(type, validator) {
     super();
     this.type = type;
     this.validator = validator;
   }
 
+  /**
+   * Overwritten method of the Validator abstract class
+   * @param event
+   * @returns {boolean}
+   */
   validate(event) {
     if (!event.data) {
       return true;

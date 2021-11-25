@@ -11,17 +11,34 @@ import Validator from './validator';
 import {JsonValidationError} from '../errors/errors';
 import Ajv from 'ajv';
 
+/**
+ * Utility to handle validation of Json strings
+ * @extends Validator
+ */
 export default class JsonSchemaValidator extends Validator {
+  /**
+   * @param {string} schema - the json schema
+   * @param {Ajv=} ajv - the json validation library
+   */
   constructor(schema, ajv = new Ajv()) {
     super();
     this.schema = schema;
     this.ajv = ajv;
   }
 
+  /**
+   * Checks is data valid
+   * @param {string} data - the data
+   * @returns {boolean}
+   */
   isValid(data) {
     return this.ajv.validate(this.schema, data);
   }
 
+  /**
+   * Overwritten method of Validator abstract class
+   * @param {string} data - the data
+   */
   validate(data) {
     if (!this.isValid(data)) {
       throw new JsonValidationError(this.ajv.errors);
