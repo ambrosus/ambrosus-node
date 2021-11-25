@@ -11,7 +11,14 @@ import {ValidationError, AuthenticationError} from '../errors/errors';
 import matchHexOfLength from '../utils/regex';
 import {getDefaultPrivateKey, getDefaultAddress} from '../utils/web3_tools';
 
+/**
+ *
+ */
 export default class IdentityManager {
+  /**
+   * @param {Web3} web3 - the common blockchain library
+   * @param {StateModel} stateModel -
+   */
   constructor(web3, stateModel) {
     this.web3 = web3;
     this.stateModel = stateModel;

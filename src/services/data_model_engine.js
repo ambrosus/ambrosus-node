@@ -14,7 +14,32 @@ import allPermissions from '../utils/all_permissions';
 import BundleStatuses from '../utils/bundle_statuses';
 import removeDuplicates from '../utils/sutils.js';
 
+/**
+ *
+ */
 export default class DataModelEngine {
+  /**
+   * @param {IdentityManager} identityManager
+   * @param tokenAuthenticator
+   * @param entityBuilder
+   * @param entityRepository
+   * @param bundleDownloader
+   * @param bundleBuilder
+   * @param bundleRepository
+   * @param accountRepository
+   * @param operationalModeRepository
+   * @param findEventQueryObjectFactory
+   * @param findAccountQueryObjectFactory
+   * @param findAssetQueryObjectFactory
+   * @param accountAccessDefinitions
+   * @param mongoClient
+   * @param uploadRepository
+   * @param rolesRepository
+   * @param workerLogRepository
+   * @param organizationRepository
+   * @param bundleStoreWrapper
+   * @param shelteringWrapper
+   */
   constructor(
     {
       identityManager,

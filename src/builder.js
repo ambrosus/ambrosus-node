@@ -65,7 +65,7 @@ import OrganizationRepository from './services/organization_repository';
 import * as Sentry from '@sentry/node';
 
 /**
- *
+ * Utility to handle dependencies of workers. Creates new Objects and builds base objects for workers of all types.
  */
 class Builder {
   /**
