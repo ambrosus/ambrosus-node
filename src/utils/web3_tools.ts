@@ -87,6 +87,10 @@ export async function createWeb3(conf: Config = config): Promise<Web3> {
   throw new Error('A configuration value for web3 rpc server is missing');
 }
 
+/**
+ * Get default address from underlying ethereum client
+ * @param {Web3} web3 - the common blockchain library
+ */
 export function getDefaultAddress(web3: Web3): string {
   // note: web3.eth.defaultAccount actually stores an address of the default account, and not the full account :P
   const {defaultAccount} = web3.eth;
@@ -96,6 +100,10 @@ export function getDefaultAddress(web3: Web3): string {
   return defaultAccount;
 }
 
+/**
+ * Gets private key of default account
+ * @param {Web3} web3 - the common blockchain library
+ */
 export function getDefaultPrivateKey(web3: Web3): string {
   const defaultAddress = getDefaultAddress(web3);
   const account = web3.eth.accounts.wallet[defaultAddress];

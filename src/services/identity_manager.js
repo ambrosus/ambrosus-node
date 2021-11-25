@@ -12,26 +12,39 @@ import matchHexOfLength from '../utils/regex';
 import {getDefaultPrivateKey, getDefaultAddress} from '../utils/web3_tools';
 
 /**
- *
+ * Utility to handle ethereum account related operations
  */
 export default class IdentityManager {
   /**
    * @param {Web3} web3 - the common blockchain library
-   * @param {StateModel} stateModel -
+   * @param {StateModel} stateModel - the utility to store account related data
    */
   constructor(web3, stateModel) {
     this.web3 = web3;
     this.stateModel = stateModel;
   }
 
+  /**
+   * Gets default private key of underlying ethereum client
+   * @returns {Promise<*>}
+   */
   async nodePrivateKey() {
     return await getDefaultPrivateKey(this.web3);
   }
 
+  /**
+   * Get address of default account from underlying ethereum client
+   * @returns {string}
+   */
   nodeAddress() {
     return getDefaultAddress(this.web3);
   }
 
+  /**
+   * Generates new admins private key and admins address
+   * New attempts overrides previously generated values
+   * @returns {Promise<string|null>}
+   */
   async adminAddress() {
     let privateKey = await this.stateModel.getPrivateKey();
 
@@ -48,6 +61,12 @@ export default class IdentityManager {
     return address;
   }
 
+  /**
+   * Signs data with private key
+   * @param {string} privateKey - the private key
+   * @param {string} data - the data
+   * @returns {string}
+   */
   sign(privateKey, data) {
     if (!matchHexOfLength(privateKey, 64)) {
       throw new ValidationError(`Invalid private key format`);
@@ -56,6 +75,12 @@ export default class IdentityManager {
     return signature;
   }
 
+  /**
+   * Validates signature. Throws error if signature invalid
+   * @param {string} address - the users address
+   * @param {string} signature - the signature
+   * @param {string} data - the data
+   */
   validateSignature(address, signature, data) {
     if (!matchHexOfLength(address, 40)) {
       throw new ValidationError(`Invalid address format`);
@@ -69,15 +94,31 @@ export default class IdentityManager {
     }
   }
 
+  /**
+   * Serializes input and creates hash
+   * @param {Object} data
+   * @returns {string}
+   */
   calculateHash(data) {
     const serialized = this.serializeForHashing(data);
     return this.web3.eth.accounts.hashMessage(serialized);
   }
 
+  /**
+   * Checks if hash is valid
+   * @param {string} hash - the hash to check
+   * @param {string} data - the hashed data
+   * @returns {boolean}
+   */
   checkHashMatches(hash, data) {
     return hash === this.calculateHash(data);
   }
 
+  /**
+   * Serializes Object to string
+   * @param {String} object - the object to serialize
+   * @returns {string}
+   */
   serializeForHashing(object) {
     const isDict = (subject) => typeof subject === 'object' && !Array.isArray(subject);
     const isString = (subject) => typeof subject === 'string';
@@ -99,11 +140,20 @@ export default class IdentityManager {
     return object.toString();
   }
 
+  /**
+   * Creates key pair from current users address and private key
+   * @returns {{address: string, secret: string}}
+   */
   createKeyPair() {
     const account = this.web3.eth.accounts.create();
     return {address: account.address, secret: account.privateKey};
   }
 
+  /**
+   * Gets account from secret
+   * @param {string} secret
+   * @returns {string}
+   */
   addressFromSecret(secret) {
     try {
       return this.web3.eth.accounts.privateKeyToAccount(secret).address;
