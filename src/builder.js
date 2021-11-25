@@ -67,11 +67,23 @@ import OperationalModeRepository from './services/operational_mode_repository';
 import OrganizationRepository from './services/organization_repository';
 import * as Sentry from '@sentry/node';
 
+/**
+ *
+ */
 class Builder {
+  /**
+   * Ensures that admin account exist
+   * @returns {Promise<void>}
+   */
   async ensureAdminAccountExist() {
     await this.dataModelEngine.addAdminAccount();
   }
 
+  /**
+   * Ensures that blockchain account is allowed to start server in this role
+   * @param allowedRoles
+   * @returns {Promise<Role>}
+   */
   async ensureAccountIsOnboarded(allowedRoles) {
     const role = await this.rolesRepository.onboardedRole(getDefaultAddress(this.web3));
     if (role.is(Role.NONE)) {
@@ -84,6 +96,12 @@ class Builder {
     return role;
   }
 
+  /**
+   * Builds a base object used to create hermes, atlas and server. Besides this initializes internal variables.
+   * @param {Config} config - the file with configuration variables
+   * @param {Object=} dependencies - the optional dependencies
+   * @returns {Promise<{kycWhitelistWrapper, client: MongoClient, dataModelEngine: DataModelEngine}>}
+   */
   async build(config, dependencies = {}) {
     this.config = config;
     const {web3} = dependencies;
