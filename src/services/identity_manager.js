@@ -116,7 +116,7 @@ export default class IdentityManager {
 
   /**
    * Serializes Object to string
-   * @param {String} object - the object to serialize
+   * @param {Object} object - the object to serialize
    * @returns {string}
    */
   serializeForHashing(object) {

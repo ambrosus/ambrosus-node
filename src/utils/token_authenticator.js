@@ -11,11 +11,23 @@ import base64url from 'base64url';
 import {AuthenticationError, ValidationError} from '../errors/errors';
 import {getTimestamp} from './time_utils';
 
+/**
+ * Utility to handle token related operations
+ */
 export default class TokenAuthenticator {
+  /**
+   * @param {IdentityManager} identityManager - the utility to handle account related operations
+   */
   constructor(identityManager) {
     this.identityManager = identityManager;
   }
 
+  /**
+   * Generates token using account data and unix timestamp
+   * @param {string} secret - the secret
+   * @param {number} timestamp - the Unix timestamp
+   * @returns {string}
+   */
   generateToken(secret, timestamp) {
     if (!timestamp || !Number.isInteger(timestamp)) {
       throw new ValidationError('Unix timestamp was not provided or has an invalid format');
@@ -31,6 +43,13 @@ export default class TokenAuthenticator {
     return this.encode(this.preparePayload(secret, idData));
   }
 
+  /**
+   * Get payload from token
+   * @throws AuthenticationError
+   * @param {string} token - the token to decode
+   * @param {number=} timeNow - the optional Unix timestamp
+   * @returns {any}
+   */
   decodeToken(token, timeNow = getTimestamp()) {
     const decoded = this.decode(token);
     const {signature, idData} = decoded;
@@ -45,12 +64,23 @@ export default class TokenAuthenticator {
     return decoded;
   }
 
+  /**
+   * Signs idData to generate token payload
+   * @param {string} secret - the user's secret
+   * @param {Object} idData - the data for payload
+   * @returns {{signature: string, idData}}
+   */
   preparePayload(secret, idData) {
     const signature = this.identityManager.sign(secret, idData);
     const payload = {signature, idData};
     return payload;
   }
 
+  /**
+   * Decodes stringified token. For internal usage
+   * @param {string} token
+   * @returns {any}
+   */
   decode(token) {
     try {
       return JSON.parse(base64url.decode(token));
@@ -59,6 +89,11 @@ export default class TokenAuthenticator {
     }
   }
 
+  /**
+   * Encodes data object
+   * @param {Object} data
+   * @returns {string}
+   */
   encode(data) {
     return base64url(this.identityManager.serializeForHashing(data));
   }
