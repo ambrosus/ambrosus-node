@@ -1,5 +1,9 @@
 #  Introduction to ambrosus
 
+Ambrosus is a blockchain based solution in logistics.
+Learn more about project on [official website](https://ambrosus.io/) and
+[community wiki](https://github.com/ambrosus/community-wiki)
+
 ## Basic constructs
 
 Ambrosus uses two core entities to model supply chain: assets and events. There is also the notion of a bundle explained later. You will see JSON is used widely to store and transfer entities.
@@ -25,6 +29,9 @@ Example asset could look like this:
 `assetId` is unique asset identifier. `idData` stores all data crucial to the digital identity of the asset. In particular `timestamp` stores information about the time when it was created (as UNIX timestamp) and `createdBy` stores id of a creator of the asset. Field `signature` authenticates the identity of the creator. We dig deeper into what every single field means later in this chapter. The image below shows the basic structure of an asset.
 
 ![Asset structure](asset.png?raw=true "Asset structure")
+
+Read more about [assets](https://github.com/ambrosus/ambrosus-node/blob/master/docs/BasicEventEntryTypes.md). \
+Read more about [asset styling](https://github.com/ambrosus/ambrosus-node/blob/master/docs/ApplicationEntryTypes.md)
 
 ### Events
 An event describes something that happened in a supply chain. Typical events are connected to producing, verification and delivery of assets, however it is possible to define custom events. Each event is associated with exactly one asset by the subject field.
@@ -52,6 +59,8 @@ Example event could look like this:
 Meaning of the fields is analogous to those in assets. Additionally, we have the `data` object, which can hold all the descriptive details about an event (e.g., type, context, location and more). `accessLevel` is used to define permissions. `dataHash` is hash of serialized `data` field. The image below shows the basic structure of an event.
 
 ![Asset structure](event.png?raw=true "Asset structure")
+
+Read more about [events](https://github.com/ambrosus/ambrosus-node/blob/master/docs/BasicEventEntryTypes.md).
 
 ### Bundles
 Multiple entities (assets and events) are packed into bundles. The proof of the bundle is stored in a smart contract deployed to the blockchain.
@@ -97,8 +106,20 @@ All `idData` of every entity is always publicly available. Entity creator can ho
  * If access level equals `0` it means entity `data` is publicly available.
  * If access level is greater than `0` it means entity `data` is only available to users registered with given node and with adequate `accessLevel` (e.g.m you need to have permission level 3 to access data on `accessLevel` 1, 2, 3).
 
+## Role of ambrosus-node in ambrosus
+This repository contains Hermes, Atlas and partially external api. 
+Additional api stored in [ambrosus-node-extended](https://github.com/ambrosus/ambrosus-node-extended) repository. 
+
+* Hermes responsible for producing and uploading bundles to the network.
+* Atlas responsible for storing and securing data(bundles) uploaded to the network.
+* Api responsible for communicating with external applications and receiving assets and event to proceed in network.
+
 ## What is next?
 
-Go to step-by-step [tutorial](https://github.com/ambrosus/ambrosus-node/blob/master/docs/tutorial.md).
+* Learn more about ambrosus on community [wiki](https://github.com/ambrosus/community-wiki).
 
-Alternatively, visit [ambrosus.docs.apiary.io](https://ambrosus.docs.apiary.io/) for full API documentation.
+* Go to step-by-step [tutorial](https://github.com/ambrosus/ambrosus-node/blob/master/docs/tutorial.md).
+
+* Visit [ambrosus.docs.apiary.io](https://ambrosus.docs.apiary.io/) for full API documentation.
+
+* Check other repositories of [ambrosus](https://github.com/ambrosus) project.

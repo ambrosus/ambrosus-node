@@ -74,7 +74,7 @@ async function start(logger) {
     hermesBackup,
     builder.workerTaskTrackingRepository,
     logger,
-    config.HermesBackupWorkerInterval
+    config.hermesBackupWorkerInterval
   );
 
   setTimeout(async () => {
