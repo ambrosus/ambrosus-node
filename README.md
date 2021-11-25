@@ -121,7 +121,7 @@ yarn dev:start:atlas
 To run your own node in ambrosus network see [ambrosus-nop](https://github.com/ambrosus/ambrosus-nop).
 
 ## Running in production mode
-This project shouldn't be running on it own. See [ambrosus-nop](https://github.com/ambrosus/ambrosus-nop) to find
+This project shouldn't be running on it own. See [ambrosus-nop](https://github.com/ambrosus/ambrosus-nop) to find 
 start scripts. For additional information about running in test mode contact ambrosus development team.
 
 Below are instructions to run this particular project. \
@@ -156,8 +156,7 @@ yarn start:atlas
 ```
 
 ## Utils
-
-getToken - utility for manual AMB_TOKEN generation, usage:
+getToken - utility for manual AMB_TOKEN generation, usage: 
 ```sh
 node getToken.js <privKey>
 ```
