@@ -11,7 +11,7 @@ import promClient from 'prom-client';
 import BundleShelteringResolver from './bundle_sheltering_resolver';
 import {atlasResolutionStatus} from './atlas_resolver';
 
-export default class AtlaTransferResolver extends BundleShelteringResolver {
+export default class AtlasTransferResolver extends BundleShelteringResolver {
   constructor(
     web3,
     dataModelEngine,
