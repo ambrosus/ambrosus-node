@@ -10,6 +10,12 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {get, put} from './dict_utils';
 import {ValidationError} from '../errors/errors';
 
+/**
+ * Utility function to cut stringified object to @maxLength
+ * @param {Object} object - the object to cut
+ * @param {number} maxLength - the maximum length of a resulting string
+ * @returns {string}
+ */
 const trimObject = (object, maxLength = 500) => {
   const stringifiedObject = object.toString();
   if (stringifiedObject.length > maxLength) {
