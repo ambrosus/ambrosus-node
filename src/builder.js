@@ -158,7 +158,7 @@ class Builder {
       defaultAddress,
       this.bundleStoreWrapper,
       this.blockChainStateWrapper,
-      this.shelteredBundlesCache,
+      this.hermesBundlesCache,
       this.db
     );
     this.retireTransfersRepository = new RetireTransfersRepository(
