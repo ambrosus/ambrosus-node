@@ -7,6 +7,8 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+import getRandomInt from '../utils/getRandomInt';
+
 export default class BundlesRestorer {
   constructor(bundleStoreWrapper, shelteringWrapper, shelteringTransfersWrapper, dataModelEngine, bundleRepository, shelteredBundlesRepository, workerLogger) {
     this.bundleStoreWrapper = bundleStoreWrapper;
@@ -45,7 +47,7 @@ export default class BundlesRestorer {
           const expirationTime = await this.shelteringWrapper.shelteringExpirationDate(bundle.bundleId);
           const donors = await this.getBundleDonors(bundle);
           while (donors.length > 0) {
-            const pos = this.getRandomInt(donors.length);
+            const pos = getRandomInt(donors.length);
             const donorId = donors[pos];
             try {
               await this.dataModelEngine.downloadBundle(bundle.bundleId, donorId, expirationTime);
@@ -66,10 +68,6 @@ export default class BundlesRestorer {
     } else {
       await this.workerLogger.addLog(`All ${storedBundles.length} bundles are present in DB`);
     }
-  }
-
-  getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max));
   }
 
   async getBundleDonors(bundle) {
