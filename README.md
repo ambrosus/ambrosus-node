@@ -82,8 +82,8 @@ Start an ethereum client of your choice. For example, the provided parity contai
 yarn dev:docker:parity
 ```
 
-Set `WEB3_NODEPRIVATEKEY` and `WEB3_DEPLOYER_PRIVATEKEY`a in `dev.env` to a private key with 
-a positive balance. 
+Set `WEB3_NODEPRIVATEKEY` and `WEB3_DEPLOYER_PRIVATEKEY`a in `dev.env` to a private key with
+a positive balance.
 
 If you're using provided parity from container, the private key in `dev.env` should already match a dev account.
 
@@ -108,7 +108,7 @@ Finally, run one of the workers you are interested in:
 ```sh
 yarn dev:start:server
 ```
-or 
+or
 ```sh
 yarn dev:start:hermes
 ```
@@ -156,7 +156,6 @@ yarn start:atlas
 ```
 
 ## Utils
-
 getToken - utility for manual AMB_TOKEN generation, usage: 
 ```sh
 node getToken.js <privKey>
