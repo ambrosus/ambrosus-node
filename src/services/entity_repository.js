@@ -10,6 +10,9 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {pick} from '../utils/dict_utils';
 
 export default class EntityRepository {
+  /**
+   * @param {MongoClient.prototype.db} db - the mongo database
+   */
   constructor(db) {
     this.db = db;
     this.blacklistedFields = {
@@ -18,22 +21,42 @@ export default class EntityRepository {
     };
   }
 
+  /**
+   * Saves assets to db. Rewrites if asset with this id already exists in the db
+   * @param {Object} asset - the asset
+   * @returns {Promise<void>}
+   */
   async storeAsset(asset) {
     if (await this.db.collection('assets').findOne({assetId: asset.assetId}) === null) {
       await this.db.collection('assets').insertOne({...asset});
     }
   }
 
+  /**
+   * Retrieves asset from db
+   * @param {number} assetId - id of the asset
+   * @returns {Promise<*>}
+   */
   async getAsset(assetId) {
     return await this.db.collection('assets').findOne({assetId}, {projection: this.blacklistedFields});
   }
 
+  /**
+   * Saves event to the db. Rewrites event if this id already exists in the db
+   * @param {Object} event
+   * @returns {Promise<void>}
+   */
   async storeEvent(event) {
     if (await this.db.collection('events').findOne({eventId: event.eventId}) === null) {
       await this.db.collection('events').insertOne({...event});
     }
   }
 
+  /**
+   * @param {Object} event
+   * @param {number?} accessLevel - //TODO: Find out about access levels. Is it a number?
+   * @returns {null|unknown}
+   */
   hideEventDataIfNecessary(event, accessLevel) {
     if (!event) {
       return null;

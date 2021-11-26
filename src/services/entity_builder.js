@@ -21,6 +21,10 @@ import {ValidationError} from '../errors/errors';
 import {getTimestamp} from '../utils/time_utils';
 
 export default class EntityBuilder {
+  /**
+   * @param {IdentityManager} identityManager - the utility to handle account related operations
+   * @param {number} maximumEntityTimestampOvertake -
+   */
   constructor(identityManager, maximumEntityTimestampOvertake) {
     this.eventValidators = [
       new JsonSchemaValidator(eventContentSchema),
@@ -34,6 +38,10 @@ export default class EntityBuilder {
     this.maximumEntityTimestampOvertake = maximumEntityTimestampOvertake;
   }
 
+  /**
+   *
+   * @param asset
+   */
   validateAsset(asset) {
     validateAndCast(asset)
       .required([

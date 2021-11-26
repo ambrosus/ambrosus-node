@@ -20,11 +20,11 @@ import removeDuplicates from '../utils/sutils.js';
 export default class DataModelEngine {
   /**
    * @param {IdentityManager} identityManager - the utility to handle account related operations
-   * @param {TokenAuthenticator} tokenAuthenticator - the utility to handle token related operatins
-   * @param entityBuilder
-   * @param entityRepository
-   * @param bundleDownloader
-   * @param bundleBuilder
+   * @param {TokenAuthenticator} tokenAuthenticator - the utility to handle token related operations
+   * @param {EntityBuilder} entityBuilder - //TODO: Decide what to do with dictionary refactoring
+   * @param {EntityRepository} entityRepository
+   * @param {BundleDownloader} bundleDownloader
+   * @param {BundleBuilder} bundleBuilder
    * @param bundleRepository
    * @param accountRepository
    * @param operationalModeRepository

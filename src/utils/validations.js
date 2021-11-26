@@ -25,6 +25,9 @@ const trimObject = (object, maxLength = 500) => {
 };
 
 class ValidationAndCasting {
+  /**
+   * @param {Object} params
+   */
   constructor(params) {
     this.params = params;
   }

@@ -8,10 +8,19 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 export default class BundleDownloader {
+  /**
+   * @param {HttpsClient} httpsClient - the httpsClient
+   */
   constructor(httpsClient) {
     this.httpsClient = httpsClient;
   }
 
+  /**
+   *
+   * @param vendorUrl
+   * @param bundleId
+   * @returns {Promise<*>}
+   */
   async openBundleDownloadStream(vendorUrl, bundleId) {
     const fullPath = `/bundle/${bundleId}`;
     const {response, statusCode} = await this.httpsClient.openHTTPSGetStream(vendorUrl, fullPath);
