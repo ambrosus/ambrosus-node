@@ -44,9 +44,9 @@ const bundlesRouter = (modelEngine) => {
   router.get('/:bundleId/info',
     asyncMiddleware(getBundleMetadataHandler(modelEngine))
   );
-//   router.get('/:bundleId/restore',
-//     asyncMiddleware(getBundleRestoreHandler(modelEngine))
-//   );
+  //   router.get('/:bundleId/restore',
+  //     asyncMiddleware(getBundleRestoreHandler(modelEngine))
+  //   );
   return router;
 };
 
