@@ -32,7 +32,7 @@ export default class RolesRepository {
     const url = await this.rolesWrapper.nodeUrl(address);
     validateAndCast({url})
       .required(['url'])
-      .isUrl(['url']);
+      .isNodeUrl(['url']);
     return url;
   }
 }

@@ -101,7 +101,7 @@ class ValidationAndCasting {
     return this.isHexOfLength(valueNames, 64);
   }
 
-  isUrl(valueNames) {
+  isNodeUrl(valueNames) {
     const isValidUrl = (inputUrl) => {
       try {
         const stringUrl = inputUrl.toString();
