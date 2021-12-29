@@ -336,16 +336,19 @@ describe('validation', () => {
       correctUrl1: 'http://ambrosusnode.com',
       correctUrl2: 'http://ambrosus-node.com',
       correctUrl3: 'http://ambrosus-node.masternode.com',
-      correctUrl4: 'http://ambrosus-node.com:8080',
-      correctUrl5: 'https://ambrosus-node.com/api',
-      correctUrl6: 'https://ambrosus-node.com/resources/ambnet/app.js',
+      correctUrl4: 'http://ambrosus-node.masternode.pro',
+      correctUrl5: 'https://a.b.c.d.e.f.g.h.valid.one.co.uk',
+      correctUrl6: 'http://a.co',
+      correctUrl7: 'http://a.b.c.de',
       incorrectUrl1: 'http://ambrosus-node.123',
       incorrectUrl2: 'http://ambrosus-node.',
       incorrectUrl3: 'http://ambrosus-node',
       incorrectUrl4: 'ftp://ambrosus-node.com',
       incorrectUrl5: '//ambrosus-node.com/resources/ambnet/accesspoint/app.js',
       incorrectUrl6: 'ambrosus-node.com',
-      incorrectUrl7: 'ambrosus-node'
+      incorrectUrl7: 'ambrosus-node',
+      incorrectUrl8: 'http://ambrosus-node.lcldmn',
+      incorrectUrl9: 'ssh://10.20.30.40/etc/passwd'
     };
 
     beforeEach(() => {
@@ -353,21 +356,17 @@ describe('validation', () => {
     });
 
     it('returns self', async () => {
-      expect(validator.isUrl([])).to.deep.equal(validator);
+      expect(validator.isNodeUrl([])).to.deep.equal(validator);
     });
 
     it('works for correct values', async () => {
-      for (let ind = 1; ind <= 6; ind++) {
-        // eslint-disable-next-line no-loop-func
-        expect(() => validator.isUrl([`correctUrl${ind}`])).to.not.throw();
-      }
+      Object.keys(input).filter((correctUrl) => correctUrl.startsWith('correct'))
+        .map((url) => expect(() => validator.isNodeUrl([`${url}`])).to.not.throw());
     });
 
     it('throws for incorrect values', async () => {
-      for (let ind = 1; ind <= 7; ind++) {
-        // eslint-disable-next-line no-loop-func
-        expect(() => validator.isUrl([`incorrectUrl${ind}`])).to.throw(ValidationError);
-      }
+      Object.keys(input).filter((incorrectUrl) => incorrectUrl.startsWith('incorrect'))
+        .map((url) => expect(() => validator.isNodeUrl([`${url}`])).to.throw(ValidationError));
     });
   });
 

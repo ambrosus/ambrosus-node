@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {get, put} from './dict_utils';
 import {ValidationError} from '../errors/errors';
+import psl from 'psl';
 
 const trimObject = (object, maxLength = 500) => {
   const stringifiedObject = object.toString();
@@ -100,11 +101,30 @@ class ValidationAndCasting {
     return this.isHexOfLength(valueNames, 64);
   }
 
-  isUrl(valueNames) {
-    const urlRegex = /^(?:(?:https?):\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i;
+  isNodeUrl(valueNames) {
+    const isValidUrl = (inputUrl) => {
+      try {
+        const stringUrl = inputUrl.toString();
+        const url = new URL(stringUrl);
+        const {protocol, hostname} = url;
+        if (!(['http:', 'https:'].includes(protocol))) {
+          return false;
+        }
+        if (!psl.isValid(hostname)) {
+          const ipv4 = /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+          if (!ipv4.test(hostname)) {
+            return false;
+          }
+        }
+        return inputUrl === `${protocol}//${hostname}`;
+        // eslint-disable-next-line no-empty
+      } catch {}
+      return false;
+    };
+
     for (const valueName of valueNames) {
       const value = get(this.params, valueName);
-      if (value !== undefined && !urlRegex.exec(value)) {
+      if (value !== undefined && !isValidUrl(value)) {
         throw new ValidationError(`${valueName} = ${trimObject(value)} is not a valid URL`);
       }
     }
