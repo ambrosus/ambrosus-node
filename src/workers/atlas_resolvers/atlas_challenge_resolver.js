@@ -10,6 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import promClient from 'prom-client';
 import BundleShelteringResolver from './bundle_sheltering_resolver';
 import {atlasResolutionStatus} from './atlas_resolver';
+import getRandomInt from '../../utils/getRandomInt';
 
 export default class AtlasChallengeResolver extends BundleShelteringResolver {
   constructor(
@@ -49,10 +50,6 @@ export default class AtlasChallengeResolver extends BundleShelteringResolver {
     });
   }
 
-  getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max));
-  }
-
   async tryToDownload(proposition) {
     const propositionExpirationTime = await this.resolutionsRepository.getExpirationTimeInMs(proposition);
     let metadata;
@@ -63,7 +60,7 @@ export default class AtlasChallengeResolver extends BundleShelteringResolver {
       await this.workerLogger.logger.info(`Failed to download bundle: ${err.message || err}`, proposition, err.stack);
       const donors = await this.getBundleDonors(proposition);
       while (donors.length > 0) {
-        const pos = this.getRandomInt(donors.length);
+        const pos = getRandomInt(donors.length);
         const donorId = donors[pos];
         try {
           metadata = await this.dataModelEngine.downloadBundle(proposition.bundleId, donorId, propositionExpirationTime);

@@ -13,6 +13,7 @@ import {pick, put} from '../utils/dict_utils';
 import allPermissions from '../utils/all_permissions';
 import BundleStatuses from '../utils/bundle_statuses';
 import removeDuplicates from '../utils/sutils.js';
+import getRandomInt from '../utils/getRandomInt';
 
 export default class DataModelEngine {
   constructor(
@@ -347,7 +348,7 @@ export default class DataModelEngine {
     this.bundleBuilder.validateBundleMetadata(downloadedMetadata);
 
     try {
-      const bundle =  await this.bundleDownloader.downloadBundleFull(nodeUrl, bundleId);
+      const bundle = await this.bundleDownloader.downloadBundleFull(nodeUrl, bundleId);
       // todo: check if bundle valid
 
       bundle.metadata = initialMetadata;
@@ -430,10 +431,6 @@ export default class DataModelEngine {
     await this.bundleBuilder.validateStreamedBundleNoWrite(stream, bundleItemsCountLimit); // throws ValidationError
   }
 
-  getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max));
-  }
-
   async getBundleDonors(bundleId, nodeId = null) {
     const donors = await this.bundleStoreWrapper.getShelterers(bundleId);
     if (nodeId) {
@@ -473,7 +470,7 @@ export default class DataModelEngine {
     const donors = await this.getBundleDonors(bundleId, this.identityManager.nodeAddress());
     // console.log('donors',donors);
     while (donors.length > 0) {
-      const pos = this.getRandomInt(donors.length);
+      const pos = getRandomInt(donors.length);
       const donorId = donors[pos];
       try {
         await this.downloadBundle(bundleId, donorId, expirationTime);

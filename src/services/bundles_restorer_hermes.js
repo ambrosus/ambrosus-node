@@ -7,6 +7,8 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+import getRandomInt from '../utils/getRandomInt';
+
 export default class BundlesRestorerHermes {
   constructor(
     bundleStoreWrapper,
@@ -103,7 +105,7 @@ export default class BundlesRestorerHermes {
           }
 
           while (donors.length > 0) {
-            const pos = this.getRandomInt(donors.length);
+            const pos = getRandomInt(donors.length);
             const donorId = donors[pos];
 
             try {
@@ -130,10 +132,6 @@ export default class BundlesRestorerHermes {
     } else {
       await this.workerLogger.addLog(`All ${storedBundles.length} bundles are present in DB`);
     }
-  }
-
-  getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max));
   }
 
   async getBundleDonors(bundle) {
